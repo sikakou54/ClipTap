@@ -1,0 +1,90 @@
+{
+  "common": {
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "search": "Search",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "copy": "Copy"
+  },
+  "snippet": {
+    "title": "Templates",
+    "create": "Create Template",
+    "edit": "Edit Template",
+    "delete_confirm": "Delete this template?",
+    "copied": "Copied!",
+    "no_snippets": "No templates",
+    "title_placeholder": "Title (optional)",
+    "title_required": "Title",
+    "content_placeholder": "Enter content...",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "usage_count": "Used {{count}} times",
+    "last_used": "Last used: {{date}}",
+    "search_placeholder": "Search templates..."
+  },
+  "category": {
+    "title": "Categories",
+    "create": "Create Category",
+    "edit": "Edit Category",
+    "delete_confirm": "Delete this category? (Snippets will not be deleted)",
+    "no_categories": "No categories",
+    "name_placeholder": "Category name",
+    "select": "Select category",
+    "uncategorized": "Uncategorized",
+    "all": "All"
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "appearance": "Appearance",
+    "data": "Data",
+    "about": "About",
+    "theme": "Theme",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "theme_auto": "Auto",
+    "language": "Language",
+    "language_ja": "日本語",
+    "language_en": "English",
+    "haptic_feedback": "Haptic Feedback",
+    "show_ads": "Show Ads",
+    "backup": "Backup",
+    "restore": "Restore",
+    "export_data": "Export Data",
+    "import_data": "Import Data",
+    "reset_data": "Reset Data",
+    "reset_confirm": "Delete all data? This cannot be undone.",
+    "version": "Version",
+    "terms": "Terms of Use",
+    "privacy": "Privacy Policy"
+  },
+  "sort": {
+    "title": "Sort by",
+    "recent": "Recent",
+    "usage": "Most Used",
+    "title_sort": "Title",
+    "pinned": "Pinned"
+  },
+  "backup": {
+    "export_success": "Exported successfully",
+    "import_success": "Imported successfully",
+    "share_title": "ClipTap Backup"
+  },
+  "error": {
+    "generic": "An error occurred",
+    "not_found": "Not found",
+    "duplicate_name": "This name is already in use",
+    "empty_title": "Please enter a title",
+    "empty_content": "Please enter content"
+  },
+  "tabs": {
+    "home": "Home",
+    "categories": "Categories",
+    "settings": "Settings"
+  }
+}

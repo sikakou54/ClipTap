@@ -1,0 +1,80 @@
+{
+  "expo": {
+    "name": "ClipTap",
+    "slug": "cliptap",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1F2937"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.sikakou.cliptap",
+      "buildNumber": "3",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": []
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.VIBRATE"
+      ],
+      "package": "com.sikakou.cliptap",
+      "versionCode": 1
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "cliptap",
+    "owner": "sikakou",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-dev-client",
+      "expo-splash-screen",
+      "expo-localization",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1"
+          },
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "minSdkVersion": 23
+          }
+        }
+      ]
+    ],
+    "updates": {
+      "enabled": true,
+      "url": "https://u.expo.dev/[your-project-id]"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "167bab11-42f6-4180-8d97-7cec4b38dc7f"
+      },
+      "router": {}
+    }
+  },
+  "react-native-google-mobile-ads": {
+    "ios_app_id": "ca-app-pub-5616727577619398~8993844331",
+    "delay_app_measurement_init": true,
+    "user_tracking_usage_description": "関連性の高い広告を表示するためにIDをトラッキングいたします。"
+  }
+}

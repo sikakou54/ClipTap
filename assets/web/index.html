@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClipTap - 定型文を1タップでコピー</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .logo {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            font-size: 1.5em;
+            opacity: 0.95;
+        }
+
+        .features {
+            background: white;
+            border-radius: 20px;
+            padding: 60px 40px;
+            margin: 40px 0;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 50px;
+            color: #667eea;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 30px;
+            border-radius: 15px;
+            background: #f8f9fa;
+            transition: transform 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .how-to-use {
+            background: white;
+            border-radius: 20px;
+            padding: 60px 40px;
+            margin: 40px 0;
+        }
+
+        .how-to-use h2 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 50px;
+            color: #667eea;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .step-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .step-content h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .step-content p {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: white;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2em;
+            }
+
+            .tagline {
+                font-size: 1.2em;
+            }
+
+            .features h2,
+            .how-to-use h2 {
+                font-size: 2em;
+            }
+
+            .step {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">📋 ClipTap</div>
+            <p class="tagline">定型文を1タップでクリップボードにコピー</p>
+        </header>
+
+        <section class="features">
+            <h2>主な機能</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>1タップコピー</h3>
+                    <p>登録した定型文をタップするだけで、即座にクリップボードへコピー。面倒な手順は一切不要です。</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📁</div>
+                    <h3>カテゴリ管理</h3>
+                    <p>仕事、プライベート、コードなど、用途に応じてカテゴリを作成。アイコンと色でわかりやすく整理できます。</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>高速検索</h3>
+                    <p>膨大な定型文の中から、キーワードで素早く検索。タイトルや本文から瞬時に見つけ出せます。</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>完全オフライン</h3>
+                    <p>ネット接続不要で全機能が利用可能。大切なデータはすべて端末内に安全に保存されます。</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🌙</div>
+                    <h3>ダークモード</h3>
+                    <p>システム設定に自動追従。目に優しいダークモードで、夜間の作業も快適です。</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>完全無料</h3>
+                    <p>すべての機能を無料で制限なく利用可能。アプリ内購入や課金は一切ありません。</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="how-to-use">
+            <h2>使い方</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">01</div>
+                    <div class="step-content">
+                        <h3>定型文を登録</h3>
+                        <p>よく使うメール定型文、住所、コードテンプレートなど、何でも登録できます。タイトルと本文を入力するだけの簡単操作です。</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">02</div>
+                    <div class="step-content">
+                        <h3>カテゴリで整理</h3>
+                        <p>定型文をカテゴリに分類して、見つけやすく管理。アイコンと色を設定して、視覚的にわかりやすく整理できます。</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">03</div>
+                    <div class="step-content">
+                        <h3>タップしてコピー</h3>
+                        <p>使いたい定型文をタップするだけで、自動的にクリップボードへコピー。あとは好きなアプリでペーストするだけです。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div style="margin-bottom: 15px;">
+                <a href="terms.html" style="color: white; text-decoration: none; margin: 0 15px; opacity: 0.9;">利用規約</a>
+                <span style="color: white; opacity: 0.7;">|</span>
+                <a href="privacy.html" style="color: white; text-decoration: none; margin: 0 15px; opacity: 0.9;">プライバシーポリシー</a>
+            </div>
+            <p>&copy; 2025 ClipTap. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

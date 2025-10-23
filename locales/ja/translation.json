@@ -1,0 +1,90 @@
+{
+  "common": {
+    "add": "追加",
+    "edit": "編集",
+    "delete": "削除",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "search": "検索",
+    "close": "閉じる",
+    "confirm": "確認",
+    "back": "戻る",
+    "copy": "コピー"
+  },
+  "snippet": {
+    "title": "定型文",
+    "create": "定型文作成",
+    "edit": "定型文編集",
+    "delete_confirm": "この定型文を削除しますか?",
+    "copied": "コピーしました",
+    "no_snippets": "定型文がありません",
+    "title_placeholder": "タイトル (省略可)",
+    "title_required": "タイトル",
+    "content_placeholder": "内容を入力してください",
+    "pin": "ピン留め",
+    "unpin": "ピン留め解除",
+    "usage_count": "{{count}}回使用",
+    "last_used": "最終使用: {{date}}",
+    "search_placeholder": "定型文を検索..."
+  },
+  "category": {
+    "title": "カテゴリ",
+    "create": "カテゴリ作成",
+    "edit": "カテゴリ編集",
+    "delete_confirm": "このカテゴリを削除しますか? (定型文は削除されません)",
+    "no_categories": "カテゴリがありません",
+    "name_placeholder": "カテゴリ名",
+    "select": "カテゴリを選択",
+    "uncategorized": "未分類",
+    "all": "すべて"
+  },
+  "settings": {
+    "title": "設定",
+    "general": "一般",
+    "appearance": "表示",
+    "data": "データ",
+    "about": "アプリについて",
+    "theme": "テーマ",
+    "theme_light": "ライト",
+    "theme_dark": "ダーク",
+    "theme_auto": "システムに従う",
+    "language": "言語",
+    "language_ja": "日本語",
+    "language_en": "English",
+    "haptic_feedback": "振動フィードバック",
+    "show_ads": "広告を表示",
+    "backup": "バックアップ",
+    "restore": "復元",
+    "export_data": "データをエクスポート",
+    "import_data": "データをインポート",
+    "reset_data": "データをリセット",
+    "reset_confirm": "すべてのデータを削除しますか? この操作は取り消せません。",
+    "version": "バージョン",
+    "terms": "利用規約",
+    "privacy": "プライバシーポリシー"
+  },
+  "sort": {
+    "title": "並べ替え",
+    "recent": "更新日時",
+    "usage": "使用頻度",
+    "title_sort": "タイトル",
+    "pinned": "ピン留め"
+  },
+  "backup": {
+    "export_success": "エクスポートしました",
+    "import_success": "インポートしました",
+    "share_title": "ClipTapバックアップ"
+  },
+  "error": {
+    "generic": "エラーが発生しました",
+    "not_found": "見つかりませんでした",
+    "duplicate_name": "この名前は既に使用されています",
+    "empty_title": "タイトルを入力してください",
+    "empty_content": "内容を入力してください"
+  },
+  "tabs": {
+    "home": "ホーム",
+    "categories": "カテゴリ",
+    "settings": "設定"
+  }
+}
