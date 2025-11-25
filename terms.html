@@ -86,7 +86,7 @@
 <body>
     <div class="container">
         <h1>利用規約</h1>
-        <p class="last-updated">最終更新日: 2025年11月23日</p>
+        <p class="last-updated">最終更新日: 2025年11月25日</p>
 
         <div class="section">
             <h2>第1条（適用）</h2>
@@ -107,24 +107,79 @@
                 <li>拡張キーボード機能（他のアプリから定型文を直接入力）</li>
                 <li>環境管理機能（無料プランは3つまで、Proプランは無制限）</li>
                 <li>カスタム変数機能（無料プランは5個まで、Proプランは無制限）</li>
+                <li>アカウント認証機能（任意・無料）- サブスクリプション情報を複数端末で共有</li>
             </ul>
             <p>本サービスは基本機能を無料で提供し、一部のプレミアム機能は有料のProプラン（サブスクリプション）として提供されます。</p>
         </div>
 
         <div class="section">
-            <h2>第3条（利用資格）</h2>
+            <h2>第3条（アカウント認証機能）</h2>
+
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">3.1 機能の概要</h3>
+            <p>本サービスは、<strong>サブスクリプション情報を複数の端末間で共有する</strong>ための任意のアカウント認証機能を提供しています。</p>
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <p style="margin: 0; font-weight: 600; color: #495057;">✅ この機能の利用は完全に任意です</p>
+                <p style="margin: 5px 0 0 0; color: #6c757d; font-size: 0.95em;">利用しない場合でも、本サービスのすべての機能（定型文管理、サブスクリプション購入等）を制限なくご利用いただけます。</p>
+            </div>
+
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">3.2 認証方法</h3>
+            <p>本サービスでは、以下の認証方法をご利用いただけます：</p>
+
+            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                <thead>
+                    <tr style="background-color: #f8f9fa;">
+                        <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">認証方法</th>
+                        <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">対応端末</th>
+                        <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">備考</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #dee2e6;"><strong>Apple Sign-In</strong></td>
+                        <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">iOS専用</td>
+                        <td style="padding: 12px; border: 1px solid #dee2e6;">Android端末では利用できません</td>
+                    </tr>
+                    <tr style="background-color: #f8f9fa;">
+                        <td style="padding: 12px; border: 1px solid #dee2e6;"><strong>Google Sign-In</strong> <span style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;">推奨</span></td>
+                        <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">iOS・Android</td>
+                        <td style="padding: 12px; border: 1px solid #dee2e6;">複数端末をお持ちの方に推奨</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p style="margin-top: 10px;">すべての認証処理は、Firebase Authentication（Google LLC提供）を使用して安全に行われます。</p>
+
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">3.3 保存される情報</h3>
+            <p>アカウント認証を利用した場合、以下の情報がFirebaseサーバー（米国リージョン）に保存されます：</p>
+            <ul>
+                <li>ユーザー識別子（UID）</li>
+                <li>メールアドレス</li>
+                <li>サブスクリプション購入状態</li>
+            </ul>
+
+            <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 15px 0;">
+                <p style="margin: 0; font-weight: 600; color: #856404;">🛡️ プライバシー保護</p>
+                <p style="margin: 10px 0 0 0; color: #856404;"><strong>定型文、カテゴリ、環境、カスタム変数等、ユーザーが作成したコンテンツは、アカウント認証の有無にかかわらず、端末内にのみ保存され、外部サーバーには一切送信されません。</strong></p>
+            </div>
+
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">3.4 解除方法</h3>
+            <p>ユーザーは、設定画面からいつでもアカウント認証を解除（ログアウト）することができます。解除後も、端末内のデータは保持されます。</p>
+        </div>
+
+        <div class="section">
+            <h2>第4条（利用資格）</h2>
             <p>ユーザーは、本規約に同意の上、本サービスを利用できます。未成年者が本サービスを利用する場合は、保護者の同意を得た上で利用するものとします。</p>
         </div>
 
         <div class="section">
-            <h2>第4条（Proプラン（有料サブスクリプション））</h2>
+            <h2>第6条（Proプラン（有料サブスクリプション））</h2>
             <p>本サービスは、以下のProプランを提供します：</p>
             <ul>
                 <li>月額プラン: ¥250/月</li>
                 <li>年間プラン: ¥3,000/年</li>
             </ul>
 
-            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">4.1 Proプランの特典</h3>
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">6.1 Proプランの特典</h3>
             <ul>
                 <li>広告の非表示</li>
                 <li>環境管理機能（無制限に作成可能）</li>
@@ -132,7 +187,7 @@
             </ul>
             <p style="margin-top: 10px; font-size: 0.95em; color: #666;">※ 無料プランでは、環境を3つまで、カスタム変数を5個まで作成・利用できます。また、広告が表示されます。Proプランでは広告が非表示になり、環境とカスタム変数を無制限に作成できます。</p>
 
-            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">4.2 支払いと自動更新</h3>
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">6.2 支払いと自動更新</h3>
 
             <h4 style="font-size: 1.1em; margin-top: 15px; margin-bottom: 10px; color: #667eea;">【iOS】</h4>
             <ul>
@@ -152,7 +207,7 @@
                 <li>購入後、ユーザーはGoogle Play ストアのアカウント設定からサブスクリプションを管理できます</li>
             </ul>
 
-            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">4.3 解約</h3>
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">6.3 解約</h3>
             <p>サブスクリプションの解約は、以下の手順でいつでも行えます：</p>
 
             <h4 style="font-size: 1.1em; margin-top: 15px; margin-bottom: 10px; color: #667eea;">【iOS】</h4>
@@ -176,7 +231,7 @@
 
             <p>解約後も、現在の契約期間が終了するまでProプランの機能をご利用いただけます。</p>
 
-            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">4.4 返金ポリシー</h3>
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">6.4 返金ポリシー</h3>
 
             <h4 style="font-size: 1.1em; margin-top: 15px; margin-bottom: 10px; color: #667eea;">【iOS】</h4>
             <p>サブスクリプションの返金は、Appleの返金ポリシーに準じます。返金のご希望については、Apple サポートにお問い合わせください。</p>
@@ -186,7 +241,7 @@
         </div>
 
         <div class="section">
-            <h2>第5条（禁止事項）</h2>
+            <h2>第6条（禁止事項）</h2>
             <p>ユーザーは、本サービスの利用にあたり、以下の行為を行ってはなりません：</p>
             <ul>
                 <li>法令または公序良俗に違反する行為</li>
@@ -202,21 +257,21 @@
         </div>
 
         <div class="section">
-            <h2>第6条（データの保存と管理）</h2>
+            <h2>第7条（データの保存と管理）</h2>
             <p>本サービスで登録されたデータ（定型文、カテゴリ、環境、カスタム変数等）は、ユーザーの端末内にローカルに保存されます。</p>
             <p>データのバックアップはユーザー自身の責任で行うものとし、当方はデータの損失について一切の責任を負いません。</p>
 
-            <h3 style="font-size: 1.1em; margin-top: 20px; margin-bottom: 10px;">6.1 環境管理の制限</h3>
+            <h3 style="font-size: 1.1em; margin-top: 20px; margin-bottom: 10px;">7.1 環境管理の制限</h3>
             <p>無料プランでは、環境を最大3つまで作成・利用できます。3つを超える環境を作成する場合は、Proプランへのアップグレードが必要です。</p>
             <p>Proプランの解約後は、無料プランの制限（3つまで）が適用されます。既に3つを超える環境が存在する場合、新しい順に3つのみが有効となり、それ以外の環境は無効化されます（データは保持されますが、編集・利用はできません）。</p>
             <p>無効化された環境のデータは端末内に保持されますが、再度Proプランに加入するまで利用できません。</p>
 
-            <h3 style="font-size: 1.1em; margin-top: 20px; margin-bottom: 10px;">6.2 カスタム変数の制限</h3>
+            <h3 style="font-size: 1.1em; margin-top: 20px; margin-bottom: 10px;">7.2 カスタム変数の制限</h3>
             <p>無料プランでは、カスタム変数を最大5個まで作成・利用できます。5個を超えるカスタム変数を作成する場合は、Proプランへのアップグレードが必要です。</p>
             <p>Proプランの解約後は、無料プランの制限（5個まで）が適用されます。既に5個を超えるカスタム変数が存在する場合、古い順に5個のみが有効となり、それ以外のカスタム変数は無効化されます（データは保持されますが、編集・利用はできません）。</p>
             <p>無効化されたカスタム変数のデータは端末内に保持されますが、再度Proプランに加入するまで利用できません。</p>
 
-            <h3 style="font-size: 1.1em; margin-top: 20px; margin-bottom: 10px;">6.3 インポート・エクスポート機能</h3>
+            <h3 style="font-size: 1.1em; margin-top: 20px; margin-bottom: 10px;">7.3 インポート・エクスポート機能</h3>
             <p>本サービスは、ユーザーが端末内のデータ（定型文、カテゴリ、環境設定その他本サービス内で保存された情報。以下「アプリデータ」といいます）をファイルとして書き出し、他の端末で読み込むためのインポート・エクスポート機能（以下「本機能」といいます）を提供します。</p>
             <p>ユーザーは、本機能を利用して作成されたファイルを自己の責任において管理するものとし、紛失、第三者への流出、誤消去等について当方は一切の責任を負わないものとします。</p>
             <p>ユーザーは、本機能を利用してアプリデータを第三者の端末または共有環境に移行・共有する場合、当該第三者のプライバシー保護および利用規約・法令を遵守する責任を負うものとします。ユーザーが本機能を利用して第三者の個人情報等を扱う場合、その取扱いについて当方は一切の責任を負いません。</p>
@@ -225,13 +280,13 @@
             <p>ユーザーが本機能を通じて作成または保存するファイルは、ユーザー自身が選択する保存先（端末内ストレージ、クラウドストレージサービス、メール送信等を含みますがこれらに限りません）の利用規約およびプライバシーポリシーに従って取り扱われます。当方は、かかる第三者サービスの利用に伴うトラブルについて、責任を負いません。</p>
             <p>ユーザーは、本機能を法令または本規約に違反する目的、または第三者の権利を侵害する目的で利用してはなりません。</p>
 
-            <h3 style="font-size: 1.1em; margin-top: 20px; margin-bottom: 10px;">6.4 Web版の利用について</h3>
+            <h3 style="font-size: 1.1em; margin-top: 20px; margin-bottom: 10px;">7.4 Web版の利用について</h3>
             <p>本サービスは、モバイルアプリ版に加え、PC等のブラウザで利用できるWeb版を提供しています。</p>
             <p>Web版の利用についても、本規約およびプライバシーポリシーが適用されます。Web版におけるデータは、ユーザーのブラウザ内（IndexedDB等）に保存され、モバイル版と同様に当方のサーバーへは送信されません。</p>
         </div>
 
         <div class="section">
-            <h2>第7条（広告の表示）</h2>
+            <h2>第8条（広告の表示）</h2>
             <p>無料版の本サービスは、Google AdMob（Google LLC提供）を通じて広告を表示します。Proプランにアップグレードすることで、広告を非表示にできます。</p>
             <p>広告の表示に関して、以下の点にご同意いただきます：</p>
             <ul>
@@ -244,7 +299,7 @@
         </div>
 
         <div class="section">
-            <h2>第8条（免責事項）</h2>
+            <h2>第9条（免責事項）</h2>
             <p>当方は、本サービスの利用により発生したいかなる損害についても、当方に故意または重過失がある場合を除き、一切の責任を負いません。</p>
             <p>当方が責任を負う場合であっても、当方の責任は、ユーザーに現実に生じた通常かつ直接の損害の範囲に限られるものとし、特別な事情から生じた損害（損害発生の予見可能性の有無を問いません）については責任を負わないものとします。</p>
             <p>本サービスは「現状有姿」で提供され、当方は本サービスの正確性、完全性、有用性等について、いかなる保証もいたしません。</p>
@@ -254,44 +309,44 @@
         </div>
 
         <div class="section">
-            <h2>第9条（サービスの変更・中止）</h2>
+            <h2>第10条（サービスの変更・中止）</h2>
             <p>当方は、ユーザーへの事前の通知なく、本サービスの内容を変更、または提供を中止することができるものとします。</p>
             <p>ただし、Proプランの契約期間中は、当該契約に基づく機能の提供を継続します。</p>
             <p>当方は、本サービスの変更または中止により発生したいかなる損害についても、一切の責任を負いません。</p>
         </div>
 
         <div class="section">
-            <h2>第10条（知的財産権）</h2>
+            <h2>第11条（知的財産権）</h2>
             <p>本サービスおよびそれに含まれるすべてのコンテンツ（テキスト、画像、デザイン、ソフトウェア等）に関する知的財産権は、当方または正当な権利者に帰属します。</p>
             <p>ユーザーは、本規約で明示的に許諾された範囲を超えて、本サービスを複製、改変、配布、公衆送信等することはできません。</p>
             <p>ユーザーが本サービス内で作成したデータ（定型文、カテゴリ、カスタム変数等）の著作権は、ユーザーに帰属します。当方は、これらのデータにアクセス、収集、利用することはありません。</p>
         </div>
 
         <div class="section">
-            <h2>第11条（契約の解除）</h2>
+            <h2>第12条（契約の解除）</h2>
             <p>当方は、ユーザーが本規約に違反した場合、事前の通知なく本規約に基づくライセンスを解除し、ユーザーによる本サービスの使用を停止させることができます。</p>
             <p>ユーザーは、本サービスをアンインストールすることにより、いつでも本サービスの利用を終了できます。</p>
         </div>
 
         <div class="section">
-            <h2>第12条（規約の変更）</h2>
+            <h2>第13条（規約の変更）</h2>
             <p>当方は、ユーザーへの事前の通知なく、本規約を変更することができるものとします。</p>
             <p>変更後の規約は、本サービス内または当方が運営するウェブサイト上に掲載された時点で効力を生じるものとします。</p>
             <p>重要な変更がある場合は、アプリ内で通知を行います。</p>
         </div>
 
         <div class="section">
-            <h2>第13条（分離可能性）</h2>
+            <h2>第14条（分離可能性）</h2>
             <p>本規約のいずれかの条項が無効または執行不能と判断された場合でも、その他の条項は引き続き有効に存続します。</p>
         </div>
 
         <div class="section">
-            <h2>第14条（完全合意）</h2>
+            <h2>第15条（完全合意）</h2>
             <p>本規約は、本サービスの使用に関するユーザーと当方との完全な合意を構成し、本サービスに関する従前の合意、表明、保証に優先します。</p>
         </div>
 
         <div class="section">
-            <h2>第15条（プラットフォーム別の規約）</h2>
+            <h2>第16条（プラットフォーム別の規約）</h2>
 
             <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 15px; color: #667eea;">【iOS】Appleの標準使用許諾契約</h3>
             <p>本サービスのiOS版はApple App Storeを通じて配布されます。本規約は、Appleの標準使用許諾契約（EULA）に追加されるものであり、矛盾する場合は本規約が優先します。</p>
@@ -336,12 +391,12 @@
         </div>
 
         <div class="section">
-            <h2>第16条（準拠法および管轄裁判所）</h2>
+            <h2>第17条（準拠法および管轄裁判所）</h2>
             <p>本規約の準拠法は日本法とし、本規約に関する紛争については、東京地方裁判所を第一審の専属的合意管轄裁判所とします。</p>
         </div>
 
         <div class="section">
-            <h2>第17条（お問い合わせ）</h2>
+            <h2>第18条（お問い合わせ）</h2>
             <p>本規約に関するお問い合わせは、以下のメールアドレスまでご連絡ください。</p>
             <p style="margin-top: 10px;"><strong>お問い合わせ先:</strong> <a href="mailto:cliptap.developer@gmail.com" style="color: #667eea; text-decoration: none;">cliptap.developer@gmail.com</a></p>
         </div>

@@ -90,7 +90,7 @@
 <body>
     <div class="container">
         <h1>プライバシーポリシー</h1>
-        <p class="last-updated">最終更新日: 2025年11月23日</p>
+        <p class="last-updated">最終更新日: 2025年11月25日</p>
 
         <div class="section">
             <h2>1. はじめに</h2>
@@ -118,7 +118,68 @@
                 <li>アプリの使用状況（クラッシュレポート等）</li>
             </ul>
 
-            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">2.3 サブスクリプション関連情報</h3>
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">2.3 アカウント認証関連情報（任意機能）</h3>
+
+            <h4 style="font-size: 1.1em; margin-top: 15px; margin-bottom: 10px; color: #667eea;">📱 概要</h4>
+            <p>本サービスでは、<strong>複数の端末でサブスクリプション情報を共有する</strong>ための任意のアカウント認証機能を提供しています。</p>
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <p style="margin: 0; font-weight: 600; color: #495057;">✅ この機能の利用は完全に任意です</p>
+                <p style="margin: 5px 0 0 0; color: #6c757d; font-size: 0.95em;">利用しない場合でも、本サービスのすべての機能（定型文管理、サブスクリプション購入等）を制限なくご利用いただけます。</p>
+            </div>
+
+            <h4 style="font-size: 1.1em; margin-top: 20px; margin-bottom: 10px; color: #667eea;">🔐 認証方法</h4>
+
+            <div style="margin-bottom: 20px;">
+                <p style="font-weight: 600; margin-bottom: 8px;">① Apple Sign-In（iOS専用）</p>
+                <ul style="margin-top: 8px;">
+                    <li><strong>対応端末：</strong>iOS端末のみ</li>
+                    <li><strong>認証基盤：</strong>Firebase Authentication（Google LLC提供）</li>
+                    <li><strong>収集情報：</strong>
+                        <ul style="margin-top: 5px;">
+                            <li>Apple IDに紐付けられたユーザー識別子（UID）</li>
+                            <li>メールアドレス（ユーザーが共有を許可した場合のみ）</li>
+                        </ul>
+                    </li>
+                    <li><strong>外部ポリシー：</strong><a href="https://www.apple.com/legal/privacy/" style="color: #667eea; text-decoration: none;" target="_blank">Apple Privacy Policy</a></li>
+                </ul>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <p style="font-weight: 600; margin-bottom: 8px;">② Google Sign-In（iOS・Android対応）<span style="background-color: #28a745; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; margin-left: 8px;">推奨</span></p>
+                <ul style="margin-top: 8px;">
+                    <li><strong>対応端末：</strong>iOS・Android両対応</li>
+                    <li><strong>認証基盤：</strong>Firebase Authentication（Google LLC提供）</li>
+                    <li><strong>収集情報：</strong>
+                        <ul style="margin-top: 5px;">
+                            <li>Googleアカウントに紐付けられたユーザー識別子（UID）</li>
+                            <li>メールアドレス</li>
+                        </ul>
+                    </li>
+                    <li><strong>外部ポリシー：</strong><a href="https://policies.google.com/privacy" style="color: #667eea; text-decoration: none;" target="_blank">Google Privacy Policy</a></li>
+                    <li style="margin-top: 8px; color: #28a745; font-weight: 500;">💡 iPhoneとAndroid端末の両方をお持ちの方には、クロスプラットフォーム対応のため<strong>Google Sign-In</strong>を強く推奨します</li>
+                </ul>
+            </div>
+
+            <h4 style="font-size: 1.1em; margin-top: 20px; margin-bottom: 10px; color: #667eea;">📋 利用目的</h4>
+            <ul>
+                <li>サブスクリプション状態の複数端末間での同期</li>
+                <li>アカウントとサブスクリプションの紐付け</li>
+            </ul>
+
+            <h4 style="font-size: 1.1em; margin-top: 20px; margin-bottom: 10px; color: #667eea;">🔒 プライバシー保護に関する重要事項</h4>
+            <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 15px 0;">
+                <p style="margin: 0 0 10px 0; font-weight: 600; color: #856404;">🛡️ あなたのデータは端末内に安全に保管されます</p>
+                <ul style="margin: 0; color: #856404;">
+                    <li><strong>定型文、カテゴリ、環境、カスタム変数等のユーザーが作成したコンテンツは、Firebaseサーバーに一切送信されません</strong></li>
+                    <li>これらのデータは、アカウント認証の有無にかかわらず、常に端末内にのみ保存されます</li>
+                    <li>Firebaseに保存されるのは、<strong>ユーザー識別子（UID）</strong>と<strong>サブスクリプション購入状態</strong>の情報のみです</li>
+                </ul>
+            </div>
+
+            <h4 style="font-size: 1.1em; margin-top: 20px; margin-bottom: 10px; color: #667eea;">↩️ 解除方法</h4>
+            <p>アカウント認証はいつでも解除（ログアウト）できます。設定画面から簡単に解除可能です。なお、解除後も端末内のデータは保持されます。</p>
+
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">2.4 サブスクリプション関連情報</h3>
             <p>Proプラン（有料サブスクリプション）の購入および管理は、各プラットフォームのストアを通じて行われます：</p>
 
             <h4 style="font-size: 1.1em; margin-top: 15px; margin-bottom: 10px; color: #667eea;">【iOS】</h4>
@@ -133,7 +194,7 @@
                 <li>決済情報（クレジットカード番号等）は、当方には一切渡されず、Googleが管理します</li>
             </ul>
 
-            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">2.4 広告関連情報（無料プランのみ）</h3>
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">2.5 広告関連情報（無料プランのみ）</h3>
             <p>無料プランでは、Google AdMob（Google LLC提供）を使用して広告を配信しています。AdMobは、広告配信の最適化のために以下の情報を収集する場合があります：</p>
             <ul>
                 <li>広告識別子（IDFA / AAID）</li>
@@ -192,7 +253,18 @@
             <h2>5. 第三者サービスの利用</h2>
             <p>本サービスは、以下の第三者サービスを利用しています：</p>
 
-            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">5.1 Google AdMob（広告配信・無料プランのみ）</h3>
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">5.1 Firebase Authentication（アカウント認証・任意機能）</h3>
+            <p>ユーザーが任意でアカウント認証機能を利用する場合、Firebase Authentication（Google LLC提供）を使用します。</p>
+            <ul>
+                <li><strong>提供元：</strong>Google LLC</li>
+                <li><strong>収集される情報：</strong>ユーザー識別子（UID）、メールアドレス、認証プロバイダー情報（Apple / Google）</li>
+                <li><strong>目的：</strong>サブスクリプション状態の複数端末間での同期</li>
+                <li><strong>データの保存場所：</strong>Google Cloudの米国リージョン（Firebaseプロジェクト: cliptap-194b5）</li>
+                <li><strong>詳細：</strong><a href="https://firebase.google.com/support/privacy" style="color: #667eea; text-decoration: none;" target="_blank">Firebase Privacy and Security</a></li>
+            </ul>
+            <p><strong>注：</strong>この機能は完全に任意であり、利用しない場合でもすべての機能をご利用いただけます。</p>
+
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">5.2 Google AdMob（広告配信・無料プランのみ）</h3>
             <p>無料プランの広告配信のため、Google AdMobを使用しています。AdMobは独自のプライバシーポリシーに基づいてデータを収集・利用します。</p>
             <ul>
                 <li><strong>提供元：</strong>Google LLC</li>
@@ -202,7 +274,7 @@
             </ul>
             <p><strong>重要：</strong>本サービスでは、デフォルトで非パーソナライズ広告を配信しています。ユーザーの行動追跡を最小限に抑えるための設定を行っています。</p>
 
-            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">5.2 決済処理</h3>
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">5.3 決済処理</h3>
 
             <h4 style="font-size: 1.1em; margin-top: 15px; margin-bottom: 10px; color: #667eea;">【iOS】Apple App Store</h4>
             <p>Proプランの購入および決済は、Apple App Storeを通じて行われます。決済情報は、Appleのプライバシーポリシーに従って処理されます。</p>
@@ -210,7 +282,7 @@
             <h4 style="font-size: 1.1em; margin-top: 15px; margin-bottom: 10px; color: #667eea;">【Android】Google Play ストア</h4>
             <p>Proプランの購入および決済は、Google Play ストアを通じて行われます。決済情報は、Googleのプライバシーポリシーに従って処理されます。</p>
 
-            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">5.3 その他の第三者への情報提供</h3>
+            <h3 style="font-size: 1.2em; margin-top: 20px; margin-bottom: 10px;">5.4 その他の第三者への情報提供</h3>
             <p>当方は、上記のサービス以外では、以下の場合を除き、ユーザーの個人情報を第三者に提供することはありません：</p>
             <ul>
                 <li>ユーザーの同意がある場合</li>
