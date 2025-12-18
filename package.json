@@ -33,6 +33,7 @@
     "expo-splash-screen": "~0.30.10",
     "expo-sqlite": "~15.2.14",
     "expo-status-bar": "~2.2.3",
+    "expo-tracking-transparency": "~5.2.4",
     "expo-updates": "~0.28.17",
     "i18next": "^25.5.2",
     "react": "19.0.0",

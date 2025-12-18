@@ -5,29 +5,35 @@
 
 import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
-import { View, ActivityIndicator } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { ThemeProvider } from '../lib/themeSystem';
 import { AlertProvider } from '../lib/providers/AlertProvider';
 import { ToastProvider } from '../lib/providers/ToastProvider';
-import { database as oldDatabase } from '../lib/database';
 import { database } from '../lib/database/database';
 import { initI18n } from '../lib/i18n/config';
 import { Logger } from '../lib/logger';
+import { SplashScreen } from '../components/common/SplashScreen';
+import { TrackingService } from '../lib/services/TrackingService';
+
+// ルート要素のスタイル
+const styles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+    backgroundColor: '#1F2937', // 常に背景色を設定
+  },
+});
 
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     async function initialize() {
       try {
-        // 既存のデータベース初期化（互換性のため）
-        try {
-          await oldDatabase.initialize();
-        } catch (err) {
-          console.log('Old database initialization skipped:', err);
-        }
+        // ATT権限をリクエスト (iOS専用、広告表示前に必須)
+        await TrackingService.requestTrackingPermission();
 
-        // 新しいデータベース初期化
+        // データベース初期化
         await database.init();
 
         // 多言語システム初期化
@@ -44,38 +50,45 @@ export default function RootLayout() {
     initialize();
   }, []);
 
-  if (!isReady) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
   return (
-    <ThemeProvider>
-      <AlertProvider>
-        <ToastProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen
-              name="snippet/create"
-              options={{
-                presentation: 'modal',
-                headerShown: false
-              }}
-            />
-            <Stack.Screen
-              name="snippet/edit"
-              options={{
-                presentation: 'modal',
-                headerShown: false
-              }}
-            />
-            <Stack.Screen name="settings" />
-          </Stack>
-        </ToastProvider>
-      </AlertProvider>
-    </ThemeProvider>
+    <>
+      {/* メイン画面を常にレンダリング（スプラッシュの下） */}
+      {isReady && (
+        <View style={styles.rootContainer}>
+          <ThemeProvider>
+            <AlertProvider>
+              <ToastProvider>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="index" />
+                  <Stack.Screen
+                    name="snippet/create"
+                    options={{
+                      presentation: 'modal',
+                      headerShown: false
+                    }}
+                  />
+                  <Stack.Screen
+                    name="snippet/edit"
+                    options={{
+                      presentation: 'modal',
+                      headerShown: false
+                    }}
+                  />
+                  <Stack.Screen name="settings" />
+                </Stack>
+              </ToastProvider>
+            </AlertProvider>
+          </ThemeProvider>
+        </View>
+      )}
+
+      {/* スプラッシュスクリーンをオーバーレイ表示 */}
+      {showSplash && (
+        <SplashScreen
+          onFinish={() => setShowSplash(false)}
+          isLoading={!isReady}
+        />
+      )}
+    </>
   );
 }

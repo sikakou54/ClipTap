@@ -2,20 +2,16 @@
   "expo": {
     "name": "ClipTap",
     "slug": "cliptap",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1F2937"
-    },
+    "jsEngine": "hermes",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.sikakou.cliptap",
-      "buildNumber": "4",
+      "buildNumber": "9",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": []
@@ -59,7 +55,8 @@
             "minSdkVersion": 23
           }
         }
-      ]
+      ],
+      "expo-tracking-transparency"
     ],
     "updates": {
       "enabled": true,
@@ -70,6 +67,10 @@
         "projectId": "167bab11-42f6-4180-8d97-7cec4b38dc7f"
       },
       "router": {}
+    },
+    "locales": {
+      "en": "./english.json",
+      "ja": "./japanese.json"
     }
   },
   "react-native-google-mobile-ads": {
