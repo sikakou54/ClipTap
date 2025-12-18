@@ -17,6 +17,7 @@ import { SearchBar } from '../components/snippet/SearchBar';
 import { CategoryFilter } from '../components/category/CategoryFilter';
 import { Snippet } from '../lib/types/snippet';
 import { database } from '../lib/database/database';
+import { AdBanner } from '../components/ads/AdBanner';
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -129,6 +130,9 @@ export default function HomeScreen() {
         />
       </View>
 
+      {/* 画面下部のバナー広告 */}
+      <AdBanner />
+
       {/* 右下の追加ボタン */}
       <TouchableOpacity
         onPress={() => router.push('/snippet/create')}
@@ -164,7 +168,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 120, // 広告の高さ + Safe Area + マージン分上に配置
     right: 24,
     width: 56,
     height: 56,

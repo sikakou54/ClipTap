@@ -39,6 +39,7 @@
     "react-i18next": "^15.7.3",
     "react-native": "0.79.5",
     "react-native-background-fetch": "^4.2.8",
+    "react-native-google-mobile-ads": "^15.8.3",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-svg": "15.11.2",
