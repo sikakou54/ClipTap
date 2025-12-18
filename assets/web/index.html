@@ -41,6 +41,118 @@
             opacity: 0.95;
         }
 
+        .pro-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 60px 40px;
+            margin: 40px 0;
+            color: white;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .pro-section h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .pro-icon {
+            font-size: 1.2em;
+        }
+
+        .pro-section .subtitle {
+            font-size: 1.2em;
+            opacity: 0.95;
+            margin-bottom: 40px;
+        }
+
+        .pricing-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 40px 0;
+        }
+
+        .pricing-card {
+            background: white;
+            color: #333;
+            border-radius: 15px;
+            padding: 40px 30px;
+            min-width: 280px;
+            flex: 1;
+            max-width: 350px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .pricing-card.recommended {
+            border: 3px solid #FFD700;
+            position: relative;
+        }
+
+        .recommended-badge {
+            position: absolute;
+            top: -15px;
+            right: 20px;
+            background: #FFD700;
+            color: #333;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .plan-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .plan-price {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .plan-period {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .plan-features {
+            text-align: left;
+            margin: 30px 0;
+        }
+
+        .plan-features li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+
+        .check-icon {
+            color: #667eea;
+            font-weight: bold;
+        }
+
         .features {
             background: white;
             border-radius: 20px;
@@ -88,6 +200,17 @@
         .feature-card p {
             color: #666;
             line-height: 1.8;
+        }
+
+        .pro-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 8px;
         }
 
         .how-to-use {
@@ -156,6 +279,16 @@
                 font-size: 1.2em;
             }
 
+            .pro-section h2 {
+                font-size: 2em;
+                flex-direction: column;
+            }
+
+            .pricing-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
             .features h2,
             .how-to-use h2 {
                 font-size: 2em;
@@ -185,6 +318,30 @@
                 </div>
 
                 <div class="feature-card">
+                    <div class="feature-icon">📅</div>
+                    <h3>システム変数</h3>
+                    <p>{{今日}}、{{現在時刻}}、{{年}}、{{月}}など、日付・時刻の変数が標準で使えます。定型文に自動で最新の日時を挿入できます。</p>
+                </div>
+
+                <div class="feature-card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border: 2px solid #667eea;">
+                    <div class="feature-icon">⚙️</div>
+                    <h3>環境管理<span class="pro-badge">PRO</span></h3>
+                    <p>複数の環境を作成して、シーンに応じた変数値を切り替え。無料プランでは3つまで、Proプランでは無制限。例えば「会社A」「会社B」の環境を作れば、{{会社名}}の値を自動で切り替えられます。</p>
+                </div>
+
+                <div class="feature-card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border: 2px solid #667eea;">
+                    <div class="feature-icon">🔤</div>
+                    <h3>カスタム変数<span class="pro-badge">PRO</span></h3>
+                    <p>{{名前}}、{{メールアドレス}}など、独自の変数を作成できます。無料プランでは5個まで、Proプランでは無制限に作成可能。よく使う情報を変数として登録すれば、入力の手間を大幅に削減できます。</p>
+                </div>
+
+                <div class="feature-card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border: 2px solid #667eea;">
+                    <div class="feature-icon">💎</div>
+                    <h3>広告なし<span class="pro-badge">PRO</span></h3>
+                    <p>Proプランなら広告が一切表示されません。集中して作業したい方、広告が気になる方に最適です。</p>
+                </div>
+
+                <div class="feature-card">
                     <div class="feature-icon">📁</div>
                     <h3>カテゴリ管理</h3>
                     <p>仕事、プライベート、コードなど、用途に応じてカテゴリを作成。アイコンと色でわかりやすく整理できます。</p>
@@ -207,12 +364,6 @@
                     <h3>ダークモード</h3>
                     <p>システム設定に自動追従。目に優しいダークモードで、夜間の作業も快適です。</p>
                 </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">💰</div>
-                    <h3>完全無料</h3>
-                    <p>すべての機能を無料で制限なく利用可能。アプリ内購入や課金は一切ありません。</p>
-                </div>
             </div>
         </section>
 
@@ -223,7 +374,7 @@
                     <div class="step-number">01</div>
                     <div class="step-content">
                         <h3>定型文を登録</h3>
-                        <p>よく使うメール定型文、住所、コードテンプレートなど、何でも登録できます。タイトルと本文を入力するだけの簡単操作です。</p>
+                        <p>よく使うメール定型文、住所、コードテンプレートなど、何でも登録できます。変数を使えば、日付や時刻、独自の情報を自動挿入できます。</p>
                     </div>
                 </div>
 
@@ -239,10 +390,50 @@
                     <div class="step-number">03</div>
                     <div class="step-content">
                         <h3>タップしてコピー</h3>
-                        <p>使いたい定型文をタップするだけで、自動的にクリップボードへコピー。あとは好きなアプリでペーストするだけです。</p>
+                        <p>使いたい定型文をタップするだけで、自動的にクリップボードへコピー。変数は実際の値に変換されます。</p>
                     </div>
                 </div>
             </div>
+        </section>
+
+        <!-- Pro料金プラン セクション -->
+        <section class="pro-section">
+            <h2><span class="pro-icon">💎</span>ClipTap Pro</h2>
+            <p class="subtitle">広告なし＋環境管理＋カスタム変数で、さらに快適に</p>
+
+            <div class="pricing-container">
+                <div class="pricing-card">
+                    <div class="plan-name">月額プラン</div>
+                    <div class="plan-price">¥250</div>
+                    <div class="plan-period">/ 月</div>
+                    <ul class="plan-features">
+                        <li><span class="check-icon">✓</span> 広告なしで快適に利用</li>
+                        <li><span class="check-icon">✓</span> 環境管理（無制限）</li>
+                        <li style="color: #999; font-size: 0.9em;">※ 無料プランは3つまで</li>
+                        <li><span class="check-icon">✓</span> カスタム変数（無制限）</li>
+                        <li style="color: #999; font-size: 0.9em;">※ 無料プランは5個まで</li>
+                        <li><span class="check-icon">✓</span> すべての基本機能</li>
+                    </ul>
+                </div>
+
+                <div class="pricing-card recommended">
+                    <div class="recommended-badge">🏆 おすすめ</div>
+                    <div class="plan-name">年間プラン</div>
+                    <div class="plan-price">¥3,000</div>
+                    <div class="plan-period">/ 年（月額換算 ¥250）</div>
+                    <ul class="plan-features">
+                        <li><span class="check-icon">✓</span> 広告なしで快適に利用</li>
+                        <li><span class="check-icon">✓</span> 環境管理（無制限）</li>
+                        <li style="color: #999; font-size: 0.9em;">※ 無料プランは3つまで</li>
+                        <li><span class="check-icon">✓</span> カスタム変数（無制限）</li>
+                        <li style="color: #999; font-size: 0.9em;">※ 無料プランは5個まで</li>
+                        <li><span class="check-icon">✓</span> すべての基本機能</li>
+                        <li><span class="check-icon">✓</span> 月額プランと同じ価格でお得</li>
+                    </ul>
+                </div>
+            </div>
+
+            <p style="opacity: 0.9; margin-top: 30px; font-size: 0.95em;">※ 価格はApp Storeでの購入時に確定します<br>※ いつでも解約可能（契約期間終了まで利用可能）</p>
         </section>
 
         <footer>

@@ -96,7 +96,7 @@ const NumberPicker: React.FC<NumberPickerProps> = ({
           }}
           itemStyle={{
             color: colors.textPrimary,
-            fontSize: 18,
+            
             height: 120
           }}
         >

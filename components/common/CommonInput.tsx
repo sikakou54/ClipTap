@@ -62,7 +62,7 @@ const CommonInput: React.FC<CommonInputProps> = ({
 }) => {
   const [validationError, setValidationError] = useState<string | undefined>();
   const [focused, setFocused] = useState(false);
-  const { colors, spacing, typography } = useTheme();
+  const { colors, spacing, typography, responsiveFontSizes } = useTheme();
 
   const displayError = error || validationError;
 

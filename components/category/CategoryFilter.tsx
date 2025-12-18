@@ -17,12 +17,11 @@ export function CategoryFilter({
   onSelectCategory,
 }: CategoryFilterProps) {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, responsiveFontSizes } = useTheme();
 
   const allOption = {
     id: null,
     name: t('category.all'),
-    icon: 'grid-outline',
   };
 
   const options = [allOption, ...categories];
@@ -35,40 +34,35 @@ export function CategoryFilter({
         contentContainerStyle={styles.container}
       >
         {options.map((option) => {
-        const isSelected = option.id === selectedCategoryId;
-        const categoryColor = option.id ? (categories.find(c => c.id === option.id)?.color || colors.primary) : colors.primary;
+          const isSelected = option.id === selectedCategoryId;
+          const categoryColor = option.id ? (categories.find(c => c.id === option.id)?.color || colors.primary) : colors.primary;
 
-        return (
-          <TouchableOpacity
-            key={option.id || 'all'}
-            style={[
-              styles.chip,
-              {
-                backgroundColor: isSelected ? categoryColor : colors.surface,
-                borderColor: isSelected ? categoryColor : colors.border,
-              },
-            ]}
-            onPress={() => onSelectCategory(option.id)}
-          >
-            {option.icon && (
-              <Ionicons
-                name={option.icon as any}
-                size={16}
-                color={isSelected ? '#FFFFFF' : colors.text}
-                style={styles.icon}
-              />
-            )}
-            <Text
+          return (
+            <TouchableOpacity
+              key={option.id || 'all'}
               style={[
-                styles.text,
-                { color: isSelected ? '#FFFFFF' : colors.text },
+                styles.chip,
+                {
+                  backgroundColor: isSelected ? categoryColor : colors.surface,
+                  borderColor: isSelected ? categoryColor : colors.border,
+                },
               ]}
+              onPress={() => onSelectCategory(option.id)}
             >
-              {option.name}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+              <Text
+                style={[
+                  styles.text,
+                  {
+                    color: isSelected ? '#FFFFFF' : colors.text,
+                    fontSize: responsiveFontSizes.xs,
+                  },
+                ]}
+              >
+                {option.name}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -76,8 +70,8 @@ export function CategoryFilter({
 
 const styles = StyleSheet.create({
   wrapper: {
-    paddingTop: 16,
-    paddingBottom: 4,
+    paddingTop: 6,
+    paddingBottom: 12,
   },
   container: {
     paddingHorizontal: 16,
@@ -96,7 +90,6 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   text: {
-    fontSize: 13,
     fontWeight: '500',
   },
 });

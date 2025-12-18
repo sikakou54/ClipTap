@@ -6,6 +6,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import { useColorScheme, Platform } from 'react-native';
 import { Logger } from './logger';
+import { responsive, isTablet, isIPad } from './utils/responsive';
 
 // カラーパレット定義
 const LIGHT_COLORS = {
@@ -61,28 +62,28 @@ const DARK_COLORS = {
   info: '#60A5FA',
 
   // Backgrounds
-  background: '#111827',
-  surface: '#1F2937',
-  surfaceElevated: '#374151',
-  card: '#1F2937',
+  background: '#000000',
+  surface: '#1A1A1A',
+  surfaceElevated: '#2A2A2A',
+  card: '#1A1A1A',
 
   // Text Colors
-  text: '#F9FAFB',
-  textPrimary: '#F9FAFB',
-  textSecondary: '#D1D5DB',
-  textTertiary: '#9CA3AF',
-  textInverse: '#111827',
+  text: '#FFFFFF',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#A0A0A0',
+  textTertiary: '#707070',
+  textInverse: '#000000',
 
   // Border & Divider
-  border: '#374151',
-  divider: '#4B5563',
+  border: '#2A2A2A',
+  divider: '#333333',
 
   // Overlays
-  overlay: 'rgba(0, 0, 0, 0.7)',
-  backdropLight: 'rgba(0, 0, 0, 0.8)',
+  overlay: 'rgba(0, 0, 0, 0.8)',
+  backdropLight: 'rgba(0, 0, 0, 0.9)',
 };
 
-// スペーシングシステム
+// スペーシングシステム（レスポンシブ対応）
 export const SPACING = {
   xxs: 4,
   xs: 8,
@@ -96,6 +97,14 @@ export const SPACING = {
   sectionGap: 48,
 } as const;
 
+// レスポンシブスペーシング関数
+export const getResponsiveSpacing = () => ({
+  screenPadding: responsive.spacing(16, 32, 48),
+  cardGap: responsive.spacing(12, 16, 20),
+  sectionGap: responsive.spacing(24, 32, 40),
+  containerPadding: responsive.spacing(16, 24, 32),
+});
+
 // フォントサイズシステム
 export const FONT_SIZES = {
   xs: 12,
@@ -107,6 +116,42 @@ export const FONT_SIZES = {
   xxl: 32,
   hero: 48,
 } as const;
+
+// レスポンシブフォントサイズ関数
+export const getResponsiveFontSizes = () => {
+  const deviceType = isTablet() ? 'tablet' : 'phone';
+
+  if (deviceType === 'tablet') {
+    return {
+      xs: 15,
+      sm: 18,
+      base: 20,
+      md: 22,
+      lg: 26,
+      xl: 30,
+      xxl: 40,
+      hero: 60,
+    };
+  }
+
+  return FONT_SIZES;
+};
+
+// レスポンシブラインハイト関数（fontSize * 1.5）
+export const getResponsiveLineHeights = () => {
+  const fontSizes = getResponsiveFontSizes();
+
+  return {
+    xs: Math.round(fontSizes.xs * 1.5),      // 18 (phone: 12 * 1.5) or 23 (tablet: 15 * 1.5)
+    sm: Math.round(fontSizes.sm * 1.5),      // 21 (phone: 14 * 1.5) or 27 (tablet: 18 * 1.5)
+    base: Math.round(fontSizes.base * 1.5),  // 24 (phone: 16 * 1.5) or 30 (tablet: 20 * 1.5)
+    md: Math.round(fontSizes.md * 1.5),      // 27 (phone: 18 * 1.5) or 33 (tablet: 22 * 1.5)
+    lg: Math.round(fontSizes.lg * 1.5),      // 30 (phone: 20 * 1.5) or 39 (tablet: 26 * 1.5)
+    xl: Math.round(fontSizes.xl * 1.5),      // 36 (phone: 24 * 1.5) or 45 (tablet: 30 * 1.5)
+    xxl: Math.round(fontSizes.xxl * 1.5),    // 48 (phone: 32 * 1.5) or 60 (tablet: 40 * 1.5)
+    hero: Math.round(fontSizes.hero * 1.5),  // 72 (phone: 48 * 1.5) or 90 (tablet: 60 * 1.5)
+  };
+};
 
 // タイポグラフィシステム
 export const TYPOGRAPHY = {
@@ -172,7 +217,7 @@ export const TYPOGRAPHY = {
   },
 } as const;
 
-// 寸法システム
+// 寸法システム（レスポンシブ対応）
 export const DIMENSIONS = {
   header: {
     height: 60,
@@ -202,6 +247,33 @@ export const DIMENSIONS = {
   },
 } as const;
 
+// レスポンシブ寸法関数
+export const getResponsiveDimensions = () => {
+  const deviceType = isTablet() ? 'tablet' : 'phone';
+  const isPadDevice = isIPad();
+
+  return {
+    header: {
+      height: isPadDevice ? 90 : responsive.width(60, 80, 90),
+      paddingHorizontal: responsive.spacing(16, 24, 32),
+      paddingVertical: deviceType === 'tablet' ? 24 : 12,
+      iconSize: isPadDevice ? 32 : responsive.width(24, 28, 32),
+    },
+    card: {
+      minHeight: responsive.width(80, 100, 120),
+      padding: responsive.spacing(16, 20, 24),
+    },
+    button: {
+      height: responsive.width(44, 52, 60),
+      paddingHorizontal: responsive.spacing(16, 24, 32),
+    },
+    fab: {
+      size: responsive.width(56, 64, 72),
+      right: responsive.spacing(24, 48, 64),
+    },
+  };
+};
+
 // シャドウシステム（フラットデザイン）
 export const SHADOWS = {
   small: {},
@@ -228,12 +300,18 @@ interface ThemeContextType {
   colors: typeof LIGHT_COLORS;
   spacing: typeof SPACING;
   fontSizes: typeof FONT_SIZES;
+  responsiveFontSizes: ReturnType<typeof getResponsiveFontSizes>;
+  responsiveLineHeights: ReturnType<typeof getResponsiveLineHeights>;
   typography: typeof TYPOGRAPHY;
   dimensions: typeof DIMENSIONS;
   shadows: typeof SHADOWS;
   radius: typeof RADIUS;
   isDark: boolean;
   colorScheme: 'light' | 'dark' | null | undefined;
+  isTablet: boolean;
+  isIPad: boolean;
+  responsive: ReturnType<typeof getResponsiveDimensions>;
+  responsiveSpacing: ReturnType<typeof getResponsiveSpacing>;
 }
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
@@ -262,12 +340,18 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     colors,
     spacing: SPACING,
     fontSizes: FONT_SIZES,
+    responsiveFontSizes: getResponsiveFontSizes(),
+    responsiveLineHeights: getResponsiveLineHeights(),
     typography: TYPOGRAPHY,
     dimensions: DIMENSIONS,
     shadows: SHADOWS,
     radius: RADIUS,
     isDark,
     colorScheme,
+    isTablet: isTablet(),
+    isIPad: isIPad(),
+    responsive: getResponsiveDimensions(),
+    responsiveSpacing: getResponsiveSpacing(),
   };
 
   return (
@@ -301,6 +385,8 @@ export const useTheme = () => {
       colors: isDark ? DARK_COLORS : LIGHT_COLORS,
       spacing: SPACING,
       fontSizes: FONT_SIZES,
+      responsiveFontSizes: getResponsiveFontSizes(),
+      responsiveLineHeights: getResponsiveLineHeights(),
       typography: TYPOGRAPHY,
       dimensions: DIMENSIONS,
       shadows: SHADOWS,
@@ -308,21 +394,13 @@ export const useTheme = () => {
       isDark,
       colorScheme,
       themeMode: 'auto' as ThemeMode,
-      setThemeMode: () => {},
+      setThemeMode: () => { },
+      isTablet: isTablet(),
+      isIPad: isIPad(),
+      responsive: getResponsiveDimensions(),
+      responsiveSpacing: getResponsiveSpacing(),
     };
   }
 
   return context;
-};
-
-export const COLORS = LIGHT_COLORS;
-export const MODERN_COLORS = { light: LIGHT_COLORS, dark: DARK_COLORS };
-
-export default {
-  useTheme,
-  SPACING,
-  TYPOGRAPHY,
-  DIMENSIONS,
-  SHADOWS,
-  RADIUS,
 };

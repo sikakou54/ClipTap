@@ -19,7 +19,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'medium',
   fullScreen = false,
 }) => {
-  const { colors, spacing, typography } = useTheme();
+  const { colors, spacing, typography, responsiveFontSizes } = useTheme();
 
   const getSizeValue = (): 'small' | 'large' => {
     return size === 'small' ? 'small' : 'large';

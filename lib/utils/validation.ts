@@ -1,64 +1,32 @@
 /**
- * バリデーション関数
+ * 共通バリデーションユーティリティ
+ * 重複したバリデーションロジックを統合
  */
 
-export interface ValidationResult {
-  isValid: boolean;
-  error?: string;
+/**
+ * 汎用的な名前重複チェックヘルパー
+ */
+export function checkNameDuplicate<T extends { id: string; name: string }>(
+  name: string,
+  getByName: (name: string) => T | null,
+  excludeId?: string
+): boolean {
+  const existing = getByName(name);
+  if (!existing) return false;
+  if (excludeId && existing.id === excludeId) return false;
+  return true;
 }
 
-export const validateRequired = (value: string): ValidationResult => {
-  if (!value || value.trim() === '') {
-    return { isValid: false, error: '必須項目です' };
+/**
+ * 名前の重複をチェックしてエラーをスロー
+ */
+export function validateNameUniqueness<T extends { id: string; name: string }>(
+  name: string,
+  getByName: (name: string) => T | null,
+  excludeId?: string,
+  entityType: string = 'item'
+): void {
+  if (checkNameDuplicate(name, getByName, excludeId)) {
+    throw new Error(`${entityType} with name "${name}" already exists`);
   }
-  return { isValid: true };
-};
-
-export const validateEmail = (email: string): ValidationResult => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || email.trim() === '') {
-    return { isValid: false, error: 'メールアドレスを入力してください' };
-  }
-  if (!emailRegex.test(email)) {
-    return { isValid: false, error: '有効なメールアドレスを入力してください' };
-  }
-  return { isValid: true };
-};
-
-export const validateMinLength = (value: string, minLength: number): ValidationResult => {
-  if (value.length < minLength) {
-    return { isValid: false, error: `${minLength}文字以上で入力してください` };
-  }
-  return { isValid: true };
-};
-
-export const validateMaxLength = (value: string, maxLength: number): ValidationResult => {
-  if (value.length > maxLength) {
-    return { isValid: false, error: `${maxLength}文字以内で入力してください` };
-  }
-  return { isValid: true };
-};
-
-export const validateNumeric = (value: string): ValidationResult => {
-  if (!/^\d+$/.test(value)) {
-    return { isValid: false, error: '数字のみ入力してください' };
-  }
-  return { isValid: true };
-};
-
-export const validateRange = (value: number, min: number, max: number): ValidationResult => {
-  if (value < min || value > max) {
-    return { isValid: false, error: `${min}〜${max}の範囲で入力してください` };
-  }
-  return { isValid: true };
-};
-
-export const validatePassword = (password: string): ValidationResult => {
-  if (password.length < 8) {
-    return { isValid: false, error: 'パスワードは8文字以上で入力してください' };
-  }
-  if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-    return { isValid: false, error: 'パスワードは大文字・小文字・数字を含めてください' };
-  }
-  return { isValid: true };
-};
+}

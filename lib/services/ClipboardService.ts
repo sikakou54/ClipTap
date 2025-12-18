@@ -1,14 +1,14 @@
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
+import { Logger } from '../logger';
 
 export class ClipboardService {
   async copyToClipboard(text: string): Promise<void> {
     try {
       await Clipboard.setStringAsync(text);
-      // 振動フィードバック（1タップコピーのフィードバック）
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+      Logger.error('Failed to copy to clipboard:', error);
       throw error;
     }
   }
@@ -18,7 +18,7 @@ export class ClipboardService {
       const text = await Clipboard.getStringAsync();
       return text;
     } catch (error) {
-      console.error('Failed to get from clipboard:', error);
+      Logger.error('Failed to get from clipboard:', error);
       throw error;
     }
   }
@@ -27,7 +27,7 @@ export class ClipboardService {
     try {
       return await Clipboard.hasStringAsync();
     } catch (error) {
-      console.error('Failed to check clipboard:', error);
+      Logger.error('Failed to check clipboard:', error);
       return false;
     }
   }

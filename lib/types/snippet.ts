@@ -4,9 +4,7 @@ export interface Snippet {
   title: string | null;
   content: string;
   categoryId: string | null;
-  isPinned: boolean;
-  usageCount: number;
-  lastUsedAt: string | null;
+  profileIds: string[];  // 複数の環境を指定
   createdAt: string;
   updatedAt: string;
 }
@@ -14,16 +12,16 @@ export interface Snippet {
 export interface CreateSnippetInput {
   title?: string;
   content: string;
-  categoryId?: string;
-  tags?: string[];
+  categoryId?: string | null;
+  profileIds?: string[];  // 複数の環境を指定
 }
 
 export interface UpdateSnippetInput {
   id: string;
   title?: string;
   content?: string;
-  categoryId?: string;
-  isPinned?: boolean;
+  categoryId?: string | null;
+  profileIds?: string[];  // 複数の環境を指定
 }
 
 export interface SearchOptions {
@@ -32,4 +30,4 @@ export interface SearchOptions {
   sortBy?: 'relevance' | 'recent' | 'usage' | 'title';
 }
 
-export type SnippetSortBy = 'recent' | 'usage' | 'title' | 'pinned';
+export type SnippetSortBy = 'recent' | 'title';

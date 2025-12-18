@@ -2,6 +2,7 @@ import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Logger } from '../logger';
 
 import en from '../../locales/en/translation.json';
 import ja from '../../locales/ja/translation.json';
@@ -22,7 +23,7 @@ const getSavedLanguage = async (): Promise<string | null> => {
   try {
     return await AsyncStorage.getItem(LANGUAGE_KEY);
   } catch (error) {
-    console.error('Failed to get saved language:', error);
+    Logger.error('Failed to get saved language:', error);
     return null;
   }
 };
@@ -32,7 +33,7 @@ export const saveLanguage = async (language: string): Promise<void> => {
   try {
     await AsyncStorage.setItem(LANGUAGE_KEY, language);
   } catch (error) {
-    console.error('Failed to save language:', error);
+    Logger.error('Failed to save language:', error);
   }
 };
 

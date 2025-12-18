@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { categoryService } from '../services/CategoryService';
 import { Category, CreateCategoryInput, UpdateCategoryInput } from '../types/category';
+import { Logger } from '../logger';
 
 export function useCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -15,7 +16,7 @@ export function useCategories() {
       setCategories(data);
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to load categories:', err);
+      Logger.error('Failed to load categories:', err);
     } finally {
       setLoading(false);
     }
@@ -31,7 +32,7 @@ export function useCategories() {
       await loadCategories();
       return newCategory;
     } catch (err) {
-      console.error('Failed to create category:', err);
+      Logger.error('Failed to create category:', err);
       throw err;
     }
   }, [loadCategories]);
@@ -42,7 +43,7 @@ export function useCategories() {
       await loadCategories();
       return updated;
     } catch (err) {
-      console.error('Failed to update category:', err);
+      Logger.error('Failed to update category:', err);
       throw err;
     }
   }, [loadCategories]);
@@ -52,7 +53,7 @@ export function useCategories() {
       await categoryService.delete(id);
       await loadCategories();
     } catch (err) {
-      console.error('Failed to delete category:', err);
+      Logger.error('Failed to delete category:', err);
       throw err;
     }
   }, [loadCategories]);
@@ -62,7 +63,7 @@ export function useCategories() {
       await categoryService.reorder(categoryIds);
       await loadCategories();
     } catch (err) {
-      console.error('Failed to reorder categories:', err);
+      Logger.error('Failed to reorder categories:', err);
       throw err;
     }
   }, [loadCategories]);

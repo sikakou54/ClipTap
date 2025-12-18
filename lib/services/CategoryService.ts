@@ -1,39 +1,53 @@
-import { categoryMapper } from '../mappers/NewCategoryMapper';
+import { categoryMapper } from '../mappers/CategoryMapper';
 import { Category, CreateCategoryInput, UpdateCategoryInput } from '../types/category';
+import i18next from 'i18next';
 
 export class CategoryService {
   async getAll(): Promise<Category[]> {
-    return await categoryMapper.getAll();
+    return categoryMapper.getAll();
   }
 
   async getById(id: string): Promise<Category | null> {
-    return await categoryMapper.getById(id);
+    return categoryMapper.getById(id);
   }
 
   async create(input: CreateCategoryInput): Promise<Category> {
-    // 同じ名前のカテゴリが存在しないかチェック
-    const existing = await categoryMapper.getByName(input.name);
-    if (existing) {
-      throw new Error('Category with this name already exists');
+    // 名前をトリムして検証
+    const trimmedName = input.name.trim();
+    if (!trimmedName) {
+      throw new Error(i18next.t('error.empty_content'));
     }
 
-    return await categoryMapper.create(input);
+    // 同じ名前のカテゴリが存在しないかチェック
+    const existing = await categoryMapper.getByName(trimmedName);
+    if (existing) {
+      throw new Error(i18next.t('error.duplicate_category_name'));
+    }
+
+    return categoryMapper.create({ ...input, name: trimmedName });
   }
 
   async update(id: string, data: Partial<Omit<Category, 'id' | 'createdAt'>>): Promise<Category> {
-    // 名前変更の場合、同じ名前のカテゴリが存在しないかチェック
+    // 名前変更の場合、トリムと重複チェック
     if (data.name) {
-      const existing = await categoryMapper.getByName(data.name);
-      if (existing && existing.id !== id) {
-        throw new Error('Category with this name already exists');
+      const trimmedName = data.name.trim();
+      if (!trimmedName) {
+        throw new Error(i18next.t('error.empty_content'));
       }
+
+      const existing = await categoryMapper.getByName(trimmedName);
+      if (existing && existing.id !== id) {
+        throw new Error(i18next.t('error.duplicate_category_name'));
+      }
+
+      data = { ...data, name: trimmedName };
     }
 
-    return await categoryMapper.update({ id, ...data });
+    return categoryMapper.update({ id, ...data });
   }
 
   async delete(id: string): Promise<void> {
-    await categoryMapper.delete(id);
+    return categoryMapper.delete(id);
   }
 
   async reorder(categoryIds: string[]): Promise<void> {

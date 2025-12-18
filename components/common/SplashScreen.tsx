@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { Image, Animated, StyleSheet } from 'react-native';
+import { View, Image, Animated, StyleSheet } from 'react-native';
 
 interface SplashScreenProps {
   onFinish: () => void;
@@ -14,22 +14,22 @@ interface SplashScreenProps {
 
 export function SplashScreen({ onFinish, isLoading, onReady }: SplashScreenProps) {
   const fadeAnim = useRef(new Animated.Value(1)).current; // 最初から表示状態
-  const [isRendered, setIsRendered] = React.useState(false);
+  const hasCalledReady = useRef(false);
 
   // コンポーネントがマウントされたらonReadyを呼ぶ
   useEffect(() => {
-    if (!isRendered && onReady) {
+    if (!hasCalledReady.current && onReady) {
+      hasCalledReady.current = true;
       // レンダリング完了を保証するため、複数フレーム待つ
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            setIsRendered(true);
             onReady();
           });
         });
       });
     }
-  }, [isRendered, onReady]);
+  }, [onReady]);
 
   useEffect(() => {
     // 初期化中は何もしない
@@ -42,7 +42,7 @@ export function SplashScreen({ onFinish, isLoading, onReady }: SplashScreenProps
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 500, // フェードアウト時間500ms
-        useNativeDriver: true,
+        useNativeDriver: false, // 背景色も含めてフェードさせるためfalseに設定
       }).start(() => {
         onFinish();
       });
@@ -52,37 +52,43 @@ export function SplashScreen({ onFinish, isLoading, onReady }: SplashScreenProps
   }, [fadeAnim, onFinish, isLoading]);
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          opacity: fadeAnim,
-        },
-      ]}
-    >
-      <Image
-        source={require('../../assets/splash-icon.png')}
-        style={styles.logo}
-        resizeMode="contain"
-      />
-    </Animated.View>
+    <View style={styles.wrapper} pointerEvents="none">
+      <Animated.View
+        style={[
+          styles.container,
+          {
+            opacity: fadeAnim,
+          },
+        ]}
+      >
+        <Image
+          source={require('../../assets/icon.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
+    backgroundColor: '#1F2937',
+    zIndex: 9999,
+  },
+  container: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1F2937', // app.jsonのsplash backgroundColorと同じ
-    zIndex: 9999,
+    backgroundColor: '#1F2937',
   },
   logo: {
     width: 200,
-    height: 200,
+    height: 200
   },
 });

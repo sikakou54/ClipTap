@@ -6,6 +6,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../themeSystem';
+import { registerToastShow } from '../utils/alerts';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -51,6 +52,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }),
     ]).start(() => setToast(null));
   }, [fadeAnim]);
+
+  // alerts.tsで使えるようにshowToast関数を登録
+  useEffect(() => {
+    registerToastShow(showToast);
+  }, [showToast]);
 
   const getToastColor = (type: ToastType) => {
     switch (type) {

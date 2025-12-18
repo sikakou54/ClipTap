@@ -11,7 +11,8 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/themeSystem';
 import { Category } from '../../lib/types/category';
-import { CreateCategoryModal } from './CreateCategoryModal';
+import { CategoryModal } from './CategoryModal';
+import { UI_CONSTANTS } from '../../lib/constants/ui';
 
 interface CategoryPickerProps {
   categories: Category[];
@@ -31,7 +32,7 @@ export function CategoryPicker({
   onCategoryCreated,
 }: CategoryPickerProps) {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const handleSelect = (categoryId: string | null) => {
@@ -65,10 +66,10 @@ export function CategoryPicker({
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
           <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>
+            <Text style={[styles.title, { color: colors.text, fontSize: responsiveFontSizes.md, lineHeight: responsiveLineHeights.md }]}>
               {t('category.select')}
             </Text>
-            <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <TouchableOpacity onPress={onClose} hitSlop={UI_CONSTANTS.HIT_SLOP.DEFAULT}>
               <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
@@ -126,8 +127,9 @@ export function CategoryPicker({
         </View>
       </View>
 
-      <CreateCategoryModal
+      <CategoryModal
         visible={showCreateModal}
+        category={null}
         onClose={() => setShowCreateModal(false)}
         onSuccess={() => {
           if (onCategoryCreated) {
@@ -160,7 +162,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   title: {
-    fontSize: 18,
+    
     fontWeight: '600',
   },
   item: {
@@ -189,7 +191,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   itemText: {
-    fontSize: 16,
+    
   },
   createNewItem: {
     borderBottomWidth: 0,

@@ -1,0 +1,204 @@
+■ What is ClipTap
+
+ClipTap is a simple iOS app for copying text templates with one tap.
+
+Register frequently used texts and copy instantly. Use variables like {{today}}, {{name}} to auto-insert information.
+
+Intuitive UI that improves productivity.
+
+
+■ Ideal for
+
+・Email and social media users
+・Frequent address/phone entry
+・Templates with dates and times
+・Programmers and engineers
+・Customer support staff
+・Sales representatives
+・Writers and bloggers
+
+
+■ Key Features
+
+【One-Tap Copy】
+Tap to copy. Confirmed with haptic feedback.
+
+【System Variables (Free)】
+{{today}}, {{now}}, {{year}}, {{month}}, {{day}}, {{weekday}} available. Auto-insert dates.
+
+【Profile Management (Pro)】
+Create multiple profiles to switch variable values by context. Free: 3 profiles. Pro: unlimited. Create "Company A" and "Company B" profiles to auto-switch {{company}} values.
+
+【Custom Variables (Pro)】
+Variables like {{name}}, {{email}}, {{company}}. Free: 5 variables. Pro: unlimited. Register once, auto-replace everywhere.
+
+【Ad-Free (Pro)】
+Zero ads. Perfect for focused work.
+
+【Category Management】
+Organize with categories. Set icons and colors.
+
+【Fast Search】
+Search by keyword. Find text instantly.
+
+【Fully Offline】
+Works without internet. Data stays on iPhone.
+
+【Privacy Focused】
+All data local, no cloud sync.
+
+【Dark Mode】
+Auto-follows iOS settings.
+
+【Multi-Language】
+Japanese and English.
+
+
+■ Pro Plan
+
+【Pricing】
+・Monthly: $2.50/month
+・Annual: $30/year
+
+【Benefits】
+・Ad-free
+・Unlimited profile management
+・Unlimited custom variables
+・All basic features
+
+【Payment】
+Secure via App Store. Cancel anytime.
+
+
+■ How to Use
+
+【STEP 1】Register
+Tap + to add text. Include variables like {{today}}.
+
+【STEP 2】Set Variables (Optional)
+Pro users create custom variables in Settings.
+
+【STEP 3】Organize
+Create categories.
+
+【STEP 4】Copy
+Tap template. Variables convert and copy.
+
+
+■ Variable Examples
+
+【Email】
+"Sending materials for {{today}}"
+→ "Sending materials for January 15, 2025"
+
+【Signature (Pro)】
+"{{name}} ({{company}}) {{email}}"
+→ "John Smith (Sample Inc.) sample@example.com"
+
+【Time】
+"Confirmed at {{now}}"
+→ "Confirmed at 14:30"
+
+
+■ Use Cases
+
+【Business】
+Email signatures, meeting invitations, product descriptions, customer templates
+
+【Programming】
+Code snippets, commands, regex patterns, API templates, debug logs
+
+【Daily】
+Addresses, phone numbers, email addresses, social profiles
+
+【Support】
+FAQ answers, thank you messages, procedure guides
+
+
+■ Security & Privacy
+
+Privacy-first design.
+
+・Data stored locally on iPhone
+・No cloud sync
+・No external server access (except subscription)
+
+Your data exists only on your iPhone.
+
+
+■ Free vs Pro
+
+【Free】
+Basic features, system variables, custom variables (5), profiles (3), ads displayed
+
+【Pro】
+Ad-free, unlimited variables, unlimited profiles
+
+
+■ FAQ
+
+Q: Where is data stored?
+A: Locally on iPhone, not iCloud.
+
+Q: Offline use?
+A: Yes, all features work offline.
+
+Q: How to use variables?
+A: Enter {{today}} or {{name}} in templates. Auto-converts when copying.
+
+Q: Cancel Pro?
+A: Yes, anytime in App Store. Features remain until period ends.
+
+
+■ Problems Solved
+
+・Typing same text repeatedly
+・Manual date entry
+・Manual address entry
+・Copy-pasting signatures
+・Code snippet management
+・Ad-free focus
+
+
+■ User Reviews
+
+"Variable feature amazing! No more date entry"
+"Email responses incredibly fast!"
+"Pro ad-free so comfortable"
+"Simple, exactly what I needed!"
+"Privacy peace of mind"
+
+
+■ From Developer
+
+ClipTap: "simpler, faster."
+
+Reduce wasted time typing. Focus on what matters.
+
+Variables automate entry. Pro enables advanced automation.
+
+Only essential features. Ultimate simplicity.
+
+May your work become easier.
+
+
+■ Requirements
+
+iOS 15.0+, iPhone
+
+
+■ Support
+
+Contact: cliptap.developer@gmail.com
+
+
+■ Privacy & Terms
+
+Terms of Use (EULA): Available in app Settings > Terms of Use
+Privacy Policy: Available in app Settings > Privacy Policy
+
+For inquiries: cliptap.developer@gmail.com
+
+
+Make your everyday efficient with ClipTap.
+Download now and save time.

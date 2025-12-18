@@ -118,3 +118,19 @@ export const formatTime = (date: Date): string => {
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${hours}:${minutes}`;
 };
+
+/**
+ * 現在のタイムスタンプをISO形式で取得
+ */
+export const getCurrentTimestamp = (): string => {
+  return new Date().toISOString();
+};
+
+/**
+ * ユニークなIDを生成
+ * カウンターを使用して同じミリ秒内でも一意性を保証
+ */
+let idCounter = 0;
+export const generateUniqueId = (): string => {
+  return `${Date.now()}-${idCounter++}-${Math.random().toString(36).substr(2, 9)}`;
+};

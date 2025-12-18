@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../lib/themeSystem';
 import { BottomSheetModal } from '../UnifiedModal';
 import { ModalFooter } from '../ModalFooter';
@@ -25,6 +26,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
   minimumDate,
   maximumDate,
 }) => {
+  const { t } = useTranslation();
   const { colors, spacing, typography } = useTheme();
   const [showPicker, setShowPicker] = useState(false);
   const [tempDate, setTempDate] = useState(value);
@@ -98,7 +100,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
         <BottomSheetModal
           visible={showPicker}
           onClose={handleCancel}
-          title="日付を選択"
+          title={t('common.select_date')}
           showCloseButton={false}
           showHandle={true}
           maxHeight="50%"
@@ -120,8 +122,8 @@ const DatePicker: React.FC<DatePickerProps> = ({
           <ModalFooter
             onConfirm={handleConfirm}
             onCancel={handleCancel}
-            confirmText="確定"
-            cancelText="キャンセル"
+            confirmText={t('common.confirm_button')}
+            cancelText={t('common.cancel')}
             showCancel={true}
           />
         </BottomSheetModal>

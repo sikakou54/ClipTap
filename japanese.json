@@ -1,4 +1,9 @@
 {
-    "CFBundleDisplayName": "ClipTap",
-    "NSUserTrackingUsageDescription": "関連性の高い広告を表示するためにIDをトラッキングいたします。"
+    "ios": {
+        "CFBundleDisplayName": "ClipTap",
+        "NSUserTrackingUsageDescription": "関連性の高い広告を表示するためにIDをトラッキングいたします。"
+    },
+    "android": {
+        "app_name": "ClipTap"
+    }
 }

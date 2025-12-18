@@ -8,6 +8,8 @@ import { TouchableOpacity, Text, ActivityIndicator, ViewStyle } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../lib/themeSystem';
+import { useTranslation } from 'react-i18next';
+import { UI_CONSTANTS } from '../../lib/constants/ui';
 
 export type ButtonType =
   | 'primary'      // メインアクション（青）
@@ -49,6 +51,7 @@ const CommonButton: React.FC<CommonButtonProps> = ({
   style,
   enableHaptics = true,
 }) => {
+  const { t } = useTranslation();
   const { isDark, fontSizes } = useTheme();
 
   const buttonStyle = useMemo((): ViewStyle => {
@@ -62,7 +65,7 @@ const CommonButton: React.FC<CommonButtonProps> = ({
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 12,
+      borderRadius: UI_CONSTANTS.BORDER_RADIUS.LG,
       height: sizeConfig.height,
       paddingHorizontal: sizeConfig.paddingHorizontal,
       minWidth: fullWidth ? undefined : sizeConfig.height * 2,
@@ -81,7 +84,7 @@ const CommonButton: React.FC<CommonButtonProps> = ({
           break;
         case 'secondary':
           typeStyle.backgroundColor = isDark ? '#374151' : '#F3F4F6';
-          typeStyle.borderWidth = 1;
+          typeStyle.borderWidth = UI_CONSTANTS.BORDER_WIDTH.THIN;
           typeStyle.borderColor = isDark ? '#4B5563' : '#D1D5DB';
           break;
         case 'danger':
@@ -98,7 +101,7 @@ const CommonButton: React.FC<CommonButtonProps> = ({
           break;
         case 'outline':
           typeStyle.backgroundColor = 'transparent';
-          typeStyle.borderWidth = 1;
+          typeStyle.borderWidth = UI_CONSTANTS.BORDER_WIDTH.THIN;
           typeStyle.borderColor = '#3B82F6';
           break;
       }
@@ -137,10 +140,10 @@ const CommonButton: React.FC<CommonButtonProps> = ({
           <ActivityIndicator
             size="small"
             color={getTextColor()}
-            style={{ marginRight: 8 }}
+            style={{ marginRight: UI_CONSTANTS.GAP.MD }}
           />
-          <Text style={{ color: getTextColor(), fontWeight: '600' }}>
-            処理中...
+          <Text style={{ color: getTextColor(), fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD }}>
+            {t('common.processing')}
           </Text>
         </>
       );
@@ -153,16 +156,16 @@ const CommonButton: React.FC<CommonButtonProps> = ({
             name={icon}
             size={getIconSize()}
             color={getTextColor()}
-            style={{ marginRight: 8 }}
+            style={{ marginRight: UI_CONSTANTS.GAP.MD }}
           />
         )}
         <Text
-          numberOfLines={1}
+          numberOfLines={UI_CONSTANTS.NUMBER_OF_LINES.SINGLE}
           adjustsFontSizeToFit={true}
           minimumFontScale={0.8}
           style={{
             color: getTextColor(),
-            fontWeight: '600',
+            fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,
             fontSize: { small: fontSizes.sm, medium: fontSizes.md, large: fontSizes.lg }[size]
           }}
         >
@@ -173,7 +176,7 @@ const CommonButton: React.FC<CommonButtonProps> = ({
             name={icon}
             size={getIconSize()}
             color={getTextColor()}
-            style={{ marginLeft: 8 }}
+            style={{ marginLeft: UI_CONSTANTS.GAP.MD }}
           />
         )}
       </>

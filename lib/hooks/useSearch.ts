@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { snippetService } from '../services/SnippetService';
 import { Snippet } from '../types/snippet';
+import { Logger } from '../logger';
 
 const DEBOUNCE_DELAY = 300;
 
@@ -9,7 +10,6 @@ export function useSearch(categoryId?: string) {
   const [results, setResults] = useState<Snippet[]>([]);
   const [searching, setSearching] = useState(false);
 
-  // デバウンス処理
   useEffect(() => {
     if (!query.trim()) {
       setResults([]);
@@ -23,7 +23,7 @@ export function useSearch(categoryId?: string) {
         const searchResults = await snippetService.search(query, categoryId);
         setResults(searchResults);
       } catch (error) {
-        console.error('Search failed:', error);
+        Logger.error('Search failed:', error);
         setResults([]);
       } finally {
         setSearching(false);

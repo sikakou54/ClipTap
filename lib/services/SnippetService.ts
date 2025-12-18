@@ -1,10 +1,22 @@
-import { snippetMapper } from '../mappers/NewSnippetMapper';
+import { snippetMapper } from '../mappers/SnippetMapper';
 import { clipboardService } from './ClipboardService';
 import { Snippet, CreateSnippetInput, UpdateSnippetInput, SnippetSortBy } from '../types/snippet';
+import { VariableParser, CustomVariableResolver } from './VariableParser';
+import { variableService } from './VariableService';
+import { purchaseService } from './PurchaseService';
+import { profileService } from './ProfileService';
+import { UI_CONSTANTS } from '../constants/ui';
+import { Logger } from '../logger';
 
 export class SnippetService {
   async getAll(): Promise<Snippet[]> {
-    return await snippetMapper.getAll();
+    const activeProfile = profileService.getActiveProfile();
+    return await snippetMapper.getAll(activeProfile?.id);
+  }
+
+  // 環境フィルタなしで全ての定型文を取得（検索画面用）
+  async getAllWithoutProfileFilter(): Promise<Snippet[]> {
+    return await snippetMapper.getAll(undefined);
   }
 
   async getById(id: string): Promise<Snippet | null> {
@@ -12,7 +24,8 @@ export class SnippetService {
   }
 
   async getByCategoryId(categoryId: string | null): Promise<Snippet[]> {
-    return await snippetMapper.getByCategoryId(categoryId);
+    const activeProfile = profileService.getActiveProfile();
+    return await snippetMapper.getByCategoryId(categoryId, activeProfile?.id);
   }
 
   async create(input: CreateSnippetInput): Promise<Snippet> {
@@ -32,30 +45,39 @@ export class SnippetService {
     await snippetMapper.delete(id);
   }
 
-  async togglePin(id: string): Promise<Snippet> {
+  async copyToClipboard(id: string, profileId?: string): Promise<void> {
     const snippet = await snippetMapper.getById(id);
     if (!snippet) throw new Error('Snippet not found');
 
-    return await snippetMapper.update({
-      id,
-      isPinned: !snippet.isPinned,
-    });
-  }
+    let content = snippet.content;
+    let title = snippet.title;
 
-  async copyToClipboard(id: string): Promise<void> {
-    const snippet = await snippetMapper.getById(id);
-    if (!snippet) throw new Error('Snippet not found');
+    try {
+      const customResolver = variableService.createCustomVariableResolver(profileId);
 
-    // タイトルと内容を結合してコピー
-    const textToCopy = snippet.title
-      ? `${snippet.title}\n${snippet.content}`
-      : snippet.content;
+      // コンテンツに変数が含まれている場合は置換処理
+      if (VariableParser.hasVariables(content)) {
+        content = await VariableParser.replaceVariables(content, customResolver);
+      }
+
+      // タイトルにも変数が含まれている場合は置換処理
+      if (title && VariableParser.hasVariables(title)) {
+        title = await VariableParser.replaceVariables(title, customResolver);
+      }
+    } catch (error) {
+      Logger.warn('Variable replacement failed, copying original content:', error);
+      // 変数置換に失敗した場合は元のコンテンツを使用
+      content = snippet.content;
+      title = snippet.title;
+    }
+
+    // タイトルと内容を結合してコピー（改行2つで区切る）
+    const textToCopy = title
+      ? `${title}\n\n${content}`
+      : content;
 
     // クリップボードにコピー（振動フィードバック含む）
     await clipboardService.copyToClipboard(textToCopy);
-
-    // 使用回数をインクリメント
-    await snippetMapper.incrementUsageCount(id);
   }
 
   async search(query: string, categoryId?: string): Promise<Snippet[]> {
@@ -67,9 +89,35 @@ export class SnippetService {
     return await snippetMapper.getSorted(sortBy);
   }
 
+  /**
+   * プレビュー生成（変数置換後）
+   */
+  async getPreview(id: string): Promise<string> {
+    const snippet = await snippetMapper.getById(id);
+    if (!snippet) throw new Error('Snippet not found');
+
+    if (VariableParser.hasVariables(snippet.content)) {
+      const customResolver = variableService.createCustomVariableResolver();
+      return await VariableParser.replaceVariables(snippet.content, customResolver);
+    }
+
+    return snippet.content;
+  }
+
+  /**
+   * テキストのプレビュー生成（変数置換後）
+   */
+  async getTextPreview(text: string): Promise<string> {
+    if (VariableParser.hasVariables(text)) {
+      const customResolver = variableService.createCustomVariableResolver();
+      return await VariableParser.replaceVariables(text, customResolver);
+    }
+    return text;
+  }
+
   private generateTitleFromContent(content: string): string {
-    // 最初の30文字をタイトルとして使用
-    const maxLength = 30;
+    // 最初の指定文字数をタイトルとして使用
+    const maxLength = UI_CONSTANTS.INPUT_LIMITS.SNIPPET_TITLE_MAX;
     const trimmed = content.trim();
 
     if (trimmed.length <= maxLength) {

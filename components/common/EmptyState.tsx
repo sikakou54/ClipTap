@@ -27,7 +27,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   actionLabel,
   onActionPress,
 }) => {
-  const { colors, spacing, typography } = useTheme();
+  const { colors, spacing, typography, responsiveFontSizes } = useTheme();
 
   const getIconSize = () => {
     switch (variant) {

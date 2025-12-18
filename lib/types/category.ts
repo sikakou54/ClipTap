@@ -3,7 +3,6 @@ export interface Category {
   id: string;
   name: string;
   color: string | null;
-  icon: string | null;
   sortOrder: number;
   createdAt: string;
 }
@@ -11,13 +10,11 @@ export interface Category {
 export interface CreateCategoryInput {
   name: string;
   color?: string;
-  icon?: string;
 }
 
 export interface UpdateCategoryInput {
   id: string;
   name?: string;
   color?: string | null;
-  icon?: string | null;
   sortOrder?: number;
 }

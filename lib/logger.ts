@@ -38,10 +38,11 @@ export class Logger {
 
   /**
    * 成功ログ - 開発環境でのみ出力される成功通知
+   * console.info を使用して通常のログと区別しやすくする
    */
   static success(message: string, ...args: any[]) {
     if (isDevelopment) {
-      console.log('✅ [SUCCESS] ' + message, ...args);
+      console.info('✅ [SUCCESS] ' + message, ...args);
     }
   }
 }

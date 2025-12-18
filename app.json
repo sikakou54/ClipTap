@@ -2,19 +2,33 @@
   "expo": {
     "name": "ClipTap",
     "slug": "cliptap",
-    "version": "1.0.2",
-    "orientation": "portrait",
+    "version": "1.0.3",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "jsEngine": "hermes",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "backgroundColor": "#1F2937",
+      "resizeMode": "contain"
+    },
     "ios": {
-      "supportsTablet": false,
+      "supportsTablet": true,
       "bundleIdentifier": "com.sikakou.cliptap",
-      "buildNumber": "9",
+      "buildNumber": "28",
+      "requireFullScreen": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": []
+        "UIBackgroundModes": [],
+        "UISupportedInterfaceOrientations": [
+          "UIInterfaceOrientationPortrait"
+        ],
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
       }
     },
     "android": {
@@ -27,7 +41,8 @@
         "android.permission.VIBRATE"
       ],
       "package": "com.sikakou.cliptap",
-      "versionCode": 1
+      "versionCode": 6,
+      "screenOrientation": "portrait"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -43,6 +58,7 @@
       "expo-dev-client",
       "expo-splash-screen",
       "expo-localization",
+      "expo-system-ui",
       [
         "expo-build-properties",
         {
@@ -50,13 +66,27 @@
             "deploymentTarget": "15.1"
           },
           "android": {
-            "compileSdkVersion": 34,
-            "targetSdkVersion": 34,
-            "minSdkVersion": 23
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 24
           }
         }
       ],
-      "expo-tracking-transparency"
+      "expo-tracking-transparency",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-5616727577619398~4455954633",
+          "iosAppId": "ca-app-pub-5616727577619398~8993844331",
+          "userTrackingPermission": "関連性の高い広告を表示するためにIDをトラッキングいたします。"
+        }
+      ],
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "PORTRAIT"
+        }
+      ]
     ],
     "updates": {
       "enabled": true,
@@ -72,10 +102,5 @@
       "en": "./english.json",
       "ja": "./japanese.json"
     }
-  },
-  "react-native-google-mobile-ads": {
-    "ios_app_id": "ca-app-pub-5616727577619398~8993844331",
-    "delay_app_measurement_init": true,
-    "user_tracking_usage_description": "関連性の高い広告を表示するためにIDをトラッキングいたします。"
   }
 }

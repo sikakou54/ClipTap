@@ -1,15 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { snippetService } from '../services/SnippetService';
 import { Snippet, CreateSnippetInput, UpdateSnippetInput, SnippetSortBy } from '../types/snippet';
+import { Logger } from '../logger';
+import { useProfiles } from './useProfiles';
 
 export function useSnippets(categoryId?: string | null) {
   const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { activeProfile } = useProfiles();
 
   const loadSnippets = useCallback(async () => {
     try {
-      console.log('[loadSnippets] Starting...');
       setLoading(true);
       setError(null);
       let data: Snippet[];
@@ -20,20 +22,19 @@ export function useSnippets(categoryId?: string | null) {
         data = await snippetService.getAll();
       }
 
-      console.log('[loadSnippets] Loaded:', data.length, 'snippets');
+      Logger.debug(`Loaded ${data.length} snippets`);
       setSnippets(data);
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to load snippets:', err);
+      Logger.error('Failed to load snippets:', err);
     } finally {
-      console.log('[loadSnippets] Setting loading to false');
       setLoading(false);
     }
-  }, [categoryId]);
+  }, [categoryId, activeProfile?.id]);
 
   useEffect(() => {
     loadSnippets();
-  }, [loadSnippets]);
+  }, [loadSnippets, activeProfile?.id]);
 
   const createSnippet = useCallback(async (input: CreateSnippetInput) => {
     try {
@@ -41,7 +42,7 @@ export function useSnippets(categoryId?: string | null) {
       await loadSnippets();
       return newSnippet;
     } catch (err) {
-      console.error('Failed to create snippet:', err);
+      Logger.error('Failed to create snippet:', err);
       throw err;
     }
   }, [loadSnippets]);
@@ -52,7 +53,7 @@ export function useSnippets(categoryId?: string | null) {
       await loadSnippets();
       return updated;
     } catch (err) {
-      console.error('Failed to update snippet:', err);
+      Logger.error('Failed to update snippet:', err);
       throw err;
     }
   }, [loadSnippets]);
@@ -62,17 +63,7 @@ export function useSnippets(categoryId?: string | null) {
       await snippetService.delete(id);
       await loadSnippets();
     } catch (err) {
-      console.error('Failed to delete snippet:', err);
-      throw err;
-    }
-  }, [loadSnippets]);
-
-  const togglePin = useCallback(async (id: string) => {
-    try {
-      await snippetService.togglePin(id);
-      await loadSnippets();
-    } catch (err) {
-      console.error('Failed to toggle pin:', err);
+      Logger.error('Failed to delete snippet:', err);
       throw err;
     }
   }, [loadSnippets]);
@@ -80,9 +71,8 @@ export function useSnippets(categoryId?: string | null) {
   const copySnippet = useCallback(async (id: string) => {
     try {
       await snippetService.copyToClipboard(id);
-      // 使用回数は更新されるが、リストは再読み込みしない（エフェクト防止）
     } catch (err) {
-      console.error('Failed to copy snippet:', err);
+      Logger.error('Failed to copy snippet:', err);
       throw err;
     }
   }, []);
@@ -93,10 +83,28 @@ export function useSnippets(categoryId?: string | null) {
       const sorted = await snippetService.getSorted(sortBy);
       setSnippets(sorted);
     } catch (err) {
-      console.error('Failed to sort snippets:', err);
+      Logger.error('Failed to sort snippets:', err);
       throw err;
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const getTextPreview = useCallback(async (content: string): Promise<string> => {
+    try {
+      return await snippetService.getTextPreview(content);
+    } catch (err) {
+      Logger.error('Failed to get text preview:', err);
+      throw err;
+    }
+  }, []);
+
+  const getById = useCallback(async (id: string): Promise<Snippet | null> => {
+    try {
+      return await snippetService.getById(id);
+    } catch (err) {
+      Logger.error('Failed to get snippet by id:', err);
+      throw err;
     }
   }, []);
 
@@ -108,8 +116,9 @@ export function useSnippets(categoryId?: string | null) {
     createSnippet,
     updateSnippet,
     deleteSnippet,
-    togglePin,
     copySnippet,
     sortSnippets,
+    getTextPreview,
+    getById,
   };
 }

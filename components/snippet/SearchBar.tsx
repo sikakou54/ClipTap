@@ -3,12 +3,14 @@ import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../lib/themeSystem';
+import { UI_CONSTANTS } from '../../lib/constants/ui';
 
 interface SearchBarProps {
   value: string;
   onChangeText: (text: string) => void;
   onClear?: () => void;
   placeholder?: string;
+  autoFocus?: boolean;
 }
 
 export function SearchBar({
@@ -16,9 +18,10 @@ export function SearchBar({
   onChangeText,
   onClear,
   placeholder,
+  autoFocus = false,
 }: SearchBarProps) {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, responsiveFontSizes } = useTheme();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
@@ -29,7 +32,7 @@ export function SearchBar({
         style={styles.icon}
       />
       <TextInput
-        style={[styles.input, { color: colors.text }]}
+        style={[styles.input, { color: colors.text, fontSize: responsiveFontSizes.base }]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder || t('snippet.search_placeholder')}
@@ -37,12 +40,13 @@ export function SearchBar({
         autoCapitalize="none"
         autoCorrect={false}
         returnKeyType="search"
+        autoFocus={autoFocus}
       />
       {value.length > 0 && (
         <TouchableOpacity
           onPress={onClear || (() => onChangeText(''))}
           style={styles.clearButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          hitSlop={UI_CONSTANTS.HIT_SLOP.DEFAULT}
         >
           <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
@@ -57,14 +61,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
     paddingHorizontal: 12,
-    height: 40,
+    height: 45,
   },
   icon: {
     marginRight: 8,
   },
   input: {
     flex: 1,
-    fontSize: 16,
     padding: 0,
   },
   clearButton: {

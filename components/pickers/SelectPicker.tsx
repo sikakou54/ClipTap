@@ -9,6 +9,7 @@ import { useTheme } from '../../lib/themeSystem';
 import { BottomSheetModal } from '../UnifiedModal';
 import { ModalFooter } from '../ModalFooter';
 import { BasePickerProps, PickerOption, PickerValue } from './PickerTypes';
+import { UI_CONSTANTS } from '../../lib/constants/ui';
 
 interface SelectPickerProps<T = PickerValue> extends BasePickerProps {
   options: PickerOption<T>[];
@@ -96,7 +97,7 @@ const SelectPicker: React.FC<SelectPickerProps> = ({
                   paddingVertical: spacing.md,
                   paddingHorizontal: spacing.lg,
                   backgroundColor: isSelected ? colors.primary + '20' : 'transparent',
-                  borderRadius: 8,
+                  borderRadius: UI_CONSTANTS.BORDER_RADIUS.MD,
                   marginBottom: spacing.xs,
                   opacity: canSelect ? 1 : 0.5,
                 }}
@@ -116,8 +117,8 @@ const SelectPicker: React.FC<SelectPickerProps> = ({
                 <View style={{
                   width: 24,
                   height: 24,
-                  borderRadius: 12,
-                  borderWidth: 2,
+                  borderRadius: UI_CONSTANTS.BORDER_RADIUS.BASE,
+                  borderWidth: UI_CONSTANTS.BORDER_WIDTH.THICK,
                   borderColor: isSelected ? colors.primary : colors.border,
                   backgroundColor: isSelected ? colors.primary : 'transparent',
                   marginRight: spacing.md,
@@ -130,7 +131,7 @@ const SelectPicker: React.FC<SelectPickerProps> = ({
                 </View>
                 <Text style={[typography.bodyMedium, {
                   color: isSelected ? colors.primary : colors.textPrimary,
-                  fontWeight: isSelected ? '600' : '400',
+                  fontWeight: isSelected ? UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD : UI_CONSTANTS.FONT_WEIGHT.NORMAL,
                   flex: 1,
                 }]}>
                   {option.label}
@@ -190,7 +191,7 @@ const SelectPicker: React.FC<SelectPickerProps> = ({
                 paddingVertical: spacing.lg,
                 paddingHorizontal: spacing.lg,
                 backgroundColor: isSelected ? colors.primary + '20' : 'transparent',
-                borderRadius: 8,
+                borderRadius: UI_CONSTANTS.BORDER_RADIUS.MD,
                 marginBottom: spacing.xs,
               }}
               onPress={() => setTempValue(option.value)}
@@ -199,8 +200,8 @@ const SelectPicker: React.FC<SelectPickerProps> = ({
               <View style={{
                 width: 24,
                 height: 24,
-                borderRadius: 12,
-                borderWidth: 2,
+                borderRadius: UI_CONSTANTS.BORDER_RADIUS.BASE,
+                borderWidth: UI_CONSTANTS.BORDER_WIDTH.THICK,
                 borderColor: isSelected ? colors.primary : colors.border,
                 backgroundColor: isSelected ? colors.primary : 'transparent',
                 marginRight: spacing.md,
@@ -213,7 +214,7 @@ const SelectPicker: React.FC<SelectPickerProps> = ({
               </View>
               <Text style={[typography.bodyLarge, {
                 color: isSelected ? colors.primary : colors.textPrimary,
-                fontWeight: isSelected ? '600' : '400',
+                fontWeight: isSelected ? UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD : UI_CONSTANTS.FONT_WEIGHT.NORMAL,
                 flex: 1,
               }]}>
                 {option.label}

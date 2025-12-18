@@ -1,0 +1,96 @@
+ClipTap Pro is Here! Profile Management + Custom Variables for Dramatically Improved Efficiency
+
+This update introduces the Pro plan (subscription) with profile management and custom variable features.
+
+New Features: ClipTap Pro
+
+【Profile Management】
+・Create multiple profiles to switch variable values by context
+・Set different variable values for each profile like "Company A" and "Company B"
+・Switch profiles with one tap to instantly change variable values
+・Free plan: 3 profiles, Pro plan: unlimited
+
+【Unlimited Custom Variables】
+・Turn frequently used information into variables for instant access
+・Freely set variables like {{name}}, {{company}}, {{email}}
+・Set different values per profile (Pro feature)
+・Perfect for names, company names, signatures, URLs, and other repetitive information
+・Free plan: 5 variables, Pro plan: unlimited
+
+【Ad-Free Experience】
+・Clean interface for better focus
+・Stress-free template creation
+・Smoother operation
+
+【90+ Icons】
+・Visually manage custom variables
+・12 categories including people, business, tech, and media
+・Identify variables at a glance
+
+Profile Management Use Cases
+
+Sales with Multiple Clients:
+Profile "Company A": {{company}} → Company A Inc.
+Profile "Company B": {{company}} → Company B Corp.
+→ Switch profiles to automatically change company names in templates
+
+Freelancers:
+Profile "Project 1": {{client}} → Client A
+Profile "Project 2": {{client}} → Client B
+→ Easily manage different information per project
+
+Custom Variable Examples
+
+Business:
+{{name}} → John Doe
+{{company}} → Sample Inc.
+{{email}} → john@example.com
+{{signature}} → Your signature
+{{phone}} → 555-1234
+
+Developers:
+{{github}} → GitHub profile URL
+{{apikey}} → API key
+{{endpoint}} → API endpoint
+
+Personal:
+{{address}} → Home address
+{{website}} → Personal website
+{{bio}} → Self introduction
+
+UI/UX Improvements
+
+・Added profile management screen
+・Implemented profile switching button
+・Added icon display to custom variable list
+・Optimized variable edit screen layout
+・Secured wider input areas
+・Enlarged icon selection grid
+・Improved overall usability
+
+Bug Fixes
+
+・Improved system stability
+
+Performance Improvements
+
+・Unified logging system for better stability
+・Reduced unnecessary code
+・Optimized overall performance
+
+Pricing Plans
+
+Monthly Plan: $2.50/month
+Annual Plan: $30/year
+
+※Easy subscription and management via App Store
+※Cancel anytime
+
+Upgrade to Pro Now
+
+Just select "ClipTap Pro" in the app settings.
+For only $2.50/month, get unlimited profile management and custom variables to dramatically improve your daily efficiency.
+
+Try the free version with 3 profiles and 5 variables first!
+
+ClipTap Team
