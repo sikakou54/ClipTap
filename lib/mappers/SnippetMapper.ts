@@ -123,9 +123,9 @@ class SnippetMapper {
     try {
       const db = database.getDB();
       await db.runAsync(
-        `INSERT INTO snippets (id, title, content, categoryId, createdAt, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [id, input.title || null, input.content, input.categoryId || null, now, now]
+        `INSERT INTO snippets (id, title, content, categoryId, copyWithTitle, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [id, input.title || null, input.content, input.categoryId || null, input.copyWithTitle ? 1 : 0, now, now]
       );
 
       // snippet_profilesテーブルに環境を登録
@@ -165,6 +165,10 @@ class SnippetMapper {
     if (input.categoryId !== undefined) {
       updates.push('categoryId = ?');
       params.push(input.categoryId);
+    }
+    if (input.copyWithTitle !== undefined) {
+      updates.push('copyWithTitle = ?');
+      params.push(input.copyWithTitle ? 1 : 0);
     }
 
     params.push(input.id);
@@ -285,6 +289,7 @@ class SnippetMapper {
       content: row.content,
       categoryId: row.categoryId,
       profileIds: profileIds,  // 複数の環境ID
+      copyWithTitle: row.copyWithTitle === 1,  // SQLiteのINTEGERをbooleanに変換
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

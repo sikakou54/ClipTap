@@ -2,7 +2,7 @@
   "expo": {
     "name": "ClipTap",
     "slug": "cliptap",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.sikakou.cliptap",
-      "buildNumber": "28",
+      "buildNumber": "31",
       "requireFullScreen": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -41,8 +41,7 @@
         "android.permission.VIBRATE"
       ],
       "package": "com.sikakou.cliptap",
-      "versionCode": 6,
-      "screenOrientation": "portrait"
+      "versionCode": 10
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -63,7 +62,9 @@
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "15.1"
+            "useFrameworks": "static",
+            "deploymentTarget": "15.1",
+            "flipper": false
           },
           "android": {
             "compileSdkVersion": 35,
@@ -86,7 +87,8 @@
         {
           "initialOrientation": "PORTRAIT"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "updates": {
       "enabled": true,

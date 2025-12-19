@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -34,6 +35,7 @@ export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
   const [content, setContent] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [selectedProfileIds, setSelectedProfileIds] = useState<string[]>([]);
+  const [copyWithTitle, setCopyWithTitle] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(mode === 'edit');
 
@@ -67,6 +69,7 @@ export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
           setContent(snippet.content);
           setSelectedCategoryId(snippet.categoryId);
           setSelectedProfileIds(snippet.profileIds || []);
+          setCopyWithTitle(snippet.copyWithTitle);
         }
       } catch (error) {
         showError('error.not_found');
@@ -121,6 +124,7 @@ export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
           content: content.trim(),
           categoryId: selectedCategoryId,
           profileIds: selectedProfileIds,
+          copyWithTitle,
         });
       } else {
         await createSnippet({
@@ -128,6 +132,7 @@ export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
           content: content.trim(),
           categoryId: selectedCategoryId,
           profileIds: selectedProfileIds,
+          copyWithTitle,
         });
       }
       router.back();
@@ -269,11 +274,32 @@ export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
           </TouchableOpacity>
         </View>
 
+        {/* タイトル付きコピー */}
+        <View style={snippetFormStyles.section}>
+          <View style={[snippetFormStyles.categoryButton, { backgroundColor: colors.surface }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base, fontWeight: '500' }}>
+                {t('snippet.copy_with_title')}
+              </Text>
+              <Text style={{ color: colors.textSecondary, fontSize: responsiveFontSizes.sm, marginTop: 2 }}>
+                {t('snippet.copy_with_title_description')}
+              </Text>
+            </View>
+            <Switch
+              value={copyWithTitle}
+              onValueChange={setCopyWithTitle}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={colors.surface}
+            />
+          </View>
+        </View>
+
         {/* 変数プレビュー */}
         <VariablePreview
           title={title}
           content={content}
           selectedProfileIds={selectedProfileIds}
+          copyWithTitle={copyWithTitle}
         />
       </ScrollView>
     </SafeAreaView>

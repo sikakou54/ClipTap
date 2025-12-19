@@ -48,7 +48,9 @@
     "select_profiles_title": "環境を選択",
     "select_profiles_description": "この定型文を使用する環境を選択してください（複数選択可）",
     "all_profiles": "全ての環境",
-    "preview_standard": "標準"
+    "preview_standard": "標準",
+    "copy_with_title": "タイトルもコピーする",
+    "copy_with_title_description": "オフの場合は内容のみをコピーします"
   },
   "category": {
     "title": "カテゴリ",

@@ -48,7 +48,9 @@
     "select_profiles_title": "Select Profiles",
     "select_profiles_description": "Select profiles to use this template (multiple selection allowed)",
     "all_profiles": "All Profiles",
-    "preview_standard": "Standard"
+    "preview_standard": "Standard",
+    "copy_with_title": "Copy Title Too",
+    "copy_with_title_description": "When OFF, copy content only"
   },
   "category": {
     "title": "Categories",

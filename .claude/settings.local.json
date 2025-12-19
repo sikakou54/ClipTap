@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(git merge:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(while read file)",
+      "Bash(do if grep -q \"^<<<<<<< \" \"$file\")",
+      "Bash(then echo \"$file\" fi done)",
+      "Bash(perl -i -0777 -pe:*)",
+      "Bash(for file in ./app/search.tsx ./components/snippet/SnippetFormScreen.tsx ./components/snippet/TextInputScreen.tsx ./components/snippet/VariableToolbar.tsx ./components/snippet/VariablePreview.tsx ./locales/ja/translation.json ./locales/en/translation.json ./lib/database/database.ts ./lib/database/schema.ts ./lib/database/seed.ts ./lib/mappers/SnippetMapper.ts ./lib/services/ClipboardService.ts ./lib/services/SnippetService.ts ./lib/types/snippet.ts ./eas.json ./package.json ./package-lock.json)",
+      "Bash(do)",
+      "Bash(if [ -f \"$file\" ])",
+      "Bash(then)",
+      "Bash(fi)"
     ]
   }
 }

@@ -32,8 +32,9 @@ export function TextInputScreen({ type }: TextInputScreenProps) {
   const paramKey = type;
   const callbackKey = type === 'title' ? 'snippetTitleCallback' : 'snippetContentCallback';
 
-  const [text, setText] = useState((params[paramKey] as string) || '');
-  const [cursorPosition, setCursorPosition] = useState(0);
+  const initialText = (params[paramKey] as string) || '';
+  const [text, setText] = useState(initialText);
+  const [cursorPosition, setCursorPosition] = useState(initialText.length);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [toolbarHeight, setToolbarHeight] = useState(0);
   const textInputRef = useRef<TextInput>(null);
@@ -79,6 +80,12 @@ export function TextInputScreen({ type }: TextInputScreenProps) {
   useEffect(() => {
     setTimeout(() => {
       textInputRef.current?.focus();
+      // カーソルをテキストの末尾に移動
+      if (initialText.length > 0) {
+        textInputRef.current?.setNativeProps({
+          selection: { start: initialText.length, end: initialText.length }
+        });
+      }
     }, 100);
   }, []);
 
@@ -107,7 +114,10 @@ export function TextInputScreen({ type }: TextInputScreenProps) {
   };
 
   return (
-    <SafeAreaView style={[commonStyles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[commonStyles.container, { backgroundColor: colors.background }]}
+      edges={['top', 'left', 'right']}
+    >
       <Header
         title={t(`snippet.${type}_input`)}
         isModal={!isTablet}
@@ -123,7 +133,7 @@ export function TextInputScreen({ type }: TextInputScreenProps) {
       <View
         style={[
           styles.contentWrapper,
-          { marginBottom: keyboardHeight > 0 ? keyboardHeight : 0 }
+          { marginBottom: keyboardHeight > 0 ? Platform.OS === 'ios' ? keyboardHeight : keyboardHeight + 24 : 0 }
         ]}
       >
         <TextInput

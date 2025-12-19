@@ -18,7 +18,7 @@
  */
 
 import * as SQLite from 'expo-sqlite';
-import * as FileSystem from 'expo-file-system';
+import { Paths, File } from 'expo-file-system';
 import { CREATE_TABLES, CREATE_INDEXES, DROP_TABLES, SCHEMA_VERSION } from './schema';
 import { Logger } from '../logger';
 import { generateUniqueId, getCurrentTimestamp } from '../utils/dateHelpers';
@@ -29,6 +29,29 @@ class Database {
 
   /** 初期化済みフラグ（重複初期化を防ぐ） */
   private isInitialized = false;
+
+  /**
+   * データベースファイルが存在するかチェック
+   *
+   * openDatabaseAsyncを呼び出す前にファイルの存在を確認します。
+   * SQLiteはopenDatabaseAsync時に自動的にファイルを作成するため、
+   * 事前チェックが必要です。
+   *
+   * @returns {Promise<boolean>} ファイルが存在する場合true
+   */
+  private async databaseFileExists(): Promise<boolean> {
+    try {
+      // 新しいexpo-file-system APIを使用
+      const dbFile = new File(Paths.document, 'SQLite', 'cliptap.db');
+      const exists = dbFile.exists;
+
+      Logger.info(`[DB File Check] Path: ${dbFile.uri}, Exists: ${exists}`);
+      return exists;
+    } catch (error) {
+      Logger.error('Failed to check database file existence:', error);
+      return false;
+    }
+  }
 
   /**
    * データベースの初期化
@@ -42,14 +65,15 @@ class Database {
     if (this.isInitialized) return;
 
     try {
+      // データベースファイルの存在チェック（openする前に）
+      const fileExists = await this.databaseFileExists();
+      Logger.info(`[Init] Database file exists: ${fileExists}`);
+
+      // データベースを開く（ファイルがない場合は自動作成される）
       this.db = await SQLite.openDatabaseAsync('cliptap.db');
 
-      // データベース状態を判定
-      const dbState = await this.detectDatabaseState();
-      Logger.info(`[Database State] ${dbState}`);
-
       // 状態に応じて処理を分岐
-      if (dbState === 'first_install') {
+      if (!fileExists) {
         // 初回インストール：テーブルを作成
         Logger.info('[Init] First install detected, creating tables...');
         await this.createTables();
@@ -57,14 +81,11 @@ class Database {
         await this.createDefaultProfileIfNeeded();
         await this.setVersion(SCHEMA_VERSION);
         Logger.success(`[Init] Database initialized with version ${SCHEMA_VERSION}`);
-      } else if (dbState === 'needs_migration') {
-        // マイグレーション必要：V1→V2マイグレーションを実行
-        Logger.info('[Init] Migration needed, running V1→V2 migration...');
+      } else {
+        // マイグレーションを実行
+        Logger.info('[Init] Migration needed, running migration...');
         await this.runMigrations();
         Logger.success('[Init] Migration completed');
-      } else {
-        // マイグレーション不要：バージョンチェックのみ
-        Logger.info('[Init] Database is up-to-date, no migration needed');
       }
 
       this.isInitialized = true;
@@ -93,21 +114,21 @@ class Database {
         return 'first_install';
       }
 
-      // 2. snippetsテーブルにisPinnedカラムが存在するか確認
-      const columns = await this.db.getAllAsync<{ name: string }>(
-        `PRAGMA table_info('snippets')`
-      );
-      const columnNames = columns.map(c => c.name);
-      const hasIsPinned = columnNames.includes('isPinned');
+      // 2. user_versionを確認
+      const currentVersion = await this.getCurrentVersion();
+      Logger.info(`[Detect] Current user_version: ${currentVersion}`);
 
-      if (hasIsPinned) {
-        // isPinnedカラムが存在する → V1スキーマ、マイグレーション必要
-        Logger.info('[Detect] snippets table has isPinned column → needs_migration');
-        Logger.info(`[Detect] Current columns: ${columnNames.join(', ')}`);
+      if (currentVersion === 0) {
+        // user_versionが0 → V1スキーマ（マイグレーション前）、マイグレーション必要
+        Logger.info('[Detect] user_version is 0 → needs_migration (V1 schema)');
+        return 'needs_migration';
+      } else if (currentVersion < SCHEMA_VERSION) {
+        // user_versionが最新より古い → マイグレーション必要
+        Logger.info(`[Detect] user_version ${currentVersion} < ${SCHEMA_VERSION} → needs_migration`);
         return 'needs_migration';
       } else {
-        // isPinnedカラムが存在しない → V2スキーマ、マイグレーション不要
-        Logger.info('[Detect] snippets table does not have isPinned column → up_to_date');
+        // user_versionが最新 → マイグレーション不要
+        Logger.info(`[Detect] user_version ${currentVersion} is up-to-date → up_to_date`);
         return 'up_to_date';
       }
     } catch (error) {
@@ -201,24 +222,91 @@ class Database {
    * - snippet_profiles テーブル（スニペット・プロファイル関連）
    * - snippets.profileId カラム（後で snippet_profiles に移行して削除）
    *
+   * Version 2 → Version 3 の変更内容:
+   * 【追加】
+   * - snippets.copyWithTitle カラム（タイトル付きコピー制御）
+   *
    * 冪等性: すべての操作は複数回実行しても安全
    */
   private async runMigrations(): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
-    const currentVersion = await this.getCurrentVersion();
+    let currentVersion = await this.getCurrentVersion();
     Logger.info(`Current database version: ${currentVersion}, Target version: ${SCHEMA_VERSION}`);
 
-    // Version 1 → 2: 一括マイグレーション
-    if (currentVersion < 2) {
-      Logger.info('Running migration: Version 1 → 2');
-      await this.migrateFromV1ToV2();
+    // user_versionが0の場合はV1として扱う
+    if (currentVersion === 0) {
+      Logger.info('[Migration] user_version is 0, treating as V1 schema');
+      currentVersion = 1;
     }
 
-    // バージョンを更新
-    if (currentVersion < SCHEMA_VERSION) {
-      await this.setVersion(SCHEMA_VERSION);
-      Logger.info(`Database migrated to version ${SCHEMA_VERSION}`);
+    // 現在のバージョンから最新バージョンまで順番にマイグレーション
+    while (currentVersion < SCHEMA_VERSION) {
+      const nextVersion = currentVersion + 1;
+      Logger.info(`Running migration: Version ${currentVersion} → ${nextVersion}`);
+
+      switch (nextVersion) {
+        case 2:
+          await this.migrateFromV1ToV2();
+          break;
+        case 3:
+          await this.migrateFromV2ToV3();
+          break;
+        default:
+          Logger.warn(`No migration defined for version ${nextVersion}`);
+          break;
+      }
+
+      // バージョンを1つずつ更新
+      await this.setVersion(nextVersion);
+      currentVersion = nextVersion;
+      Logger.info(`Database migrated to version ${nextVersion}`);
+    }
+
+    Logger.info(`Database is now at version ${SCHEMA_VERSION}`);
+  }
+
+  /**
+   * Version 2 → Version 3 マイグレーション
+   *
+   * V2スキーマ:
+   * - snippets: id, title, content, categoryId, createdAt, updatedAt
+   *
+   * V3スキーマ:
+   * - snippets: id, title, content, categoryId, copyWithTitle, createdAt, updatedAt
+   *
+   * 追加するカラム:
+   * - copyWithTitle: タイトルと内容を一緒にコピーするか（0: 内容のみ, 1: タイトル付き）
+   *
+   * 冪等性: カラムが既に存在する場合はスキップ
+   */
+  private async migrateFromV2ToV3(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    Logger.info('[Migration V2→V3] Starting migration...');
+
+    try {
+      // 現在のカラム構成を取得
+      const columns = await this.db.getAllAsync<{ name: string }>(
+        `SELECT name FROM pragma_table_info('snippets')`
+      );
+      const columnNames = columns.map(c => c.name);
+
+      // copyWithTitleカラムが存在しない場合のみ追加
+      if (!columnNames.includes('copyWithTitle')) {
+        Logger.info('Adding copyWithTitle column to snippets table...');
+        await this.db.execAsync(`
+          ALTER TABLE snippets ADD COLUMN copyWithTitle INTEGER DEFAULT 0;
+        `);
+        Logger.success('copyWithTitle column added successfully');
+      } else {
+        Logger.info('copyWithTitle column already exists');
+      }
+
+      Logger.success('[Migration V2→V3] Migration completed successfully');
+    } catch (error) {
+      Logger.error('Failed to migrate from V2 to V3:', error);
+      throw error;
     }
   }
 
@@ -484,30 +572,6 @@ class Database {
   }
 
   /**
-   * snippet_profilesテーブル作成
-   */
-  private async migrateSnippetProfiles(): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    Logger.info('[Migration] Creating snippet_profiles table...');
-
-    try {
-      // snippet_profiles テーブルを作成
-      await this.db.execAsync(CREATE_TABLES.snippetProfiles);
-      Logger.info('Created snippet_profiles table');
-
-      // インデックスを作成
-      await this.db.execAsync(CREATE_INDEXES.snippetProfilesSnippet);
-      await this.db.execAsync(CREATE_INDEXES.snippetProfilesProfile);
-      Logger.info('Created snippet_profiles indexes');
-
-    } catch (error) {
-      Logger.error('Failed to migrate snippet_profiles:', error);
-      throw error;
-    }
-  }
-
-  /**
    * categoriesテーブルの整理（V1→V2）
    *
    * V1の不要カラムを削除: icon
@@ -673,47 +737,14 @@ class Database {
 
   /**
    * データベースファイルを完全に削除して再作成
+   *
+   * 注: この機能は現在使用していません。
+   * データベースをリセットする場合は reset() メソッドを使用してください。
    */
   async deleteAndRecreate(): Promise<void> {
-    try {
-      // データベース接続をクローズ
-      if (this.db) {
-        await this.db.closeAsync();
-        this.db = null;
-      }
-      this.isInitialized = false;
-
-      // データベースファイルのパスを取得
-      const dbPath = `${FileSystem.documentDirectory}SQLite/cliptap.db`;
-
-      // ファイルが存在する場合は削除
-      const fileInfo = await FileSystem.getInfoAsync(dbPath);
-      if (fileInfo.exists) {
-        await FileSystem.deleteAsync(dbPath);
-        Logger.info('Database file deleted');
-      }
-
-      // WALファイルとSHMファイルも削除
-      const walPath = `${dbPath}-wal`;
-      const shmPath = `${dbPath}-shm`;
-
-      const walInfo = await FileSystem.getInfoAsync(walPath);
-      if (walInfo.exists) {
-        await FileSystem.deleteAsync(walPath);
-      }
-
-      const shmInfo = await FileSystem.getInfoAsync(shmPath);
-      if (shmInfo.exists) {
-        await FileSystem.deleteAsync(shmPath);
-      }
-
-      // データベースを再初期化
-      await this.init();
-      Logger.info('Database recreated successfully');
-    } catch (error) {
-      Logger.error('Failed to delete and recreate database:', error);
-      throw error;
-    }
+    // データベースのリセットで代替
+    await this.reset();
+    Logger.info('Database recreated successfully');
   }
 }
 

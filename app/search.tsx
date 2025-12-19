@@ -78,11 +78,11 @@ export default function SearchScreen() {
   // 選択中の環境でフィルタリング
   const displaySnippets = selectedProfileId
     ? baseSnippets.filter(snippet => {
-        // 環境未設定の定型文は全ての環境で表示
-        if (!snippet.profileIds || snippet.profileIds.length === 0) return true;
-        // 選択した環境に設定されている定型文のみ表示
-        return snippet.profileIds.includes(selectedProfileId);
-      })
+      // 環境未設定の定型文は全ての環境で表示
+      if (!snippet.profileIds || snippet.profileIds.length === 0) return true;
+      // 選択した環境に設定されている定型文のみ表示
+      return snippet.profileIds.includes(selectedProfileId);
+    })
     : baseSnippets; // 環境が選択されていない場合は全て表示（通常は起こらない）
 
   const handleRefresh = async () => {
@@ -286,7 +286,8 @@ const styles = StyleSheet.create({
   },
   profileFilterContent: {
     gap: UI_CONSTANTS.GAP.SM,
-    paddingVertical: UI_CONSTANTS.GAP.SM,
+    paddingTop: UI_CONSTANTS.GAP.SM,
+    paddingBottom: UI_CONSTANTS.GAP.LG,
   },
   profileChip: {
     flexDirection: 'row',

@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { WebView } from 'react-native-webview';
-import * as FileSystem from 'expo-file-system';
+import { File } from 'expo-file-system';
 import { Asset } from 'expo-asset';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../lib/themeSystem';
@@ -43,7 +43,8 @@ export default function WebViewScreen() {
       await asset.downloadAsync();
 
       if (asset.localUri) {
-        const content = await FileSystem.readAsStringAsync(asset.localUri);
+        const file = new File(asset.localUri);
+        const content = await file.text();
         setHtmlContent(content);
       }
     } catch (error) {

@@ -18,9 +18,10 @@ interface Props {
   title: string;
   content: string;
   selectedProfileIds?: string[];  // 選択中の環境ID
+  copyWithTitle?: boolean;  // タイトルもコピーするか
 }
 
-export function VariablePreview({ title, content, selectedProfileIds = [] }: Props) {
+export function VariablePreview({ title, content, selectedProfileIds = [], copyWithTitle = false }: Props) {
   const { t } = useTranslation();
   const { profiles } = useProfiles();
   const { createCustomVariableResolver } = useVariables();
@@ -34,7 +35,14 @@ export function VariablePreview({ title, content, selectedProfileIds = [] }: Pro
   // コピー機能
   const handleCopy = async () => {
     try {
-      await Clipboard.setStringAsync(preview);
+      let textToCopy: string;
+      if (copyWithTitle && previewTitle) {
+        textToCopy = `${previewTitle}\n${preview}`;
+      } else {
+        textToCopy = preview;
+      }
+
+      await Clipboard.setStringAsync(textToCopy);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setIsCopied(true);
       showSuccess(t('snippet.copied'));

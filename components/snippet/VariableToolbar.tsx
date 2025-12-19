@@ -108,10 +108,12 @@ function VariableButton({ variable, onPress }: VariableButtonProps) {
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 12,
+    paddingTop: 6,
+    paddingBottom: 6,
   },
   scrollContent: {
     paddingHorizontal: 12,
+    paddingBottom: 0,
     gap: 8,
   },
   button: {

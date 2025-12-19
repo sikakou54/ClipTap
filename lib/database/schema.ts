@@ -15,7 +15,7 @@
  * スキーマバージョン
  * マイグレーションの管理に使用
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 /**
  * テーブル作成SQL
@@ -49,6 +49,7 @@ export const CREATE_TABLES = {
    * @field title - スニペットのタイトル（省略可）
    * @field content - スニペットの本文（必須）
    * @field categoryId - 所属カテゴリID（外部キー、削除時NULL）
+   * @field copyWithTitle - タイトルと内容を一緒にコピーするか（0: 内容のみ, 1: タイトル付き、デフォルト: 0）
    * @field createdAt - 作成日時（ISO 8601形式）
    * @field updatedAt - 更新日時（ISO 8601形式）
    *
@@ -65,6 +66,7 @@ export const CREATE_TABLES = {
       title TEXT,
       content TEXT NOT NULL,
       categoryId TEXT,
+      copyWithTitle INTEGER DEFAULT 0,
       createdAt TEXT NOT NULL,
       updatedAt TEXT NOT NULL,
       FOREIGN KEY (categoryId) REFERENCES categories(id) ON DELETE SET NULL

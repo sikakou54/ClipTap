@@ -61,6 +61,7 @@ const TEST_SNIPPETS = [
 
 {{signature}}`,
     categoryName: 'メール',
+    copyWithTitle: true,
   },
   {
     title: '資料送付メール',
@@ -78,6 +79,7 @@ Email: {{client_email}}
 
 {{signature}}`,
     categoryName: 'メール',
+    copyWithTitle: true,
   },
   {
     title: '新規お問い合わせ対応',
@@ -95,6 +97,7 @@ Email: {{client_email}}
 
 {{signature}}`,
     categoryName: 'サポート',
+    copyWithTitle: true,
   },
   {
     title: '商品説明・提案',
@@ -115,6 +118,7 @@ Email: {{client_email}}
 
 {{signature}}`,
     categoryName: '営業',
+    copyWithTitle: true,
   },
   {
     title: '日程調整',
@@ -132,6 +136,7 @@ Email: {{client_email}}
 
 {{signature}}`,
     categoryName: 'メール',
+    copyWithTitle: true,
   },
   {
     title: '見積もり送付',
@@ -152,6 +157,7 @@ Email: {{client_email}}
 
 {{signature}}`,
     categoryName: '営業',
+    copyWithTitle: true,
   },
   {
     title: '問題解決報告',
@@ -175,6 +181,7 @@ Email: {{client_email}}
 
 {{signature}}`,
     categoryName: 'サポート',
+    copyWithTitle: true,
   },
   {
     title: '資料送付',
@@ -189,6 +196,7 @@ Email: {{client_email}}
 
 {{signature}}`,
     categoryName: 'メール',
+    copyWithTitle: true,
   },
   {
     title: 'フォローアップ',
@@ -203,6 +211,7 @@ Email: {{client_email}}
 
 {{signature}}`,
     categoryName: '営業',
+    copyWithTitle: true,
   },
   {
     title: '住所・連絡先',
@@ -213,6 +222,7 @@ TEL: {{phone}}
 Email: {{email}}
 Web: {{website}}`,
     categoryName: 'プライベート',
+    copyWithTitle: false,
   },
   {
     title: '自己紹介',
@@ -225,6 +235,7 @@ Web: {{website}}`,
 
 連絡先: {{email}}`,
     categoryName: 'プライベート',
+    copyWithTitle: false,
   },
 ];
 
@@ -448,6 +459,7 @@ async function seedSnippets(categoryMap: Map<string, string>): Promise<void> {
         title: snippetData.title,
         content: snippetData.content,
         categoryId: categoryId || undefined,
+        copyWithTitle: snippetData.copyWithTitle,
       });
 
       Logger.info(`[Seed] Created snippet: ${snippetData.title}`);

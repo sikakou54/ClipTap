@@ -71,10 +71,15 @@ export class SnippetService {
       title = snippet.title;
     }
 
-    // タイトルと内容を結合してコピー（改行2つで区切る）
-    const textToCopy = title
-      ? `${title}\n\n${content}`
-      : content;
+    // copyWithTitleフラグに基づいてコピー内容を決定
+    let textToCopy: string;
+    if (snippet.copyWithTitle && title) {
+      // タイトル付きでコピー（改行1つで区切る）
+      textToCopy = `${title}\n${content}`;
+    } else {
+      // 内容のみコピー
+      textToCopy = content;
+    }
 
     // クリップボードにコピー（振動フィードバック含む）
     await clipboardService.copyToClipboard(textToCopy);

@@ -5,6 +5,7 @@ export interface Snippet {
   content: string;
   categoryId: string | null;
   profileIds: string[];  // 複数の環境を指定
+  copyWithTitle: boolean;  // タイトルと内容を一緒にコピーするか
   createdAt: string;
   updatedAt: string;
 }
@@ -14,6 +15,7 @@ export interface CreateSnippetInput {
   content: string;
   categoryId?: string | null;
   profileIds?: string[];  // 複数の環境を指定
+  copyWithTitle?: boolean;  // タイトルと内容を一緒にコピーするか
 }
 
 export interface UpdateSnippetInput {
@@ -22,6 +24,7 @@ export interface UpdateSnippetInput {
   content?: string;
   categoryId?: string | null;
   profileIds?: string[];  // 複数の環境を指定
+  copyWithTitle?: boolean;  // タイトルと内容を一緒にコピーするか
 }
 
 export interface SearchOptions {
