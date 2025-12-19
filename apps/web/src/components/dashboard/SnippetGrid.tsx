@@ -1,0 +1,109 @@
+/**
+ * スニペットグリッド表示
+ *
+ * @description
+ * フィルタリング済みのスニペットをグリッドレイアウト（1〜3列）で表示。
+ * カテゴリ情報のメモ化により、アコーディオン開閉時の再計算を防止。
+ */
+import { useMemo } from 'react';
+import type { Category, SnippetWithDisplay, Snippet } from '@cliptap/shared';
+import { SnippetCard } from '@components/snippet/SnippetCard';
+import { EmptySnippetGrid } from '@components/snippet/EmptySnippetGrid';
+
+interface SnippetGridProps {
+  /** フィルタリング済みスニペット一覧 */
+  filteredSnippets: SnippetWithDisplay[];
+  /** グリッドの列数 */
+  gridColumns: 1 | 2 | 3;
+  /** コピー済みスニペットのID */
+  copiedId: string | null;
+  /** カテゴリ一覧 */
+  categories: Category[];
+  /** カテゴリIDから色を取得する関数 */
+  getCategoryColor: (categoryId: string | null) => string | null;
+  /** カテゴリIDから名前を取得する関数 */
+  getCategoryName: (categoryId: string | null) => string;
+  /** コピーボタンクリック時のコールバック */
+  onCopy: (snippet: Snippet) => void;
+  /** 編集ボタンクリック時のコールバック */
+  onEdit: (snippet: Snippet) => void;
+  /** 削除ボタンクリック時のコールバック */
+  onDelete: (snippetId: string) => void;
+}
+
+export function SnippetGrid({
+  filteredSnippets,
+  gridColumns,
+  copiedId,
+  categories,
+  getCategoryColor,
+  getCategoryName,
+  onCopy,
+  onEdit,
+  onDelete,
+}: SnippetGridProps) {
+  /* カテゴリ情報をMapに変換（カテゴリIDから色と名前を高速検索できるようにする）
+      メモ化により、categoriesやgetCategoryColor/getCategoryNameが変更された時のみ再計算。
+      アコーディオン開閉時の不要な再計算を防止し、パフォーマンスを向上。 */
+  const categoryInfoMap = useMemo(() => {
+    const map = new Map<string | null, { color: string | null; name: string }>();
+    /* 未分類カテゴリ（null）の情報を設定 */
+    map.set(null, { color: null, name: getCategoryName(null) });
+    /* 各カテゴリの色と名前をMapに登録 */
+    categories.forEach((category) => {
+      map.set(category.id, {
+        color: getCategoryColor(category.id),
+        name: getCategoryName(category.id),
+      });
+    });
+    return map;
+  }, [categories, getCategoryColor, getCategoryName]);
+
+  /* スニペットが0件の場合は空状態を表示
+      フィルタリング結果が0件の場合、空状態メッセージと新規作成ボタンを表示。 */
+  if (filteredSnippets.length === 0) {
+    return <EmptySnippetGrid />;
+  }
+
+  /* グリッドの列数に応じたクラスを生成（レスポンシブ対応）
+      1列: 常に1列表示
+      2列: モバイル1列、デスクトップ2列
+      3列: モバイル1列、タブレット2列、デスクトップ3列 */
+  const gridClass = `grid gap-4 pb-20 items-start ${
+    gridColumns === 1 ? 'grid-cols-1' :
+    gridColumns === 2 ? 'grid-cols-1 md:grid-cols-2' :
+    'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+  }`;
+
+  /* スニペットグリッドコンテナ（1〜3列、レスポンシブ対応）
+      pb-20で下部にマージンを確保（フッターやスクロール時の余白）。 */
+  return (
+    <div className={gridClass}>
+      {filteredSnippets.map((snippet) => {
+        /* スニペットに紐づくカテゴリ情報を取得（未分類の場合はデフォルト値を使用）
+            categoryInfoMapから高速検索。見つからない場合は未分類のデフォルト値を使用。 */
+        const categoryInfo = categoryInfoMap.get(snippet.categoryId) || {
+          color: null,
+          name: getCategoryName(null),
+        };
+
+        /* スニペットカード
+            各スニペットのタイトル・内容・カテゴリ情報を表示。
+            コピー・編集・削除ボタンを提供。
+            isCopiedがtrueの場合はコピー済み状態を視覚的に表示。 */
+        return (
+          <SnippetCard
+            key={snippet.id}
+            snippet={snippet}
+            isCopied={copiedId === snippet.id}
+            categoryColor={categoryInfo.color}
+            categoryName={categoryInfo.name}
+            onCopy={() => onCopy(snippet)}
+            onEdit={() => onEdit(snippet)}
+            onDelete={() => onDelete(snippet.id)}
+          />
+        );
+      })}
+    </div>
+  );
+}

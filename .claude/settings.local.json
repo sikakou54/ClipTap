@@ -11,7 +11,10 @@
       "Bash(do)",
       "Bash(if [ -f \"$file\" ])",
       "Bash(then)",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(# v1.0.5をコミット\ngit commit -m \"\"$\\(cat <<''EOF''\nv1.0.5 拡張キーボード対応（iOS/Android）、Bare Workflowへ移行\n\n- iOS/Androidネイティブキーボード拡張機能を実装\n- Expo Bare Workflowへ移行\n- android/ディレクトリ追加（Kotlinネイティブコード）\n- ios/ディレクトリ追加（Swiftネイティブコード）\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\"\" 2>&1)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nv1.0.7 Web版対応、インポート・エクスポート実装、ドキュメント整備\n\n- Web版（apps/web）の基盤対応準備\n- インポート・エクスポート機能を実装\n- 選択エクスポート・選択インポート機能を追加\n- 設定画面の更新\n- docs/ディレクトリにアーキテクチャ・API・開発ガイドを追加\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nv1.0.8 UI改善\n\n- 各画面のUIコンポーネントを改善\n- 共通コンポーネント（UnifiedModal, ModalFooter）を追加\n- カテゴリ、プロフィール、スニペットコンポーネントのスタイリング調整\n- 設定画面のレイアウト改善\n- index.tsファイルを追加してエクスポートを整理\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

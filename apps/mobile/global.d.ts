@@ -1,0 +1,61 @@
+/**
+ * @file global.d.ts
+ * @description
+ * グローバル型定義
+ *
+ * React Nativeのモーダル画面と親画面間のコールバック通信に使用する
+ * グローバル変数の型定義。Expo Routerではモーダル間の直接的なコールバック
+ * 受け渡しが難しいため、グローバル変数を経由して値を返す。
+ *
+ * 使用パターン:
+ * 1. 親画面でコールバック関数をグローバル変数に設定
+ * 2. モーダル画面で値を編集
+ * 3. モーダル画面でグローバル変数のコールバックを呼び出し
+ * 4. 親画面のコールバックが実行される
+ *
+ * @see text-editor.tsx - テキストエディターモーダル
+ * @see CategoryPicker - カテゴリ選択ピッカー
+ */
+
+declare global {
+  /**
+   * スニペット本文のコールバック
+   * テキストエディターモーダルから親画面に編集後の本文を返す
+   */
+  var snippetContentCallback: ((content: string) => void) | undefined;
+
+  /**
+   * スニペットタイトルのコールバック
+   * テキストエディターモーダルから親画面に編集後のタイトルを返す
+   */
+  var snippetTitleCallback: ((title: string) => void) | undefined;
+
+  /**
+   * カテゴリ選択のコールバック
+   * カテゴリピッカーから親画面に選択されたカテゴリIDを返す
+   * nullは「カテゴリなし」を表す
+   */
+  var categorySelectCallback: ((categoryId: string | null) => void) | undefined;
+
+  /**
+   * プロファイル選択のコールバック
+   * プロファイルピッカーから親画面に選択されたプロファイルIDの配列を返す
+   */
+  var profileSelectCallback: ((selectedIds: string[]) => void) | undefined;
+
+  /**
+   * 変数値編集のデータ
+   * 変数値編集モーダルから親画面に編集後のデータを返す
+   */
+  var variableValueCallbackData: {
+    /** 対象プロファイルのID */
+    profileId: string;
+    /** 標準値かどうか（デフォルトプロファイルの場合true） */
+    isStandard: boolean | string;
+    /** 新しい変数値 */
+    newValue: string;
+  } | undefined;
+}
+
+/** このファイルをモジュールとして扱うための空エクスポート */
+export {};

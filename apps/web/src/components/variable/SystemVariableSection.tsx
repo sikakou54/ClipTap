@@ -1,0 +1,37 @@
+/**
+ * システム変数セクションコンポーネント
+ *
+ * @description
+ * システム提供の変数（DATE、TIME等）一覧を表示。
+ * これらの変数は読み取り専用で、編集・削除不可。
+ */
+import { useTranslation } from '@cliptap/shared';
+import { SystemVariableItem } from './SystemVariableItem';
+import type { SystemVariable } from '@hooks/screens/useVariablesScreen';
+
+interface SystemVariableSectionProps {
+  systemVariables: readonly SystemVariable[];
+}
+
+export function SystemVariableSection({ systemVariables }: SystemVariableSectionProps) {
+  const { t } = useTranslation();
+
+  /* システム変数セクション（タイトルと変数一覧） */
+  return (
+    <div>
+      {/* セクションタイトル */}
+      <h2 className="text-sm font-medium text-gray-500 dark:text-[#707070] mb-3">{t('snippet.system_variables')}</h2>
+      {/* システム変数一覧コンテナ */}
+      <div className="bg-white dark:bg-[#1A1A1A] rounded-xl shadow-sm border border-gray-200 dark:border-[#2A2A2A] overflow-hidden">
+        {systemVariables.map((variable, index) => (
+          <SystemVariableItem
+            key={variable.name}
+            variable={variable}
+            isLast={index === systemVariables.length - 1}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+

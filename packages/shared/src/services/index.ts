@@ -1,0 +1,25 @@
+/**
+ * 共通サービス層
+ *
+ * @description
+ * Mobile/Webで共通のビジネスロジックを提供するサービス。
+ * 新アーキテクチャでは静的メソッドベースのサービスを使用。
+ *
+ * @module services
+ */
+
+export { CategoryService } from './CategoryService';
+export { ProfileService } from './ProfileService';
+export { SnippetService } from './SnippetService';
+export { VariableService, type VariableResolverContext } from './VariableService';
+export {
+  SubscriptionService,
+  FREE_PROFILES_LIMIT,
+  FREE_VARIABLES_LIMIT,
+  type ValidFlagsUpdater,
+} from './SubscriptionService';
+export { createValidFlagsUpdater } from './validFlagsUpdater';
+
+export { AuthService } from './AuthService';
+
+export { ImportService } from './ImportService';

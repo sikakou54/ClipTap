@@ -1,0 +1,148 @@
+{
+  "expo": {
+    "name": "ClipTap",
+    "slug": "cliptap",
+    "version": "1.0.5",
+    "version": "1.0.6",
+    "version": "1.0.7",
+    "version": "1.0.8",
+    "version": "1.2.0",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "jsEngine": "hermes",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "backgroundColor": "#1F2937",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sikakou.cliptap",
+      "buildNumber": "32",
+      "buildNumber": "33",
+      "requireFullScreen": false,
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.sikakou.cliptap"
+        ]
+      },
+      "buildNumber": "40",
+      "buildNumber": "41",
+      "buildNumber": "50",
+      "requireFullScreen": false,
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.sikakou.cliptap"
+        ],
+        "com.apple.developer.applesignin": [
+          "Default"
+        ]
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [],
+        "UISupportedInterfaceOrientations": [
+          "UIInterfaceOrientationPortrait"
+        ],
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.VIBRATE"
+      ],
+      "package": "com.sikakou.cliptap",
+      "versionCode": 11
+      "versionCode": 12
+      "versionCode": 20,
+      "googleServicesFile": "./google-services.json"
+      "versionCode": 21,
+      "versionCode": 30,
+      "googleServicesFile": "./google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "cliptap",
+    "owner": "sikakou",
+    "runtimeVersion": "1.0.4",
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-dev-client",
+      "expo-splash-screen",
+      "expo-localization",
+      "expo-system-ui",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      "@react-native-google-signin/google-signin/app.plugin.js",
+      "expo-apple-authentication",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static",
+            "deploymentTarget": "15.1",
+            "flipper": false
+          },
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 24
+          }
+        }
+      ],
+      "expo-tracking-transparency",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-5616727577619398~4455954633",
+          "iosAppId": "ca-app-pub-5616727577619398~8993844331",
+          "userTrackingPermission": "関連性の高い広告を表示するためにIDをトラッキングいたします。"
+        }
+      ],
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "PORTRAIT"
+        }
+      ],
+      "expo-font"
+      ],
+      ],
+      "expo-font"
+      ],
+      "expo-font"
+      ],
+      "expo-font"
+      "expo-font",
+      "expo-audio"
+    ],
+    "updates": {
+      "enabled": true,
+      "url": "https://u.expo.dev/[your-project-id]"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "167bab11-42f6-4180-8d97-7cec4b38dc7f"
+      },
+      "router": {}
+    },
+    "locales": {
+      "en": "./english.json",
+      "ja": "./japanese.json"
+    }
+  }
+}
