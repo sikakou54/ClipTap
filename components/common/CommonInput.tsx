@@ -1,6 +1,17 @@
 /**
  * 共通入力フィールドコンポーネント
- * バリデーション機能付き
+ *
+ * アプリ全体で使用される統一された入力フィールド。
+ * バリデーション機能、アイコン表示、エラー表示を提供。
+ *
+ * 主な機能:
+ * - 入力タイプ別キーボード設定（text, email, password, number, multiline）
+ * - リアルタイムバリデーション（入力時 or フォーカスアウト時）
+ * - ラベル・ヘルパーテキスト・エラーメッセージ表示
+ * - 左右アイコン配置（右アイコンはタップ可能）
+ * - フォーカス状態のボーダー色変更
+ *
+ * @see SnippetFormScreen - 使用例
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -11,13 +22,25 @@ import {
   TextInputProps,
   ViewStyle,
   TextStyle,
-  NativeSyntheticEvent,
-  TextInputFocusEventData,
   TouchableOpacity
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../lib/themeSystem';
+import { useTheme } from '@lib/themeSystem';
 
+/*
+ * ========================================
+ * 型定義
+ * ========================================
+ */
+
+/**
+ * 入力タイプ
+ * - text: 通常テキスト（デフォルト）
+ * - email: メールアドレス（@キーボード）
+ * - password: パスワード（マスク表示）
+ * - number: 数値（テンキー）
+ * - multiline: 複数行テキスト
+ */
 export type InputType =
   | 'text'
   | 'email'
@@ -25,6 +48,28 @@ export type InputType =
   | 'number'
   | 'multiline';
 
+/*
+ * ========================================
+ * Props定義
+ * ========================================
+ */
+
+/**
+ * CommonInputのProps
+ * @property type - 入力タイプ（キーボード種類を決定）
+ * @property label - 入力欄上部のラベルテキスト
+ * @property error - 外部から渡すエラーメッセージ
+ * @property helperText - ヘルパーテキスト（エラーがない時に表示）
+ * @property icon - 左側アイコン名
+ * @property rightIcon - 右側アイコン名
+ * @property onRightIconPress - 右アイコンタップ時のコールバック
+ * @property containerStyle - コンテナのスタイル上書き
+ * @property inputStyle - 入力欄のスタイル上書き
+ * @property required - 必須マーク表示フラグ
+ * @property validateOnChange - 入力時にバリデーション実行するか
+ * @property validator - カスタムバリデーション関数
+ * @property onValidationChange - バリデーション結果変更時のコールバック
+ */
 interface CommonInputProps extends Omit<TextInputProps, 'style'> {
   type?: InputType;
   label?: string;
@@ -60,12 +105,34 @@ const CommonInput: React.FC<CommonInputProps> = ({
   onFocus,
   ...textInputProps
 }) => {
+  /*
+   * ========================================
+   * Hooks & コンテキスト
+   * ========================================
+   */
+  const { colors, spacing, typography } = useTheme();
+
+  /*
+   * ========================================
+   * 状態管理
+   * ========================================
+   */
   const [validationError, setValidationError] = useState<string | undefined>();
   const [focused, setFocused] = useState(false);
-  const { colors, spacing, typography, responsiveFontSizes } = useTheme();
 
   const displayError = error || validationError;
 
+  /*
+   * ========================================
+   * ヘルパー関数
+   * ========================================
+   */
+
+  /**
+   * バリデーション実行
+   * validatorが渡されている場合のみ実行し、
+   * 結果をstateとコールバックで通知
+   */
   const runValidation = useCallback((value: string) => {
     if (!validator) return;
 
@@ -78,6 +145,16 @@ const CommonInput: React.FC<CommonInputProps> = ({
     }
   }, [validator, onValidationChange]);
 
+  /*
+   * ========================================
+   * イベントハンドラ
+   * ========================================
+   */
+
+  /**
+   * テキスト変更時の処理
+   * 親コンポーネントへ通知し、validateOnChangeがtrueならバリデーション実行
+   */
   const handleChangeText = useCallback((text: string) => {
     onChangeText?.(text);
 
@@ -86,7 +163,10 @@ const CommonInput: React.FC<CommonInputProps> = ({
     }
   }, [onChangeText, validateOnChange, runValidation]);
 
-  const handleBlur = useCallback((e: any) => {
+  /**
+   * フォーカスアウト時の処理
+   */
+  const handleBlur = useCallback<NonNullable<TextInputProps['onBlur']>>((e) => {
     setFocused(false);
     onBlur?.(e);
 
@@ -95,11 +175,18 @@ const CommonInput: React.FC<CommonInputProps> = ({
     }
   }, [onBlur, validator, runValidation, textInputProps.value]);
 
-  const handleFocus = useCallback((e: any) => {
+  /**
+   * フォーカス時の処理
+   */
+  const handleFocus = useCallback<NonNullable<TextInputProps['onFocus']>>((e) => {
     setFocused(true);
     onFocus?.(e);
   }, [onFocus]);
 
+  /**
+   * 入力タイプに応じたキーボードタイプを取得
+   * @returns React Nativeのキーボードタイプ
+   */
   const getKeyboardType = (): TextInputProps['keyboardType'] => {
     switch (type) {
       case 'email':
@@ -111,24 +198,38 @@ const CommonInput: React.FC<CommonInputProps> = ({
     }
   };
 
+  /**
+   * ボーダー色を決定
+   * 優先順位: エラー > フォーカス > 通常
+   */
   const borderColor = useMemo(() => {
     if (displayError) return colors.error;
     if (focused) return colors.primary;
     return colors.border;
   }, [displayError, focused, colors]);
 
+  /*
+   * ========================================
+   * レンダリング
+   * ========================================
+   */
+
+  /* 共通入力フィールドコンテナ */
   return (
     <View style={containerStyle}>
+      {/* ラベル（オプション） */}
       {label && (
         <Text style={[
           typography.label,
           { color: colors.text, marginBottom: spacing.xs }
         ]}>
           {label}
+          {/* 必須マーク */}
           {required && <Text style={{ color: colors.error }}> *</Text>}
         </Text>
       )}
 
+      {/* 入力欄コンテナ（アイコン + テキスト入力 + 右アイコン） */}
       <View style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -139,6 +240,7 @@ const CommonInput: React.FC<CommonInputProps> = ({
         paddingHorizontal: spacing.sm,
         minHeight: type === 'multiline' ? 100 : 44,
       }}>
+        {/* 左側アイコン（オプション） */}
         {icon && (
           <Ionicons
             name={icon}
@@ -148,6 +250,7 @@ const CommonInput: React.FC<CommonInputProps> = ({
           />
         )}
 
+        {/* テキスト入力欄 */}
         <TextInput
           style={[
             typography.body,
@@ -170,6 +273,7 @@ const CommonInput: React.FC<CommonInputProps> = ({
           {...textInputProps}
         />
 
+        {/* 右側アイコン（オプション、タップ可能） */}
         {rightIcon && (
           <TouchableOpacity
             onPress={onRightIconPress}
@@ -185,6 +289,7 @@ const CommonInput: React.FC<CommonInputProps> = ({
         )}
       </View>
 
+      {/* エラーメッセージまたはヘルパーテキスト */}
       {(displayError || helperText) && (
         <Text style={[
           typography.caption,

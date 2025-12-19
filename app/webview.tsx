@@ -1,68 +1,40 @@
 /**
- * WebView Screen
- * HTMLファイルを表示
+ * @module WebViewScreen
+ * @description WebView画面
+ *
+ * 利用規約やプライバシーポリシーなどの静的HTMLコンテンツを表示。
+ * アプリ内のassets/html/配下のHTMLファイルを読み込む。
+ *
+ * @param file - 表示するHTMLファイル名（拡張子なし）
+ * @param title - ヘッダーに表示するタイトル
+ *
+ * @see assets/html/terms.html - 利用規約
+ * @see assets/html/privacy.html - プライバシーポリシー
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { WebView } from 'react-native-webview';
-import { File } from 'expo-file-system';
-import { Asset } from 'expo-asset';
-import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../lib/themeSystem';
-import { Header } from '../components/common/Header';
-import { commonStyles } from '../lib/styles/commonStyles';
-import { Logger } from '../lib/logger';
+import { useTheme } from '@lib/themeSystem';
+import { Header } from '@components/common/Header';
+import { commonStyles } from '@lib/styles/commonStyles';
+import { useWebViewScreen } from '@hooks/screens/useWebViewScreen';
 
 export default function WebViewScreen() {
   const { colors } = useTheme();
-  const router = useRouter();
-  const params = useLocalSearchParams();
-  const { file, title } = params;
-  const [htmlContent, setHtmlContent] = useState<string>('');
-  const [loading, setLoading] = useState(true);
+  const { file, title: paramTitle } = useLocalSearchParams<{ file: string; title: string }>();
 
-  useEffect(() => {
-    loadHtmlFile();
-  }, [file]);
-
-  const loadHtmlFile = async () => {
-    try {
-      let assetModule;
-
-      if (file === 'terms') {
-        assetModule = require('../assets/web/terms.html');
-      } else if (file === 'privacy') {
-        assetModule = require('../assets/web/privacy.html');
-      } else {
-        assetModule = require('../assets/web/index.html');
-      }
-
-      const asset = Asset.fromModule(assetModule);
-      await asset.downloadAsync();
-
-      if (asset.localUri) {
-        const file = new File(asset.localUri);
-        const content = await file.text();
-        setHtmlContent(content);
-      }
-    } catch (error) {
-      Logger.error('Failed to load HTML file:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { htmlContent, loading, title } = useWebViewScreen({
+    file: file ?? '',
+    title: paramTitle ?? 'ClipTap',
+  });
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
       <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-        <Header title={(title as string) || 'ClipTap'} backIcon="arrow-back" />
+        <Header title={title} backIcon="arrow-back" />
 
         {loading ? (
           <View style={styles.loadingContainer}>

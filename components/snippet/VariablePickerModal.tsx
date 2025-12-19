@@ -1,58 +1,58 @@
-import React, { useMemo } from 'react';
-import { View, Modal, TouchableOpacity, Text, FlatList, StyleSheet } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../lib/themeSystem';
-import { Ionicons } from '@expo/vector-icons';
-import { useVariables } from '../../lib/hooks/useVariables';
-import { SYSTEM_VARIABLES, VariableOption } from '../../lib/types/variable';
-import { UI_CONSTANTS } from '../../lib/constants/ui';
+/**
+ * 変数選択モーダルコンポーネント
+ *
+ * 変数を一覧から選択するためのボトムシートモーダル。
+ * システム変数とカスタム変数を表示し、タップで選択。
+ *
+ * 主な機能:
+ * - システム変数リスト表示（date, time, datetime等）
+ * - カスタム変数リスト表示
+ * - 変数の説明と構文を表示
+ * - FlashListによる仮想化リスト
+ *
+ * @see VariableToolbar - 簡易版の変数挿入UI
+ */
 
-interface Props {
+import React from 'react';
+import { View, Modal, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { useTranslation } from '@cliptap/shared';
+import { FlashList } from '@mobile-types/flashlist';
+import { useTheme } from '@lib/themeSystem';
+import { Ionicons } from '@expo/vector-icons';
+import { UI_CONSTANTS } from '@constants/ui';
+import { useVariablePickerModal } from '@hooks/components/useVariablePickerModal';
+
+/* ========================================
+   Props定義
+   ======================================== */
+
+/**
+ * VariablePickerModalのProps
+ * @property visible - モーダル表示状態
+ * @property onClose - 閉じるボタン押下時のコールバック
+ * @property onSelect - 変数選択時のコールバック（変数名を受け取る）
+ */
+interface VariablePickerModalProps {
   visible: boolean;
   onClose: () => void;
   onSelect: (variableName: string) => void;
 }
 
-export function VariablePickerModal({ visible, onClose, onSelect }: Props) {
+export function VariablePickerModal({ visible, onClose, onSelect }: VariablePickerModalProps) {
   const { t } = useTranslation();
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
-  const { getEnabledCustomVariables, getStandardValue } = useVariables();
 
-  const variables = useMemo(() => {
-    // システム変数を変換
-    const systemVars: VariableOption[] = SYSTEM_VARIABLES.map((v) => ({
-      name: v.name,
-      icon: v.icon,
-      label: t(v.labelKey),
-      description: t(v.descriptionKey),
-      isSystem: true,
-    }));
+  /* フックからロジックを取得 */
+  const { variables, handleSelect } = useVariablePickerModal({ onClose, onSelect });
 
-    // 有効なカスタム変数のみ取得（作成日時昇順でソート済み、無料版は上位5個のみ）
-    const enabledCustomVars = getEnabledCustomVariables();
-
-    // カスタム変数をVariableOption形式に変換
-    const customVarOptions: VariableOption[] = enabledCustomVars.map((v) => ({
-      name: v.name,
-      icon: (v.icon as keyof typeof Ionicons.glyphMap) || 'code-outline',
-      label: v.label || v.name,
-      description: getStandardValue(v.name),
-      isSystem: false,
-    }));
-
-    return [...systemVars, ...customVarOptions];
-  }, [t, getEnabledCustomVariables]);
-
-  const handleSelect = (variableName: string) => {
-    onSelect(variableName);
-    onClose();
-  };
-
+  /* 変数選択モーダル（ボトムシート形式） */
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      {/* オーバーレイ */}
       <View style={styles.modalOverlay}>
+        {/* モーダルコンテンツ */}
         <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-          {/* ヘッダー */}
+          {/* ヘッダー（タイトルと閉じるボタン） */}
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text, fontSize: responsiveFontSizes.md, lineHeight: responsiveLineHeights.md }]}>{t('variables.select_variable')}</Text>
             <TouchableOpacity onPress={onClose}>
@@ -60,23 +60,28 @@ export function VariablePickerModal({ visible, onClose, onSelect }: Props) {
             </TouchableOpacity>
           </View>
 
-          {/* 変数リスト */}
-          <FlatList
+          {/* FlashListで仮想化（大量の変数でも高速） */}
+          <FlashList
             data={variables}
             keyExtractor={(item) => item.name}
+            estimatedItemSize={100}
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={[styles.variableItem, { borderBottomColor: colors.border }]}
                 onPress={() => handleSelect(item.name)}
               >
+                {/* 変数アイコン */}
                 <View style={[styles.variableIcon, { backgroundColor: colors.surface }]}>
                   <Ionicons name={item.icon} size={24} color={colors.primary} />
                 </View>
                 <View style={styles.variableInfo}>
+                  {/* 変数ラベル */}
                   <Text style={[styles.variableLabel, { color: colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>{item.label}</Text>
+                  {/* 変数説明 */}
                   <Text style={[styles.variableDescription, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]} numberOfLines={UI_CONSTANTS.NUMBER_OF_LINES.SINGLE}>
                     {item.description}
                   </Text>
+                  {/* 変数コード（{{変数名}}） */}
                   <Text style={[styles.variableCode, { color: colors.textSecondary, fontSize: responsiveFontSizes.xs, lineHeight: responsiveLineHeights.xs }]}>
                     {`{{${item.name}}}`}
                   </Text>
@@ -111,7 +116,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    
     fontWeight: 'bold',
   },
   variableItem: {
@@ -134,14 +138,11 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   variableLabel: {
-    
     fontWeight: '600',
   },
   variableDescription: {
-    
   },
   variableCode: {
-    
     fontFamily: 'monospace',
     marginTop: 2,
   },

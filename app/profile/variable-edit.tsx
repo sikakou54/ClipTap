@@ -1,8 +1,18 @@
 /**
- * プロファイル変数編集モーダル
+ * @module ProfileVariableEditModal
+ * @description プロファイル変数編集モーダル
+ *
+ * 特定のプロファイル（環境）に対する変数値を編集するモーダル画面。
+ *
+ * @features
+ * - 環境固有の変数値の編集
+ * - 複数行テキスト入力対応
+ * - 値のプレビュー表示
+ *
+ * @see lib/hooks/screens/useProfileVariableEditScreen.ts - ビジネスロジック
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -14,149 +24,117 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../lib/themeSystem';
-import { useProfiles } from '../../lib/hooks/useProfiles';
-import { useVariables } from '../../lib/hooks/useVariables';
-import { Header } from '../../components/common/Header';
-import { commonStyles } from '../../lib/styles/commonStyles';
-import { UI_CONSTANTS } from '../../lib/constants/ui';
-import { showAlert } from '../../lib/utils/alerts';
+import { useLocalSearchParams } from 'expo-router';
+import { useTranslation } from '@cliptap/shared'
+import { useTheme } from '@lib/themeSystem';
+import { useProfileVariableEditScreen } from '@hooks/screens/useProfileVariableEditScreen';
+import { Header } from '@components/common/Header';
+import { commonStyles } from '@lib/styles/commonStyles';
+import { UI_CONSTANTS } from '@constants/ui';
 
 export default function ProfileVariableEditModal() {
   const { t } = useTranslation();
-  const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
-  const router = useRouter();
+  const { colors, responsiveFontSizes } = useTheme();
   const params = useLocalSearchParams();
 
-  const { getProfileWithVariables } = useProfiles();
-  const { getAllCustomVariables, upsertVariableMetadata, upsertVariableValuesForProfiles } = useVariables();
-  const [variableName, setVariableName] = useState('');
-  const [variableValue, setVariableValue] = useState('');
-  const [variableId, setVariableId] = useState<string | undefined>(undefined);
-  const [saving, setSaving] = useState(false);
-
-  // パラメータ
   const profileId = params.profileId as string;
-  const profileVariableId = params.variableId as string | undefined;
-  const isEdit = !!profileVariableId;
+  const variableId = params.variableId as string | undefined;
 
-  useEffect(() => {
-    if (profileVariableId && profileId) {
-      const profileWithVars = getProfileWithVariables(profileId);
-      const profileVariable = profileWithVars?.variables.find(v => v.id === profileVariableId);
+  const {
+    variableName,
+    setVariableName,
+    variableValue,
+    setVariableValue,
+    saving,
+    isEdit,
+    canSave,
+    handleSave,
+  } = useProfileVariableEditScreen({ profileId, variableId });
 
-      if (profileVariable) {
-        // variableIdから変数名を取得
-        const customVariables = getAllCustomVariables();
-        const variable = customVariables.find(v => v.id === profileVariable.variableId);
-        if (variable) {
-          setVariableName(variable.name);
-          setVariableId(variable.id);
-        }
-        setVariableValue(profileVariable.value);
-      }
-    }
-  }, [profileVariableId, profileId, getProfileWithVariables, getAllCustomVariables]);
-
-  const handleSave = async () => {
-    if (!variableName.trim()) {
-      showAlert(t('error.generic'), t('variables.name_required'), undefined, 'error');
-      return;
-    }
-
-    if (!variableValue.trim()) {
-      showAlert(t('error.generic'), t('variables.value_required'), undefined, 'error');
-      return;
-    }
-
-    // 変数名のバリデーション（英数字とアンダースコアのみ）
-    const namePattern = /^[a-zA-Z0-9_]+$/;
-    if (!namePattern.test(variableName)) {
-      showAlert(t('error.generic'), t('variables.name_format_error'), undefined, 'error');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      // 1. 変数メタデータを作成または取得
-      let savedVariable;
-      if (variableId) {
-        // 既存の変数を取得
-        const customVariables = getAllCustomVariables();
-        savedVariable = customVariables.find(v => v.id === variableId);
-        if (!savedVariable) {
-          throw new Error('Variable not found');
-        }
-      } else {
-        // 新規作成
-        savedVariable = await upsertVariableMetadata(
-          undefined,
-          variableName.trim()
-        );
-      }
-
-      // 2. このプロファイルの変数値を作成/更新
-      await upsertVariableValuesForProfiles(savedVariable.id, {
-        [profileId]: variableValue.trim()
-      });
-
-      router.back();
-    } catch (error: any) {
-      showAlert(t('error.generic'), error.message, undefined, 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const canSave = variableName.trim() && variableValue.trim();
-
+  /* プロファイル変数編集モーダル */
   return (
     <SafeAreaView style={[commonStyles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+      {/* キーボード回避ビュー（iOS/Android対応） */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={0}
       >
-      <Header
-        title={isEdit ? t('profile.edit_variable') : t('profile.add_variable')}
-        isModal={true}
-        rightAction={
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={saving || !canSave}
-            style={styles.saveButton}
-          >
-            <Text
-              style={[
-                styles.saveText,
-                {
-                  color: (saving || !canSave) ? colors.textSecondary : colors.primary,
-                  fontSize: responsiveFontSizes.base,
-                }
-              ]}
+        {/* ヘッダー（タイトルと保存ボタン） */}
+        <Header
+          title={isEdit ? t('profile.edit_variable') : t('profile.add_variable')}
+          isModal={true}
+          rightAction={
+            <TouchableOpacity
+              onPress={handleSave}
+              disabled={saving || !canSave}
+              style={styles.saveButton}
             >
-              {t('common.save')}
-            </Text>
-          </TouchableOpacity>
-        }
-      />
+              <Text
+                style={[
+                  styles.saveText,
+                  {
+                    color: (saving || !canSave) ? colors.textSecondary : colors.primary,
+                    fontSize: responsiveFontSizes.base,
+                  }
+                ]}
+              >
+                {t('common.save')}
+              </Text>
+            </TouchableOpacity>
+          }
+        />
 
-      <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
-        {/* 変数名 */}
-        <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm }]}>
-            {t('profile.variable_name')}
-          </Text>
-          <View style={styles.inputWrapper}>
-            <Text style={[styles.prefix, { color: colors.textSecondary, fontSize: responsiveFontSizes.base }]}>
-              {'{{'}
+        {/* スクロール可能なコンテンツエリア */}
+        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+          {/* 変数名入力セクション */}
+          <View style={styles.section}>
+            <Text style={[styles.label, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm }]}>
+              {t('profile.variable_name')}
+            </Text>
+            {/* 変数名入力（{{ }}で囲む） */}
+            <View style={styles.inputWrapper}>
+              <Text style={[styles.prefix, { color: colors.textSecondary, fontSize: responsiveFontSizes.base }]}>
+                {'{{'}
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  styles.nameInput,
+                  {
+                    backgroundColor: colors.surface,
+                    color: colors.text,
+                    borderColor: colors.border,
+                    fontSize: responsiveFontSizes.base,
+                  }
+                ]}
+                value={variableName}
+                onChangeText={setVariableName}
+                placeholder={t('profile.variable_name_placeholder')}
+                placeholderTextColor={colors.textSecondary}
+                autoFocus={!isEdit}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <Text style={[styles.suffix, { color: colors.textSecondary, fontSize: responsiveFontSizes.base }]}>
+                {'}}'}
+              </Text>
+            </View>
+            {/* 変数名フォーマットのヒント */}
+            <Text style={[styles.hint, { color: colors.textSecondary, fontSize: responsiveFontSizes.xs }]}>
+              {t('variables.name_format_hint')}
+            </Text>
+          </View>
+
+          {/* 変数値入力セクション */}
+          <View style={styles.section}>
+            <Text style={[styles.label, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm }]}>
+              {t('profile.variable_value')}
             </Text>
             <TextInput
               style={[
                 styles.input,
-                styles.nameInput,
+                styles.textArea,
                 {
                   backgroundColor: colors.surface,
                   color: colors.text,
@@ -164,68 +142,35 @@ export default function ProfileVariableEditModal() {
                   fontSize: responsiveFontSizes.base,
                 }
               ]}
-              value={variableName}
-              onChangeText={setVariableName}
-              placeholder={t('profile.variable_name_placeholder')}
+              value={variableValue}
+              onChangeText={setVariableValue}
+              placeholder={t('profile.variable_value_placeholder')}
               placeholderTextColor={colors.textSecondary}
-              autoFocus={!isEdit}
-              autoCapitalize="none"
-              autoCorrect={false}
+              multiline
+              numberOfLines={UI_CONSTANTS.NUMBER_OF_LINES.DESCRIPTION}
             />
-            <Text style={[styles.suffix, { color: colors.textSecondary, fontSize: responsiveFontSizes.base }]}>
-              {'}}'}
-            </Text>
           </View>
-          <Text style={[styles.hint, { color: colors.textSecondary, fontSize: responsiveFontSizes.xs }]}>
-            {t('variables.name_format_hint')}
-          </Text>
-        </View>
 
-        {/* 値 */}
-        <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm }]}>
-            {t('profile.variable_value')}
-          </Text>
-          <TextInput
-            style={[
-              styles.input,
-              styles.textArea,
-              {
-                backgroundColor: colors.surface,
-                color: colors.text,
-                borderColor: colors.border,
-                fontSize: responsiveFontSizes.base,
-              }
-            ]}
-            value={variableValue}
-            onChangeText={setVariableValue}
-            placeholder={t('profile.variable_value_placeholder')}
-            placeholderTextColor={colors.textSecondary}
-            multiline
-            numberOfLines={UI_CONSTANTS.NUMBER_OF_LINES.DESCRIPTION}
-          />
-        </View>
-
-        {/* プレビュー */}
-        {variableName && variableValue && (
-          <View style={styles.section}>
-            <Text style={[styles.label, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm }]}>
-              {t('common.preview')}
-            </Text>
-            <View style={[styles.preview, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Text style={{ color: colors.textSecondary, fontSize: responsiveFontSizes.sm }}>
-                {`{{${variableName}}}`}
+          {/* プレビューセクション（変数名と値が入力されている場合のみ表示） */}
+          {variableName && variableValue && (
+            <View style={styles.section}>
+              <Text style={[styles.label, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm }]}>
+                {t('common.preview')}
               </Text>
-              <Text style={{ color: colors.text, fontSize: responsiveFontSizes.base }}>
-                ↓
-              </Text>
-              <Text style={{ color: colors.text, fontSize: responsiveFontSizes.base }}>
-                {variableValue}
-              </Text>
+              <View style={[styles.preview, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Text style={{ color: colors.textSecondary, fontSize: responsiveFontSizes.sm }}>
+                  {`{{${variableName}}}`}
+                </Text>
+                <Text style={{ color: colors.text, fontSize: responsiveFontSizes.base }}>
+                  ↓
+                </Text>
+                <Text style={{ color: colors.text, fontSize: responsiveFontSizes.base }}>
+                  {variableValue}
+                </Text>
+              </View>
             </View>
-          </View>
-        )}
-      </ScrollView>
+          )}
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

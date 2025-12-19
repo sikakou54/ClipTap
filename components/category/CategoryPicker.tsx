@@ -1,19 +1,42 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  StyleSheet,
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../lib/themeSystem';
-import { Category } from '../../lib/types/category';
-import { CategoryModal } from './CategoryModal';
-import { UI_CONSTANTS } from '../../lib/constants/ui';
+/**
+ * カテゴリ選択モーダルコンポーネント
+ *
+ * スニペット作成・編集時にカテゴリを選択するためのボトムシート形式モーダル。
+ * カテゴリ一覧表示と新規カテゴリ作成機能を提供。
+ *
+ * 主な機能:
+ * - 「カテゴリなし」オプション
+ * - 既存カテゴリ一覧（色付きインジケーター）
+ * - 新規カテゴリ作成（モーダル内モーダル）
+ * - 選択中のカテゴリにチェックマーク表示
+ *
+ * @see SnippetFormScreen - スニペットフォームでの使用
+ * @see CategoryModal - 新規作成用モーダル
+ */
 
+import React from 'react';
+import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet } from 'react-native';
+import { useTranslation } from '@cliptap/shared';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@lib/themeSystem';
+import { Category } from '@cliptap/shared';
+import { CategoryModal } from './CategoryModal';
+import { UI_CONSTANTS } from '@constants/ui';
+import { useCategoryPicker } from '@hooks/components/useCategoryPicker';
+
+/* ========================================
+   Props定義
+   ======================================== */
+
+/**
+ * CategoryPickerのProps
+ * @property categories - 選択可能なカテゴリ一覧
+ * @property selectedCategoryId - 現在選択中のカテゴリID（nullで「カテゴリなし」）
+ * @property onSelect - カテゴリ選択時のコールバック
+ * @property visible - モーダル表示状態
+ * @property onClose - 閉じる時のコールバック
+ * @property onCategoryCreated - 新規カテゴリ作成後のコールバック
+ */
 interface CategoryPickerProps {
   categories: Category[];
   selectedCategoryId: string | null;
@@ -33,29 +56,24 @@ export function CategoryPicker({
 }: CategoryPickerProps) {
   const { t } = useTranslation();
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const handleSelect = (categoryId: string | null) => {
-    onSelect(categoryId);
-    onClose();
-  };
+  /* フックからロジックを取得 */
+  const {
+    showCreateModal,
+    options,
+    handleSelect,
+    handleOpenCreateModal,
+    handleCloseCreateModal,
+    handleCategoryCreated,
+  } = useCategoryPicker({
+    categories,
+    selectedCategoryId,
+    onSelect,
+    onClose,
+    onCategoryCreated,
+  });
 
-  const uncategorizedOption = {
-    id: null,
-    name: t('category.uncategorized'),
-    color: colors.textSecondary,
-    icon: 'remove-circle-outline',
-  };
-
-  const createNewOption = {
-    id: 'create-new',
-    name: t('category.create'),
-    color: colors.primary,
-    icon: 'add-circle-outline',
-  };
-
-  const options = [uncategorizedOption, ...categories, createNewOption];
-
+  /* カテゴリ選択モーダル（ボトムシート形式） */
   return (
     <Modal
       visible={visible}
@@ -63,17 +81,24 @@ export function CategoryPicker({
       animationType="slide"
       onRequestClose={onClose}
     >
+      {/* オーバーレイ */}
       <View style={styles.modalOverlay}>
+        {/* モーダルコンテンツ */}
         <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+          {/* ヘッダー（タイトルと閉じるボタン） */}
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text, fontSize: responsiveFontSizes.md, lineHeight: responsiveLineHeights.md }]}>
               {t('category.select')}
             </Text>
-            <TouchableOpacity onPress={onClose} hitSlop={UI_CONSTANTS.HIT_SLOP.DEFAULT}>
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={UI_CONSTANTS.HIT_SLOP.DEFAULT}
+            >
               <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
+          {/* カテゴリ一覧（FlatList） */}
           <FlatList
             data={options}
             keyExtractor={(item) => item.id || 'uncategorized'}
@@ -82,6 +107,7 @@ export function CategoryPicker({
               const categoryColor = item.color || colors.primary;
               const isCreateNew = item.id === 'create-new';
 
+              /* カテゴリアイテム */
               return (
                 <TouchableOpacity
                   style={[
@@ -91,13 +117,14 @@ export function CategoryPicker({
                   ]}
                   onPress={() => {
                     if (isCreateNew) {
-                      setShowCreateModal(true);
+                      handleOpenCreateModal();
                     } else {
                       handleSelect(item.id);
                     }
                   }}
                 >
                   <View style={styles.itemLeft}>
+                    {/* 新規作成アイコンまたはカラーインジケーター */}
                     {isCreateNew ? (
                       <View style={styles.iconContainer}>
                         <Ionicons name="add-circle" size={32} color={colors.primary} />
@@ -110,6 +137,7 @@ export function CategoryPicker({
                         ]}
                       />
                     )}
+                    {/* カテゴリ名 */}
                     <Text style={[
                       styles.itemText,
                       { color: isCreateNew ? colors.primary : colors.text }
@@ -117,6 +145,7 @@ export function CategoryPicker({
                       {item.name}
                     </Text>
                   </View>
+                  {/* 選択中のチェックマーク */}
                   {isSelected && !isCreateNew && (
                     <Ionicons name="checkmark" size={24} color={colors.primary} />
                   )}
@@ -127,20 +156,20 @@ export function CategoryPicker({
         </View>
       </View>
 
+      {/* 新規カテゴリ作成モーダル */}
       <CategoryModal
         visible={showCreateModal}
         category={null}
-        onClose={() => setShowCreateModal(false)}
-        onSuccess={() => {
-          if (onCategoryCreated) {
-            onCategoryCreated();
-          }
-        }}
+        onClose={handleCloseCreateModal}
+        onSuccess={handleCategoryCreated}
       />
     </Modal>
   );
 }
 
+/* ========================================
+   スタイル定義
+   ======================================== */
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
@@ -162,7 +191,6 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   title: {
-    
     fontWeight: '600',
   },
   item: {
@@ -190,9 +218,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  itemText: {
-    
-  },
+  itemText: {},
   createNewItem: {
     borderBottomWidth: 0,
   },

@@ -1,8 +1,19 @@
 /**
- * プロファイル編集モーダル
+ * @module ProfileEditModal
+ * @description プロファイル（環境）編集モーダル
+ *
+ * プロファイルの新規作成・編集を行うモーダル画面。
+ *
+ * @features
+ * - プロファイル名の入力（最大50文字）
+ * - 新規作成/編集モードの自動判定
+ * - 重複プロファイル名のバリデーション
+ * - 無料プラン制限チェック
+ *
+ * @see lib/hooks/screens/useProfileEditScreen.ts - ビジネスロジック
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -12,95 +23,53 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../lib/themeSystem';
-import { useProfiles } from '../../lib/hooks/useProfiles';
-import { useSubscription } from '../../lib/hooks/useSubscription';
-import { Header } from '../../components/common/Header';
-import { commonStyles } from '../../lib/styles/commonStyles';
-import { UI_CONSTANTS } from '../../lib/constants/ui';
-import { FREE_PROFILES_LIMIT } from '../../lib/services/PurchaseService';
-import { showAlert, showConfirm } from '../../lib/utils/alerts';
+import { useLocalSearchParams } from 'expo-router';
+import { useTranslation } from '@cliptap/shared'
+import { useTheme } from '@lib/themeSystem';
+import { useProfileEditScreen } from '@hooks/screens/useProfileEditScreen';
+import { Header } from '@components/common/Header';
+import { commonStyles } from '@lib/styles/commonStyles';
+import { UI_CONSTANTS } from '@constants/ui';
 
 export default function ProfileEditModal() {
   const { t } = useTranslation();
-  const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
-  const router = useRouter();
+  const { colors, responsiveFontSizes } = useTheme();
   const params = useLocalSearchParams();
 
-  const { profiles, createProfile, updateProfile } = useProfiles();
-  const { canAddProfile } = useSubscription();
-  const [profileName, setProfileName] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  // 編集モードの判定
   const profileId = params.id as string | undefined;
-  const isEdit = !!profileId;
-  const profile = profiles.find(p => p.id === profileId);
 
-  useEffect(() => {
-    if (profile && profileId) {
-      setProfileName(profile.name);
-    } else {
-      setProfileName('');
-    }
-  }, [profile, profileId]);
+  const {
+    profileName,
+    setProfileName,
+    saving,
+    isEdit,
+    canSave,
+    handleSave,
+  } = useProfileEditScreen({ profileId });
 
-  const handleSave = async () => {
-    if (!profileName.trim()) {
-      showAlert('', t('error.empty_content'), undefined, 'error');
-      return;
-    }
-
-    // 新規作成時のみ制限チェック
-    if (!isEdit && !canAddProfile(profiles.length)) {
-      showConfirm(
-        t('profile.limit_message', { limit: FREE_PROFILES_LIMIT }),
-        () => router.push('/subscription/paywall'),
-        undefined,
-        'warning'
-      );
-      return;
-    }
-
-    setSaving(true);
-    try {
-      if (isEdit && profileId) {
-        await updateProfile(profileId, {
-          name: profileName.trim(),
-        });
-      } else {
-        await createProfile({
-          name: profileName.trim(),
-        });
-      }
-      router.back();
-    } catch (error: any) {
-      showAlert('', error.message, undefined, 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
+  /* プロファイル編集モーダル */
   return (
-    <SafeAreaView style={[commonStyles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={[commonStyles.container, { backgroundColor: colors.background }]}
+      edges={['top', 'left', 'right']}
+    >
+      {/* ヘッダー（タイトルと保存ボタン） */}
       <Header
         title={isEdit ? t('profile.edit') : t('profile.create')}
         isModal={true}
         rightAction={
           <TouchableOpacity
             onPress={handleSave}
-            disabled={saving || !profileName.trim()}
+            disabled={saving || !canSave}
             style={styles.saveButton}
           >
             <Text
               style={[
                 styles.saveText,
                 {
-                  color: (saving || !profileName.trim()) ? colors.textSecondary : colors.primary,
+                  color: saving || !canSave ? colors.textSecondary : colors.primary,
                   fontSize: responsiveFontSizes.base,
-                }
+                },
               ]}
             >
               {t('common.save')}
@@ -109,12 +78,29 @@ export default function ProfileEditModal() {
         }
       />
 
+      {/* スクロール可能なコンテンツエリア */}
       <ScrollView style={styles.content}>
-        {/* プロファイル名 */}
+        {/* プロファイル名入力セクション */}
         <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm }]}>
-            {t('profile.name')}
-          </Text>
+          {/* ラベルと文字数カウンター */}
+          <View style={styles.labelRow}>
+            <Text
+              style={[
+                styles.label,
+                { color: colors.textSecondary, fontSize: responsiveFontSizes.sm },
+              ]}
+            >
+              {t('profile.name')}
+            </Text>
+            <Text
+              style={[
+                styles.charCount,
+                { color: colors.textSecondary, fontSize: responsiveFontSizes.xs },
+              ]}
+            >
+              {profileName.length}/{UI_CONSTANTS.INPUT_LIMITS.PROFILE_NAME_MAX}
+            </Text>
+          </View>
           <TextInput
             style={[
               styles.input,
@@ -123,7 +109,7 @@ export default function ProfileEditModal() {
                 color: colors.text,
                 borderColor: colors.border,
                 fontSize: responsiveFontSizes.base,
-              }
+              },
             ]}
             value={profileName}
             onChangeText={setProfileName}
@@ -132,9 +118,6 @@ export default function ProfileEditModal() {
             autoFocus={!isEdit}
             maxLength={UI_CONSTANTS.INPUT_LIMITS.PROFILE_NAME_MAX}
           />
-          <Text style={[styles.charCount, { color: colors.textSecondary, fontSize: responsiveFontSizes.xs }]}>
-            {profileName.length}/{UI_CONSTANTS.INPUT_LIMITS.PROFILE_NAME_MAX}
-          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -148,9 +131,14 @@ const styles = StyleSheet.create({
   section: {
     padding: 16,
   },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: UI_CONSTANTS.GAP.MD,
+  },
   label: {
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,
-    marginBottom: UI_CONSTANTS.GAP.MD,
     textTransform: 'uppercase',
   },
   input: {
@@ -158,10 +146,7 @@ const styles = StyleSheet.create({
     borderRadius: UI_CONSTANTS.BORDER_RADIUS.MD,
     padding: UI_CONSTANTS.GAP.BASE,
   },
-  charCount: {
-    marginTop: UI_CONSTANTS.GAP.XS,
-    textAlign: 'right',
-  },
+  charCount: {},
   saveButton: {
     padding: UI_CONSTANTS.GAP.MD,
   },

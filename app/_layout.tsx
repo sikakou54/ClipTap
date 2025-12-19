@@ -1,246 +1,156 @@
 /**
- * ルートレイアウト
- * アプリ全体のプロバイダーとレイアウトを管理
+ * @module RootLayout
+ * @description ルートレイアウト
+ *
+ * ClipTapアプリ全体のプロバイダー構成とナビゲーション設定を管理。
+ * Expo Routerの_layout.tsxとして、アプリ起動時に最初に実行される。
+ *
+ * @responsibility
+ * - アダプター初期化処理（useAdapterInitialization）
+ * - アプリデータ初期化処理（useAppInitialization、AuthProvider内）
+ * - プロバイダー階層: ThemeProvider → AlertProvider → AuthProvider → SubscriptionProvider → DatabaseProvider
+ * - 全画面のナビゲーション設定（Stack Navigator）
+ * - スプラッシュスクリーンの表示制御
+ *
+ * @see docs/ARCHITECTURE.md - 全体アーキテクチャ
  */
 
-import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
-import { View, StyleSheet, Platform, StatusBar } from 'react-native';
-import * as SystemUI from 'expo-system-ui';
-import * as ScreenOrientation from 'expo-screen-orientation';
-import { ThemeProvider } from '../lib/themeSystem';
-import { AlertProvider } from '../lib/providers/AlertProvider';
-import { ToastProvider } from '../lib/providers/ToastProvider';
-import { SubscriptionProvider } from '../lib/hooks/useSubscription';
-import { ProfileProvider } from '../lib/hooks/useProfiles';
-import { useTracking } from '../lib/hooks/useTracking';
-import { database } from '../lib/database/database';
-import { runSeed } from '../lib/database/seed';
-import { initI18n } from '../lib/i18n/config';
-import { Logger } from '../lib/logger';
-import { SplashScreen } from '../components/common/SplashScreen';
-import { isTablet } from '../lib/utils/responsive';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { ThemeProvider } from '@lib/themeSystem';
+import { AlertProvider } from '@providers/AlertProvider';
+import { SubscriptionProvider } from '@providers/SubscriptionProvider';
+import { SplashScreen } from '@components/common/SplashScreen';
+import { AuthProvider, DatabaseProvider, ProfileProvider, VariableProvider, CategoryProvider, SnippetProvider } from '@cliptap/shared';
+import { useAdapterInitialization } from '@hooks/screens/useAdapterInitialization';
+import { useAppInitialization } from '@hooks/screens/useAppInitialization';
 
-// ルート要素のスタイル
+const MODAL_SLIDE_OPTIONS = {
+  presentation: 'modal',
+  headerShown: false,
+  animation: 'slide_from_bottom',
+} as const;
+
+const HEADER_HIDDEN_OPTIONS = {
+  headerShown: false,
+} as const;
+
 const styles = StyleSheet.create({
   rootContainer: {
     flex: 1,
-    backgroundColor: '#1F2937', // 常に背景色を設定
+    backgroundColor: '#1F2937',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1F2937',
   },
 });
 
+/**
+ * アプリコンテンツ
+ *
+ * AuthProvider内で使用。アプリデータ初期化後にナビゲーションを表示。
+ */
+function AppContent({ isTabletDevice }: { isTabletDevice: boolean }) {
+  const { isAppReady, isLoaded, setLoaded } = useAppInitialization();
+
+  const tabletAwareModalOptions = {
+    presentation: isTabletDevice ? 'card' : 'modal',
+    headerShown: false,
+    animation: !isTabletDevice ? 'slide_from_bottom' : undefined,
+  } as const;
+
+  if (!isAppReady) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3B82F6" />
+      </View>
+    );
+  }
+
+  /* データベースプロバイダーとナビゲーションスタック */
+  /* Provider階層: Database → Profile → Variable → Category */
+  return (
+    <DatabaseProvider value={{ isLoaded, setLoaded }}>
+      <ProfileProvider>
+        <VariableProvider>
+          <CategoryProvider>
+            <SnippetProvider>
+              <Stack screenOptions={HEADER_HIDDEN_OPTIONS}>
+                {/* ホーム画面 */}
+                <Stack.Screen name="index" />
+                {/* 検索画面（透明モーダル） */}
+                <Stack.Screen
+                  name="search"
+                  options={{ presentation: 'transparentModal', headerShown: false, animation: 'fade' }}
+                />
+                {/* スニペット作成画面 */}
+                <Stack.Screen name="snippet/create" options={tabletAwareModalOptions} />
+                {/* スニペット編集画面 */}
+                <Stack.Screen name="snippet/edit" options={tabletAwareModalOptions} />
+                {/* スニペット内容入力画面 */}
+                <Stack.Screen name="snippet/content-input" options={tabletAwareModalOptions} />
+                {/* スニペットタイトル入力画面 */}
+                <Stack.Screen name="snippet/title-input" options={tabletAwareModalOptions} />
+                {/* スニペットプロファイル選択画面 */}
+                <Stack.Screen name="snippet/profile-select" options={MODAL_SLIDE_OPTIONS} />
+                {/* カテゴリ編集画面 */}
+                <Stack.Screen name="category/edit" options={MODAL_SLIDE_OPTIONS} />
+                {/* カテゴリ選択画面 */}
+                <Stack.Screen name="category/select" options={MODAL_SLIDE_OPTIONS} />
+                {/* 変数編集画面 */}
+                <Stack.Screen name="variable/edit" options={MODAL_SLIDE_OPTIONS} />
+                {/* 変数プロファイル値編集画面 */}
+                <Stack.Screen name="variable/profile-value-edit" options={MODAL_SLIDE_OPTIONS} />
+                {/* プロファイル編集画面 */}
+                <Stack.Screen name="profile/edit" options={MODAL_SLIDE_OPTIONS} />
+                {/* プロファイル変数編集画面 */}
+                <Stack.Screen name="profile/variable-edit" options={MODAL_SLIDE_OPTIONS} />
+                {/* 設定画面 */}
+                <Stack.Screen name="settings" options={HEADER_HIDDEN_OPTIONS} />
+                {/* サブスクリプション課金画面（フルスクリーンモーダル） */}
+                <Stack.Screen
+                  name="subscription/paywall"
+                  options={{ presentation: 'fullScreenModal', headerShown: false }}
+                />
+                {/* サブスクリプション管理画面 */}
+                <Stack.Screen name="subscription/manage" options={HEADER_HIDDEN_OPTIONS} />
+                {/* WebView画面 */}
+                <Stack.Screen name="webview" options={HEADER_HIDDEN_OPTIONS} />
+              </Stack>
+            </SnippetProvider>
+          </CategoryProvider>
+        </VariableProvider>
+      </ProfileProvider>
+    </DatabaseProvider>
+  );
+}
+
 export default function RootLayout() {
-  const [isReady, setIsReady] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
-  const { requestTrackingPermission } = useTracking();
-
-  // タブレットかどうかを判定
-  const isTabletDevice = isTablet();
-
-  useEffect(() => {
-    async function initialize() {
-      try {
-        // StatusBarの設定（Androidのedge-to-edge対応）
-        if (Platform.OS === 'android') {
-          await SystemUI.setBackgroundColorAsync('transparent');
-          StatusBar.setTranslucent(true);
-          StatusBar.setBarStyle('dark-content');
-        }
-
-        // 画面の向きを制御（タブレットは全方向、携帯はポートレートのみ）
-        if (isTabletDevice) {
-          // タブレット: 一旦ポートレートに設定してから全方向許可
-          await ScreenOrientation.lockAsync(
-            ScreenOrientation.OrientationLock.PORTRAIT_UP
-          );
-          // 少し待ってから全方向許可
-          setTimeout(async () => {
-            await ScreenOrientation.unlockAsync();
-          }, 100);
-        } else {
-          // 携帯: ポートレートのみ
-          await ScreenOrientation.lockAsync(
-            ScreenOrientation.OrientationLock.PORTRAIT_UP
-          );
-        }
-
-        // ATT権限をリクエスト (iOS専用、広告表示前に必須)
-        await requestTrackingPermission();
-
-        // データベース初期化
-        await database.init();
-
-        // 開発モードで新規データベースの場合、テストデータをシード
-        if (__DEV__) {
-          await runSeed();
-        }
-
-        // 多言語システム初期化
-        await initI18n();
-
-        Logger.success('🚀 App initialized successfully');
-        setIsReady(true);
-      } catch (error) {
-        Logger.error('App initialization error:', error);
-        setIsReady(true); // エラーでも画面を表示
-      }
-    }
-
-    initialize();
-  }, [isTabletDevice]);
+  const { isAdaptersReady, showSplash, isTabletDevice, hideSplash } = useAdapterInitialization();
 
   return (
     <>
-      {/* メイン画面を常にレンダリング（スプラッシュの下） */}
-      {isReady && (
+      {/* アダプター初期化完了後のメインアプリコンテンツ */}
+      {isAdaptersReady && (
         <View style={styles.rootContainer}>
+          {/* プロバイダー階層（テーマ → アラート → 認証 → サブスクリプション → Database → Profile → Variable → Category） */}
           <ThemeProvider>
-            <SubscriptionProvider>
-              <ProfileProvider>
-                <AlertProvider>
-                  <ToastProvider>
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen name="index" />
-                      <Stack.Screen
-                        name="search"
-                        options={{
-                          presentation: 'transparentModal',
-                          headerShown: false,
-                          animation: 'fade',
-                        }}
-                      />
-                      <Stack.Screen
-                        name="snippet/create"
-                        options={{
-                          presentation: isTabletDevice ? 'card' : 'modal',
-                          headerShown: false,
-                          animation: !isTabletDevice ? 'slide_from_bottom' : undefined
-                        }}
-                      />
-                      <Stack.Screen
-                        name="snippet/edit"
-                        options={{
-                          presentation: isTabletDevice ? 'card' : 'modal',
-                          headerShown: false,
-                          animation: !isTabletDevice ? 'slide_from_bottom' : undefined
-                        }}
-                      />
-                      <Stack.Screen
-                        name="snippet/content-input"
-                        options={{
-                          presentation: isTabletDevice ? 'card' : 'modal',
-                          headerShown: false,
-                          animation: !isTabletDevice ? 'slide_from_bottom' : undefined
-                        }}
-                      />
-                      <Stack.Screen
-                        name="category/edit"
-                        options={{
-                          presentation: 'modal',
-                          headerShown: false,
-                          animation: 'slide_from_bottom'
-                        }}
-                      />
-                      <Stack.Screen
-                        name="category/select"
-                        options={{
-                          presentation: 'modal',
-                          headerShown: false,
-                          animation: 'slide_from_bottom'
-                        }}
-                      />
-                      <Stack.Screen
-                        name="variable/edit"
-                        options={{
-                          presentation: 'modal',
-                          headerShown: false,
-                          animation: 'slide_from_bottom'
-                        }}
-                      />
-                      <Stack.Screen
-                        name="profile/edit"
-                        options={{
-                          presentation: 'modal',
-                          headerShown: false,
-                          animation: 'slide_from_bottom'
-                        }}
-                      />
-                      <Stack.Screen
-                        name="profile/variable-edit"
-                        options={{
-                          presentation: 'modal',
-                          headerShown: false,
-                          animation: 'slide_from_bottom'
-                        }}
-                      />
-                      <Stack.Screen
-                        name="variable/profile-value-edit"
-                        options={{
-                          presentation: 'modal',
-                          headerShown: false,
-                          animation: 'slide_from_bottom'
-                        }}
-                      />
-                      <Stack.Screen
-                        name="snippet/profile-select"
-                        options={{
-                          presentation: 'modal',
-                          headerShown: false,
-                          animation: 'slide_from_bottom'
-                        }}
-                      />
-                      <Stack.Screen
-                        name="snippet/title-input"
-                        options={{
-                          presentation: isTabletDevice ? 'card' : 'modal',
-                          headerShown: false,
-                          animation: !isTabletDevice ? 'slide_from_bottom' : undefined
-                        }}
-                      />
-                      {/* Settings screens - nested routing handled by settings/_layout.tsx */}
-                      <Stack.Screen
-                        name="settings"
-                        options={{
-                          headerShown: false,
-                        }}
-                      />
-                      {/* Subscription screens - modal presentation */}
-                      <Stack.Screen
-                        name="subscription/paywall"
-                        options={{
-                          presentation: 'fullScreenModal',
-                          headerShown: false,
-                        }}
-                      />
-                      <Stack.Screen
-                        name="subscription/manage"
-                        options={{
-                          headerShown: false,
-                        }}
-                      />
-                      {/* WebView - full screen modal for documents */}
-                      <Stack.Screen
-                        name="webview"
-                        options={{
-                          headerShown: false,
-                        }}
-                      />
-                    </Stack>
-                  </ToastProvider>
-                </AlertProvider>
-              </ProfileProvider>
-            </SubscriptionProvider>
+            <AlertProvider>
+              <AuthProvider>
+                <SubscriptionProvider>
+                  <AppContent isTabletDevice={isTabletDevice} />
+                </SubscriptionProvider>
+              </AuthProvider>
+            </AlertProvider>
           </ThemeProvider>
         </View>
       )}
 
-      {/* スプラッシュスクリーンをオーバーレイ表示 */}
-      {showSplash && (
-        <SplashScreen
-          onFinish={() => setShowSplash(false)}
-          isLoading={!isReady}
-        />
-      )}
+      {/* スプラッシュスクリーン（初期化中に表示） */}
+      {showSplash && <SplashScreen onFinish={hideSplash} isLoading={!isAdaptersReady} />}
     </>
   );
 }

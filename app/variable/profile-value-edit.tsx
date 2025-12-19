@@ -1,8 +1,18 @@
 /**
- * プロファイル別変数値編集モーダル（標準値編集も対応）
+ * @module ProfileValueEditModal
+ * @description プロファイル別変数値編集モーダル
+ *
+ * カスタム変数の値をプロファイル（環境）ごとに編集するためのモーダル画面。
+ *
+ * @features
+ * - 複数行テキスト入力
+ * - 標準値の編集（デフォルトプロファイル用）
+ * - プロファイル固有値の編集
+ *
+ * @see lib/hooks/screens/useProfileValueEditScreen.ts - ビジネスロジック
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import {
   View,
   TextInput,
@@ -13,89 +23,36 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../lib/themeSystem';
-import { useProfiles } from '../../lib/hooks/useProfiles';
-import { useVariables } from '../../lib/hooks/useVariables';
-import { Header } from '../../components/common/Header';
-import { commonStyles } from '../../lib/styles/commonStyles';
-import { UI_CONSTANTS } from '../../lib/constants/ui';
-import { showAlert } from '../../lib/utils/alerts';
-import { Logger } from '../../lib/logger';
+import { useLocalSearchParams } from 'expo-router';
+import { useTranslation } from '@cliptap/shared'
+import { useTheme } from '@lib/themeSystem';
+import { useProfileValueEditScreen } from '@hooks/screens/useProfileValueEditScreen';
+import { Header } from '@components/common/Header';
+import { commonStyles } from '@lib/styles/commonStyles';
 
 export default function ProfileValueEditModal() {
   const { t } = useTranslation();
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
-  const router = useRouter();
   const params = useLocalSearchParams();
 
-  const { defaultProfile } = useProfiles();
-  const { getAllCustomVariables, upsertVariableValuesForProfiles } = useVariables();
-  const [value, setValue] = useState('');
-  const textInputRef = useRef<TextInput>(null);
-
-  // パラメータ
   const profileId = params.profileId as string;
   const variableName = params.variableName as string;
   const profileName = params.profileName as string;
   const isStandard = params.isStandard === 'true';
-  const currentValue = params.currentValue as string || '';
+  const currentValue = (params.currentValue as string) || '';
 
-  useEffect(() => {
-    // 初期値を設定
-    setValue(currentValue);
-  }, [currentValue]);
-
-  // 自動フォーカス
-  useEffect(() => {
-    setTimeout(() => {
-      textInputRef.current?.focus();
-    }, 100);
-  }, []);
-
-  const handleSave = async () => {
-    try {
-      const customVariables = getAllCustomVariables();
-      const variable = customVariables.find(v => v.name === variableName);
-
-      if (!variable) {
-        // 変数がまだ存在しない場合（新規作成中）は編集画面に値を返すだけ
-        Logger.info('[ProfileValueEdit] Variable not yet created, returning value to edit screen');
-        Logger.info('[ProfileValueEdit] Callback data:', { profileId, isStandard, value });
-        global.variableValueCallbackData = {
-          profileId: profileId,
-          isStandard: isStandard,
-          newValue: value
-        };
-        Logger.info('[ProfileValueEdit] Set global.variableValueCallbackData:', global.variableValueCallbackData);
-        router.back();
-        return;
-      }
-
-      // 標準値・プロファイル固有値どちらもupsertVariableValuesForProfilesで処理
-      const targetProfileId = isStandard
-        ? (defaultProfile?.id || profileId) // 標準値の場合はデフォルトプロファイル
-        : profileId; // プロファイル固有値の場合は指定されたプロファイル
-
-      await upsertVariableValuesForProfiles(variable.id, {
-        [targetProfileId]: value
-      });
-
-      // 編集画面に値を通知（画面更新用）
-      Logger.info('[ProfileValueEdit] Setting callback data for existing variable:', { profileId, isStandard, value });
-      global.variableValueCallbackData = {
-        profileId: profileId,
-        isStandard: isStandard,
-        newValue: value
-      };
-
-      router.back();
-    } catch (error) {
-      Logger.error('Failed to save variable value:', error);
-      showAlert(t('error.generic'), String(error));
-    }
-  };
+  const {
+    value,
+    setValue,
+    textInputRef,
+    handleSave,
+  } = useProfileValueEditScreen({
+    profileId,
+    variableName,
+    profileName,
+    isStandard,
+    currentValue,
+  });
 
   return (
     <SafeAreaView
@@ -108,49 +65,49 @@ export default function ProfileValueEditModal() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <Header
-        title={isStandard ? t('variables.standard_value') : profileName || t('variables.value')}
-        isModal={true}
-        rightAction={
-          <TouchableOpacity
-            onPress={handleSave}
-            style={styles.saveButton}
-          >
-            <Text
-              style={[
-                styles.saveText,
-                {
-                  color: colors.primary,
-                  fontSize: responsiveFontSizes.base,
-                  lineHeight: responsiveLineHeights.base,
-                }
-              ]}
+          title={isStandard ? t('variables.standard_value') : profileName || t('variables.value')}
+          isModal={true}
+          rightAction={
+            <TouchableOpacity
+              onPress={handleSave}
+              style={styles.saveButton}
             >
-              {t('common.done')}
-            </Text>
-          </TouchableOpacity>
-        }
-      />
-
-      <View style={styles.contentWrapper}>
-        <TextInput
-          ref={textInputRef}
-          value={value}
-          onChangeText={setValue}
-          placeholder={t('variables.enter_value_placeholder')}
-          placeholderTextColor={colors.textSecondary}
-          style={[
-            styles.input,
-            {
-              color: colors.text,
-              fontSize: responsiveFontSizes.base,
-              lineHeight: responsiveFontSizes.base * 1.5,
-            }
-          ]}
-          multiline
-          textAlignVertical="top"
-          scrollEnabled={true}
+              <Text
+                style={[
+                  styles.saveText,
+                  {
+                    color: colors.primary,
+                    fontSize: responsiveFontSizes.base,
+                    lineHeight: responsiveLineHeights.base,
+                  }
+                ]}
+              >
+                {t('common.done')}
+              </Text>
+            </TouchableOpacity>
+          }
         />
-      </View>
+
+        <View style={styles.contentWrapper}>
+          <TextInput
+            ref={textInputRef}
+            value={value}
+            onChangeText={setValue}
+            placeholder={t('variables.enter_value_placeholder')}
+            placeholderTextColor={colors.textSecondary}
+            style={[
+              styles.input,
+              {
+                color: colors.text,
+                fontSize: responsiveFontSizes.base,
+                lineHeight: responsiveFontSizes.base * 1.5,
+              }
+            ]}
+            multiline
+            textAlignVertical="top"
+            scrollEnabled={true}
+          />
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

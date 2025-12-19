@@ -1,8 +1,19 @@
 /**
- * カテゴリ編集モーダル（expo-router modal）
+ * @module CategoryEditModal
+ * @description カテゴリ編集モーダル
+ *
+ * カテゴリの新規作成・編集を行うモーダル画面。
+ *
+ * @features
+ * - カテゴリ名の入力（最大50文字）
+ * - カテゴリカラーの選択（15色のプリセットカラー）
+ * - カスタムRGBカラーの入力
+ * - 新規作成/編集モードの自動判定
+ *
+ * @see lib/hooks/screens/useCategoryEditScreen.ts - ビジネスロジック
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -12,91 +23,66 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useTranslation } from 'react-i18next';
+import { useLocalSearchParams } from 'expo-router';
+import { useTranslation } from '@cliptap/shared'
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../lib/themeSystem';
-import { useCategories } from '../../lib/hooks/useCategories';
-import { CATEGORY_COLORS } from '../../lib/constants/colors';
-import { Header } from '../../components/common/Header';
-import { commonStyles } from '../../lib/styles/commonStyles';
-import { showAlert } from '../../lib/utils/alerts';
+import { CATEGORY_COLORS } from '@cliptap/shared';
+import { useTheme } from '@lib/themeSystem';
+import { useCategoryEditScreen } from '@hooks/screens/useCategoryEditScreen';
+import { UI_CONSTANTS } from '@constants/ui';
+import { Header } from '@components/common/Header';
+import { commonStyles } from '@lib/styles/commonStyles';
 
 export default function CategoryEditModal() {
   const { t } = useTranslation();
-  const { colors, isTablet, responsiveFontSizes, responsiveLineHeights } = useTheme();
-  const router = useRouter();
+  const { colors, isTablet, responsiveFontSizes } = useTheme();
   const params = useLocalSearchParams();
 
-  const { categories, createCategory, updateCategory } = useCategories();
-  const [categoryName, setCategoryName] = useState('');
-  const [selectedColor, setSelectedColor] = useState(CATEGORY_COLORS[0]);
-  const [saving, setSaving] = useState(false);
-
-  // 編集モードの判定
   const categoryId = params.id as string | undefined;
-  const isEdit = !!categoryId;
-  const category = categories.find(c => c.id === categoryId);
 
-  useEffect(() => {
-    if (category) {
-      setCategoryName(category.name);
-      setSelectedColor(category.color || CATEGORY_COLORS[0]);
-    } else {
-      setCategoryName('');
-      setSelectedColor(CATEGORY_COLORS[0]);
-    }
-  }, [category]);
+  const {
+    categoryName,
+    setCategoryName,
+    selectedColor,
+    useCustomColor,
+    customR,
+    customG,
+    customB,
+    saving,
+    isEdit,
+    canSave,
+    currentColor,
+    validation,
+    handleSave,
+    handleColorSelect,
+    handlePresetColorToggle,
+    handleCustomColorToggle,
+    handleRGBChange,
+  } = useCategoryEditScreen({ categoryId });
 
-  const handleSave = async () => {
-    if (!categoryName.trim()) {
-      showAlert('', t('error.empty_content'), undefined, 'error');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      if (isEdit && categoryId) {
-        await updateCategory(categoryId, {
-          name: categoryName.trim(),
-          color: selectedColor,
-        });
-      } else {
-        await createCategory({
-          name: categoryName.trim(),
-          color: selectedColor,
-        });
-      }
-      router.back();
-    } catch (error: any) {
-      showAlert('', error.message, undefined, 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // expo-routerのStackモーダルとして表示
+  /* カテゴリ編集モーダル */
   return (
     <SafeAreaView
       style={[commonStyles.container, { backgroundColor: colors.background }]}
       edges={['top', 'left', 'right']}
     >
+      {/* ヘッダー（タイトルと保存ボタン） */}
       <Header
         title={isEdit ? t('category.edit') : t('category.create')}
         isModal={true}
         rightAction={
           <TouchableOpacity
             onPress={handleSave}
-            disabled={saving || !categoryName.trim()}
+            disabled={saving || !canSave}
             style={styles.saveButton}
           >
             <Text
               style={[
                 styles.saveText,
                 {
-                  color: (saving || !categoryName.trim()) ? colors.textSecondary : colors.primary,
+                  color: saving || !canSave ? colors.textSecondary : colors.primary,
                   fontSize: responsiveFontSizes.base,
-                }
+                },
               ]}
             >
               {t('common.save')}
@@ -105,50 +91,238 @@ export default function CategoryEditModal() {
         }
       />
 
+      {/* スクロール可能なコンテンツエリア */}
       <ScrollView contentContainerStyle={styles.content}>
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.surface,
-              color: colors.text,
-              fontSize: responsiveFontSizes.base,
-            }
-          ]}
-          value={categoryName}
-          onChangeText={setCategoryName}
-          placeholder={t('category.name_placeholder')}
-          placeholderTextColor={colors.textSecondary}
-          autoFocus
-          onSubmitEditing={handleSave}
-        />
-
-        <View style={styles.colorSection}>
-          <Text style={[styles.label, { color: colors.text, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
-            {t('category.color')}
-          </Text>
-          <View style={styles.colorGrid}>
-            {CATEGORY_COLORS.map((color) => (
-              <TouchableOpacity
-                key={color}
-                style={[
-                  styles.colorOption,
-                  {
-                    backgroundColor: color,
-                    width: isTablet ? 48 : 40,
-                    height: isTablet ? 48 : 40,
-                    borderRadius: isTablet ? 24 : 20,
-                  },
-                  selectedColor === color && styles.colorOptionSelected,
-                ]}
-                onPress={() => setSelectedColor(color)}
-              >
-                {selectedColor === color && (
-                  <Ionicons name="checkmark" size={isTablet ? 24 : 20} color="#FFFFFF" />
-                )}
-              </TouchableOpacity>
-            ))}
+        {/* カテゴリ名入力セクション */}
+        <View style={styles.inputContainer}>
+          {/* ラベルと文字数カウンター */}
+          <View style={styles.labelRow}>
+            <Text
+              style={[
+                styles.label,
+                { color: colors.textSecondary, fontSize: responsiveFontSizes.sm },
+              ]}
+            >
+              {t('category.title')}
+            </Text>
+            <Text
+              style={[
+                styles.charCount,
+                { color: colors.textSecondary, fontSize: responsiveFontSizes.xs },
+              ]}
+            >
+              {categoryName.length}/{UI_CONSTANTS.INPUT_LIMITS.CATEGORY_NAME_MAX}
+            </Text>
           </View>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.surface,
+                color: colors.text,
+                fontSize: responsiveFontSizes.base,
+              },
+            ]}
+            value={categoryName}
+            onChangeText={setCategoryName}
+            placeholder={t('category.name_placeholder')}
+            placeholderTextColor={colors.textSecondary}
+            autoFocus
+            onSubmitEditing={handleSave}
+            maxLength={UI_CONSTANTS.INPUT_LIMITS.CATEGORY_NAME_MAX}
+          />
+        </View>
+
+        {/* カラー選択セクション */}
+        <View style={styles.colorSection}>
+          {/* プリセット/カスタムカラーの切り替えボタン */}
+          <View style={styles.colorModeSwitch}>
+            <TouchableOpacity
+              style={[
+                styles.modeSwitchButton,
+                !useCustomColor && { backgroundColor: colors.primary },
+                { borderColor: colors.border },
+              ]}
+              onPress={handlePresetColorToggle}
+            >
+              <Text
+                style={[
+                  styles.modeSwitchText,
+                  {
+                    color: !useCustomColor ? '#FFFFFF' : colors.textSecondary,
+                    fontSize: responsiveFontSizes.sm,
+                  },
+                ]}
+              >
+                {t('category.preset_colors')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.modeSwitchButton,
+                useCustomColor && { backgroundColor: colors.primary },
+                { borderColor: colors.border },
+              ]}
+              onPress={handleCustomColorToggle}
+            >
+              <Text
+                style={[
+                  styles.modeSwitchText,
+                  {
+                    color: useCustomColor ? '#FFFFFF' : colors.textSecondary,
+                    fontSize: responsiveFontSizes.sm,
+                  },
+                ]}
+              >
+                {t('category.custom_rgb')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* プリセットカラーグリッド */}
+          {!useCustomColor ? (
+            <View style={styles.colorGrid}>
+              {CATEGORY_COLORS.map((color) => (
+                <TouchableOpacity
+                  key={color}
+                  style={[
+                    styles.colorOption,
+                    {
+                      backgroundColor: color,
+                      width: isTablet ? 48 : 40,
+                      height: isTablet ? 48 : 40,
+                      borderRadius: isTablet ? 24 : 20,
+                    },
+                    selectedColor === color && !useCustomColor && styles.colorOptionSelected,
+                  ]}
+                  onPress={() => handleColorSelect(color)}
+                >
+                  {/* 選択中のチェックマーク */}
+                  {selectedColor === color && (
+                    <Ionicons name="checkmark" size={isTablet ? 24 : 20} color="#FFFFFF" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : (
+            /* カスタムRGB入力セクション */
+            <View style={styles.rgbInputSection}>
+              <View style={styles.rgbInputRow}>
+                {/* RGB入力カラム */}
+                <View style={styles.rgbInputColumn}>
+                  {/* R値入力 */}
+                  <View style={styles.rgbInputWrapper}>
+                    <Text
+                      style={[
+                        styles.rgbLabel,
+                        { color: colors.text, fontSize: responsiveFontSizes.sm },
+                      ]}
+                    >
+                      R
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.rgbInput,
+                        {
+                          backgroundColor: colors.surface,
+                          color: colors.text,
+                          fontSize: responsiveFontSizes.base,
+                          borderColor: !validation.isRValid ? colors.error : colors.border,
+                          borderWidth: !validation.isRValid ? 2 : 1,
+                        },
+                      ]}
+                      value={customR}
+                      onChangeText={(text) => handleRGBChange('R', text)}
+                      keyboardType="number-pad"
+                      placeholder="0-255"
+                      placeholderTextColor={colors.textSecondary}
+                      maxLength={3}
+                    />
+                  </View>
+                  {/* G値入力 */}
+                  <View style={styles.rgbInputWrapper}>
+                    <Text
+                      style={[
+                        styles.rgbLabel,
+                        { color: colors.text, fontSize: responsiveFontSizes.sm },
+                      ]}
+                    >
+                      G
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.rgbInput,
+                        {
+                          backgroundColor: colors.surface,
+                          color: colors.text,
+                          fontSize: responsiveFontSizes.base,
+                          borderColor: !validation.isGValid ? colors.error : colors.border,
+                          borderWidth: !validation.isGValid ? 2 : 1,
+                        },
+                      ]}
+                      value={customG}
+                      onChangeText={(text) => handleRGBChange('G', text)}
+                      keyboardType="number-pad"
+                      placeholder="0-255"
+                      placeholderTextColor={colors.textSecondary}
+                      maxLength={3}
+                    />
+                  </View>
+                  {/* B値入力 */}
+                  <View style={styles.rgbInputWrapper}>
+                    <Text
+                      style={[
+                        styles.rgbLabel,
+                        { color: colors.text, fontSize: responsiveFontSizes.sm },
+                      ]}
+                    >
+                      B
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.rgbInput,
+                        {
+                          backgroundColor: colors.surface,
+                          color: colors.text,
+                          fontSize: responsiveFontSizes.base,
+                          borderColor: !validation.isBValid ? colors.error : colors.border,
+                          borderWidth: !validation.isBValid ? 2 : 1,
+                        },
+                      ]}
+                      value={customB}
+                      onChangeText={(text) => handleRGBChange('B', text)}
+                      keyboardType="number-pad"
+                      placeholder="0-255"
+                      placeholderTextColor={colors.textSecondary}
+                      maxLength={3}
+                    />
+                  </View>
+                </View>
+
+                {/* カラープレビューセクション */}
+                <View style={styles.colorPreviewSection}>
+                  <View
+                    style={[
+                      styles.colorPreview,
+                      {
+                        backgroundColor: currentColor,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  />
+                  {/* 16進数カラー値表示 */}
+                  <Text
+                    style={[
+                      styles.hexValue,
+                      { color: colors.textSecondary, fontSize: responsiveFontSizes.sm },
+                    ]}
+                  >
+                    {currentColor}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -159,17 +333,42 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
   },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  label: {
+    fontWeight: '600',
+  },
   input: {
     borderRadius: 10,
     padding: 12,
+  },
+  inputContainer: {
     marginBottom: 20,
   },
+  charCount: {},
   colorSection: {
     marginBottom: 16,
   },
-  label: {
-    fontWeight: '500',
-    marginBottom: 12,
+  colorModeSwitch: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  modeSwitchButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  modeSwitchText: {
+    fontWeight: '600',
   },
   colorGrid: {
     flexDirection: 'row',
@@ -188,6 +387,59 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 4,
+  },
+  rgbInputSection: {
+    gap: 20,
+  },
+  rgbInputRow: {
+    flexDirection: 'row',
+    gap: 0,
+    alignItems: 'center',
+  },
+  rgbInputColumn: {
+    flex: 0.5,
+    gap: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rgbInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  rgbLabel: {
+    fontWeight: '600',
+    width: 20,
+  },
+  rgbInput: {
+    width: 80,
+    borderRadius: 8,
+    padding: 12,
+    textAlign: 'center',
+    borderWidth: 1,
+  },
+  colorPreviewSection: {
+    flex: 0.5,
+    alignItems: 'center',
+    gap: 8,
+    justifyContent: 'center',
+  },
+  colorPreview: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  hexValue: {
+    fontFamily: 'monospace',
+    fontWeight: '600',
+    textAlign: 'center',
+    width: '100%',
   },
   saveButton: {
     padding: 4,

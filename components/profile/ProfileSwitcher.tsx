@@ -1,53 +1,62 @@
 /**
- * ProfileSwitcher - フラットな環境切り替えコンポーネント
+ * 環境（プロファイル）スイッチャーコンポーネント
+ *
+ * 左右の矢印ボタンでプロファイルを順番に切り替えられるコンパクトなUI。
+ * メイン画面のヘッダーなど、限られたスペースでの使用を想定。
+ *
+ * 主な機能:
+ * - 現在のプロファイル名表示
+ * - 左右矢印でプロファイル順送り/逆送り
+ * - プロファイル1つ以下の場合は非表示
+ *
+ * @see app/(tabs)/index.tsx - メイン画面での使用
+ * @see useProfiles - プロファイル管理フック
  */
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../lib/themeSystem';
-import { useProfiles } from '../../lib/hooks/useProfiles';
-import { Profile } from '../../lib/types/profile';
-import { showError } from '../../lib/utils/alerts';
-import { UI_CONSTANTS } from '../../lib/constants/ui';
+import { useTranslation } from '@cliptap/shared';
+import { useTheme } from '@lib/themeSystem';
+import { UI_CONSTANTS } from '@constants/ui';
+import { useProfileSwitcher } from '@hooks/components/useProfileSwitcher';
 
-export function ProfileSwitcher() {
+interface ProfileSwitcherProps {
+  /** プロファイル変更時のコールバック */
+  onProfileChange?: () => void;
+}
+
+export function ProfileSwitcher({ onProfileChange }: ProfileSwitcherProps) {
+  /* ========================================
+     Hooks & コンテキスト
+     ======================================== */
   const { t } = useTranslation();
   const { colors, responsiveFontSizes } = useTheme();
-  const { profiles, activeProfile, setActiveProfile } = useProfiles();
 
-  // プロファイルが1つ以下の場合は表示しない
-  if (profiles.length <= 1) {
+  /* フックからロジックを取得 */
+  const {
+    activeProfile,
+    shouldShow,
+    handleNext,
+    handlePrevious,
+  } = useProfileSwitcher({ onProfileChange });
+
+  /* ========================================
+     早期リターン
+     ======================================== */
+
+  if (!shouldShow) {
     return null;
   }
 
-  const handleNext = async () => {
-    const currentIndex = profiles.findIndex(p => p.isActive);
-    const nextIndex = (currentIndex + 1) % profiles.length;
-    const nextProfile = profiles[nextIndex];
+  /* ========================================
+     レンダリング
+     ======================================== */
 
-    try {
-      await setActiveProfile(nextProfile.id);
-    } catch (error) {
-      showError();
-    }
-  };
-
-  const handlePrevious = async () => {
-    const currentIndex = profiles.findIndex(p => p.isActive);
-    const previousIndex = currentIndex === 0 ? profiles.length - 1 : currentIndex - 1;
-    const previousProfile = profiles[previousIndex];
-
-    try {
-      await setActiveProfile(previousProfile.id);
-    } catch (error) {
-      showError();
-    }
-  };
-
+  /* プロファイルスイッチャーコンテナ */
   return (
     <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      {/* 前のプロファイルボタン */}
       <TouchableOpacity
         onPress={handlePrevious}
         style={styles.arrowButton}
@@ -56,13 +65,17 @@ export function ProfileSwitcher() {
         <Ionicons name="chevron-back" size={20} color={colors.text} />
       </TouchableOpacity>
 
+      {/* プロファイル情報（中央） */}
       <View style={styles.profileInfo}>
+        {/* 人物アイコン */}
         <Ionicons name="person" size={16} color={colors.primary} style={styles.icon} />
+        {/* プロファイル名 */}
         <Text style={[styles.profileName, { color: colors.text, fontSize: responsiveFontSizes.sm }]} numberOfLines={UI_CONSTANTS.NUMBER_OF_LINES.SINGLE}>
           {activeProfile?.name || t('profile.environment')}
         </Text>
       </View>
 
+      {/* 次のプロファイルボタン */}
       <TouchableOpacity
         onPress={handleNext}
         style={styles.arrowButton}
@@ -74,7 +87,11 @@ export function ProfileSwitcher() {
   );
 }
 
+/* ========================================
+   スタイル定義
+   ======================================== */
 const styles = StyleSheet.create({
+  /** コンテナ（横並び、ボーダー付き） */
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -84,9 +101,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 4,
   },
+  /** 矢印ボタン */
   arrowButton: {
     padding: 4,
   },
+  /** プロファイル情報（中央配置） */
   profileInfo: {
     flex: 1,
     flexDirection: 'row',
@@ -94,9 +113,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
   },
+  /** 人物アイコン */
   icon: {
     marginRight: 2,
   },
+  /** プロファイル名テキスト */
   profileName: {
     fontWeight: '500',
   },

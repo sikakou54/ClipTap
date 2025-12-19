@@ -1,28 +1,77 @@
 /**
  * 統一ボタンコンポーネント
- * 一貫性のあるインタラクションを提供
+ *
+ * アプリ全体で使用される一貫性のあるボタンUI。
+ * 触覚フィードバック、ローディング状態、アイコン対応。
+ *
+ * 主な機能:
+ * - 7種類のボタンタイプ（primary, secondary, danger, success, ghost, outline, warning）
+ * - 3種類のサイズ（small, medium, large）
+ * - 触覚フィードバック（Haptics）
+ * - ローディング状態表示
+ * - アイコン対応（左/右配置）
+ * - アクセシビリティ対応
  */
 
 import React, { useMemo } from 'react';
-import { TouchableOpacity, Text, ActivityIndicator, ViewStyle } from 'react-native';
+import { TouchableOpacity, Text, ActivityIndicator, ViewStyle, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useTheme } from '../../lib/themeSystem';
-import { useTranslation } from 'react-i18next';
-import { UI_CONSTANTS } from '../../lib/constants/ui';
 
+import { useTheme } from '@lib/themeSystem';
+import { useTranslation } from '@cliptap/shared';
+import { UI_CONSTANTS } from '@constants/ui';
+
+/*
+ * ========================================
+ * 型定義
+ * ========================================
+ */
+
+/**
+ * ボタンタイプ
+ * - primary: メインアクション（青）
+ * - secondary: サブアクション（グレー）
+ * - danger: 注意アクション（赤）
+ * - success: 完了アクション（緑）
+ * - ghost: 透明背景
+ * - outline: 枠線のみ
+ * - warning: 警告アクション（オレンジ）
+ */
 export type ButtonType =
-  | 'primary'      // メインアクション（青）
-  | 'secondary'    // サブアクション（グレー）
-  | 'danger'       // 注意アクション（赤）
-  | 'success'      // 完了アクション（緑）
-  | 'ghost'        // 透明背景
-  | 'outline'      // 枠線のみ
-  | 'warning';     // 警告アクション（オレンジ）
+  | 'primary'
+  | 'secondary'
+  | 'danger'
+  | 'success'
+  | 'ghost'
+  | 'outline'
+  | 'warning';
 
+/** ボタンサイズ */
 export type ButtonSize = 'small' | 'medium' | 'large';
 
-interface CommonButtonProps {
+/*
+ * ========================================
+ * Props定義
+ * ========================================
+ */
+
+/**
+ * CommonButtonのProps
+ * @property title - ボタンテキスト
+ * @property onPress - タップ時のコールバック
+ * @property type - ボタンタイプ（デフォルト: primary）
+ * @property size - ボタンサイズ（デフォルト: medium）
+ * @property disabled - 無効状態
+ * @property loading - ローディング状態
+ * @property icon - アイコン名
+ * @property iconPosition - アイコン位置（left/right）
+ * @property fullWidth - 幅100%にするか
+ * @property maxWidth - 最大幅
+ * @property style - カスタムスタイル
+ * @property enableHaptics - 触覚フィードバックを有効にするか
+ */
+export interface CommonButtonProps {
   title: string;
   onPress: () => void;
   type?: ButtonType;
@@ -37,7 +86,7 @@ interface CommonButtonProps {
   enableHaptics?: boolean;
 }
 
-const CommonButton: React.FC<CommonButtonProps> = ({
+export function CommonButton({
   title,
   onPress,
   type = 'primary',
@@ -50,15 +99,30 @@ const CommonButton: React.FC<CommonButtonProps> = ({
   maxWidth,
   style,
   enableHaptics = true,
-}) => {
+}: CommonButtonProps) {
+  /*
+   * ========================================
+   * Hooks & コンテキスト
+   * ========================================
+   */
   const { t } = useTranslation();
-  const { isDark, fontSizes } = useTheme();
+  const { colors, responsiveFontSizes } = useTheme();
 
+  /*
+   * ========================================
+   * メモ化されたスタイル計算
+   * ========================================
+   */
+
+  /**
+   * ボタンスタイルを計算
+   * サイズ、タイプ、状態（disabled/loading）に基づいてスタイルを生成
+   */
   const buttonStyle = useMemo((): ViewStyle => {
     const sizeConfig = {
-      small: { height: 36, paddingHorizontal: 12, fontSize: fontSizes.sm },
-      medium: { height: 44, paddingHorizontal: 16, fontSize: fontSizes.md },
-      large: { height: 52, paddingHorizontal: 20, fontSize: fontSizes.lg }
+      small: { height: 36, paddingHorizontal: 12 },
+      medium: { height: 44, paddingHorizontal: 16 },
+      large: { height: 52, paddingHorizontal: 20 }
     }[size];
 
     const baseStyle: ViewStyle = {
@@ -76,25 +140,25 @@ const CommonButton: React.FC<CommonButtonProps> = ({
     let typeStyle: ViewStyle = {};
 
     if (disabled || loading) {
-      typeStyle.backgroundColor = isDark ? '#374151' : '#9CA3AF';
+      typeStyle.backgroundColor = colors.textTertiary;
     } else {
       switch (type) {
         case 'primary':
-          typeStyle.backgroundColor = '#3B82F6';
+          typeStyle.backgroundColor = colors.primary;
           break;
         case 'secondary':
-          typeStyle.backgroundColor = isDark ? '#374151' : '#F3F4F6';
+          typeStyle.backgroundColor = colors.surface;
           typeStyle.borderWidth = UI_CONSTANTS.BORDER_WIDTH.THIN;
-          typeStyle.borderColor = isDark ? '#4B5563' : '#D1D5DB';
+          typeStyle.borderColor = colors.border;
           break;
         case 'danger':
-          typeStyle.backgroundColor = '#EF4444';
+          typeStyle.backgroundColor = colors.danger;
           break;
         case 'success':
-          typeStyle.backgroundColor = '#10B981';
+          typeStyle.backgroundColor = colors.success;
           break;
         case 'warning':
-          typeStyle.backgroundColor = '#F59E0B';
+          typeStyle.backgroundColor = colors.warning;
           break;
         case 'ghost':
           typeStyle.backgroundColor = 'transparent';
@@ -102,47 +166,79 @@ const CommonButton: React.FC<CommonButtonProps> = ({
         case 'outline':
           typeStyle.backgroundColor = 'transparent';
           typeStyle.borderWidth = UI_CONSTANTS.BORDER_WIDTH.THIN;
-          typeStyle.borderColor = '#3B82F6';
+          typeStyle.borderColor = colors.primary;
           break;
       }
     }
 
     return { ...baseStyle, ...typeStyle };
-  }, [disabled, loading, isDark, type, size, fullWidth, fontSizes]);
+  }, [disabled, loading, colors, type, size, fullWidth]);
 
+  /*
+   * ========================================
+   * ヘルパー関数
+   * ========================================
+   */
+
+  /** タイプと状態に応じたテキスト色を取得 */
   const getTextColor = (): string => {
-    if (disabled || loading) return isDark ? '#9CA3AF' : '#6B7280';
+    if (disabled || loading) return colors.textSecondary;
 
     switch (type) {
       case 'primary':
       case 'danger':
       case 'success':
       case 'warning':
-        return '#FFFFFF';
+        return colors.textInverse;
       case 'secondary':
-        return isDark ? '#FFFFFF' : '#111827';
+        return colors.text;
       case 'ghost':
       case 'outline':
-        return '#3B82F6';
+        return colors.primary;
       default:
-        return '#FFFFFF';
+        return colors.textInverse;
     }
   };
 
+  /** サイズに応じたアイコンサイズを取得 */
   const getIconSize = (): number => {
     return { small: 16, medium: 18, large: 20 }[size];
   };
 
+  /** サイズに応じたフォントサイズを取得 */
+  const getFontSize = (): number => {
+    return {
+      small: responsiveFontSizes.sm,
+      medium: responsiveFontSizes.base,
+      large: responsiveFontSizes.md
+    }[size];
+  };
+
+  /*
+   * ========================================
+   * レンダリング関数
+   * ========================================
+   */
+
+  /** ボタンコンテンツをレンダリング（ローディング/通常） */
   const renderContent = () => {
     if (loading) {
       return (
         <>
+          {/* ローディングインジケーター */}
           <ActivityIndicator
             size="small"
             color={getTextColor()}
-            style={{ marginRight: UI_CONSTANTS.GAP.MD }}
+            style={styles.loadingIndicator}
           />
-          <Text style={{ color: getTextColor(), fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD }}>
+          {/* ローディング時のテキスト */}
+          <Text style={[
+            styles.text,
+            {
+              color: getTextColor(),
+              fontSize: getFontSize(),
+            }
+          ]}>
             {t('common.processing')}
           </Text>
         </>
@@ -151,38 +247,44 @@ const CommonButton: React.FC<CommonButtonProps> = ({
 
     return (
       <>
+        {/* 左側アイコン（オプション） */}
         {icon && iconPosition === 'left' && (
           <Ionicons
             name={icon}
             size={getIconSize()}
             color={getTextColor()}
-            style={{ marginRight: UI_CONSTANTS.GAP.MD }}
+            style={styles.iconLeft}
           />
         )}
+        {/* ボタンテキスト */}
         <Text
           numberOfLines={UI_CONSTANTS.NUMBER_OF_LINES.SINGLE}
           adjustsFontSizeToFit={true}
           minimumFontScale={0.8}
-          style={{
-            color: getTextColor(),
-            fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,
-            fontSize: { small: fontSizes.sm, medium: fontSizes.md, large: fontSizes.lg }[size]
-          }}
+          style={[
+            styles.text,
+            {
+              color: getTextColor(),
+              fontSize: getFontSize(),
+            }
+          ]}
         >
           {title}
         </Text>
+        {/* 右側アイコン（オプション） */}
         {icon && iconPosition === 'right' && (
           <Ionicons
             name={icon}
             size={getIconSize()}
             color={getTextColor()}
-            style={{ marginLeft: UI_CONSTANTS.GAP.MD }}
+            style={styles.iconRight}
           />
         )}
       </>
     );
   };
 
+  /* ボタン本体（触覚フィードバック、アクセシビリティ対応） */
   return (
     <TouchableOpacity
       style={[
@@ -192,7 +294,7 @@ const CommonButton: React.FC<CommonButtonProps> = ({
       ]}
       onPress={() => {
         if (enableHaptics && !disabled && !loading) {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
         }
         onPress();
       }}
@@ -208,6 +310,24 @@ const CommonButton: React.FC<CommonButtonProps> = ({
       {renderContent()}
     </TouchableOpacity>
   );
-};
+}
 
-export default CommonButton;
+/*
+ * ========================================
+ * スタイル定義
+ * ========================================
+ */
+const styles = StyleSheet.create({
+  text: {
+    fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,
+  },
+  loadingIndicator: {
+    marginRight: UI_CONSTANTS.GAP.MD,
+  },
+  iconLeft: {
+    marginRight: UI_CONSTANTS.GAP.MD,
+  },
+  iconRight: {
+    marginLeft: UI_CONSTANTS.GAP.MD,
+  },
+});

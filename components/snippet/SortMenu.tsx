@@ -1,11 +1,34 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../lib/themeSystem';
-import { SnippetSortBy } from '../../lib/types/snippet';
-import { UI_CONSTANTS } from '../../lib/constants/ui';
+/**
+ * ソートメニューコンポーネント
+ *
+ * スニペット一覧のソート順を変更するドロップダウンメニュー。
+ * 現在のソート順を表示し、タップでモーダルを開いて変更可能。
+ *
+ * ソートオプション:
+ * - recent: 最近使用した順（デフォルト）
+ * - title: タイトル順（アルファベット/あいうえお順）
+ *
+ * @see app/(tabs)/index.tsx - メイン画面での使用例
+ */
 
+import React from 'react';
+import { Text, TouchableOpacity, StyleSheet, Modal, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '@cliptap/shared';
+import { useTheme } from '@lib/themeSystem';
+import { SnippetSortBy } from '@cliptap/shared';
+import { UI_CONSTANTS } from '@constants/ui';
+import { useSortMenu } from '@hooks/components/useSortMenu';
+
+/* ========================================
+   Props定義
+   ======================================== */
+
+/**
+ * SortMenuのProps
+ * @property currentSort - 現在のソート順
+ * @property onSortChange - ソート順変更時のコールバック
+ */
 interface SortMenuProps {
   currentSort: SnippetSortBy;
   onSortChange: (sort: SnippetSortBy) => void;
@@ -14,52 +37,54 @@ interface SortMenuProps {
 export function SortMenu({ currentSort, onSortChange }: SortMenuProps) {
   const { t } = useTranslation();
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
-  const [visible, setVisible] = useState(false);
 
-  const sortOptions: { value: SnippetSortBy; label: string; icon: string }[] = [
-    { value: 'recent', label: t('sort.recent'), icon: 'time' },
-    { value: 'title', label: t('sort.title_sort'), icon: 'text' },
-  ];
-
-  const handlePress = () => {
-    setVisible(true);
-  };
-
-  const handleSelect = (value: SnippetSortBy) => {
-    onSortChange(value);
-    setVisible(false);
-  };
-
-  const currentOption = sortOptions.find((opt) => opt.value === currentSort);
+  /* フックからロジックを取得 */
+  const {
+    visible,
+    sortOptions,
+    currentOption,
+    handlePress,
+    handleSelect,
+    handleClose,
+  } = useSortMenu({ currentSort, onSortChange });
 
   return (
     <>
+      {/* ソートボタン（現在のソート順を表示） */}
       <TouchableOpacity
         style={[styles.button, { backgroundColor: colors.surface }]}
         onPress={handlePress}
       >
+        {/* ソートアイコン */}
         <Ionicons
-          name={currentOption?.icon as any}
+          name={currentOption?.icon}
           size={18}
           color={colors.text}
         />
+        {/* ソートラベル */}
         <Text style={[styles.label, { color: colors.text, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
           {currentOption?.label}
         </Text>
+        {/* ドロップダウンアイコン */}
         <Ionicons name="chevron-down" size={18} color={colors.textSecondary} />
       </TouchableOpacity>
 
+      {/* ソート選択モーダル */}
       <Modal
         visible={visible}
         transparent
         animationType="fade"
-        onRequestClose={() => setVisible(false)}
+        onRequestClose={handleClose}
       >
-        <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
+        {/* オーバーレイ（背景タップで閉じる） */}
+        <Pressable style={styles.overlay} onPress={handleClose}>
+          {/* モーダルコンテンツ */}
           <Pressable style={[styles.modal, { backgroundColor: colors.surface }]} onPress={(e) => e.stopPropagation()}>
+            {/* モーダルタイトル */}
             <Text style={[styles.modalTitle, { color: colors.text, fontSize: responsiveFontSizes.lg, lineHeight: responsiveLineHeights.lg }]}>
               {t('sort.title')}
             </Text>
+            {/* ソートオプション一覧 */}
             {sortOptions.map((option, index) => (
               <TouchableOpacity
                 key={option.value}
@@ -70,11 +95,13 @@ export function SortMenu({ currentSort, onSortChange }: SortMenuProps) {
                 ]}
                 onPress={() => handleSelect(option.value)}
               >
+                {/* オプションアイコン */}
                 <Ionicons
-                  name={option.icon as any}
+                  name={option.icon}
                   size={22}
                   color={currentSort === option.value ? colors.primary : colors.text}
                 />
+                {/* オプションラベル */}
                 <Text style={[
                   styles.optionText,
                   {
@@ -85,6 +112,7 @@ export function SortMenu({ currentSort, onSortChange }: SortMenuProps) {
                 ]}>
                   {option.label}
                 </Text>
+                {/* 選択中のチェックマーク */}
                 {currentSort === option.value && (
                   <Ionicons name="checkmark" size={22} color={colors.primary} />
                 )}

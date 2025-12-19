@@ -1,104 +1,114 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../lib/themeSystem';
-import { Ionicons } from '@expo/vector-icons';
-import { useVariables } from '../../lib/hooks/useVariables';
-import { SYSTEM_VARIABLES, VariableOption } from '../../lib/types/variable';
-import { Logger } from '../../lib/logger';
+/**
+ * 変数挿入ツールバーコンポーネント
+ *
+ * テキスト入力画面でキーボードの上に表示される変数挿入ボタン群。
+ * システム変数とカスタム変数をワンタップで挿入可能。
+ *
+ * 主な機能:
+ * - システム変数ボタン（date, time, datetime等）
+ * - カスタム変数ボタン（ユーザー定義変数）
+ * - 横スクロール対応
+ * - 10秒ごとの自動リフレッシュ（変数追加を反映）
+ *
+ * @see TextInputScreen - 親コンポーネント
+ * @see UI_SYSTEM_VARIABLES - システム変数定義
+ */
 
-interface Props {
+import React from 'react';
+import { View, ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { useTheme } from '@lib/themeSystem';
+import { Ionicons } from '@expo/vector-icons';
+import { VariableOption } from '@mobile-types/variable';
+import { useVariableToolbar } from '@hooks/components/useVariableToolbar';
+
+/* ========================================
+   Props定義
+   ======================================== */
+
+/**
+ * VariableToolbarのProps
+ * @property onInsert - 変数挿入時のコールバック（変数名を受け取る）
+ */
+interface VariableToolbarProps {
   onInsert: (variableName: string) => void;
-  onShowMore?: () => void;
 }
 
-export function VariableToolbar({ onInsert }: Props) {
-  const { t } = useTranslation();
+export function VariableToolbar({ onInsert }: VariableToolbarProps) {
   const { colors } = useTheme();
-  const { getEnabledCustomVariables, getStandardValue } = useVariables();
-  const [allVariables, setAllVariables] = useState<VariableOption[]>([]);
 
-  // カスタム変数を読み込み
-  useEffect(() => {
-    loadCustomVariables();
+  /* フックからロジックを取得 */
+  const {
+    allVariables,
+    shouldCenter,
+    horizontalPadding,
+    handleContentLayout,
+  } = useVariableToolbar();
 
-    // 10秒ごとにリフレッシュ（変数追加・編集・削除を反映）
-    const interval = setInterval(() => {
-      loadCustomVariables();
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [t]);
-
-  const loadCustomVariables = () => {
-    try {
-      // システム変数を変換
-      const systemVariables: VariableOption[] = SYSTEM_VARIABLES.map((v) => ({
-        name: v.name,
-        icon: v.icon,
-        label: t(v.labelKey),
-        description: t(v.descriptionKey),
-        isSystem: true,
-      }));
-
-      // 有効なカスタム変数のみ取得（作成日時昇順でソート済み、無料版は上位5個のみ）
-      const enabledCustomVars = getEnabledCustomVariables();
-
-      // カスタム変数をVariableOption形式に変換
-      const customOptions: VariableOption[] = enabledCustomVars.map((v) => ({
-        name: v.name,
-        icon: (v.icon || 'code-outline') as keyof typeof Ionicons.glyphMap,
-        label: v.label || v.name,
-        description: getStandardValue(v.name),
-        isSystem: false,
-      }));
-
-      setAllVariables([...systemVariables, ...customOptions]);
-    } catch (error) {
-      Logger.error('Failed to load custom variables:', error);
-    }
-  };
-
+  /* 変数挿入ツールバーコンテナ */
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
+      {/* 水平スクロール可能な変数ボタン一覧 */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          shouldCenter && { paddingHorizontal: horizontalPadding },
+        ]}
         keyboardShouldPersistTaps="handled"
       >
-        {allVariables.map((variable) => (
-          <VariableButton
-            key={variable.name}
-            variable={variable}
-            onPress={() => onInsert(variable.name)}
-          />
-        ))}
+        <View style={styles.buttonContainer} onLayout={handleContentLayout}>
+          {allVariables.map((variable) => (
+            <VariableButton
+              key={variable.name}
+              variable={variable}
+              onPress={() => onInsert(variable.name)}
+            />
+          ))}
+        </View>
       </ScrollView>
     </View>
   );
 }
 
+/**
+ * VariableButtonのProps
+ * @property variable - 変数オプションデータ
+ * @property onPress - タップ時のコールバック
+ */
 interface VariableButtonProps {
   variable: VariableOption;
   onPress: () => void;
 }
 
+/**
+ * 変数挿入ボタンコンポーネント
+ * アイコン、ラベル、変数構文（{{name}}）を表示
+ */
 function VariableButton({ variable, onPress }: VariableButtonProps) {
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
 
+  /* 変数挿入ボタン */
   return (
     <TouchableOpacity
-      style={[styles.button, { backgroundColor: colors.card }]}
+      style={[
+        styles.button,
+        {
+          backgroundColor: colors.card,
+        },
+      ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
       <View style={styles.buttonContent}>
+        {/* 変数アイコン */}
         <Ionicons name={variable.icon} size={16} color={colors.primary} />
+        {/* 変数ラベル */}
         <Text style={[styles.buttonLabel, { color: colors.text, fontSize: responsiveFontSizes.xs, lineHeight: responsiveLineHeights.xs }]}>
           {variable.label}
         </Text>
       </View>
+      {/* 変数コード（{{変数名}}） */}
       <Text style={[styles.buttonVariable, { color: colors.textSecondary, fontSize: responsiveFontSizes.xs - 2, lineHeight: Math.round((responsiveFontSizes.xs - 2) * 1.5) }]}>
         {`{{${variable.name}}}`}
       </Text>
@@ -112,15 +122,15 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
   },
   scrollContent: {
-    paddingHorizontal: 12,
     paddingBottom: 0,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
     gap: 8,
   },
   button: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
-    minWidth: 100,
     gap: 4,
     alignItems: 'center',
   },

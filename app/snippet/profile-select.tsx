@@ -1,65 +1,48 @@
 /**
- * 環境選択画面
- * 定型文に関連付ける環境を複数選択
+ * @module ProfileSelectScreen
+ * @description プロファイル（環境）選択画面
+ *
+ * 定型文を表示するプロファイルを複数選択するためのモーダル画面。
+ *
+ * @features
+ * - 利用可能なプロファイルの一覧表示
+ * - 複数選択によるプロファイル指定
+ * - 「全ての環境」オプション（空配列=全プロファイルで表示）
+ *
+ * @see lib/hooks/screens/useProfileSelectScreen.ts - ビジネスロジック
  */
 
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-} from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import React from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../lib/themeSystem';
-import { useProfiles } from '../../lib/hooks/useProfiles';
-import { Profile } from '../../lib/types/profile';
-import { Header } from '../../components/common/Header';
-import { commonStyles } from '../../lib/styles/commonStyles';
-import { UI_CONSTANTS } from '../../lib/constants/ui';
+import { useLocalSearchParams } from 'expo-router';
+import { useTranslation } from '@cliptap/shared'
+import { useTheme } from '@lib/themeSystem';
+import { useProfileSelectScreen } from '@hooks/screens/useProfileSelectScreen';
+import { Profile } from '@cliptap/shared';
+import { Header } from '@components/common/Header';
+import { commonStyles } from '@lib/styles/commonStyles';
+import { UI_CONSTANTS } from '@constants/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProfileSelectScreen() {
   const { t } = useTranslation();
   const { colors, isTablet, responsiveFontSizes } = useTheme();
-  const router = useRouter();
   const params = useLocalSearchParams();
-  const { profiles } = useProfiles();
 
-  // パラメータから選択中のIDを取得
   const selectedIds = params.selectedIds
-    ? (typeof params.selectedIds === 'string'
-      ? params.selectedIds.split(',').filter(id => id !== '')
-      : params.selectedIds)
+    ? typeof params.selectedIds === 'string'
+      ? params.selectedIds.split(',').filter((id) => id !== '')
+      : params.selectedIds
     : [];
 
-  const [tempSelectedIds, setTempSelectedIds] = useState<string[]>(
-    Array.isArray(selectedIds) ? selectedIds : []
-  );
-
-  const toggleProfile = (profileId: string) => {
-    if (tempSelectedIds.includes(profileId)) {
-      setTempSelectedIds(tempSelectedIds.filter(id => id !== profileId));
-    } else {
-      setTempSelectedIds([...tempSelectedIds, profileId]);
-    }
-  };
-
-  const handleSelectAll = () => {
-    setTempSelectedIds([]);
-  };
-
-  const handleSave = () => {
-    // グローバルコールバックで選択結果を返す
-    if (global.profileSelectCallback) {
-      global.profileSelectCallback(tempSelectedIds);
-      global.profileSelectCallback = undefined;
-    }
-    router.back();
-  };
+  const {
+    tempSelectedIds,
+    profiles,
+    toggleProfile,
+    handleSelectAll,
+    handleSave,
+  } = useProfileSelectScreen({ selectedIds: Array.isArray(selectedIds) ? selectedIds : [] });
 
   return (
     <SafeAreaView style={[commonStyles.container, { backgroundColor: colors.background }]}>
@@ -76,12 +59,10 @@ export default function ProfileSelectScreen() {
       />
 
       <ScrollView style={styles.content}>
-        {/* 説明 */}
         <Text style={[styles.description, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm }]}>
           {t('snippet.select_profiles_description')}
         </Text>
 
-        {/* 全ての環境 */}
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
           <TouchableOpacity
             style={[styles.profileOption, { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
@@ -100,7 +81,6 @@ export default function ProfileSelectScreen() {
             </View>
           </TouchableOpacity>
 
-          {/* 個別の環境（有効な環境のみ） */}
           {profiles.map((profile: Profile, index: number) => {
             const isSelected = tempSelectedIds.includes(profile.id);
             const isLastItem = index === profiles.length - 1;
@@ -171,13 +151,6 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.MEDIUM,
-  },
-  profileDescription: {
-    marginTop: 2,
-  },
-  profileIcon: {
-    fontSize: 24,
-    marginLeft: UI_CONSTANTS.GAP.BASE,
   },
   saveButton: {
     padding: UI_CONSTANTS.GAP.XS,

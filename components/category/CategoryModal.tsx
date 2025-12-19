@@ -1,22 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Modal,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../lib/themeSystem';
-import { useCategories } from '../../lib/hooks/useCategories';
-import { CATEGORY_COLORS } from '../../lib/constants/colors';
-import { Category } from '../../lib/types/category';
-import { UI_CONSTANTS } from '../../lib/constants/ui';
-import { showAlert } from '../../lib/utils/alerts';
+/**
+ * カテゴリ作成・編集モーダルコンポーネント
+ *
+ * カテゴリの新規作成と既存カテゴリの編集を行うモーダル。
+ * 名前入力とカラー選択のUIを提供。
+ *
+ * 主な機能:
+ * - カテゴリ名入力
+ * - プリセットカラーからの色選択
+ * - 新規作成/編集モードの自動切り替え
+ * - バリデーション（名前必須）
+ *
+ * @see CategoryPicker - カテゴリ選択画面からの呼び出し
+ * @see app/category/manage.tsx - カテゴリ管理画面での使用
+ */
 
+import React from 'react';
+import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, ScrollView } from 'react-native';
+import { useTranslation, type Category, CATEGORY_COLORS } from '@cliptap/shared';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@lib/themeSystem';
+import { UI_CONSTANTS } from '@constants/ui';
+import { useCategoryModal } from '@hooks/components/useCategoryModal';
+
+/* ========================================
+   Props定義
+   ======================================== */
+
+/**
+ * CategoryModalのProps
+ * @property visible - モーダル表示状態
+ * @property category - 編集対象のカテゴリ（nullなら新規作成）
+ * @property onClose - 閉じる時のコールバック
+ * @property onSuccess - 保存成功時のコールバック
+ */
 interface CategoryModalProps {
   visible: boolean;
   category?: Category | null;
@@ -32,57 +48,20 @@ export function CategoryModal({
 }: CategoryModalProps) {
   const { t } = useTranslation();
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
-  const { createCategory, updateCategory } = useCategories();
-  const [categoryName, setCategoryName] = useState('');
-  const [selectedColor, setSelectedColor] = useState(CATEGORY_COLORS[0]);
-  const [saving, setSaving] = useState(false);
 
-  const isEdit = !!category;
+  /* フックからロジックを取得 */
+  const {
+    categoryName,
+    selectedColor,
+    saving,
+    isEdit,
+    setCategoryName,
+    setSelectedColor,
+    handleSave,
+    handleClose,
+  } = useCategoryModal({ visible, category, onClose, onSuccess });
 
-  useEffect(() => {
-    if (category) {
-      setCategoryName(category.name);
-      setSelectedColor(category.color || CATEGORY_COLORS[0]);
-    } else {
-      setCategoryName('');
-      setSelectedColor(CATEGORY_COLORS[0]);
-    }
-  }, [category, visible]);
-
-  const handleSave = async () => {
-    if (!categoryName.trim()) {
-      showAlert(t('error.generic'), t('error.empty_content'), undefined, 'error');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      if (isEdit) {
-        await updateCategory(category.id, {
-          name: categoryName.trim(),
-          color: selectedColor,
-        });
-      } else {
-        await createCategory({
-          name: categoryName.trim(),
-          color: selectedColor,
-        });
-      }
-      handleClose();
-      onSuccess();
-    } catch (error: any) {
-      showAlert(t('error.generic'), error.message, undefined, 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleClose = () => {
-    setCategoryName('');
-    setSelectedColor(CATEGORY_COLORS[0]);
-    onClose();
-  };
-
+  /* カテゴリ作成・編集モーダル */
   return (
     <Modal
       visible={visible}
@@ -90,8 +69,11 @@ export function CategoryModal({
       animationType="fade"
       onRequestClose={handleClose}
     >
+      {/* オーバーレイ */}
       <View style={styles.overlay}>
+        {/* モーダルコンテンツ */}
         <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+          {/* ヘッダー（タイトルと閉じるボタン） */}
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text, fontSize: responsiveFontSizes.md, lineHeight: responsiveLineHeights.md }]}>
               {isEdit ? t('category.edit') : t('category.create')}
@@ -101,6 +83,7 @@ export function CategoryModal({
             </TouchableOpacity>
           </View>
 
+          {/* カテゴリ名入力欄 */}
           <TextInput
             style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
             value={categoryName}
@@ -111,13 +94,18 @@ export function CategoryModal({
             onSubmitEditing={handleSave}
           />
 
-          <Text style={[styles.label, { color: colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>{t('category.color')}</Text>
+          {/* カラー選択セクション */}
+          <Text style={[styles.label, { color: colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
+            {t('category.color')}
+          </Text>
+          {/* プリセットカラー一覧（水平スクロール） */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.colorPicker}
           >
             {CATEGORY_COLORS.map((color) => (
+              /* カラーオプション */
               <TouchableOpacity
                 key={color}
                 style={[
@@ -127,6 +115,7 @@ export function CategoryModal({
                 ]}
                 onPress={() => setSelectedColor(color)}
               >
+                {/* 選択中のチェックマーク */}
                 {selectedColor === color && (
                   <Ionicons name="checkmark" size={20} color="#FFFFFF" />
                 )}
@@ -134,17 +123,28 @@ export function CategoryModal({
             ))}
           </ScrollView>
 
+          {/* アクションボタン（キャンセル/保存） */}
           <View style={styles.buttons}>
+            {/* キャンセルボタン */}
             <TouchableOpacity
-              style={[styles.button, styles.cancelButton, { borderColor: colors.border }]}
+              style={[
+                styles.button,
+                styles.cancelButton,
+                { borderColor: colors.border }
+              ]}
               onPress={handleClose}
             >
               <Text style={[styles.buttonText, { color: colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
                 {t('common.cancel')}
               </Text>
             </TouchableOpacity>
+            {/* 保存ボタン */}
             <TouchableOpacity
-              style={[styles.button, styles.saveButton, { backgroundColor: colors.primary }]}
+              style={[
+                styles.button,
+                styles.saveButton,
+                { backgroundColor: colors.primary }
+              ]}
               onPress={handleSave}
               disabled={saving || !categoryName.trim()}
             >
@@ -159,6 +159,9 @@ export function CategoryModal({
   );
 }
 
+/* ========================================
+   スタイル定義
+   ======================================== */
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
@@ -180,17 +183,14 @@ const styles = StyleSheet.create({
     marginBottom: UI_CONSTANTS.GAP.LG,
   },
   title: {
-
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,
   },
   input: {
     borderRadius: UI_CONSTANTS.BORDER_RADIUS.BASE,
     padding: UI_CONSTANTS.GAP.BASE,
-
     marginBottom: UI_CONSTANTS.GAP.LG,
   },
   label: {
-
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.MEDIUM,
     marginBottom: UI_CONSTANTS.GAP.BASE,
   },
@@ -228,11 +228,8 @@ const styles = StyleSheet.create({
   cancelButton: {
     borderWidth: UI_CONSTANTS.BORDER_WIDTH.THIN,
   },
-  saveButton: {
-    // backgroundColor set dynamically
-  },
+  saveButton: {},
   buttonText: {
-
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,
   },
 });
