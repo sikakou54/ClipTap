@@ -1,0 +1,73 @@
+/*
+ * Localizable.strings (English)
+ * ClipTapKeyboard
+ *
+ * English translation file
+ * Defines English translations for all text displayed in the keyboard extension
+ */
+
+/* Profile (Environment) related */
+"profile.all" = "All";
+"profile.select" = "Select Environment";
+"profile.none" = "No Environment";
+
+/* Category related */
+"category.all" = "All";
+"category.select" = "Select Category";
+"category.none" = "No Category";
+"category.uncategorized" = "Uncategorized";
+
+/* Snippet related */
+"snippet.title" = "Snippet";
+"snippet.select" = "Select Snippet";
+"snippet.empty" = "No snippets available";
+"snippet.no_results" = "No matching snippets found";
+"snippet.copy" = "Copy";
+"snippet.insert" = "Insert";
+"snippet.preview" = "Preview";
+"snippet.detail" = "Details";
+"snippet.close" = "Close";
+
+/* Search related */
+"search.placeholder" = "Search snippets";
+"search.clear" = "Clear";
+"search.no_results" = "No search results";
+
+/* Error messages */
+"error.database" = "Database error occurred";
+"error.load_failed" = "Failed to load data";
+"error.permission" = "Access permission denied";
+"error.unknown" = "Unknown error occurred";
+
+/* Subscription related */
+"subscription.required" = "This feature requires a premium plan";
+"subscription.upgrade" = "Upgrade";
+"subscription.premium" = "Premium";
+"subscription.free" = "Free";
+
+/* Variable related */
+"variable.today" = "Today";
+"variable.now" = "Now";
+"variable.time" = "Time";
+"variable.not_found" = "Variable not found";
+
+/* Common buttons */
+"button.ok" = "OK";
+"button.cancel" = "Cancel";
+"button.done" = "Done";
+"button.back" = "Back";
+"button.close" = "Close";
+"button.retry" = "Retry";
+
+/* Messages */
+"message.copied" = "Copied";
+"message.inserted" = "Inserted";
+"message.loading" = "Loading...";
+"message.empty_state" = "Create snippets in the main app";
+
+/* Accessibility */
+"accessibility.profile_button" = "Profile button";
+"accessibility.category_button" = "Category button";
+"accessibility.snippet_item" = "Snippet item";
+"accessibility.close_button" = "Close button";
+"accessibility.copy_button" = "Copy button";

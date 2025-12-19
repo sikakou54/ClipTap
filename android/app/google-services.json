@@ -1,0 +1,70 @@
+{
+  "project_info": {
+    "project_number": "570104360158",
+    "project_id": "cliptap-194b5",
+    "storage_bucket": "cliptap-194b5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:570104360158:android:e618d5ff7641cf9b9ee64f",
+        "android_client_info": {
+          "package_name": "com.sikakou.cliptap"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "570104360158-092025npverpurefde8uk3rtvldru3cn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sikakou.cliptap",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "570104360158-8eqkl3ae7n2t8coq5rrjgmek7ifpibfb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sikakou.cliptap",
+            "certificate_hash": "96ab3cb4f127374a00a87bc68d45beb927733679"
+          }
+        },
+        {
+          "client_id": "570104360158-a05n16nufb4pp19ebtuebk766rj3hl4k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sikakou.cliptap",
+            "certificate_hash": "ed0aae8ff0548fd525f5231e13ec5421510edee9"
+          }
+        },
+        {
+          "client_id": "570104360158-jj3g9mc15782i8ia6bh92qo5mtdhtuu5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBoaDT40z4PDfF163mlEeCSE0vklElXCUA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "570104360158-jj3g9mc15782i8ia6bh92qo5mtdhtuu5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "570104360158-tp89lr2buks8va20lg2ml8g2ercpdmko.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.sikakou.cliptap"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

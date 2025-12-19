@@ -1,0 +1,73 @@
+/*
+ * Localizable.strings (Japanese)
+ * ClipTapKeyboard
+ *
+ * 日本語の翻訳ファイル
+ * キーボード拡張で表示される全てのテキストの日本語訳を定義します
+ */
+
+/* プロファイル（環境）関連 */
+"profile.all" = "すべて";
+"profile.select" = "環境を選択";
+"profile.none" = "環境なし";
+
+/* カテゴリ関連 */
+"category.all" = "すべて";
+"category.select" = "カテゴリを選択";
+"category.none" = "カテゴリなし";
+"category.uncategorized" = "未分類";
+
+/* スニペット関連 */
+"snippet.title" = "スニペット";
+"snippet.select" = "スニペットを選択";
+"snippet.empty" = "スニペットがありません";
+"snippet.no_results" = "該当するスニペットが見つかりません";
+"snippet.copy" = "コピー";
+"snippet.insert" = "挿入";
+"snippet.preview" = "プレビュー";
+"snippet.detail" = "詳細";
+"snippet.close" = "閉じる";
+
+/* 検索関連 */
+"search.placeholder" = "スニペットを検索";
+"search.clear" = "クリア";
+"search.no_results" = "検索結果がありません";
+
+/* エラーメッセージ */
+"error.database" = "データベースエラーが発生しました";
+"error.load_failed" = "データの読み込みに失敗しました";
+"error.permission" = "アクセス権限がありません";
+"error.unknown" = "不明なエラーが発生しました";
+
+/* サブスクリプション関連 */
+"subscription.required" = "この機能は有料プランが必要です";
+"subscription.upgrade" = "アップグレード";
+"subscription.premium" = "プレミアム";
+"subscription.free" = "無料";
+
+/* 変数関連 */
+"variable.today" = "今日";
+"variable.now" = "現在";
+"variable.time" = "時刻";
+"variable.not_found" = "変数が見つかりません";
+
+/* 一般的なボタン */
+"button.ok" = "OK";
+"button.cancel" = "キャンセル";
+"button.done" = "完了";
+"button.back" = "戻る";
+"button.close" = "閉じる";
+"button.retry" = "再試行";
+
+/* メッセージ */
+"message.copied" = "コピーしました";
+"message.inserted" = "挿入しました";
+"message.loading" = "読み込み中...";
+"message.empty_state" = "メインアプリでスニペットを作成してください";
+
+/* アクセシビリティ */
+"accessibility.profile_button" = "環境ボタン";
+"accessibility.category_button" = "カテゴリボタン";
+"accessibility.snippet_item" = "スニペット項目";
+"accessibility.close_button" = "閉じるボタン";
+"accessibility.copy_button" = "コピーボタン";
