@@ -1,4 +1,27 @@
-import React, { useState, useEffect, useCallback } from 'react';
+/**
+ * スニペット作成・編集フォーム画面コンポーネント
+ *
+ * スニペットの新規作成と既存スニペットの編集を行う共通フォーム。
+ * モーダル形式で表示され、各入力項目は専用画面へ遷移して入力する。
+ *
+ * 主な機能:
+ * - タイトル入力（専用画面へ遷移）
+ * - コンテンツ入力（専用画面へ遷移）
+ * - カテゴリ選択（選択画面へ遷移）
+ * - プロファイル（環境）選択（複数選択可能）
+ * - タイトル付きコピー設定
+ * - 変数プレビュー表示
+ *
+ * アーキテクチャ:
+ * - UIとビジネスロジックを完全分離
+ * - 全ての状態・ロジックはuseSnippetFormScreenフックで管理
+ *
+ * @see lib/hooks/screens/useSnippetFormScreen.ts - ビジネスロジック
+ * @see app/snippet/new.tsx - 新規作成ルート
+ * @see app/snippet/[id]/edit.tsx - 編集ルート
+ */
+
+import React from 'react';
 import {
   View,
   Text,
@@ -7,20 +30,21 @@ import {
   ActivityIndicator,
   Switch,
 } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@cliptap/shared';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../lib/themeSystem';
-import { useSnippets } from '../../lib/hooks/useSnippets';
-import { useCategories } from '../../lib/hooks/useCategories';
-import { useProfiles } from '../../lib/hooks/useProfiles';
-import { CategoryBadge } from '../category/CategoryBadge';
+import { useTheme } from '@lib/themeSystem';
+import { useSnippetFormScreen } from '@hooks/screens/useSnippetFormScreen';
+import { CategoryBadge } from '@components/category/CategoryBadge';
 import { VariablePreview } from './VariablePreview';
-import { Header } from '../common/Header';
-import { commonStyles, snippetFormStyles } from '../../lib/styles/commonStyles';
-import { showError, showInfo } from '../../lib/utils/alerts';
+import { Header } from '@components/common/Header';
+import { commonStyles, snippetFormStyles } from '@lib/styles/commonStyles';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+/**
+ * SnippetFormScreenのProps
+ * @property mode - フォームモード（'create': 新規作成, 'edit': 編集）
+ * @property snippetId - 編集対象のスニペットID（編集モード時のみ必須）
+ */
 interface SnippetFormScreenProps {
   mode: 'create' | 'edit';
   snippetId?: string;
@@ -29,122 +53,28 @@ interface SnippetFormScreenProps {
 export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
   const { t } = useTranslation();
   const { colors, isTablet, responsiveFontSizes, responsiveLineHeights } = useTheme();
-  const router = useRouter();
 
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [selectedProfileIds, setSelectedProfileIds] = useState<string[]>([]);
-  const [copyWithTitle, setCopyWithTitle] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(mode === 'edit');
+  const {
+    title,
+    content,
+    selectedProfileIds,
+    copyWithTitle,
+    saving,
+    loading,
+    isEditMode,
+    canSave,
+    selectedCategory,
+    profiles,
+    handleTitlePress,
+    handleContentPress,
+    handleCategoryPress,
+    handleProfilePress,
+    handleCopyWithTitleChange,
+    handleSave,
+  } = useSnippetFormScreen({ mode, snippetId });
 
-  const { createSnippet, updateSnippet, getById } = useSnippets();
-  const { categories, refresh: refreshCategories } = useCategories();
-  const { profiles } = useProfiles();
-
-  const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
-  const isEditMode = mode === 'edit';
-  const canSave = title.trim() !== '' && content.trim() !== '';
-
-  // カテゴリ選択画面から戻ってきた時にカテゴリ一覧を再読み込み
-  useFocusEffect(
-    useCallback(() => {
-      refreshCategories();
-    }, [refreshCategories])
-  );
-
-  // 編集モードの場合、スニペットデータを読み込む
-  useEffect(() => {
-    const loadSnippet = async () => {
-      if (!isEditMode || !snippetId) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const snippet = await getById(snippetId);
-        if (snippet) {
-          setTitle(snippet.title || '');
-          setContent(snippet.content);
-          setSelectedCategoryId(snippet.categoryId);
-          setSelectedProfileIds(snippet.profileIds || []);
-          setCopyWithTitle(snippet.copyWithTitle);
-        }
-      } catch (error) {
-        showError('error.not_found');
-        router.back();
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadSnippet();
-  }, [isEditMode, snippetId, getById]);
-
-  // タイトル入力画面に遷移
-  const handleTitlePress = () => {
-    global.snippetTitleCallback = (newTitle: string) => {
-      setTitle(newTitle);
-    };
-    router.push({
-      pathname: '/snippet/title-input',
-      params: { title, onSave: 'true' },
-    });
-  };
-
-  // コンテンツ入力画面に遷移
-  const handleContentPress = () => {
-    global.snippetContentCallback = (newContent: string) => {
-      setContent(newContent);
-    };
-    router.push({
-      pathname: '/snippet/content-input',
-      params: { content, onSave: 'true' },
-    });
-  };
-
-  const handleSave = async () => {
-    if (!title.trim()) {
-      showInfo('error.empty_title');
-      return;
-    }
-
-    if (!content.trim()) {
-      showInfo('error.empty_content');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      if (isEditMode && snippetId) {
-        await updateSnippet({
-          id: snippetId,
-          title: title.trim(),
-          content: content.trim(),
-          categoryId: selectedCategoryId,
-          profileIds: selectedProfileIds,
-          copyWithTitle,
-        });
-      } else {
-        await createSnippet({
-          title: title.trim(),
-          content: content.trim(),
-          categoryId: selectedCategoryId,
-          profileIds: selectedProfileIds,
-          copyWithTitle,
-        });
-      }
-      router.back();
-    } catch (error) {
-      showError();
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // ローディング表示
   if (loading) {
+    /* ローディング状態 */
     return (
       <View style={[commonStyles.container, commonStyles.centered, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -152,11 +82,13 @@ export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
     );
   }
 
+  /* スニペット作成・編集フォーム画面 */
   return (
     <SafeAreaView
       style={[commonStyles.container, { backgroundColor: colors.background }]}
       edges={['top', 'left', 'right']}
     >
+      {/* ヘッダー：タイトルと保存ボタン */}
       <Header
         title={isEditMode ? t('snippet.edit') : t('snippet.create')}
         isModal={!isTablet}
@@ -179,8 +111,9 @@ export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
         }
       />
 
+      {/* スクロール可能なフォームコンテンツ */}
       <ScrollView style={snippetFormStyles.content}>
-        {/* タイトル */}
+        {/* タイトル入力セクション */}
         <View style={snippetFormStyles.section}>
           <TouchableOpacity
             style={[snippetFormStyles.titleButton, { backgroundColor: colors.surface }]}
@@ -193,7 +126,7 @@ export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
           </TouchableOpacity>
         </View>
 
-        {/* コンテンツ */}
+        {/* コンテンツ入力セクション */}
         <View style={snippetFormStyles.section}>
           <TouchableOpacity
             style={[snippetFormStyles.contentButton, { backgroundColor: colors.surface }]}
@@ -210,21 +143,13 @@ export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
           </TouchableOpacity>
         </View>
 
-        {/* カテゴリ */}
+        {/* カテゴリ選択セクション */}
         <View style={snippetFormStyles.section}>
           <TouchableOpacity
             style={[snippetFormStyles.categoryButton, { backgroundColor: colors.surface }]}
-            onPress={() => {
-              // グローバルコールバックでカテゴリ選択結果を受け取る
-              global.categorySelectCallback = (categoryId: string | null) => {
-                setSelectedCategoryId(categoryId);
-              };
-              router.push({
-                pathname: '/category/select',
-                params: { selectedId: selectedCategoryId ?? 'null' },
-              });
-            }}
+            onPress={handleCategoryPress}
           >
+            {/* 選択されたカテゴリバッジまたはプレースホルダー */}
             {selectedCategory ? (
               <CategoryBadge category={selectedCategory} />
             ) : (
@@ -236,22 +161,14 @@ export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
           </TouchableOpacity>
         </View>
 
-        {/* 環境（プロファイル） */}
+        {/* プロファイル（環境）選択セクション（複数選択可能） */}
         <View style={snippetFormStyles.section}>
           <TouchableOpacity
             style={[snippetFormStyles.categoryButton, { backgroundColor: colors.surface }]}
-            onPress={() => {
-              // グローバルコールバックで環境選択結果を受け取る
-              global.profileSelectCallback = (profileIds: string[]) => {
-                setSelectedProfileIds(profileIds);
-              };
-              router.push({
-                pathname: '/snippet/profile-select',
-                params: { selectedIds: selectedProfileIds.join(',') },
-              });
-            }}
+            onPress={handleProfilePress}
           >
             <View style={{ flex: 1 }}>
+              {/* 選択されたプロファイル数と名前の表示 */}
               {selectedProfileIds.length === 0 ? (
                 <Text style={{ color: colors.textSecondary, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }}>
                   {t('snippet.select_profile')}
@@ -274,7 +191,7 @@ export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
           </TouchableOpacity>
         </View>
 
-        {/* タイトル付きコピー */}
+        {/* タイトル付きコピー設定 */}
         <View style={snippetFormStyles.section}>
           <View style={[snippetFormStyles.categoryButton, { backgroundColor: colors.surface }]}>
             <View style={{ flex: 1 }}>
@@ -285,9 +202,10 @@ export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
                 {t('snippet.copy_with_title_description')}
               </Text>
             </View>
+            {/* スイッチ */}
             <Switch
               value={copyWithTitle}
-              onValueChange={setCopyWithTitle}
+              onValueChange={handleCopyWithTitleChange}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor={colors.surface}
             />

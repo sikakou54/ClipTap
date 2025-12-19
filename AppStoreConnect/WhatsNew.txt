@@ -1,96 +1,84 @@
-ClipTap Pro is Here! Profile Management + Custom Variables for Dramatically Improved Efficiency
+★Keyboard Extension Feature Added! Type Templates Directly from ANY App★
 
-This update introduces the Pro plan (subscription) with profile management and custom variable features.
+This update introduces the highly requested "Keyboard Extension" feature, exclusively available with the Pro plan!
 
-New Features: ClipTap Pro
+New Feature: Keyboard Extension (Pro Exclusive)
+Keyboard Extension Now FREE! Type Templates Directly from ANY App
 
-【Profile Management】
-・Create multiple profiles to switch variable values by context
-・Set different variable values for each profile like "Company A" and "Company B"
-・Switch profiles with one tap to instantly change variable values
-・Free plan: 3 profiles, Pro plan: unlimited
+This update makes the highly requested "Keyboard Extension" feature FREE for all users!
 
-【Unlimited Custom Variables】
-・Turn frequently used information into variables for instant access
-・Freely set variables like {{name}}, {{company}}, {{email}}
-・Set different values per profile (Pro feature)
-・Perfect for names, company names, signatures, URLs, and other repetitive information
-・Free plan: 5 variables, Pro plan: unlimited
+New Feature: Keyboard Extension (Completely FREE)
 
-【Ad-Free Experience】
-・Clean interface for better focus
-・Stress-free template creation
-・Smoother operation
+【Works Everywhere】
+・Works in email, LINE, Twitter, Instagram, and all other apps
+・Access templates just by switching keyboards
+・No need to switch between apps
+・Variables automatically convert on input
+・Completely offline and secure
 
-【90+ Icons】
-・Visually manage custom variables
-・12 categories including people, business, tech, and media
-・Identify variables at a glance
+【Easy Setup】
+1. iPhone Settings → General → Keyboard
+2. Keyboards → Add New Keyboard
+3. Select ClipTap Keyboard
+4. In any app, long-press the globe icon and select ClipTap
 
-Profile Management Use Cases
+【Perfect For】
+・Entering signatures in email apps
+・Sending standard greetings in LINE
+・Posting regular hashtags on Twitter
+・Entering common comments on Instagram
+・Sending business messages in chat apps
 
-Sales with Multiple Clients:
-Profile "Company A": {{company}} → Company A Inc.
-Profile "Company B": {{company}} → Company B Corp.
-→ Switch profiles to automatically change company names in templates
+Usage Examples
 
-Freelancers:
-Profile "Project 1": {{client}} → Client A
-Profile "Project 2": {{client}} → Client B
-→ Easily manage different information per project
+Business Email:
+Switch keyboard → Select "Meeting Invitation" template → Instant input complete
 
-Custom Variable Examples
+Social Media:
+Switch keyboard → Select "Standard Hashtags" → Add to post
 
-Business:
-{{name}} → John Doe
-{{company}} → Sample Inc.
-{{email}} → john@example.com
-{{signature}} → Your signature
-{{phone}} → 555-1234
+Customer Support:
+Switch keyboard → Select "FAQ Answer" → Reply complete
 
-Developers:
-{{github}} → GitHub profile URL
-{{apikey}} → API key
-{{endpoint}} → API endpoint
+Other Improvements
 
-Personal:
-{{address}} → Home address
-{{website}} → Personal website
-{{bio}} → Self introduction
+・Optimized keyboard display
+・Faster variable conversion
+・Improved UI/UX
+・Enhanced stability
 
-UI/UX Improvements
+Free Version Features
 
-・Added profile management screen
-・Implemented profile switching button
-・Added icon display to custom variable list
-・Optimized variable edit screen layout
-・Secured wider input areas
-・Enlarged icon selection grid
-・Improved overall usability
+【Available for Free】
+・Keyboard Extension (type from any app!)
+・One-tap copy
+・Category management
+・Search function
+・System variables (auto-insert dates/times)
+・Profile management (up to 3)
+・Custom variables (up to 5)
 
-Bug Fixes
+Pro Plan for Even More
 
-・Improved system stability
+【Pro Plan Benefits】
+・Ad-free
+・Unlimited profile management
+・Unlimited custom variables
 
-Performance Improvements
+※Select "ClipTap Pro" from settings to upgrade
 
-・Unified logging system for better stability
-・Reduced unnecessary code
-・Optimized overall performance
+Download Now
 
-Pricing Plans
-
-Monthly Plan: $2.50/month
-Annual Plan: $30/year
-
-※Easy subscription and management via App Store
-※Cancel anytime
-
-Upgrade to Pro Now
-
-Just select "ClipTap Pro" in the app settings.
-For only $2.50/month, get unlimited profile management and custom variables to dramatically improve your daily efficiency.
-
-Try the free version with 3 profiles and 5 variables first!
+All basic features including Keyboard Extension are completely FREE.
+Try it today!
 
 ClipTap Team
+Web Version Released! Manage templates on PC.
+
+【New Features】
+・Web version is now available!
+・Import/Export: You can now create backup files (.cliptap) to freely transfer and sync data between PC and phone, or between different devices.
+・Edit large collections of templates comfortably on your PC screen.
+
+【Other】
+・Minor bug fixes and performance improvements.

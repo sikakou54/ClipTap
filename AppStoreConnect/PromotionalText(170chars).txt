@@ -1,2 +1,10 @@
-One-tap copy with auto-insert variables!
-{{today}} {{name}} automate input. Profile management switches sets. Pro $2.50/mo: ad-free + unlimited profiles & variables.
+One-tap copy for your template, with dates and names auto-inserted.
+Save replies, addresses, codes; offline search. 
+Go Pro for no ads, unlimited envs/vars, and keyboard.
+One-tap copy with auto-inserted dates/names.
+FREE keyboard in ANY app! Save replies, addresses, codes. 
+{{today}}, {{name}} variables. Pro: ad-free + unlimited.
+One-tap copy! Auto-insert dates & names.
+Use anywhere via Keyboard. Manage on PC with Web version.
+Switch profiles for efficiency.
+Go Pro for no ads & unlimited usage.

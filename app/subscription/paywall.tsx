@@ -1,9 +1,20 @@
 /**
- * サブスクリプション購入画面（Paywall）
- * Proプランの機能説明と購入UI
+ * @module PaywallScreen
+ * @description サブスクリプション購入画面（Paywall）
+ *
+ * Proプランへのアップグレードを促す画面。
+ *
+ * @features
+ * - Proプランの機能説明
+ * - 月額/年間プランの選択
+ * - 購入処理（RevenueCat経由）
+ * - 購入復元機能
+ * - 利用規約/プライバシーポリシーへのリンク
+ *
+ * @see lib/hooks/screens/usePaywallScreen.ts - ビジネスロジック
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -13,124 +24,30 @@ import {
   ActivityIndicator,
   Modal,
 } from 'react-native';
-import { useRouter, useNavigation } from 'expo-router';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@cliptap/shared'
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../lib/themeSystem';
-import { useSubscription } from '../../lib/hooks/useSubscription';
-import { Logger } from '../../lib/logger';
-import { Header } from '../../components/common/Header';
-import { commonStyles } from '../../lib/styles/commonStyles';
-import type { PurchasesPackage } from 'react-native-purchases';
-import { showAlert } from '../../lib/utils/alerts';
+import { useTheme } from '@lib/themeSystem';
+import { Header } from '@components/common/Header';
+import { commonStyles } from '@lib/styles/commonStyles';
+import { usePaywallScreen } from '@hooks/screens/usePaywallScreen';
 
 export default function PaywallScreen() {
   const { t } = useTranslation();
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
-  const router = useRouter();
-  const navigation = useNavigation();
-  const { isSubscribed, refresh, getCurrentPlanType, getOfferings, purchasePackage, restorePurchases } = useSubscription();
 
-  const [loading, setLoading] = useState(true);
-  const [purchasing, setPurchasing] = useState(false);
-  const [monthlyPackage, setMonthlyPackage] = useState<PurchasesPackage | null>(null);
-  const [yearlyPackage, setYearlyPackage] = useState<PurchasesPackage | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
-  const [currentPlan, setCurrentPlan] = useState<'monthly' | 'annual' | null>(null);
-
-  useEffect(() => {
-    loadCurrentPlan();
-    loadOfferings();
-  }, []);
-
-  // 購入処理中はスワイプバックを無効化
-  useEffect(() => {
-    navigation.setOptions({
-      gestureEnabled: !purchasing,
-    });
-  }, [purchasing, navigation]);
-
-  const loadCurrentPlan = async () => {
-    try {
-      // CustomerInfoを最新の状態に更新
-      await refresh();
-      const planType = getCurrentPlanType();
-      setCurrentPlan(planType);
-    } catch (error) {
-      Logger.error('[PaywallScreen] Failed to load current plan:', error);
-    }
-  };
-
-  const loadOfferings = async () => {
-    try {
-      setLoading(true);
-      const offering = await getOfferings();
-
-      if (offering) {
-        // 月額プランと年間プランを取得
-        const monthly = offering.availablePackages.find(
-          (pkg: PurchasesPackage) => pkg.packageType === 'MONTHLY'
-        );
-        const yearly = offering.availablePackages.find(
-          (pkg: PurchasesPackage) => pkg.packageType === 'ANNUAL'
-        );
-
-        setMonthlyPackage(monthly || null);
-        setYearlyPackage(yearly || null);
-      }
-    } catch (error) {
-      Logger.error('[PaywallScreen] Failed to load offerings:', error);
-      showAlert('', t('error.generic'), undefined, 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePurchase = async () => {
-    try {
-      setPurchasing(true);
-
-      const pkg = selectedPlan === 'monthly' ? monthlyPackage : yearlyPackage;
-
-      if (!pkg) {
-        showAlert('', t('error.generic'), undefined, 'error');
-        return;
-      }
-
-      await purchasePackage(pkg);
-
-      showAlert('', t('subscription.purchase_success'), undefined, 'success', () => {
-        router.back();
-      });
-    } catch (error: any) {
-      if (error.userCancelled) {
-        // ユーザーがキャンセルした場合は何もしない
-        return;
-      }
-      showAlert('', t('subscription.purchase_failed'), undefined, 'error');
-    } finally {
-      setPurchasing(false);
-    }
-  };
-
-  const handleRestore = async () => {
-    try {
-      setPurchasing(true);
-      await restorePurchases();
-
-      if (isSubscribed) {
-        showAlert('', t('subscription.restore_success'), undefined, 'success', () => {
-          router.back();
-        });
-      } else {
-        showAlert('', t('subscription.restore_failed'), undefined, 'error');
-      }
-    } catch (error) {
-      showAlert('', t('subscription.restore_failed'), undefined, 'error');
-    } finally {
-      setPurchasing(false);
-    }
-  };
+  const {
+    loading,
+    purchasing,
+    monthlyPackage,
+    yearlyPackage,
+    selectedPlan,
+    currentPlan,
+    selectPlan,
+    handlePurchase,
+    handleRestore,
+    navigateToTerms,
+    navigateToPrivacy,
+  } = usePaywallScreen();
 
   if (loading) {
     return (
@@ -148,7 +65,6 @@ export default function PaywallScreen() {
       <Header title="" backgroundColor={colors.background} />
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* タイトル */}
         <View style={styles.titleSection}>
           <Ionicons name="diamond" size={48} color={colors.primary} />
           <Text style={[styles.title, { color: colors.text, fontSize: responsiveFontSizes.xxl, lineHeight: responsiveLineHeights.xxl }]}>
@@ -159,8 +75,15 @@ export default function PaywallScreen() {
           </Text>
         </View>
 
-        {/* 機能一覧 */}
         <View style={styles.featuresSection}>
+          <FeatureItem
+            icon="keypad-outline"
+            title={t('subscription.feature_keyboard_extension')}
+            description={t('subscription.feature_keyboard_extension_desc')}
+            colors={colors}
+            responsiveFontSizes={responsiveFontSizes}
+            responsiveLineHeights={responsiveLineHeights}
+          />
           <FeatureItem
             icon="close-circle-outline"
             title={t('subscription.feature_no_ads')}
@@ -187,9 +110,7 @@ export default function PaywallScreen() {
           />
         </View>
 
-        {/* プラン選択 */}
         <View style={styles.plansSection}>
-          {/* 年間プラン */}
           {yearlyPackage && (
             <View
               style={[
@@ -206,11 +127,7 @@ export default function PaywallScreen() {
                 <View style={[styles.disabledOverlay, { backgroundColor: colors.background }]} />
               )}
               <TouchableOpacity
-                onPress={() => {
-                  if (currentPlan !== 'annual') {
-                    setSelectedPlan('yearly');
-                  }
-                }}
+                onPress={() => selectPlan('yearly')}
                 activeOpacity={currentPlan === 'annual' ? 1 : 0.7}
                 disabled={currentPlan === 'annual'}
                 style={styles.planCardInner}
@@ -240,13 +157,12 @@ export default function PaywallScreen() {
                   )}
                 </View>
                 <Text style={[styles.planPrice, { color: currentPlan === 'annual' ? colors.textSecondary : colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
-                  {yearlyPackage.product.priceString}{t('subscription.per_year')}
+                  {yearlyPackage.priceString}{t('subscription.per_year')}
                 </Text>
               </TouchableOpacity>
             </View>
           )}
 
-          {/* 月額プラン */}
           {monthlyPackage && (
             <View
               style={[
@@ -263,11 +179,7 @@ export default function PaywallScreen() {
                 <View style={[styles.disabledOverlay, { backgroundColor: colors.background }]} />
               )}
               <TouchableOpacity
-                onPress={() => {
-                  if (currentPlan !== 'monthly') {
-                    setSelectedPlan('monthly');
-                  }
-                }}
+                onPress={() => selectPlan('monthly')}
                 activeOpacity={currentPlan === 'monthly' ? 1 : 0.7}
                 disabled={currentPlan === 'monthly'}
                 style={styles.planCardInner}
@@ -292,14 +204,13 @@ export default function PaywallScreen() {
                   </View>
                 </View>
                 <Text style={[styles.planPrice, { color: currentPlan === 'monthly' ? colors.textSecondary : colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
-                  {monthlyPackage.product.priceString}{t('subscription.per_month')}
+                  {monthlyPackage.priceString}{t('subscription.per_month')}
                 </Text>
               </TouchableOpacity>
             </View>
           )}
         </View>
 
-        {/* 購入ボタン */}
         <TouchableOpacity
           style={[styles.purchaseButton, { backgroundColor: colors.primary }]}
           onPress={handlePurchase}
@@ -314,7 +225,6 @@ export default function PaywallScreen() {
           )}
         </TouchableOpacity>
 
-        {/* 復元ボタン */}
         <TouchableOpacity
           style={styles.restoreButton}
           onPress={handleRestore}
@@ -325,13 +235,9 @@ export default function PaywallScreen() {
           </Text>
         </TouchableOpacity>
 
-        {/* 利用規約とプライバシーポリシーへのリンク */}
         <View style={styles.legalLinksContainer}>
           <TouchableOpacity
-            onPress={() => router.push({
-              pathname: '/webview',
-              params: { file: 'terms', title: t('settings.terms') }
-            })}
+            onPress={navigateToTerms}
             disabled={purchasing}
           >
             <Text style={[styles.legalLinkText, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
@@ -342,10 +248,7 @@ export default function PaywallScreen() {
             {' • '}
           </Text>
           <TouchableOpacity
-            onPress={() => router.push({
-              pathname: '/webview',
-              params: { file: 'privacy', title: t('settings.privacy') }
-            })}
+            onPress={navigateToPrivacy}
             disabled={purchasing}
           >
             <Text style={[styles.legalLinkText, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
@@ -355,7 +258,6 @@ export default function PaywallScreen() {
         </View>
       </ScrollView>
 
-      {/* 購入処理中のオーバーレイローディング */}
       <Modal
         visible={purchasing}
         transparent
