@@ -1,0 +1,410 @@
+ClipTap is an ultra-simple app for copying text templates with one tap.
+
+Register frequently used texts like email templates, addresses, phone numbers, and code snippets, then copy them instantly with a single tap.
+
+Use system variables like {{today}}, {{now}}, and custom variables like {{name}}, {{email}} to automatically insert information into your templates.
+
+Intuitive UI that dramatically improves your work efficiency.
+ClipTap is an ultra-simple app for copying text templates with one tap.
+
+Register frequently used texts like email templates, addresses, phone numbers, and code snippets, then copy them instantly.
+
+Use system variables like {{today}}, {{now}}, and custom variables like {{name}}, {{email}} to automatically insert information.
+
+
+■ Ideal for
+
+・Typing the same text repeatedly in emails and social media
+・Frequently entering personal information like addresses and phone numbers
+・Often using templates with dates and times
+・Programmers and engineers (code snippet management)
+・Customer support staff (template responses)
+・Sales representatives (product descriptions and greetings)
+・Writers and bloggers (saving frequently used phrases)
+・Typing the same text repeatedly
+・Frequently entering personal information
+・Using templates with dates and times
+・Programmers (code snippet management)
+・Customer support (template responses)
+・Sales (product descriptions)
+■ What is ClipTap?
+
+ClipTap is a clipboard manager app that lets you copy frequently used text snippets with just one tap.
+From email templates to code snippets, store any text and access it instantly.
+Features like auto-expanding variables and a custom keyboard extension make repetitive typing a thing of the past.
+
+
+■ Key Features
+
+【Keyboard Extension】
+Input templates directly from ANY app! Works in email, messages, SNS, everywhere.
+
+【One-Tap Copy】
+Copy templates instantly. Confirmed with haptic feedback.
+
+【System Variables (Free)】
+{{today}}, {{now}}, {{year}}, {{month}}, {{day}}, {{weekday}} variables available. Automatically insert dates and times.
+
+【Profile Management (Pro)】
+Create multiple profiles and switch variable values by context. Free: 3 profiles. Pro: unlimited.
+
+【Custom Variables (Pro)】
+Create variables like {{name}}, {{email}}, {{company}}. Free: 5 variables. Pro: unlimited.
+
+【Ad-Free (Pro)】
+Pro plan shows zero ads.
+
+【Category Management】
+Create categories like "Work", "Personal", "Code". Organize with icons and colors.
+
+【Fast Search】
+Quickly search templates by keyword.
+
+【Fully Offline】
+All features work without internet. All data stored on your iPhone, never sent to servers.
+
+【Privacy Focused】
+All data stored locally with no cloud sync.
+
+【Dark Mode】
+Automatically follows system settings.
+
+【Multi-Language】
+Supports Japanese and English.
+
+
+■ Pro Plan
+
+【Pricing】
+【Keyboard Extension (Pro Plan)】★NEW★
+A dedicated keyboard that lets you input templates directly from ANY app!
+Works in email, messages, SNS, everywhere.
+
+【One-Tap Copy】
+Copy templates instantly with a single tap.
+Confirmed with haptic feedback.
+
+【System Variables (Free)】
+Standard date/time variables like {{today}}, {{now}}, {{year}}, {{month}}, {{day}}, {{weekday}} are available.
+Automatically insert the latest date and time into your templates.
+
+【Profile Management (Pro Plan)】
+Create multiple profiles and switch variable values by context.
+Free version: up to 3 profiles. Pro plan: unlimited.
+Example: Create "Company A" and "Company B" profiles to automatically switch {{company}} values.
+
+【Custom Variables (Pro Plan)】
+Create your own variables like {{name}}, {{email}}, {{company}}.
+Free version: up to 5 variables. Pro plan: unlimited.
+Register frequently used information once to significantly reduce input effort.
+
+【Ad-Free (Pro Plan)】
+Pro plan shows zero ads.
+Perfect for focused work.
+
+【Category Management】
+Create categories based on usage like "Work", "Personal", "Code".
+Organize visually with icons and colors.
+
+【Fast Search】
+Quickly search through numerous templates by keyword.
+Find instantly by searching titles or content.
+
+【Fully Offline】
+All features work without internet connection.
+All data is stored on your iPhone and never sent to external servers.
+
+【Privacy Focused】
+All data is stored locally with no cloud sync or data transmission.
+
+【Dark Mode Support】
+Automatically follows system settings.
+Comfortable dark mode for nighttime use.
+
+【Multi-Language Support】
+Supports Japanese and English.
+Automatically switches based on language settings.
+
+
+■ About Pro Plan
+
+【Pricing】
+・Monthly plan
+・Annual plan
+
+【Benefits】
+・Ad-free
+・Unlimited profiles
+・Unlimited custom variables
+
+【Payment】
+・Secure payment through App Store
+・Cancel anytime
+
+
+■ How to Use
+
+・Secure payment through App Store
+・Cancel anytime (features remain until subscription period ends)
+
+
+■ How to Use (4 Steps)
+
+【STEP 1】Register Templates
+Tap the plus button to register frequently used text.
+You can include variables like {{today}} or {{name}} in the content.
+
+【STEP 2】Set Variables (Optional)
+System variables work automatically, but Pro plan users can create custom variables.
+Register {{name}}, {{email}}, etc. from the Settings screen.
+
+【STEP 3】Organize by Category
+As templates increase, create categories to organize them.
+Classifying by usage makes them easier to find later.
+
+【STEP 4】Tap to Copy
+Just tap the template you want to use, and variables automatically convert to actual values and copy to clipboard.
+【STEP 1】Register Templates
+Tap + button to register text. Include variables like {{today}} or {{name}}.
+
+【STEP 2】Set Variables (Optional)
+System variables work automatically. Pro users can create custom variables from Settings.
+
+【STEP 3】Organize by Category
+Create categories to organize templates.
+
+【STEP 4】Tap to Copy
+Tap template to copy. Variables automatically convert to actual values.
+【Custom Keyboard Extension】
+Insert snippets directly into any app (Messages, Mail, SNS, etc.) without switching apps.
+
+【One-Tap Copy】
+Simply tap a snippet to copy it to your clipboard. Variables are automatically replaced with their values.
+
+【Smart Variables】
+- System Variables (Free): Automatically insert date/time like {{today}}, {{now}}, {{weekday}}.
+- Custom Variables (Pro): Define your own placeholders like {{name}} or {{email}}.
+- Profiles (Pro): Create environments (e.g., "Work", "Private") to switch variable values instantly.
+
+【Web Version Sync】
+Export your data to edit on PC via ClipTap Web.
+Useful for organizing large collections or typing long texts. Data sync is done via file import/export, keeping your data offline and secure.
+
+【Category Management】
+Organize snippets into categories with custom colors and icons.
+
+【Privacy First】
+All data is stored locally on your device. No cloud sync, no tracking, no external server transmission.
+Your sensitive data (addresses, contacts) stays with you.
+
+【Other Features】
+- Dark Mode support
+- Fast search by title or content
+- Haptic feedback
+- Multilingual support (English/Japanese)
+
+
+■ Pro Plan (Subscription)
+
+Upgrade to ClipTap Pro to unlock full potential:
+- Remove all ads
+- Unlimited Profiles (Free version: max 3)
+- Unlimited Custom Variables (Free version: max 5)
+
+Available as Monthly or Yearly subscriptions.
+Manage or cancel anytime via App Store settings.
+
+
+■ Use Cases
+
+Email greetings/signatures, meeting invitations, product descriptions, response templates
+
+【Programming】
+Code snippets, commands, regex patterns, API calls
+
+【Daily Life】
+Addresses/phone numbers, email addresses, social media profiles
+
+【Customer Support】
+FAQ responses, apology/thank you messages, procedure guides
+【Business】Email greetings/signatures, meeting invitations, response templates
+
+【Programming】Code snippets, commands, regex patterns, API calls
+
+【Daily Life】Addresses, phone numbers, email addresses
+
+【Customer Support】FAQ responses, apology messages
+
+
+■ Security & Privacy
+
+ClipTap is designed with your privacy as top priority.
+
+・All data stored locally on iPhone
+・No cloud sync, no data transmission
+・No external server access (except subscription)
+・Safe to store personal information
+
+Your templates and variables exist only on your iPhone. We cannot access your data.
+
+
+■ Free vs Pro
+
+【Free】
+ClipTap is designed with your privacy as the top priority.
+
+・All data stored locally on iPhone
+・No cloud sync, no data transmission
+・No external server access (except subscription management)
+・Safe to store personal and confidential information
+
+Your registered templates and variables exist only on your iPhone.
+We cannot access your data.
+
+
+■ Free vs Pro Plan
+
+【Free Version】
+・All basic features available
+・System variables ({{today}}, {{now}}, etc.) available
+・Profile management (up to 3)
+・Custom variables (up to 5)
+・Ads displayed
+
+【Pro Plan】
+・Keyboard Extension
+・Ad-free comfortable use
+・Unlimited profile management
+・Unlimited custom variables
+・All basic features
+・All basic features
+・Keyboard Extension
+・System variables
+・3 profiles
+・5 custom variables
+・Ads displayed
+
+【Pro】
+・Ad-free
+・Unlimited profiles
+・Unlimited variables
+- Business: Email signatures, greeting templates, meeting agendas.
+- Engineering: Code snippets, git commands, SQL queries.
+- Support: FAQ responses, template replies.
+- Personal: Addresses, phone numbers, bank info, hashtags.
+
+
+■ How to Use
+
+1. Add a Snippet: Tap "+" and enter your text (e.g., "Best regards, {{name}}").
+2. Set Variables: Define {{name}} as "John Doe" in Settings.
+3. Tap & Copy: Tap the snippet, and "Best regards, John Doe" is copied!
+4. Keyboard: Enable ClipTap keyboard in iOS Settings to type directly in other apps.
+
+
+■ FAQ
+
+A: Locally on your iPhone, not in iCloud.
+
+Q: Offline use?
+A: Yes, all features work offline.
+
+Q: How to use variables?
+A: All data is stored locally on your iPhone, not in iCloud.
+
+Q: Can I use it offline?
+A: Yes, all features work offline.
+
+Q: How do I use variables?
+A: Just enter {{today}} or {{name}} in templates. They auto-convert when copying.
+
+Q: How do I cancel Pro plan?
+A: Cancel anytime from App Store. Features remain available until subscription period ends.
+A: Enter {{today}} or {{name}} in templates. They auto-convert when copying.
+
+Q: Cancel Pro?
+A: Anytime from App Store. Features remain until period ends.
+
+
+■ Problems Solved
+
+・Tired of typing the same text repeatedly
+・Manually entering dates in emails every time
+・Manually entering addresses and phone numbers every time
+・Copy-pasting signatures every time
+・Copy-pasting email templates from notes app
+・Struggling with code snippet management
+・Want to quickly recall frequently used phrases
+・Want to streamline customer support responses
+・Want to improve work efficiency and save time
+・Want to work ad-free with focus
+
+
+■ From the Developer
+
+ClipTap is an iOS-exclusive app developed with the concept of "simpler, faster."
+
+Born from the desire to reduce wasted time typing the same text repeatedly in daily work, and increase time to focus on what truly matters.
+
+Variable features automate date and personal information entry. Pro plan enables even more advanced automation with custom variables.
+
+We eliminated all unnecessary features and packed in only what's truly needed. The ultimate simple tool that anyone can use intuitively.
+
+May your daily work become just a little easier.
+・Typing same text repeatedly
+・Manually entering dates/addresses
+・Copy-pasting signatures
+・Code snippet management
+・Streamline support responses
+
+
+■ Requirements
+
+・iOS 15.0 or later
+・iPhone compatible
+
+
+■ Privacy Policy & Terms of Use
+
+Terms of Use (EULA): Available in app Settings > Terms of Use
+Privacy Policy: Available in app Settings > Privacy Policy
+
+Also directly accessible from the subscription purchase screen.
+
+
+Make your everyday more efficient with ClipTap.
+■ Support
+
+cliptap.developer@gmail.com
+
+
+■ Privacy & Terms
+
+Terms of Use (EULA): App Settings > Terms of Use
+Privacy Policy: App Settings > Privacy Policy
+
+Also accessible from subscription purchase screen.
+
+
+Make your everyday efficient.
+Download now and save time.
+Q: Where is my data stored?
+A: Locally on your device. We do not host your data on our servers.
+
+Q: Can I use it offline?
+A: Yes, the app works completely offline.
+
+Q: How do I sync with PC?
+A: Go to Settings -> Export Data. Share the .cliptap file to your PC and open it on the ClipTap Web site.
+
+
+■ Requirements
+iOS 15.0 or later.
+
+
+■ Support
+If you have any questions or feedback, please contact us.
+Email: cliptap.developer@gmail.com
+
+Terms of Use & Privacy Policy are available within the app settings.
+Download ClipTap now and reclaim your time!

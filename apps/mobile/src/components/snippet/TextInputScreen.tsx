@@ -1,0 +1,160 @@
+/**
+ * テキスト入力画面コンポーネント
+ *
+ * タイトルまたはコンテンツを入力する専用画面。
+ * スニペット作成・編集画面から遷移して使用。
+ *
+ * 主な機能:
+ * - マルチライン対応テキスト入力
+ * - 変数挿入ツールバー（キーボードの上に表示）
+ * - キーボード表示時の自動レイアウト調整
+ * - カーソル位置への変数挿入
+ *
+ * アーキテクチャ:
+ * - UIとビジネスロジックを完全分離
+ * - 全ての状態・ロジックはuseTextInputScreenフックで管理
+ *
+ * @see lib/hooks/screens/useTextInputScreen.ts - ビジネスロジック
+ * @see SnippetFormScreen - 親コンポーネント
+ * @see VariableToolbar - 変数挿入ツールバー
+ */
+
+import React from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { useTranslation } from '@cliptap/shared';
+import { useTheme } from '@lib/themeSystem';
+import { useTextInputScreen } from '@hooks/screens/useTextInputScreen';
+import { VariableToolbar } from './VariableToolbar';
+import { Header } from '@components/common/Header';
+import { commonStyles } from '@lib/styles/commonStyles';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+/* ========================================
+   Props定義
+   ======================================== */
+
+/**
+ * TextInputScreenのProps
+ * @property type - 入力タイプ（'title': タイトル, 'content': コンテンツ）
+ * @property initialValue - 初期テキスト値
+ * @property hasOnSave - 保存コールバックが設定されているか
+ */
+export interface TextInputScreenProps {
+  type: 'title' | 'content';
+  initialValue?: string;
+  hasOnSave?: boolean;
+}
+
+export function TextInputScreen({ type, initialValue, hasOnSave }: TextInputScreenProps) {
+  const { t } = useTranslation();
+  const { colors, isTablet, responsiveFontSizes, responsiveLineHeights } = useTheme();
+
+  const {
+    text,
+    keyboardHeight,
+    textInputRef,
+    handleTextChange,
+    handleSelectionChange,
+    handleInsertVariable,
+    handleSave,
+  } = useTextInputScreen({ type, initialValue, hasOnSave });
+  /* テキスト入力画面 */
+  return (
+    <SafeAreaView
+      style={[commonStyles.container, { backgroundColor: colors.background }]}
+      edges={['top', 'left', 'right']}
+    >
+      {/* ヘッダー（タイトルと完了ボタン） */}
+      <Header
+        title={t(`snippet.${type}_input`)}
+        isModal={!isTablet}
+        rightAction={
+          <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+            <Text
+              style={[
+                styles.saveText,
+                {
+                  color: colors.primary,
+                  fontSize: responsiveFontSizes.base,
+                  lineHeight: responsiveLineHeights.base,
+                },
+              ]}
+            >
+              {t('common.done')}
+            </Text>
+          </TouchableOpacity>
+        }
+      />
+
+      {/* キーボード表示に応じてレイアウト調整 */}
+      <View
+        style={[
+          styles.contentWrapper,
+          {
+            marginBottom:
+              keyboardHeight > 0
+                ? Platform.OS === 'ios'
+                  ? keyboardHeight
+                  : keyboardHeight + 24
+                : 0,
+          },
+        ]}
+      >
+        {/* テキスト入力フィールド */}
+        <TextInput
+          ref={textInputRef}
+          value={text}
+          onChangeText={handleTextChange}
+          onSelectionChange={(e) => {
+            handleSelectionChange(e.nativeEvent.selection.start);
+          }}
+          placeholder={t(`snippet.${type}_input_placeholder`)}
+          placeholderTextColor={colors.textSecondary}
+          style={[
+            styles.input,
+            {
+              color: colors.text,
+              fontSize: responsiveFontSizes.base,
+              lineHeight: responsiveFontSizes.base * 1.5,
+            },
+          ]}
+          multiline
+          textAlignVertical="top"
+          scrollEnabled={true}
+        />
+
+        {/* 変数挿入ツールバー（キーボードの上に表示） */}
+        <View
+          style={[
+            styles.toolbarContainer,
+            {
+              backgroundColor: colors.surface,
+              borderTopColor: colors.border,
+            },
+          ]}
+        >
+          <VariableToolbar onInsert={handleInsertVariable} />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  saveButton: {
+    padding: 4,
+  },
+  saveText: {
+    fontWeight: '600',
+  },
+  contentWrapper: {
+    flex: 1,
+  },
+  input: {
+    flex: 1,
+    padding: 16,
+  },
+  toolbarContainer: {
+    borderTopWidth: 1,
+  },
+});

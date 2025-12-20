@@ -1,0 +1,178 @@
+{
+  "categories": [
+    { "name": "仕事", "color": "#3B82F6" },
+    { "name": "フリーランス", "color": "#EF4444" },
+    { "name": "SNS", "color": "#10B981" },
+    { "name": "タグセット", "color": "#8B5CF6" },
+    { "name": "コード", "color": "#F59E0B" }
+  ],
+  "profiles": [
+    { "name": "A社用" },
+    { "name": "B社用" },
+    { "name": "個人用" }
+  ],
+  "custom_variables": [
+    {
+      "name": "client_name",
+      "label": "取引先担当者名",
+      "icon": "person-outline",
+      "standardValue": "ご担当者",
+      "profileValues": {
+        "A社用": "田中様",
+        "B社用": "鈴木様",
+        "個人用": "お客様"
+      }
+    },
+    {
+      "name": "company",
+      "label": "自社名",
+      "icon": "business-outline",
+      "standardValue": "株式会社サンプル",
+      "profileValues": {
+        "A社用": "株式会社A商事",
+        "B社用": "株式会社Bコーポレーション",
+        "個人用": "フリーランス"
+      }
+    },
+    {
+      "name": "sender_name",
+      "label": "送信者名",
+      "icon": "person-circle-outline",
+      "standardValue": "山田太郎",
+      "profileValues": {
+        "A社用": "山田",
+        "B社用": "T.Yamada",
+        "個人用": "Yamada"
+      }
+    },
+    {
+      "name": "signature",
+      "label": "署名",
+      "icon": "create-outline",
+      "standardValue": "よろしくお願いいたします。\n山田",
+      "profileValues": {
+        "A社用": "--------------------\n株式会社A商事\n営業部 山田\n--------------------",
+        "B社用": "--------------------\n株式会社Bコーポレーション\n開発部 T.Yamada\n--------------------",
+        "個人用": "--------------------\nフリーランス\nYamada\n--------------------"
+      }
+    },
+    {
+      "name": "signature_freelance",
+      "label": "フリーランス署名",
+      "icon": "brush-outline",
+      "standardValue": "--------------------\nフリーランス\nYamada\n--------------------",
+      "profileValues": {
+        "個人用": "--------------------\nフリーランスエンジニア\nYamada Taro\nhttps://example.com\n--------------------"
+      }
+    },
+    {
+      "name": "freelance_name",
+      "label": "フリーランス名",
+      "icon": "id-card-outline",
+      "standardValue": "Yamada",
+      "profileValues": {
+        "個人用": "Yamada Taro"
+      }
+    }
+  ],
+  "snippets": [
+    {
+      "id": "tpl_001",
+      "category": "仕事",
+      "title": "業務開始報告",
+      "body": "お疲れ様です。\n{{today}} の業務を開始します。\n\n本日の予定：\n・\n・\n・\n\n以上、よろしくお願いいたします。",
+      "copyWithTitle": true
+    },
+    {
+      "id": "tpl_002",
+      "category": "仕事",
+      "title": "日程調整（候補提示）",
+      "body": "{{client_name}} 様\n\nいつもお世話になっております。\n{{company}} の {{sender_name}} です。\n\nお打ち合わせの件につきまして、\n以下の日程をご提案させていただきます。\n\n・\n・\n・\n\nご都合のよろしい日時がございましたら、\nお知らせいただけますと幸いです。\n\nどうぞよろしくお願いいたします。\n\n{{signature}}",
+      "copyWithTitle": false
+    },
+    {
+      "id": "tpl_003",
+      "category": "仕事",
+      "title": "打ち合わせお礼",
+      "body": "{{client_name}} 様\n\n本日はお忙しい中、お時間をいただきまして誠にありがとうございました。\n\nお打ち合わせの中で、特に印象に残った点は以下の通りです。\n・\n・\n\n今後の進め方につきましては、別途ご提案させていただきます。\n\n引き続き、どうぞよろしくお願いいたします。\n\n{{signature}}",
+      "copyWithTitle": false
+    },
+    {
+      "id": "tpl_004",
+      "category": "仕事",
+      "title": "進捗報告（簡易）",
+      "body": "お疲れ様です。{{sender_name}} です。\n担当案件の進捗をご報告いたします。\n\n【本日の実施内容】\n・\n・\n\n【次回予定】\n・\n・\n\n以上です。ご不明点などありましたらお知らせください。",
+      "copyWithTitle": true
+    },
+    {
+      "id": "tpl_005",
+      "category": "フリーランス",
+      "title": "見積提示",
+      "body": "{{client_name}} 様\n\nこのたびはお問い合わせいただきありがとうございます。\n\n下記の内容にてお見積りいたします。\n\n——————————\n■ 内容：\n■ 料金：〇〇円（税込）\n■ 想定納期：〇〇頃\n——————————\n\nご不明点やご要望などございましたら、\n遠慮なくお知らせください。\n\nご検討のほど、よろしくお願いいたします。\n\n{{signature_freelance}}",
+      "copyWithTitle": false
+    },
+    {
+      "id": "tpl_006",
+      "category": "フリーランス",
+      "title": "請求書送付",
+      "body": "{{client_name}} 様\n\nいつもお世話になっております。\n{{freelance_name}} です。\n\n〇月分のご請求書をお送りいたします。\n添付ファイルをご確認いただけますと幸いです。\n\n■ 請求金額：〇〇円（税込）\n■ 支払期限：〇〇まで\n\nお手数をおかけいたしますが、\nお手続きのほどよろしくお願いいたします。\n\n{{signature_freelance}}",
+      "copyWithTitle": false
+    },
+    {
+      "id": "tpl_007",
+      "category": "フリーランス",
+      "title": "納期リマインド",
+      "body": "{{client_name}} 様\n\nいつもお世話になっております。\n{{freelance_name}} です。\n\n納品予定日が〇〇となっておりますので、\n念のため共有させていただきます。\n\n現在の進行状況：\n・\n・\n\nもしご要望や変更点などございましたら、\nお早めにご相談いただけますと幸いです。\n\n今後ともよろしくお願いいたします。\n\n{{signature_freelance}}",
+      "copyWithTitle": false
+    },
+    {
+      "id": "tpl_008",
+      "category": "SNS",
+      "title": "今日の積み上げ（汎用）",
+      "body": "{{today}} の積み上げ📚\n\n・\n・\n・\n\n今日もお疲れさまでした。\n\n#今日の積み上げ #学習記録 #継続は力なり #勉強垢さんと繋がりたい",
+      "copyWithTitle": false
+    },
+    {
+      "id": "tpl_009",
+      "category": "SNS",
+      "title": "ブログ／ノート更新告知",
+      "body": "ブログを更新しました📝\n\n「タイトル」\nhttps://example.com\n\nこんな方におすすめ：\n・\n・\n\nよろしければチェックしてみてください！\n\n#ブログ更新 #note更新 #アウトプット #今日の積み上げ",
+      "copyWithTitle": false
+    },
+    {
+      "id": "tpl_010",
+      "category": "SNS",
+      "title": "サービス／アプリ紹介",
+      "body": "個人開発でこんなサービスを作りました📱\n\n【サービス名】\nサービス名をここに\n\n【できること】\n・\n・\n\n詳しくはこちら▼\nhttps://example.com\n\n#個人開発 #アプリ開発 #フリーランス #サービス紹介",
+      "copyWithTitle": false
+    },
+    {
+      "id": "tpl_011",
+      "category": "タグセット",
+      "title": "勉強系ハッシュタグセット",
+      "body": "#今日の積み上げ #勉強垢さんと繋がりたい #学習記録 #アウトプット #継続は力なり",
+      "copyWithTitle": false
+    },
+    {
+      "id": "tpl_012",
+      "category": "タグセット",
+      "title": "個人開発タグセット",
+      "body": "#個人開発 #アプリ開発 #駆け出しエンジニアと繋がりたい #ReactNative #プログラミング #開発ログ",
+      "copyWithTitle": false
+    },
+    {
+      "id": "tpl_013",
+      "category": "コード",
+      "title": "Git コマンドメモ",
+      "body": "git status\ngit add .\ngit commit -m \"YOUR_MESSAGE\"\ngit push origin YOUR_BRANCH",
+      "copyWithTitle": false
+    },
+    {
+      "id": "tpl_014",
+      "category": "コード",
+      "title": "React Native ビルド",
+      "body": "npx expo run:ios\nnpx expo run:android\nnpx expo start\n",
+      "copyWithTitle": false
+    }
+  ]
+}

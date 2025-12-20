@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/* Tailwind CSS v4: Enable dark mode with class selector */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ========================================
+   Custom Color Tokens for Dark Mode
+   ======================================== */
+
+@theme {
+  /* Surface colors (backgrounds) */
+  --color-surface-primary: #1A1A1A;
+  --color-surface-secondary: #2A2A2A;
+  --color-surface-tertiary: #202020;
+
+  /* Text colors */
+  --color-text-muted: #A0A0A0;
+  --color-text-subtle: #707070;
+
+  /* Border colors */
+  --color-border-default: #2A2A2A;
+  --color-border-strong: #333333;
+}
+
+:root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
+
+.dark body {
+  background-color: #000000;
+}
+
+#root {
+  min-height: 100vh;
+}

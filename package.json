@@ -1,0 +1,27 @@
+{
+  "name": "cliptap-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:mobile": "npm run start --workspace=@cliptap/mobile",
+    "ios": "npm run ios --workspace=@cliptap/mobile",
+    "android": "npm run android --workspace=@cliptap/mobile",
+    "prebuild": "npm run prebuild --workspace=@cliptap/mobile",
+    "pod-install": "npm run pod-install --workspace=@cliptap/mobile",
+    "dev:web": "npm run dev --workspace=@cliptap/web",
+    "preview:mobile": "npm run preview --workspace=@cliptap/mobile",
+    "build:mobile": "npm run build --workspace=@cliptap/mobile",
+    "build:web": "npm run build --workspace=@cliptap/web",
+    "type-check": "npm run type-check:mobile && npm run type-check:web && npm run type-check:shared",
+    "type-check:mobile": "tsc --project apps/mobile/tsconfig.json --noEmit",
+    "type-check:web": "tsc --project apps/web/tsconfig.app.json --noEmit",
+    "type-check:shared": "tsc --project packages/shared/tsconfig.json --noEmit",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}

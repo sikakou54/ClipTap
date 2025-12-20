@@ -1,0 +1,169 @@
+require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
+require File.join(File.dirname(`node --print "require.resolve('react-native/package.json')"`), "scripts/react_native_pods")
+
+require 'json'
+podfile_properties = JSON.parse(File.read(File.join(__dir__, 'Podfile.properties.json'))) rescue {}
+
+def ccache_enabled?(podfile_properties)
+  # Environment variable takes precedence
+  return ENV['USE_CCACHE'] == '1' if ENV['USE_CCACHE']
+  
+  # Fall back to Podfile properties
+  podfile_properties['apple.ccacheEnabled'] == 'true'
+end
+
+ENV['RCT_NEW_ARCH_ENABLED'] ||= '0' if podfile_properties['newArchEnabled'] == 'false'
+ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] ||= podfile_properties['EX_DEV_CLIENT_NETWORK_INSPECTOR']
+ENV['RCT_USE_RN_DEP'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true' && podfile_properties['newArchEnabled'] != 'false'
+ENV['RCT_USE_PREBUILT_RNCORE'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true' && podfile_properties['newArchEnabled'] != 'false'
+platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
+
+# FirebaseAuth / FirebaseCoreInternal などの Swift Pod が static library 構成でも
+# 正しくモジュールとして解決されるように、モジュラー・ヘッダを有効化する
+use_modular_headers!
+
+prepare_react_native_project!
+
+target 'ClipTap' do
+  use_expo_modules!
+
+  if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'
+    config_command = ['node', '-e', "process.argv=['', '', 'config'];require('@react-native-community/cli').run()"];
+  else
+    config_command = [
+      'npx',
+      'expo-modules-autolinking',
+      'react-native-config',
+      '--json',
+      '--platform',
+      'ios'
+    ]
+  end
+
+  config = use_native_modules!(config_command)
+
+  # https://rnfirebase.io/
+  use_frameworks! :linkage => :static
+  $RNFirebaseAsStaticFramework = true
+  # https://rnfirebase.io/
+  use_frameworks! :linkage => :static
+  $RNFirebaseAsStaticFramework = true
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    :hermes_enabled => podfile_properties['expo.jsEngine'] == nil || podfile_properties['expo.jsEngine'] == 'hermes',
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/..",
+    :privacy_file_aggregation_enabled => podfile_properties['apple.privacyManifestAggregationEnabled'] != 'false',
+  )
+
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false,
+      :ccache_enabled => ccache_enabled?(podfile_properties),
+    )
+
+    # Disable code signing for all pods (Xcode 14+ compatibility)
+    puts "🔧 Disabling code signing for all pods..."
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['EXPANDED_CODE_SIGN_IDENTITY'] = ""
+        config.build_settings['CODE_SIGNING_REQUIRED'] = "NO"
+        config.build_settings['CODE_SIGNING_ALLOWED'] = "NO"
+      end
+    end
+
+    # This is necessary for Xcode 14+, because it signs resource bundles by default
+    # when building for devices.
+    puts "🔧 Disabling code signing for resource bundles..."
+    installer.target_installation_results.pod_target_installation_results
+      .each do |pod_name, target_installation_result|
+      target_installation_result.resource_bundle_targets.each do |resource_bundle_target|
+        resource_bundle_target.build_configurations.each do |config|
+          config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+        end
+      end
+    end
+
+    # Ensure Firebase-related Swift pods define modules so that
+    # FirebaseAuth/FirebaseAuth-Swift.h can be resolved correctly.
+    firebase_module_pods = %w[
+      FirebaseAuth
+      FirebaseAuthInterop
+      FirebaseAppCheckInterop
+      FirebaseCore
+      FirebaseCoreExtension
+      FirebaseCoreInternal
+      GoogleUtilities
+      RecaptchaInterop
+    ]
+
+    installer.pods_project.targets.each do |target|
+      next unless firebase_module_pods.include?(target.name)
+
+      puts "🔧 Enabling DEFINES_MODULE for #{target.name}"
+      target.build_configurations.each do |config|
+        config.build_settings['DEFINES_MODULE'] = 'YES'
+        config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
+      end
+    end
+
+    # RNFBApp および関連する Firebase pods が use_frameworks! 環境で React-Core のヘッダをモジュールとして参照できるようにする
+    rnfb_pods = %w[
+      RNFBApp
+      RNFBAuth
+      RNFBMessaging
+    ]
+
+    installer.pods_project.targets.each do |target|
+      next unless rnfb_pods.any? { |pod| target.name.start_with?(pod) }
+
+      puts "🔧 Configuring #{target.name} to use React-Core headers as modules"
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
+        config.build_settings['DEFINES_MODULE'] = 'YES'
+        # React-Core のヘッダをモジュールとして扱う
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      end
+    end
+
+    # RNGoogleMobileAds および RNFB の Configuration script phase が Info.plist に依存してビルドサイクルを
+    # 引き起こすため、これらの script phase のシェルスクリプトを無効化する（Expo plugin が設定を処理する）
+    project_path = installer.aggregate_targets[0].user_project_path
+    project = Xcodeproj::Project.open(project_path)
+
+    project.targets.each do |target|
+      next unless target.name == 'ClipTap'
+
+      target.build_phases.each do |phase|
+        if phase.is_a?(Xcodeproj::Project::Object::PBXShellScriptBuildPhase)
+          if phase.name&.include?('Configuration') && (phase.name.include?('RNGoogleMobileAds') || phase.name.include?('RNFB'))
+            puts "🔧 Disabling #{phase.name} script to prevent build cycle (Expo plugin handles configuration)"
+            # シェルスクリプトを空にして無効化
+            phase.shell_script = "# Disabled to prevent build cycle - Expo plugin handles configuration\nexit 0"
+            # input/output paths を削除
+            phase.input_paths.clear if phase.input_paths
+            phase.output_paths.clear if phase.output_paths
+          end
+        end
+      end
+    end
+
+    project.save
+
+    puts "✅ Code signing disabled & Firebase pods marked as modules"
+  end
+end
+
+# ClipTapKeyboard (Keyboard Extension)
+target 'ClipTapKeyboard' do
+
+  # https://rnfirebase.io/
+  use_frameworks! :linkage => :static
+  $RNFirebaseAsStaticFramework = true
+
+  # RevenueCat for subscription management
+  pod 'RevenueCat', '~> 5.0'
+end

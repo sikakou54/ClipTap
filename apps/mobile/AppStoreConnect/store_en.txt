@@ -1,0 +1,67 @@
+[Title]
+ClipTap – Snippets & Templates
+
+[Subtitle]
+One-tap text templates for work & SNS
+
+[Promo text]
+Turn your everyday phrases into one-tap templates. Save time on emails, SNS posts, and freelance admin so you can focus on the work and ideas that really matter.
+
+[Description]
+
+What is ClipTap
+
+ClipTap is a text template app that lets you save phrases you use all the time and insert them with a single tap. Email greetings, your address and phone number, estimate and invoice messages, SNS hashtags and bios – anything you keep retyping can be turned into a reusable template.
+
+You can also use variables to partly automate your messages. System variables like {{today}} and {{now}} insert the current date and time, and Pro adds custom variables such as {{name}} or {{company}}. It is ideal when only a few parts of a message change each time.
+
+With the ClipTap keyboard extension, you can call templates directly from Gmail, Slack, LINE, X, Instagram, your browser and many other apps.
+
+Who is ClipTap for?
+
+1. Business professionals who send similar emails and chats every day and need to switch signatures or company names between multiple roles.  
+2. Daily SNS users who post recurring series, reuse almost the same captions and hashtag blocks, and want standard bios ready to paste.  
+3. Freelancers and solo entrepreneurs who send many semi-templated messages (quotes, invoices, reminders, Zoom links) and prefer to keep client data on their device.
+
+Main features
+
+• Keyboard extension  
+Insert templates from the ClipTap keyboard in any app. No app-switching, no copy-and-paste loops.
+
+• One-tap copy / one-tap insert  
+Tap a template in the app to copy it, or tap it on the keyboard to insert it straight into the text field.
+
+• Variables for the parts that change  
+Use system variables for dates and times ({{today}}, {{now}}, {{year}}, etc.), and with Pro add custom variables for your own data ({{name}}, {{email}}, {{company}}, {{client}}, {{fee}}). Register this information once and reuse it across many templates.
+
+• Environments (profiles)  
+Create profiles like “Company A”, “Company B”, “Side business” and “Personal”. Switching profiles automatically changes company names, titles and signatures while using the same templates.  
+Free: up to 3 profiles / Pro: unlimited.
+
+• Web version (PC)  
+Export your data as a .cliptap file, edit and organize templates on a PC, then import the updated file back into the app. Ideal if you write on PC but send from your phone.
+
+• Categories & search  
+Group templates into categories such as “Work”, “SNS”, “Freelance admin”, “Code” and “Daily life”, and find them quickly with keyword search.
+
+• Import / export sync  
+Export templates to a file and import them on another device. Useful when changing phones or sharing the same setup between iPhone, iPad and the web version.
+
+Security & privacy
+
+All templates and variable data are stored locally on your device. There is no automatic cloud sync and nothing is sent to external servers, except what is required for subscription processing. Core features work offline, so you can store text that includes client data, confidential business content or personal information.
+
+Pro plan
+
+Pro offers a monthly and a yearly subscription. It removes ads, unlocks unlimited profiles and unlimited custom variables, and includes all features of the free version. Payments are handled by the App Store, and you can cancel at any time; you keep Pro features until the end of the paid period.
+
+Example use cases
+
+• Sales / CS: scheduling emails, thank-you and apology messages, periodic reports, internal announcements  
+• SNS: series post formats, hashtag sets and profile templates  
+• Freelancers: quotes, invoices, reminders, Zoom invitations, contract-related text  
+• Everyday life: address, phone number, email and frequently used fixed phrases
+
+From the developer
+
+ClipTap was created to help you spend less time retyping the same sentences and more time on work and communication that really matter. Whether it is for business, SNS or freelance admin tasks, I hope it can turn your “usual one-liners” into powerful templates and make each day a little easier.

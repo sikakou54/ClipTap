@@ -1,0 +1,41 @@
+{
+  "cli": {
+    "appVersionSource": "local"
+  },
+  "build": {
+    "base": {
+      "android": {
+        "image": "latest",
+        "env": {
+          "PLATFORM": "android"
+        }
+      },
+      "ios": {
+        "image": "latest",
+        "prebuildCommand": "echo 'Skipping prebuild - using committed ios folder'",
+        "env": {
+          "PLATFORM": "ios"
+        }
+      }
+    },
+    "development": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {},
+      "channel": "development"
+    },
+    "preview": {
+      "extends": "base",
+      "distribution": "internal",
+      "env": {},
+      "channel": "preview"
+    },
+    "production": {
+      "extends": "base",
+      "autoIncrement": true,
+      "env": {},
+      "channel": "production"
+    }
+  }
+}

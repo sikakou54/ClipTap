@@ -1,0 +1,240 @@
+/**
+ * Dashboard - 定型文一覧画面（メイン）
+ *
+ * アプリケーションのメイン画面。定型文の一覧表示、検索、フィルタリング、
+ * CRUD操作、エクスポート/インポート機能を提供する。
+ *
+ * ビジネスロジックはuseHomeScreenに集約し、UIはシンプルに保つ。
+ * Mobile版と同様の構成パターンを採用。
+ *
+ * @see hooks/screens/useHomeScreen.ts - ビジネスロジック
+ */
+import { useState, useCallback } from 'react';
+import { useAuth } from '@cliptap/shared';
+import { useHomeScreen } from '@hooks/screens/useHomeScreen';
+import { SnippetEditModal } from '@components/snippet/SnippetEditModal';
+import { DashboardHeader } from '@components/dashboard/DashboardHeader';
+import { SnippetGrid } from '@components/dashboard/SnippetGrid';
+import { AccountLinkModal } from '@components/auth/AccountLinkModal';
+import { SideMenu } from '@components/settings/SideMenu';
+import { ImportFileModal, ImportSelectionModal, ImportModeSelectModal } from '@components/import';
+import { ExportSelectionModal } from '@components/export';
+
+/** 新規作成時のプロファイルID初期値（空配列を再利用してメモリ効率化） */
+const EMPTY_PROFILE_IDS: string[] = [];
+
+export function Dashboard() {
+  const { signInWithGoogle, signInWithApple, loading: authLoading, error: authError } = useAuth();
+
+  const [showAccountLinkModal, setShowAccountLinkModal] = useState(false);
+
+  const openAccountLinkModal = useCallback(() => {
+    setShowAccountLinkModal(true);
+  }, []);
+
+  const closeAccountLinkModal = useCallback(() => {
+    setShowAccountLinkModal(false);
+  }, []);
+
+  const {
+    isLoaded,
+
+    searchQuery,
+    selectedCategory,
+    copiedId,
+    showProfileDropdown,
+    showSearchBar,
+    gridColumns,
+
+    isMobileMenuOpen,
+
+    snippetModal,
+    exportScreen,
+    importScreen,
+
+    filteredSnippets,
+    categories,
+    validProfiles,
+    variables,
+    profileVariables,
+    activeProfile,
+
+    setSearchQuery,
+    setSelectedCategory,
+    setShowSearchBar,
+    setGridColumns,
+    setShowProfileDropdown,
+
+    handleCopySnippet,
+    handleDeleteSnippet,
+    handleSelectProfile,
+    handleToggleMobileMenu,
+    handleCloseMobileMenu,
+    getCategoryColor,
+    getCategoryName,
+  } = useHomeScreen();
+
+  /* DB未読み込み時は何も表示しない（nullを返す） */
+  if (!isLoaded) {
+    return null;
+  }
+
+  /* ダッシュボード画面（定型文一覧・メイン画面） */
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
+      {/* サイドメニュー（レスポンシブ対応、モバイルではオーバーレイ表示）
+          エクスポート・インポート・アカウント連携などの機能へのアクセスを提供。
+          デスクトップでは常時表示、モバイルではハンバーガーメニューで開閉。 */}
+      <SideMenu
+        onExport={exportScreen.openExportModal}
+        onImport={importScreen.openFileModal}
+        isOpen={isMobileMenuOpen}
+        onClose={handleCloseMobileMenu}
+        onAccountLink={openAccountLinkModal}
+      />
+
+      {/* メインコンテンツエリア（デスクトップではサイドメニュー分の左マージンを確保）
+          サイドメニューの幅（72 = 18rem = 288px）分のマージンを左側に設定。 */}
+      <div className="md:ml-72 transition-all duration-300">
+        {/* ヘッダー（環境切り替え・検索・新規作成・カテゴリフィルター）
+            固定表示で、スクロール時も常に上部に表示される。
+            環境切り替え、検索バー、グリッド列数選択、新規作成ボタン、カテゴリフィルターを含む。 */}
+        <DashboardHeader
+          validProfiles={validProfiles}
+          activeProfile={activeProfile}
+          showProfileDropdown={showProfileDropdown}
+          setShowProfileDropdown={setShowProfileDropdown}
+          handleProfileSelect={handleSelectProfile}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          showSearchBar={showSearchBar}
+          setShowSearchBar={setShowSearchBar}
+          categories={categories}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          onToggleMobileMenu={handleToggleMobileMenu}
+          onCreate={snippetModal.handleCreate}
+          gridColumns={gridColumns}
+          setGridColumns={setGridColumns}
+        />
+
+        {/* メインコンテンツ（定型文グリッド）
+            pt-36でヘッダー分の上部マージンを確保（固定ヘッダーの下にコンテンツが表示されるように）。 */}
+        <main className="px-6 py-6 pt-36">
+          <SnippetGrid
+            filteredSnippets={filteredSnippets}
+            gridColumns={gridColumns}
+            copiedId={copiedId}
+            categories={categories}
+            getCategoryColor={getCategoryColor}
+            getCategoryName={getCategoryName}
+            onCopy={handleCopySnippet}
+            onEdit={snippetModal.handleEdit}
+            onDelete={handleDeleteSnippet}
+          />
+        </main>
+      </div>
+
+      {/* エクスポートモーダル（部分エクスポート用）
+          選択したスニペット・カテゴリ・プロファイルのみをエクスポートするための選択画面。 */}
+      <ExportSelectionModal
+        isOpen={exportScreen.showExportModal}
+        onClose={exportScreen.closeExportModal}
+        onExport={exportScreen.handleExportSelected}
+        isProcessing={exportScreen.isExporting}
+      />
+
+      {/* 作成モーダル（新規定型文作成）
+          snippetModal.isCreatingがtrueの時のみ表示。
+          空の初期値でモーダルを開き、ユーザーが入力した内容で新規スニペットを作成。 */}
+      {snippetModal.isCreating && (
+        <SnippetEditModal
+          isOpen={snippetModal.isCreating}
+          mode="create"
+          initialTitle=""
+          initialContent=""
+          initialCategoryId={null}
+          initialProfileIds={EMPTY_PROFILE_IDS}
+          initialCopyWithTitle={false}
+          categories={categories}
+          profiles={validProfiles}
+          profileVariables={profileVariables}
+          variables={variables}
+          onSave={snippetModal.handleSaveCreate}
+          onClose={snippetModal.closeCreateModal}
+        />
+      )}
+
+      {/* 編集モーダル（既存定型文編集）
+          snippetModal.editingSnippetが存在する時のみ表示。
+          既存のスニペット情報を初期値として表示し、編集後に保存。 */}
+      {snippetModal.editingSnippet && (
+        <SnippetEditModal
+          isOpen={!!snippetModal.editingSnippet}
+          mode="edit"
+          initialTitle={snippetModal.editingSnippet.title || ''}
+          initialContent={snippetModal.editingSnippet.content}
+          initialCategoryId={snippetModal.editingSnippet.categoryId}
+          initialProfileIds={snippetModal.editingSnippetProfileIds}
+          initialCopyWithTitle={!!snippetModal.editingSnippet.copyWithTitle}
+          categories={categories}
+          profiles={validProfiles}
+          profileVariables={profileVariables}
+          variables={variables}
+          onSave={snippetModal.handleSaveEdit}
+          onClose={snippetModal.closeEditModal}
+        />
+      )}
+
+      {/* インポートファイル選択モーダル（.cliptapファイル選択）
+          ユーザーがエクスポートした.cliptapファイルを選択するためのモーダル。
+          ファイル選択後、パスワード入力とモード選択へ進む。 */}
+      <ImportFileModal
+        isOpen={importScreen.showFileModal}
+        onClose={importScreen.closeFileModal}
+        onFileSelected={importScreen.handleFileSelected}
+        isLoading={importScreen.isLoading}
+      />
+
+      {/* インポートモード選択モーダル（復元/マージ選択）
+          ファイル選択後、復元モード（既存データを全て置き換え）か
+          マージモード（既存データに追加）かを選択する画面。 */}
+      <ImportModeSelectModal
+        isOpen={importScreen.showModeSelectModal}
+        onClose={importScreen.closeModeSelectModal}
+        onSelectMode={(mode) => {
+          if (mode === 'restore') {
+            /* 復元モード: 既存データを全て置き換え */
+            importScreen.handleRestoreBackup();
+          } else {
+            /* マージモード: 既存データに追加（アイテム選択画面へ） */
+            importScreen.handleSelectMergeMode();
+          }
+        }}
+      />
+
+      {/* インポート選択モーダル（部分インポート用、アイテム選択）
+          マージモード選択時、どのスニペット・カテゴリ・プロファイルをインポートするか選択する画面。
+          重複チェックと競合解決のためのUIを提供。 */}
+      <ImportSelectionModal
+        isOpen={importScreen.showSelectionModal}
+        onClose={importScreen.closeSelectionModal}
+        candidates={importScreen.importCandidates}
+        onImport={importScreen.handleExecuteImport}
+        isProcessing={importScreen.isProcessing}
+      />
+
+      {/* アカウント連携モーダル（Google/Apple認証）
+          サブスクリプション機能を使用するために、GoogleまたはAppleアカウントと連携するためのモーダル。
+          認証後、サブスクリプション状態を同期。 */}
+      <AccountLinkModal
+        isOpen={showAccountLinkModal}
+        onClose={closeAccountLinkModal}
+        onSignInWithGoogle={signInWithGoogle}
+        onSignInWithApple={signInWithApple}
+        isLoading={authLoading}
+        error={authError}
+      />
+    </div>
+  );
+}

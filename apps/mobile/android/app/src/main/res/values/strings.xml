@@ -1,0 +1,53 @@
+<resources>
+  <string name="app_name">ClipTap</string>
+  <string name="expo_runtime_version">1.0.4</string>
+  <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
+  <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
+  <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
+  <string name="profile_all">All</string>
+  <string name="profile_select">Select Environment</string>
+  <string name="profile_none">No Environment</string>
+  <string name="category_all">All</string>
+  <string name="category_select">Select Category</string>
+  <string name="category_none">No Category</string>
+  <string name="category_uncategorized">Uncategorized</string>
+  <string name="snippet_title">Snippet</string>
+  <string name="snippet_select">Select Snippet</string>
+  <string name="snippet_empty">No snippets available</string>
+  <string name="snippet_no_results">No matching snippets found</string>
+  <string name="snippet_copy">Copy</string>
+  <string name="snippet_insert">Insert</string>
+  <string name="snippet_preview">Preview</string>
+  <string name="snippet_detail">Details</string>
+  <string name="snippet_close">Close</string>
+  <string name="search_placeholder">Search snippets</string>
+  <string name="search_clear">Clear</string>
+  <string name="search_no_results">No search results</string>
+  <string name="error_database">Database error occurred</string>
+  <string name="error_load_failed">Failed to load data</string>
+  <string name="error_permission">Access permission denied</string>
+  <string name="error_unknown">Unknown error occurred</string>
+  <string name="subscription_required">This feature requires a premium plan</string>
+  <string name="subscription_upgrade">Upgrade</string>
+  <string name="subscription_premium">Premium</string>
+  <string name="subscription_free">Free</string>
+  <string name="variable_today">Today</string>
+  <string name="variable_now">Now</string>
+  <string name="variable_time">Time</string>
+  <string name="variable_not_found">Variable not found</string>
+  <string name="button_ok">OK</string>
+  <string name="button_cancel">Cancel</string>
+  <string name="button_done">Done</string>
+  <string name="button_back">Back</string>
+  <string name="button_close">Close</string>
+  <string name="button_retry">Retry</string>
+  <string name="message_copied">Copied</string>
+  <string name="message_inserted">Inserted</string>
+  <string name="message_loading">Loading…</string>
+  <string name="message_empty_state">Create snippets in the main app</string>
+  <string name="accessibility_profile_button">Profile button</string>
+  <string name="accessibility_category_button">Category button</string>
+  <string name="accessibility_snippet_item">Snippet item</string>
+  <string name="accessibility_close_button">Close button</string>
+  <string name="accessibility_copy_button">Copy button</string>
+</resources>
