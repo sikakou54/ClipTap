@@ -21,6 +21,7 @@
     "react-dom": "19.1.0",
     "react-dropzone": "^14.3.8",
     "react-i18next": "^15.7.3",
+    "react-icons": "^5.5.0",
     "react-router-dom": "^7.9.6",
     "sql.js": "^1.13.0"
   },

@@ -168,6 +168,7 @@ export * from './constants/componentTokens';  // コンポーネント用トー�
 export * from './constants/iconMapping';      // アイコンマッピング（Ionicons ↔ Heroicons）
 export * from './constants/themeTokens';      // テーマトークン（スペーシング、フォント、タイポグラフィ）
 export * from './constants/subscription';     // サブスクリプション定数（PRO_ENTITLEMENT_ID）
+export * from './constants/variableIcons';    // 変数アイコン定数
 
 /* ======================================== */
 /* Utils */

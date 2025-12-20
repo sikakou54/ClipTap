@@ -134,6 +134,7 @@
     "variable_label": "表示ラベル",
     "variable_label_placeholder": "例: 自分の名前",
     "variable_label_hint": "ツールバーに表示される名前",
+    "select_icon": "アイコンを選択",
     "variable_value": "値",
     "variable_value_placeholder": "例: 佐々木 太郎",
     "variable_value_hint": "変数が置き換えられる値",

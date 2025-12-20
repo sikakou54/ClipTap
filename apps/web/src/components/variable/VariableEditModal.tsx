@@ -12,10 +12,13 @@
  * - 少なくとも1つのプロファイルに値が必要
  */
 import { useState, useEffect, useMemo } from 'react';
-import { useTranslation } from '@cliptap/shared';
+import { useTranslation, DEFAULT_VARIABLE_ICON } from '@cliptap/shared';
 import { useProfiles, useVariables, UI_SYSTEM_VARIABLES, INPUT_LIMITS } from '@cliptap/shared';
+import type { VariableIconName } from '@cliptap/shared';
 import { useUnsavedChangesWarning } from '@hooks/useUnsavedChangesWarning';
 import { useBodyScrollLock } from '@hooks/useBodyScrollLock';
+import { VariableIcon } from '@components/common/VariableIcon';
+import { IconPickerModal } from './IconPickerModal';
 
 interface VariableEditModalProps {
   isOpen: boolean;
@@ -31,10 +34,12 @@ export function VariableEditModal({ isOpen, variableId, onClose }: VariableEditM
 
   const [name, setName] = useState('');
   const [label, setLabel] = useState('');
+  const [selectedIcon, setSelectedIcon] = useState<VariableIconName>(DEFAULT_VARIABLE_ICON);
+  const [showIconModal, setShowIconModal] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileValues, setProfileValues] = useState<Record<string, string>>({});
-  const [initialValues, setInitialValues] = useState<{ name: string; label: string; profileValues: Record<string, string> } | null>(null);
+  const [initialValues, setInitialValues] = useState<{ name: string; label: string; icon: VariableIconName; profileValues: Record<string, string> } | null>(null);
 
   const editingVariable = variables.find(v => v.id === variableId);
 
@@ -46,11 +51,12 @@ export function VariableEditModal({ isOpen, variableId, onClose }: VariableEditM
     if (!isOpen || !initialValues) return false;
     const nameChanged = name !== initialValues.name;
     const labelChanged = label !== initialValues.label;
+    const iconChanged = selectedIcon !== initialValues.icon;
     const profileValuesChanged = Object.keys(profileValues).some(
       key => profileValues[key] !== (initialValues.profileValues[key] || '')
     );
-    return nameChanged || labelChanged || profileValuesChanged;
-  }, [isOpen, initialValues, name, label, profileValues]);
+    return nameChanged || labelChanged || iconChanged || profileValuesChanged;
+  }, [isOpen, initialValues, name, label, selectedIcon, profileValues]);
 
   const { confirmClose } = useUnsavedChangesWarning({
     hasChanges,
@@ -71,6 +77,8 @@ export function VariableEditModal({ isOpen, variableId, onClose }: VariableEditM
       if (isEdit && editingVariable) {
         setName(editingVariable.name);
         setLabel(editingVariable.label || '');
+        const iconValue = (editingVariable.icon || DEFAULT_VARIABLE_ICON) as VariableIconName;
+        setSelectedIcon(iconValue);
         const values: Record<string, string> = {};
         profiles.forEach(profile => {
           const pv = profileVariables.find(
@@ -79,16 +87,17 @@ export function VariableEditModal({ isOpen, variableId, onClose }: VariableEditM
           values[profile.id] = pv?.value || '';
         });
         setProfileValues(values);
-        setInitialValues({ name: editingVariable.name, label: editingVariable.label || '', profileValues: values });
+        setInitialValues({ name: editingVariable.name, label: editingVariable.label || '', icon: iconValue, profileValues: values });
       } else {
         setName('');
         setLabel('');
+        setSelectedIcon(DEFAULT_VARIABLE_ICON);
         const values: Record<string, string> = {};
         profiles.forEach(profile => {
           values[profile.id] = '';
         });
         setProfileValues(values);
-        setInitialValues({ name: '', label: '', profileValues: values });
+        setInitialValues({ name: '', label: '', icon: DEFAULT_VARIABLE_ICON, profileValues: values });
       }
     }
   }, [isOpen, variableId, editingVariable, profiles, profileVariables, isEdit]);
@@ -166,11 +175,13 @@ export function VariableEditModal({ isOpen, variableId, onClose }: VariableEditM
         savedVariable = await updateVariable(editingVariable.id, {
           name: name.trim(),
           label: label.trim() || null,
+          icon: selectedIcon,
         });
       } else {
         savedVariable = await createVariable({
           name: name.trim(),
           label: label.trim() || undefined,
+          icon: selectedIcon,
         });
       }
 
@@ -267,18 +278,31 @@ export function VariableEditModal({ isOpen, variableId, onClose }: VariableEditM
               )}
             </div>
 
-            {/* 表示ラベル入力（オプション） */}
+            {/* 表示ラベル入力（オプション） + アイコン選択 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-[#A0A0A0] mb-2">
                 {t('settings.variable_label')}
               </label>
-              <input
-                type="text"
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                placeholder={t('settings.variable_label_placeholder')}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-[#2A2A2A] rounded-xl focus:outline-none bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#707070]"
-              />
+              {/* アイコン選択ボタン + ラベル入力のフレックスコンテナ */}
+              <div className="flex items-center gap-3">
+                {/* アイコン選択ボタン */}
+                <button
+                  type="button"
+                  onClick={() => setShowIconModal(true)}
+                  className="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-gray-300 dark:border-[#2A2A2A] rounded-xl bg-white dark:bg-[#1A1A1A] hover:bg-gray-50 dark:hover:bg-[#2A2A2A] transition-colors text-blue-600 dark:text-blue-400"
+                  title={t('settings.select_icon')}
+                >
+                  <VariableIcon name={selectedIcon} size={22} />
+                </button>
+                {/* ラベル入力フィールド */}
+                <input
+                  type="text"
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  placeholder={t('settings.variable_label_placeholder')}
+                  className="flex-1 px-4 py-3 border border-gray-300 dark:border-[#2A2A2A] rounded-xl focus:outline-none bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#707070]"
+                />
+              </div>
               {/* ラベルヒント */}
               <p className="mt-2 text-xs text-gray-500 dark:text-[#707070]">
                 {t('settings.variable_label_hint')}
@@ -362,6 +386,14 @@ export function VariableEditModal({ isOpen, variableId, onClose }: VariableEditM
           </button>
         </div>
       </div>
+
+      {/* アイコン選択モーダル */}
+      <IconPickerModal
+        isOpen={showIconModal}
+        selectedIcon={selectedIcon}
+        onSelect={setSelectedIcon}
+        onClose={() => setShowIconModal(false)}
+      />
     </div>
   );
 }
