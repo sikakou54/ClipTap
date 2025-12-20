@@ -134,6 +134,7 @@
     "variable_label": "Display Label",
     "variable_label_placeholder": "e.g. My Name",
     "variable_label_hint": "Name shown in toolbar",
+    "select_icon": "Select Icon",
     "variable_value": "Value",
     "variable_value_placeholder": "e.g. John Doe",
     "variable_value_hint": "Value to replace the variable",

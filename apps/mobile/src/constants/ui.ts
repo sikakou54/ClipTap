@@ -23,7 +23,8 @@
  * @see themeSystem - テーマ依存のスタイル
  */
 
-import { INPUT_LIMITS, FEATURE_LIMITS, DESIGN_TOKENS } from '@cliptap/shared';
+import { INPUT_LIMITS, FEATURE_LIMITS, DESIGN_TOKENS, VARIABLE_ICONS, DEFAULT_VARIABLE_ICON } from '@cliptap/shared';
+import type { VariableIconName } from '@cliptap/shared';
 
 /**
  * UI定数オブジェクト
@@ -272,125 +273,8 @@ export const UI_CONSTANTS = {
 export type UIConstants = typeof UI_CONSTANTS;
 
 /**
- * 利用可能なアイコン一覧（カテゴリ別に整理）
- * カスタム変数作成時にユーザーが選択できるアイコンのリスト
- * 変数を視覚的に識別しやすくするため
- *
- * @remarks Ionicons の outline スタイルを使用（統一感のあるデザイン）
+ * 変数アイコン関連の再エクスポート
+ * @cliptap/shared から提供されるアイコン定数と型を再エクスポート
  */
-/* 変数アイコン一覧（as constで各アイコン名をリテラル型として扱う） */
-export const VARIABLE_ICONS = [
-  /* 人物・連絡先カテゴリ */
-  'person-outline',         // 個人
-  'people-outline',         // グループ
-  'person-circle-outline',  // プロフィール
-  'mail-outline',           // メール
-  'call-outline',           // 電話
-  'chatbubble-outline',     // チャット
-  'at-outline',             // メンション
-
-  /* 場所・施設カテゴリ */
-  'home-outline',           // 自宅
-  'business-outline',       // オフィス
-  'location-outline',       // 位置情報
-  'map-outline',            // 地図
-  'navigate-outline',       // ナビゲーション
-  'globe-outline',          // グローバル
-
-  /* ドキュメント・テキストカテゴリ */
-  'document-outline',       // 書類
-  'document-text-outline',  // テキスト書類
-  'documents-outline',      // 複数の書類
-  'newspaper-outline',      // ニュース
-  'reader-outline',         // リーダー
-  'text-outline',           // テキスト
-  'create-outline',         // 作成
-  'pencil-outline',         // 編集
-
-  /* ビジネス・金融カテゴリ */
-  'card-outline',           // カード
-  'wallet-outline',         // 財布
-  'cash-outline',           // 現金
-  'calculator-outline',     // 計算機
-  'briefcase-outline',      // ブリーフケース
-  'receipt-outline',        // 領収書
-
-  /* 技術・開発カテゴリ */
-  'code-outline',           // コード
-  'code-slash-outline',     // コード終了
-  'terminal-outline',       // ターミナル
-  'bug-outline',            // バグ
-  'construct-outline',      // 建設
-  'hammer-outline',         // ハンマー
-
-  /* メディア・エンターテインメントカテゴリ */
-  'musical-notes-outline',  // 音楽
-  'headset-outline',        // ヘッドセット
-  'image-outline',          // 画像
-  'camera-outline',         // カメラ
-  'film-outline',           // 映画
-  'videocam-outline',       // ビデオカメラ
-
-  /* 時間・スケジュールカテゴリ */
-  'time-outline',           // 時刻
-  'calendar-outline',       // カレンダー
-  'alarm-outline',          // アラーム
-  'stopwatch-outline',      // ストップウォッチ
-  'hourglass-outline',      // 砂時計
-
-  /* アクション・状態カテゴリ */
-  'heart-outline',          // ハート
-  'heart-circle-outline',   // ハートサークル
-  'star-outline',           // スター
-  'bookmark-outline',       // ブックマーク
-  'flag-outline',           // フラグ
-  'trophy-outline',         // トロフィー
-  'ribbon-outline',         // リボン
-
-  /* オブジェクトカテゴリ */
-  'gift-outline',           // ギフト
-  'basket-outline',         // バスケット
-  'cart-outline',           // カート
-  'bag-outline',            // バッグ
-  'pizza-outline',          // ピザ
-  'cafe-outline',           // カフェ
-  'restaurant-outline',     // レストラン
-
-  /* 移動・交通カテゴリ */
-  'car-outline',            // 車
-  'bicycle-outline',        // 自転車
-  'airplane-outline',       // 飛行機
-  'train-outline',          // 電車
-  'boat-outline',           // ボート
-
-  /* ツール・設定カテゴリ */
-  'settings-outline',       // 設定
-  'cog-outline',            // 歯車
-  'options-outline',        // オプション
-  'build-outline',          // ビルド
-  'flash-outline',          // フラッシュ
-  'key-outline',            // キー
-  'lock-closed-outline',    // ロック
-
-  /* 天気・自然カテゴリ */
-  'sunny-outline',          // 晴れ
-  'moon-outline',           // 月
-  'cloud-outline',          // 曇り
-  'rainy-outline',          // 雨
-  'leaf-outline',           // 葉
-  'flower-outline',         // 花
-
-  /* その他カテゴリ */
-  'link-outline',           // リンク
-  'infinite-outline',       // 無限
-  'funnel-outline',         // フィルター
-  'analytics-outline',      // 分析
-  'stats-chart-outline',    // 統計グラフ
-  'pie-chart-outline',      // 円グラフ
-  'barcode-outline',        // バーコード
-  'qr-code-outline',        // QRコード
-] as const; // as const: 配列を読み取り専用にし、各要素をリテラル型として扱う
-
-/** アイコン名の型（VARIABLE_ICONSの要素のユニオン型） */
-/* 例: 'person-outline' | 'people-outline' | ... というユニオン型が生成される */
-export type VariableIconName = (typeof VARIABLE_ICONS)[number];
+export { VARIABLE_ICONS, DEFAULT_VARIABLE_ICON };
+export type { VariableIconName };

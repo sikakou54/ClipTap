@@ -6,6 +6,7 @@
  */
 import { useTranslation, UI_SYSTEM_VARIABLES } from '@cliptap/shared';
 import type { Variable } from '@cliptap/shared';
+import { VariableIcon } from '@components/common/VariableIcon';
 
 interface VariableBadgesProps {
   variables: Variable[];
@@ -47,13 +48,14 @@ export function VariableBadges({ variables, onInsertVariable }: VariableBadgesPr
           {/* カスタム変数バッジ一覧 */}
           <div className="flex flex-wrap gap-2">
             {customVariables.map((variable) => (
-              /* カスタム変数バッジ */
+              /* カスタム変数バッジ（アイコン + ラベル） */
               <button
                 key={variable.id}
                 onClick={() => onInsertVariable(variable.name)}
-                className="px-3 py-1.5 bg-white dark:bg-[#2A2A2A] border border-purple-200 dark:border-purple-900 text-purple-700 dark:text-purple-300 rounded-lg text-sm font-medium hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors shadow-sm"
+                className="px-3 py-1.5 bg-white dark:bg-[#2A2A2A] border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-300 rounded-lg text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors shadow-sm flex items-center gap-1.5"
                 title={`{{${variable.name}}}`}
               >
+                <VariableIcon name={variable.icon} size={14} />
                 {variable.label && variable.label.trim() !== '' ? variable.label : `{{${variable.name}}}`}
               </button>
             ))}
