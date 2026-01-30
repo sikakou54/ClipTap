@@ -1,3 +1,9 @@
 <resources>
   <string name="app_name">"ClipTap"</string>
+  <string name="accessibility_sort_button">"Sort button"</string>
+  <string name="keyboard_sort_label">"Sort"</string>
+  <string name="keyboard_sort_created">"Created"</string>
+  <string name="keyboard_sort_updated">"Updated"</string>
+  <string name="keyboard_sort_title">"Title"</string>
+  <string name="keyboard_sort_usage">"Usage"</string>
 </resources>
