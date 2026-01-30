@@ -79,58 +79,60 @@ export function useFilteredSnippets({
   }, [snippetProfiles]);
 
   const filteredSnippets = useMemo((): SnippetWithDisplay[] => {
-    return snippets
-      .filter((snippet) => {
-        /* 1. 検索フィルター */
-        if (searchQuery) {
-          const query = searchQuery.toLowerCase();
-          const matchesTitle = snippet.title?.toLowerCase().includes(query);
-          const matchesContent = snippet.content.toLowerCase().includes(query);
-          if (!matchesTitle && !matchesContent) return false;
-        }
+    /* 1. フィルタリング */
+    const filtered = snippets.filter((snippet) => {
+      /* 1-1. 検索フィルター */
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesTitle = snippet.title?.toLowerCase().includes(query);
+        const matchesContent = snippet.content.toLowerCase().includes(query);
+        if (!matchesTitle && !matchesContent) return false;
+      }
 
-        /* 2. カテゴリフィルター */
-        if (selectedCategory !== null) {
-          if (selectedCategory === 'uncategorized') {
-            if (snippet.categoryId !== null) return false;
-          } else {
-            if (snippet.categoryId !== selectedCategory) return false;
-          }
+      /* 1-2. カテゴリフィルター */
+      if (selectedCategory !== null) {
+        if (selectedCategory === 'uncategorized') {
+          if (snippet.categoryId !== null) return false;
+        } else {
+          if (snippet.categoryId !== selectedCategory) return false;
         }
+      }
 
-        /* 3. 環境（プロファイル）フィルター */
-        const restrictedProfiles = snippetProfileMap.get(snippet.id);
-        if (restrictedProfiles && restrictedProfiles.length > 0) {
-          if (!activeProfileId) {
-            return false;
-          }
-          if (!restrictedProfiles.includes(activeProfileId)) {
-            return false;
-          }
+      /* 1-3. 環境（プロファイル）フィルター */
+      const restrictedProfiles = snippetProfileMap.get(snippet.id);
+      if (restrictedProfiles && restrictedProfiles.length > 0) {
+        if (!activeProfileId) {
+          return false;
         }
-
-        return true;
-      })
-      .map((snippet) => {
-        if (enableVariableExpansion) {
-          const expandedTitle = snippet.title
-            ? expandVariables(snippet.title, activeProfileId, defaultProfileId)
-            : null;
-          const expandedContent = expandVariables(snippet.content, activeProfileId, defaultProfileId);
-
-          return {
-            ...snippet,
-            displayTitle: expandedTitle,
-            displayContent: expandedContent,
-          };
+        if (!restrictedProfiles.includes(activeProfileId)) {
+          return false;
         }
+      }
+
+      return true;
+    });
+
+    /* 2. 変数展開（ソートはDB側で実行済み） */
+    return filtered.map((snippet) => {
+      if (enableVariableExpansion) {
+        const expandedTitle = snippet.title
+          ? expandVariables(snippet.title, activeProfileId, defaultProfileId)
+          : null;
+        const expandedContent = expandVariables(snippet.content, activeProfileId, defaultProfileId);
 
         return {
           ...snippet,
-          displayTitle: snippet.title,
-          displayContent: snippet.content,
+          displayTitle: expandedTitle,
+          displayContent: expandedContent,
         };
-      });
+      }
+
+      return {
+        ...snippet,
+        displayTitle: snippet.title,
+        displayContent: snippet.content,
+      };
+    });
   }, [
     snippets,
     searchQuery,

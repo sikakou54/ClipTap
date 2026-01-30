@@ -12,10 +12,12 @@ import { z } from 'zod';
  * スニペットの並び替え基準スキーマ
  *
  * @remarks
- * - 'recent': 更新日時順（新しい順）
+ * - 'created': 作成日時順（新しい順）- デフォルト
+ * - 'updated': 更新日時順（新しい順）
  * - 'title': タイトル順（昇順）
+ * - 'usage': 使用頻度順（コピー回数が多い順）
  */
-export const SnippetSortBySchema = z.enum(['recent', 'title']);
+export const SnippetSortBySchema = z.enum(['created', 'updated', 'title', 'usage']);
 
 /**
  * スニペットの並び替え基準
@@ -33,6 +35,7 @@ export type SnippetSortBy = z.infer<typeof SnippetSortBySchema>;
  * - categoryId: nullは未分類
  * - profileIds: 空または未定義の場合は全環境で利用可能
  * - copyWithTitle: コピー時にタイトルも含めるかどうか
+ * - copyCount: コピー回数（使用頻度ソート用）
  */
 export const SnippetSchema = z.object({
   id: z.string(),
@@ -41,6 +44,7 @@ export const SnippetSchema = z.object({
   categoryId: z.string().nullable(),
   profileIds: z.array(z.string()).optional(),
   copyWithTitle: z.boolean(),
+  copyCount: z.number().default(0),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

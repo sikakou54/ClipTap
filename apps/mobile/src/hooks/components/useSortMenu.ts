@@ -44,12 +44,18 @@ export interface UseSortMenuReturn {
   visible: boolean;
   sortOptions: SortOption[];
   currentOption: SortOption | undefined;
+  isDefaultSort: boolean;
 
   /* ハンドラ */
   handlePress: () => void;
   handleSelect: (value: SnippetSortBy) => void;
   handleClose: () => void;
 }
+
+/**
+ * デフォルトのソート順
+ */
+const DEFAULT_SORT: SnippetSortBy = 'created';
 
 /**
  * ソートメニューのビジネスロジックフック
@@ -69,9 +75,16 @@ export function useSortMenu({
    * ソートオプション一覧
    */
   const sortOptions: SortOption[] = useMemo(() => [
-    { value: 'recent', label: t('sort.recent'), icon: 'time-outline' },
+    { value: 'created', label: t('sort.created'), icon: 'create-outline' },
+    { value: 'updated', label: t('sort.updated'), icon: 'time-outline' },
     { value: 'title', label: t('sort.title_sort'), icon: 'text-outline' },
+    { value: 'usage', label: t('sort.usage'), icon: 'stats-chart-outline' },
   ], [t]);
+
+  /**
+   * デフォルトソートかどうか
+   */
+  const isDefaultSort = currentSort === DEFAULT_SORT;
 
   /**
    * 現在選択中のオプション
@@ -106,6 +119,7 @@ export function useSortMenu({
     visible,
     sortOptions,
     currentOption,
+    isDefaultSort,
     handlePress,
     handleSelect,
     handleClose,

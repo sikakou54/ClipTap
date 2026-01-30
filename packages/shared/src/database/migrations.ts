@@ -9,6 +9,7 @@
  * - V2 → V3: copyWithTitleカラム追加
  * - V3 → V4: 共有コンテナへのDB移行（キーボード拡張対応）
  * - V4 → V5: variables, profilesテーブルにsortOrderカラム追加
+ * - V5 → V6: snippetsテーブルにcopyCountカラム追加（使用頻度ソート用）
  */
 
 import type { DbAdapter } from '../adapters/DbAdapter';
@@ -506,6 +507,48 @@ export async function migrateV4ToV5(db: DbAdapter): Promise<void> {
   }
 }
 
+/* ======================================== */
+/* V5 → V6 マイグレーション */
+/* ======================================== */
+
+/**
+ * V5 → V6 マイグレーション
+ *
+ * 変更内容:
+ * - snippetsテーブルにcopyCountカラムを追加（使用頻度ソート用）
+ *
+ * @param db - mainDBアダプター（データが格納されているDB）
+ */
+export async function migrateV5ToV6(db: DbAdapter): Promise<void> {
+  Logger.info('[Migration V5→V6] Starting migration...');
+
+  try {
+    /* snippetsテーブルにcopyCountカラムを追加 */
+    const snippetColumns = db.all<{ name: string }>(
+      `SELECT name FROM pragma_table_info('snippets')`
+    );
+    const hasCopyCount = snippetColumns.some((c) => c.name === 'copyCount');
+
+    if (!hasCopyCount) {
+      Logger.info('[Migration V5→V6] Adding copyCount column to snippets table...');
+      await db.exec(`ALTER TABLE snippets ADD COLUMN copyCount INTEGER DEFAULT 0;`);
+
+      /* インデックスを作成 */
+      await db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_snippets_copy_count
+        ON snippets(copyCount DESC);
+      `);
+
+      Logger.success('[Migration V5→V6] copyCount column and index added successfully');
+    }
+
+    Logger.success('[Migration V5→V6] Migration completed successfully');
+  } catch (error) {
+    Logger.error('[Migration V5→V6] Failed to migrate:', error);
+    throw error;
+  }
+}
+
 /**
  * 全テーブルを作成
  *
@@ -622,6 +665,9 @@ export async function runMigrations(
       case 5:
         await migrateV4ToV5(mainDB);
         break;
+      case 6:
+        await migrateV5ToV6(mainDB);
+        break;
       default:
         Logger.warn(`[Migration] No migration defined for version ${nextVersion}`);
         break;
@@ -657,7 +703,9 @@ export async function migrateImportTempDb(db: DbAdapter, fromVersion: number): P
       case 5:
         await migrateV4ToV5(db);
         break;
-      /* 将来のバージョンはここに追加 */
+      case 6:
+        await migrateV5ToV6(db);
+        break;
       default:
         Logger.warn(`[Import Migration] No migration defined for version ${nextVersion}`);
         break;

@@ -40,6 +40,7 @@ import { MobileFilePickerAdapter } from '@adapters/MobileFilePickerAdapter';
 import { MobileAuthAdapter } from '@adapters/MobileAuthAdapter';
 import { MobileExportAdapter } from '@adapters/MobileExportAdapter';
 import { MobileImportAdapter } from '@adapters/MobileImportAdapter';
+import { MobileSortPreferenceAdapter } from '@adapters/MobileSortPreferenceAdapter';
 
 /* ======================================== */
 /* 型定義 */
@@ -99,6 +100,7 @@ export function useAdapterInitialization(): UseAdapterInitializationReturn {
         auth: new MobileAuthAdapter(),
         export: new MobileExportAdapter(fileIOAdapter, fileShareAdapter),
         import: new MobileImportAdapter(fileIOAdapter),
+        sortPreference: new MobileSortPreferenceAdapter(),
       },
       adapterOptions: {
         subscription: {

@@ -29,6 +29,7 @@ import { useHomeScreen } from '@hooks/screens/useHomeScreen';
 import { SnippetList } from '@components/snippet/SnippetList';
 import { CategoryFilter } from '@components/category/CategoryFilter';
 import { ProfileSelector } from '@components/profile/ProfileSelector';
+import { SortMenu } from '@components/snippet/SortMenu';
 import { AdBanner } from '@components/ads/AdBanner';
 import { commonStyles } from '@lib/styles/commonStyles';
 import { getMaxContentWidth } from '@utils/responsive';
@@ -55,6 +56,8 @@ export default function HomeScreen() {
     handleNavigateToSearch,
     handleNavigateToCreate,
     handleProfileChange,
+    currentSort,
+    handleSortChange,
   } = useHomeScreen();
 
   return (
@@ -125,11 +128,14 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* カテゴリフィルター（横スクロール可能なカテゴリ一覧） */}
+        {/* カテゴリフィルター（横スクロール可能なカテゴリ一覧）+ ソートメニュー */}
         <CategoryFilter
           categories={filteredCategories}
           selectedCategoryId={selectedCategoryId}
           onSelectCategory={handleCategorySelect}
+          sortMenu={
+            <SortMenu currentSort={currentSort} onSortChange={handleSortChange} />
+          }
         />
 
         {/* スニペット一覧（FlashListによる高速レンダリング） */}
@@ -143,6 +149,7 @@ export default function HomeScreen() {
             onRefresh={handleRefresh}
             categories={categories}
             overrideProfileId={activeProfileId}
+            extraData={currentSort}
           />
         </View>
       </View>

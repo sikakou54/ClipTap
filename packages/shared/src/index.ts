@@ -111,6 +111,12 @@ export {
   setImportAdapter,
   getImportAdapter,
   hasImportAdapter,
+
+  /* SortPreferenceAdapter関連（ソート設定） */
+  type SortPreferenceAdapter,
+  setSortPreferenceAdapter,
+  getSortPreferenceAdapter,
+  hasSortPreferenceAdapter,
 } from './adapters';
 
 /* ======================================== */
@@ -240,6 +246,10 @@ export {
   /* Translation（翻訳） */
   useTranslation,
   type TranslationFunction,
+
+  /* Sort Preference（ソート設定） */
+  useSortPreference,
+  type UseSortPreferenceReturn,
 } from './hooks';
 
 /* ======================================== */

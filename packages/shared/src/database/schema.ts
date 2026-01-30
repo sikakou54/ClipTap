@@ -7,7 +7,7 @@
 /**
  * データベーススキーマバージョン
  */
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 /**
  * テーブル作成SQL定義
@@ -36,6 +36,7 @@ export const CREATE_TABLES = {
       content TEXT NOT NULL,
       categoryId TEXT,
       copyWithTitle INTEGER DEFAULT 0,
+      copyCount INTEGER DEFAULT 0,
       createdAt TEXT NOT NULL,
       updatedAt TEXT NOT NULL,
       FOREIGN KEY (categoryId) REFERENCES categories(id) ON DELETE SET NULL
@@ -117,6 +118,10 @@ export const CREATE_INDEXES = {
   snippetsUpdated: `
     CREATE INDEX IF NOT EXISTS idx_snippets_updated
     ON snippets(updatedAt DESC);
+  `,
+  snippetsCopyCount: `
+    CREATE INDEX IF NOT EXISTS idx_snippets_copy_count
+    ON snippets(copyCount DESC);
   `,
   profilesActive: `
     CREATE INDEX IF NOT EXISTS idx_profiles_active

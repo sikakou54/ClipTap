@@ -19,7 +19,8 @@ import { getClipboardAdapter, hasClipboardAdapter } from '../adapters/ClipboardA
 import { getLocaleAdapter, hasLocaleAdapter } from '../adapters/LocaleAdapter';
 import { useDatabase } from './DatabaseProvider';
 import type { VariableResolver } from '../variables/parser';
-import type { Snippet, SnippetProfile, CreateSnippetInput, UpdateSnippetInput } from '../schema';
+import type { Snippet, SnippetProfile, CreateSnippetInput, UpdateSnippetInput, SnippetSortBy } from '../schema';
+import { hasSortPreferenceAdapter, getSortPreferenceAdapter } from '../adapters/SortPreferenceAdapter';
 
 /* ======================================== */
 /* 型定義 */
@@ -29,7 +30,7 @@ import type { Snippet, SnippetProfile, CreateSnippetInput, UpdateSnippetInput } 
  * SnippetContextの型定義
  */
 export interface SnippetContextValue {
-  /** 全スニペット一覧（フィルタリングなし） */
+  /** 全スニペット一覧（ソート済み、フィルタリングなし） */
   allSnippets: Snippet[];
   /** スニペット-プロファイル関連 */
   snippetProfiles: SnippetProfile[];
@@ -37,6 +38,10 @@ export interface SnippetContextValue {
   loading: boolean;
   /** エラー情報 */
   error: Error | null;
+  /** 現在のソート順 */
+  sortBy: SnippetSortBy;
+  /** ソート順を変更 */
+  setSortBy: (sortBy: SnippetSortBy) => void;
   /** データ再読み込み関数 */
   refresh: () => void;
   /** スニペット作成 */
@@ -125,19 +130,45 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
   const [snippetProfiles, setSnippetProfiles] = useState<SnippetProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [sortBy, setSortByState] = useState<SnippetSortBy>('created');
+  const [isSortPreferenceLoaded, setIsSortPreferenceLoaded] = useState(false);
 
   /* データベース初期化状態（DatabaseProviderが必須） */
   const { isLoaded: isDatabaseLoaded } = useDatabase();
 
+  /* 初回マウント時に保存されたソート設定を読み込み */
+  useEffect(() => {
+    async function loadSortPreference() {
+      if (!hasSortPreferenceAdapter()) {
+        setIsSortPreferenceLoaded(true);
+        return;
+      }
+
+      try {
+        const adapter = getSortPreferenceAdapter();
+        const saved = await adapter.getSortPreference();
+        if (saved) {
+          setSortByState(saved);
+        }
+      } catch (err) {
+        Logger.error('[SnippetProvider] Failed to load sort preference:', err);
+      } finally {
+        setIsSortPreferenceLoaded(true);
+      }
+    }
+
+    void loadSortPreference();
+  }, []);
+
   /* ======================================== */
   /* データ読み込み */
   /* ======================================== */
-  const loadSnippets = useCallback(() => {
+  const loadSnippets = useCallback((currentSortBy: SnippetSortBy) => {
     try {
       setLoading(true);
 
-      /* 全スニペットを取得（プロファイルフィルタなし） */
-      const data = SnippetService.getAll();
+      /* 全スニペットを取得（SQLでソート済み） */
+      const data = SnippetService.getSorted(currentSortBy);
       setAllSnippets(data);
 
       /* 全スニペット-プロファイル関連を取得 */
@@ -153,15 +184,37 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
     }
   }, []);
 
-  /* データベースが初期化された後にデータを読み込む */
+  /* データベースが初期化され、ソート設定が読み込まれた後にデータを読み込む */
   useEffect(() => {
-    if (!isDatabaseLoaded) return;
-    loadSnippets();
-  }, [loadSnippets, isDatabaseLoaded]);
+    if (!isDatabaseLoaded || !isSortPreferenceLoaded) return;
+    loadSnippets(sortBy);
+  }, [loadSnippets, isDatabaseLoaded, isSortPreferenceLoaded, sortBy]);
 
   /* ======================================== */
   /* CRUD操作 */
   /* ======================================== */
+
+  /**
+   * ソート順を変更し、永続化する
+   */
+  const setSortBy = useCallback((newSortBy: SnippetSortBy) => {
+    setSortByState(newSortBy);
+
+    /* 非同期で永続化（UIをブロックしない） */
+    if (hasSortPreferenceAdapter()) {
+      const adapter = getSortPreferenceAdapter();
+      void adapter.setSortPreference(newSortBy).catch((err) => {
+        Logger.error('[SnippetProvider] Failed to save sort preference:', err);
+      });
+    }
+  }, []);
+
+  /**
+   * 現在のソート順でデータを再読み込み
+   */
+  const refresh = useCallback(() => {
+    loadSnippets(sortBy);
+  }, [loadSnippets, sortBy]);
 
   /**
    * スニペット作成
@@ -170,10 +223,10 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
   const createSnippet = useCallback(
     (input: CreateSnippetInput): Snippet => {
       const snippet = SnippetService.create(input);
-      loadSnippets();
+      loadSnippets(sortBy);
       return snippet;
     },
-    [loadSnippets]
+    [loadSnippets, sortBy]
   );
 
   /**
@@ -182,10 +235,10 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
   const updateSnippet = useCallback(
     (input: UpdateSnippetInput): Snippet => {
       const snippet = SnippetService.update(input);
-      loadSnippets();
+      loadSnippets(sortBy);
       return snippet;
     },
-    [loadSnippets]
+    [loadSnippets, sortBy]
   );
 
   /**
@@ -194,9 +247,9 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
   const deleteSnippet = useCallback(
     (id: string): void => {
       SnippetService.delete(id);
-      loadSnippets();
+      loadSnippets(sortBy);
     },
-    [loadSnippets]
+    [loadSnippets, sortBy]
   );
 
   /* ======================================== */
@@ -226,6 +279,12 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
 
     if (hasClipboardAdapter()) {
       await getClipboardAdapter().copy(textToCopy);
+      /* コピー成功後、コピー回数をインクリメント（使用頻度ソート用） */
+      SnippetService.incrementCopyCount(id);
+      /* ローカルステートも更新（UIへの即座反映のため） */
+      setAllSnippets(prev => prev.map(s =>
+        s.id === id ? { ...s, copyCount: (s.copyCount ?? 0) + 1 } : s
+      ));
     }
   }, []);
 
@@ -269,7 +328,9 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
       snippetProfiles,
       loading,
       error,
-      refresh: loadSnippets,
+      sortBy,
+      setSortBy,
+      refresh,
       createSnippet,
       updateSnippet,
       deleteSnippet,
@@ -285,7 +346,9 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
       snippetProfiles,
       loading,
       error,
-      loadSnippets,
+      sortBy,
+      setSortBy,
+      refresh,
       createSnippet,
       updateSnippet,
       deleteSnippet,

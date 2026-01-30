@@ -7,7 +7,7 @@
  * @see https://shopify.github.io/flash-list/docs/usage
  */
 
-import { FlashList as OriginalFlashList, FlashListProps } from '@shopify/flash-list';
+import { FlashList as OriginalFlashList, FlashListProps, FlashListRef } from '@shopify/flash-list';
 import type React from 'react';
 
 /**
@@ -18,8 +18,8 @@ import type React from 'react';
  * 型レベルで必須化することで設定忘れを防ぎます。
  */
 export const FlashList = OriginalFlashList as unknown as <T>(
-  props: FlashListProps<T> & { estimatedItemSize: number }
+  props: FlashListProps<T> & { estimatedItemSize: number; ref?: React.Ref<FlashListRef<T>> }
 ) => React.ReactElement;
 
-export type { FlashListProps } from '@shopify/flash-list';
+export type { FlashListProps, FlashListRef } from '@shopify/flash-list';
 export type { ListRenderItemInfo } from '@shopify/flash-list';

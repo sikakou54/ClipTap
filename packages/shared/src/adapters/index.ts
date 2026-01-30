@@ -142,3 +142,12 @@ export {
   hasImportAdapter,
 } from './ImportAdapter';
 
+/* ======================================== */
+/* SortPreferenceAdapter（ソート設定） */
+/* ======================================== */
+export {
+  type SortPreferenceAdapter,
+  setSortPreferenceAdapter,
+  getSortPreferenceAdapter,
+  hasSortPreferenceAdapter,
+} from './SortPreferenceAdapter';

@@ -208,7 +208,8 @@
   },
   "sort": {
     "title": "Sort by",
-    "recent": "Recent",
+    "created": "Created",
+    "updated": "Updated",
     "usage": "Most Used",
     "title_sort": "Title",
     "pinned": "Pinned"
