@@ -193,9 +193,9 @@ class KeyboardDataService {
 
         var snippets: [Snippet] = []
 
-        // アプリと同じロジック: snippet_profilesに登録されていない(全環境共通)か、指定プロファイルのスニペット
+        /* アプリと同じロジック: snippet_profilesに登録されていない(全環境共通)か、指定プロファイルのスニペット */
         var query = """
-            SELECT DISTINCT s.id, s.title, s.content, s.categoryId, s.copyWithTitle, s.createdAt, s.updatedAt
+            SELECT DISTINCT s.id, s.title, s.content, s.categoryId, s.copyWithTitle, s.copyCount, s.createdAt, s.updatedAt
             FROM snippets s
             WHERE s.id NOT IN (SELECT snippetId FROM snippet_profiles)
                OR s.id IN (SELECT snippetId FROM snippet_profiles WHERE profileId = ?)
@@ -241,8 +241,9 @@ class KeyboardDataService {
                 let categoryIdPtr = sqlite3_column_text(statement, 3)
                 let categoryId = categoryIdPtr != nil ? String(cString: categoryIdPtr!) : nil
                 let copyWithTitle = sqlite3_column_int(statement, 4) == 1
-                let createdAt = String(cString: sqlite3_column_text(statement, 5))
-                let updatedAt = String(cString: sqlite3_column_text(statement, 6))
+                let copyCount = Int(sqlite3_column_int(statement, 5))
+                let createdAt = String(cString: sqlite3_column_text(statement, 6))
+                let updatedAt = String(cString: sqlite3_column_text(statement, 7))
 
                 print("[KeyboardDataService] 📄 Row \(rowCount): id=\(id), title=\(title ?? "nil")")
 
@@ -252,6 +253,7 @@ class KeyboardDataService {
                     content: content,
                     categoryId: categoryId,
                     copyWithTitle: copyWithTitle,
+                    copyCount: copyCount,
                     createdAt: createdAt,
                     updatedAt: updatedAt
                 ))

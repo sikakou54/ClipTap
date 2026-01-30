@@ -34,17 +34,17 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
 
         val query = if (filterByProfileId != null) {
             """
-            SELECT DISTINCT s.id, s.title, s.content, s.categoryId, s.copyWithTitle, s.createdAt, s.updatedAt
+            SELECT DISTINCT s.id, s.title, s.content, s.categoryId, s.copyWithTitle, s.copyCount, s.createdAt, s.updatedAt
             FROM snippets s
             WHERE s.id NOT IN (SELECT snippetId FROM snippet_profiles)
                OR s.id IN (SELECT snippetId FROM snippet_profiles WHERE profileId = ?)
-            ORDER BY s.createdAt ASC
+            ORDER BY s.createdAt DESC
             """
         } else {
             """
-            SELECT id, title, content, categoryId, copyWithTitle, createdAt, updatedAt
+            SELECT id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt
             FROM snippets
-            ORDER BY createdAt ASC
+            ORDER BY createdAt DESC
             """
         }
 
@@ -63,8 +63,9 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
                         content = it.getString(2),
                         categoryId = it.getStringOrNull(3),
                         copyWithTitle = it.getBoolean(4),
-                        createdAt = it.getString(5),
-                        updatedAt = it.getString(6)
+                        copyCount = it.getInt(5),
+                        createdAt = it.getString(6),
+                        updatedAt = it.getString(7)
                     )
                 )
             }
@@ -83,19 +84,19 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
 
         val query = if (filterByProfileId != null) {
             """
-            SELECT DISTINCT s.id, s.title, s.content, s.categoryId, s.copyWithTitle, s.createdAt, s.updatedAt
+            SELECT DISTINCT s.id, s.title, s.content, s.categoryId, s.copyWithTitle, s.copyCount, s.createdAt, s.updatedAt
             FROM snippets s
             WHERE s.categoryId = ?
               AND (s.id NOT IN (SELECT snippetId FROM snippet_profiles)
                    OR s.id IN (SELECT snippetId FROM snippet_profiles WHERE profileId = ?))
-            ORDER BY s.createdAt ASC
+            ORDER BY s.createdAt DESC
             """
         } else {
             """
-            SELECT id, title, content, categoryId, copyWithTitle, createdAt, updatedAt
+            SELECT id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt
             FROM snippets
             WHERE categoryId = ?
-            ORDER BY createdAt ASC
+            ORDER BY createdAt DESC
             """
         }
 
@@ -114,8 +115,9 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
                         content = it.getString(2),
                         categoryId = it.getStringOrNull(3),
                         copyWithTitle = it.getBoolean(4),
-                        createdAt = it.getString(5),
-                        updatedAt = it.getString(6)
+                        copyCount = it.getInt(5),
+                        createdAt = it.getString(6),
+                        updatedAt = it.getString(7)
                     )
                 )
             }
@@ -130,7 +132,7 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
      */
     fun getById(id: String): Snippet? {
         val query = """
-            SELECT id, title, content, categoryId, copyWithTitle, createdAt, updatedAt
+            SELECT id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt
             FROM snippets
             WHERE id = ?
         """
@@ -144,12 +146,29 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
                     content = it.getString(2),
                     categoryId = it.getStringOrNull(3),
                     copyWithTitle = it.getBoolean(4),
-                    createdAt = it.getString(5),
-                    updatedAt = it.getString(6)
+                    copyCount = it.getInt(5),
+                    createdAt = it.getString(6),
+                    updatedAt = it.getString(7)
                 )
             }
         }
 
         return null
+    }
+
+    /**
+     * スニペットのコピー回数をインクリメント
+     * 拡張キーボードでスニペットを使用した際に呼び出し、使用頻度を記録する
+     * TypeScript版 SnippetMapper.incrementCopyCount() と同等
+     */
+    fun incrementCopyCount(snippetId: String) {
+        val query = """
+            UPDATE snippets
+            SET copyCount = copyCount + 1
+            WHERE id = ?
+        """
+
+        executeUpdate(query, arrayOf(snippetId))
+        Log.d(TAG, "✅ Incremented copyCount for snippet: $snippetId")
     }
 }

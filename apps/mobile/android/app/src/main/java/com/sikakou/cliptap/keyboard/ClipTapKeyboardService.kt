@@ -86,8 +86,15 @@ class ClipTapKeyboardService : InputMethodService() {
     private var allSnippets: List<Snippet> = emptyList()
     private var variablesMap: Map<String, String> = emptyMap()
 
+    // ソートボタンとソート状態
+    private lateinit var sortButton: android.widget.ImageButton
+    private lateinit var sortBadge: android.view.View
+    private var currentSortBy: String = "created"
+
     companion object {
         private const val TAG = "ClipTapKeyboard"
+        private const val SORT_PREFS_NAME = "ClipTapKeyboardPrefs"
+        private const val SORT_PREFERENCE_KEY = "keyboard_snippet_sort_by"
     }
 
     /**
@@ -192,6 +199,8 @@ class ClipTapKeyboardService : InputMethodService() {
         categoryChipGroup = keyboardView.findViewById(R.id.categoryChipGroup)
         snippetRecyclerView = keyboardView.findViewById(R.id.snippetRecyclerView)
         emptyStateTextView = keyboardView.findViewById(R.id.emptyStateTextView)
+        sortButton = keyboardView.findViewById(R.id.sortButton)
+        sortBadge = keyboardView.findViewById(R.id.sortBadge)
 
         // 詳細画面のビューを初期化
         detailView = keyboardView.findViewById(R.id.detailView)
@@ -204,6 +213,7 @@ class ClipTapKeyboardService : InputMethodService() {
         Log.d(TAG, "✅ Views found - categoryChipGroup: $categoryChipGroup")
         Log.d(TAG, "✅ Views found - snippetRecyclerView: $snippetRecyclerView")
         Log.d(TAG, "✅ Views found - detailView: $detailView")
+        Log.d(TAG, "✅ Views found - sortButton: $sortButton")
 
         // RecyclerViewの設定
         snippetRecyclerView.layoutManager = LinearLayoutManager(this)
@@ -219,6 +229,14 @@ class ClipTapKeyboardService : InputMethodService() {
         closeButton.setOnClickListener {
             closeDetailView()
         }
+
+        // ソートボタンの設定
+        currentSortBy = loadSortPreference()
+        sortButton.setOnClickListener {
+            showSortMenu(it)
+        }
+        updateSortBadgeVisibility()
+        Log.d(TAG, "✅ Sort button configured (currentSortBy: $currentSortBy)")
 
         Log.d(TAG, "✅ RecyclerView configured")
     }
@@ -315,14 +333,8 @@ class ClipTapKeyboardService : InputMethodService() {
             val status = subscriptionManager.getSubscriptionStatus()
             Log.d(TAG, "🔐 Subscription status from SharedPreferences: $status")
 
-            // データなし、期限切れの場合はメッセージを表示
-            // FREE版でも拡張キーボードを使えるように変更
-            if (status == SubscriptionStatus.NO_DATA || status == SubscriptionStatus.EXPIRED) {
-            // データなし、期限切れの場合はメッセージを表示
-            // FREE版でも拡張キーボードを使えるように変更
-            if (status == SubscriptionStatus.NO_DATA || status == SubscriptionStatus.EXPIRED) {
-            // データなし、期限切れの場合はメッセージを表示
-            // FREE版でも拡張キーボードを使えるように変更
+            /* データなし、期限切れの場合はメッセージを表示 */
+            /* FREE版でも拡張キーボードを使えるように変更 */
             if (status == SubscriptionStatus.NO_DATA || status == SubscriptionStatus.EXPIRED) {
                 showSubscriptionMessage(status)
                 return
@@ -664,7 +676,7 @@ class ClipTapKeyboardService : InputMethodService() {
      * 表示するスニペットをフィルタリングして更新する必要があります。
      */
     private fun reloadSnippets() {
-        Log.d(TAG, "🔄 reloadSnippets started")
+        Log.d(TAG, "🔄 reloadSnippets started (sortBy: $currentSortBy)")
 
         val profileId = currentProfile?.id
         if (profileId == null) {
@@ -676,13 +688,16 @@ class ClipTapKeyboardService : InputMethodService() {
         val categoryId = currentCategory?.id
 
         // Serviceを使用してスニペットを取得
-        allSnippets = if (categoryId != null) {
+        val loadedSnippets = if (categoryId != null) {
             snippetService.getSnippetsByCategory(categoryId, profileId)
         } else {
             snippetService.getAllSnippets(profileId)
         }
 
-        Log.d(TAG, "✅ Loaded ${allSnippets.size} snippets")
+        // ソートを適用
+        allSnippets = applySortOrder(loadedSnippets)
+
+        Log.d(TAG, "✅ Loaded and sorted ${allSnippets.size} snippets (sortBy: $currentSortBy)")
 
         // アダプターに変数マップを設定（タイトルの変数置換に使用）
         snippetAdapter.variablesMap = variablesMap
@@ -906,8 +921,12 @@ class ClipTapKeyboardService : InputMethodService() {
             Log.d(TAG, "✅ Root background color set to white")
         }
 
-        // メッセージ内容を決定
-        val (iconResId, title, message, badgeColor) = getMessageContent(status)
+        /* メッセージ内容を決定 */
+        val messageContent = getMessageContent(status)
+        val iconResId = messageContent.iconResId
+        val title = messageContent.title
+        val message = messageContent.message
+        val badgeColor = messageContent.badgeColor
 
         // バッジ背景を作成
         val badgeBackgroundView = android.widget.LinearLayout(themedContext)
@@ -1061,14 +1080,103 @@ class ClipTapKeyboardService : InputMethodService() {
     }
 
     /**
-     * 4つの値を返すためのデータクラス
+     * サブスクリプションメッセージ表示用のデータクラス
      */
     private data class Quadruple(
-        val first: Int,  // iconResId
-        val second: String,
-        val third: String,
-        val fourth: Int
+        val iconResId: Int,
+        val title: String,
+        val message: String,
+        val badgeColor: Int
     )
+
+    // MARK: - Sort Methods（ソート関連メソッド）
+
+    /**
+     * ソートメニューを表示
+     *
+     * 【目的】
+     * ソートボタンをタップした時にPopupMenuを表示し、
+     * ユーザーがソート順を選択できるようにします。
+     */
+    private fun showSortMenu(anchor: View) {
+        val popupMenu = android.widget.PopupMenu(this, anchor)
+        popupMenu.menu.apply {
+            add(0, 0, 0, getString(R.string.keyboard_sort_created))
+            add(0, 1, 1, getString(R.string.keyboard_sort_updated))
+            add(0, 2, 2, getString(R.string.keyboard_sort_title))
+            add(0, 3, 3, getString(R.string.keyboard_sort_usage))
+        }
+
+        popupMenu.setOnMenuItemClickListener { item ->
+            val newSortBy = when (item.itemId) {
+                0 -> "created"
+                1 -> "updated"
+                2 -> "title"
+                3 -> "usage"
+                else -> "created"
+            }
+            updateSortPreference(newSortBy)
+            true
+        }
+
+        popupMenu.show()
+    }
+
+    /**
+     * ソート設定を更新
+     */
+    private fun updateSortPreference(sortBy: String) {
+        Log.d(TAG, "🔄 [Sort] Updating sort preference: $currentSortBy → $sortBy")
+        currentSortBy = sortBy
+        saveSortPreference(sortBy)
+
+        // スニペット一覧を再読み込み
+        reloadSnippets()
+
+        // バッジ表示を更新
+        updateSortBadgeVisibility()
+    }
+
+    /**
+     * ソート設定を保存（SharedPreferences）
+     */
+    private fun saveSortPreference(sortBy: String) {
+        val prefs = getSharedPreferences(SORT_PREFS_NAME, MODE_PRIVATE)
+        prefs.edit().putString(SORT_PREFERENCE_KEY, sortBy).apply()
+        Log.d(TAG, "💾 [Sort] Saved sort preference: $sortBy")
+    }
+
+    /**
+     * ソート設定を読み込み（SharedPreferences）
+     */
+    private fun loadSortPreference(): String {
+        val prefs = getSharedPreferences(SORT_PREFS_NAME, MODE_PRIVATE)
+        val sortBy = prefs.getString(SORT_PREFERENCE_KEY, "created") ?: "created"
+        Log.d(TAG, "📂 [Sort] Loaded sort preference: $sortBy")
+        return sortBy
+    }
+
+    /**
+     * スニペットにソートを適用
+     */
+    private fun applySortOrder(snippets: List<Snippet>): List<Snippet> {
+        return when (currentSortBy) {
+            "created" -> snippets.sortedByDescending { it.createdAt }
+            "updated" -> snippets.sortedByDescending { it.updatedAt }
+            "title" -> snippets.sortedBy { it.title ?: "" }
+            "usage" -> snippets.sortedByDescending { it.copyCount }
+            else -> snippets.sortedByDescending { it.createdAt }
+        }
+    }
+
+    /**
+     * ソートバッジの表示/非表示を更新
+     * デフォルト（created）以外の時にバッジを表示
+     */
+    private fun updateSortBadgeVisibility() {
+        val isDefaultSort = currentSortBy == "created"
+        sortBadge.visibility = if (isDefaultSort) android.view.View.GONE else android.view.View.VISIBLE
+    }
 
 }
 

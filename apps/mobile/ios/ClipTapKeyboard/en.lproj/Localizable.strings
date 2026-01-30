@@ -71,3 +71,11 @@
 "accessibility.snippet_item" = "Snippet item";
 "accessibility.close_button" = "Close button";
 "accessibility.copy_button" = "Copy button";
+"accessibility.sort_button" = "Sort button";
+
+/* Sort related */
+"sort.label" = "Sort";
+"sort.created" = "Created";
+"sort.updated" = "Updated";
+"sort.title" = "Title";
+"sort.usage" = "Frequency";

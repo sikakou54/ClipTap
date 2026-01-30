@@ -71,3 +71,11 @@
 "accessibility.snippet_item" = "スニペット項目";
 "accessibility.close_button" = "閉じるボタン";
 "accessibility.copy_button" = "コピーボタン";
+"accessibility.sort_button" = "並び替えボタン";
+
+/* ソート関連 */
+"sort.label" = "並順";
+"sort.created" = "作成日時";
+"sort.updated" = "更新日時";
+"sort.title" = "タイトル";
+"sort.usage" = "使用頻度";

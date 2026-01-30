@@ -98,6 +98,13 @@ class KeyboardViewController: UIInputViewController {
     /// ユーザーがスニペットをタップすると、このプロパティに保存されます
     private var selectedSnippet: Snippet?
 
+    /// 現在のソート順
+    /// 値: "created" | "updated" | "title" | "usage"
+    private var currentSortBy: String = "created"
+
+    /// ソート設定を保存するUserDefaultsキー
+    private let sortPreferenceKey = "keyboard_snippet_sort_by"
+
     // MARK: - UI Components（画面を構成するUI部品）
 
     // === 統合フィルターエリア（環境 + カテゴリを1行に配置）===
@@ -158,6 +165,32 @@ class KeyboardViewController: UIInputViewController {
         sv.translatesAutoresizingMaskIntoConstraints = false
         sv.backgroundColor = .clear  // 背景色を透明に
         return sv
+    }()
+
+    /// ソートボタン（左端に固定配置）
+    /// タップするとソートオプションメニューが表示される
+    private let sortButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        let image = UIImage(systemName: "arrow.up.arrow.down", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.tintColor = .secondaryLabel
+        button.backgroundColor = .clear
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.showsMenuAsPrimaryAction = true
+        button.accessibilityLabel = L10n.Accessibility.sortButton
+        return button
+    }()
+
+    /// ソートボタンのバッジ（デフォルト以外の時に表示）
+    /// プライマリカラーの小さな丸で、デフォルト以外のソートが選択されていることを示す
+    private let sortBadgeView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBlue
+        view.layer.cornerRadius = 4
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isHidden = true
+        return view
     }()
 
     // === スニペット一覧エリア ===
@@ -471,41 +504,60 @@ class KeyboardViewController: UIInputViewController {
     }
 
     private func setupUI() {
-        // 統合フィルターコンテナ（環境ドロップダウン + カテゴリスクロールビュー）
+        // 統合フィルターコンテナ（環境ドロップダウン + カテゴリスクロールビュー + ソートボタン）
         view.addSubview(filterContainerView)
         filterContainerView.addSubview(profileDropdownButton)
         filterContainerView.addSubview(categoryScrollView)
+        filterContainerView.addSubview(sortButton)
         categoryScrollView.addSubview(categoryStackView)
 
         // シェブロンアイコンをボタンの上に配置
         profileDropdownButton.addSubview(chevronImageView)
 
+        // ソートバッジをボタンに追加
+        sortButton.addSubview(sortBadgeView)
+
+        // ソートボタンのメニューを設定
+        setupSortButtonMenu()
+
         NSLayoutConstraint.activate([
-            // フィルターコンテナ: 画面上部に配置
+            /* フィルターコンテナ: 画面上部に配置 */
             filterContainerView.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
             filterContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
             filterContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
             filterContainerView.heightAnchor.constraint(equalToConstant: 36),
 
-            // 環境ドロップダウンボタン: 左端に固定、固定幅100pt
-            profileDropdownButton.leadingAnchor.constraint(equalTo: filterContainerView.leadingAnchor),
+            /* ソートボタン: 左端に固定、固定幅36pt */
+            sortButton.leadingAnchor.constraint(equalTo: filterContainerView.leadingAnchor),
+            sortButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
+            sortButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
+            sortButton.widthAnchor.constraint(equalToConstant: 36),
+
+            /* ソートバッジ: ボタン右上に配置、8x8ptの円 */
+            sortBadgeView.widthAnchor.constraint(equalToConstant: 8),
+            sortBadgeView.heightAnchor.constraint(equalToConstant: 8),
+            sortBadgeView.topAnchor.constraint(equalTo: sortButton.topAnchor, constant: 2),
+            sortBadgeView.trailingAnchor.constraint(equalTo: sortButton.trailingAnchor, constant: -2),
+
+            /* 環境ドロップダウンボタン: ソートボタンの右隣、固定幅100pt */
+            profileDropdownButton.leadingAnchor.constraint(equalTo: sortButton.trailingAnchor, constant: 4),
             profileDropdownButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
             profileDropdownButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
             profileDropdownButton.widthAnchor.constraint(equalToConstant: 100),
 
-            // シェブロンアイコン: ボタンの右端に固定配置
+            /* シェブロンアイコン: ボタンの右端に固定配置 */
             chevronImageView.trailingAnchor.constraint(equalTo: profileDropdownButton.trailingAnchor, constant: -10),
             chevronImageView.centerYAnchor.constraint(equalTo: profileDropdownButton.centerYAnchor),
             chevronImageView.widthAnchor.constraint(equalToConstant: 12),
             chevronImageView.heightAnchor.constraint(equalToConstant: 12),
 
-            // カテゴリスクロールビュー: 環境ドロップダウンの右側、残りスペースを使用
+            /* カテゴリスクロールビュー: 環境ドロップダウンの右から右端まで */
             categoryScrollView.leadingAnchor.constraint(equalTo: profileDropdownButton.trailingAnchor, constant: 8),
             categoryScrollView.trailingAnchor.constraint(equalTo: filterContainerView.trailingAnchor),
             categoryScrollView.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
             categoryScrollView.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
 
-            // カテゴリスタックビュー: スクロールビュー内に配置
+            /* カテゴリスタックビュー: スクロールビュー内に配置 */
             categoryStackView.topAnchor.constraint(equalTo: categoryScrollView.topAnchor),
             categoryStackView.leadingAnchor.constraint(equalTo: categoryScrollView.leadingAnchor),
             categoryStackView.trailingAnchor.constraint(equalTo: categoryScrollView.trailingAnchor),
@@ -931,10 +983,10 @@ class KeyboardViewController: UIInputViewController {
             NSLog("  ... and %d more snippets", allSnippets.count - 5)
         }
 
-        // 表示用のリストにコピー（現在は追加フィルタなし）
-        filteredSnippets = allSnippets
-        os_log("✅ Filtered snippets: %d", log: keyboardLog, type: .info, filteredSnippets.count)
-        NSLog("✅ [reloadSnippets] Filtered snippets: %d", filteredSnippets.count)
+        // ソートを適用して表示用のリストにコピー
+        filteredSnippets = applySortOrder(allSnippets)
+        os_log("✅ Filtered and sorted snippets: %d (sortBy: %@)", log: keyboardLog, type: .info, filteredSnippets.count, currentSortBy)
+        NSLog("✅ [reloadSnippets] Filtered and sorted snippets: %d (sortBy: %@)", filteredSnippets.count, currentSortBy)
 
         // 空状態の表示/非表示を更新
         updateEmptyState()
@@ -1088,6 +1140,100 @@ class KeyboardViewController: UIInputViewController {
 
         os_log("✅ insertSnippet completed", log: keyboardLog, type: .info)
         NSLog("✅ [KeyboardViewController] insertSnippet completed")
+    }
+
+    // MARK: - Sort Methods（ソート関連メソッド）
+
+    /// ソートボタンのメニューを設定
+    /// iOS 14以降のUIMenuを使用して、タップ時にメニューを表示
+    private func setupSortButtonMenu() {
+        // 保存されたソート設定を読み込み
+        currentSortBy = loadSortPreference()
+        NSLog("🔄 [Sort] Loaded sort preference: %@", currentSortBy)
+
+        // メニュー項目を作成
+        let createdAction = UIAction(
+            title: L10n.Sort.created,
+            image: currentSortBy == "created" ? UIImage(systemName: "checkmark") : nil
+        ) { [weak self] _ in
+            self?.updateSortPreference("created")
+        }
+
+        let updatedAction = UIAction(
+            title: L10n.Sort.updated,
+            image: currentSortBy == "updated" ? UIImage(systemName: "checkmark") : nil
+        ) { [weak self] _ in
+            self?.updateSortPreference("updated")
+        }
+
+        let titleAction = UIAction(
+            title: L10n.Sort.title,
+            image: currentSortBy == "title" ? UIImage(systemName: "checkmark") : nil
+        ) { [weak self] _ in
+            self?.updateSortPreference("title")
+        }
+
+        let usageAction = UIAction(
+            title: L10n.Sort.usage,
+            image: currentSortBy == "usage" ? UIImage(systemName: "checkmark") : nil
+        ) { [weak self] _ in
+            self?.updateSortPreference("usage")
+        }
+
+        // メニューを作成してボタンに設定
+        let menu = UIMenu(title: L10n.Sort.label, children: [createdAction, updatedAction, titleAction, usageAction])
+        sortButton.menu = menu
+
+        // バッジ表示を更新
+        updateSortBadgeVisibility()
+    }
+
+    /// ソート設定を更新
+    private func updateSortPreference(_ sortBy: String) {
+        NSLog("🔄 [Sort] Updating sort preference: %@ → %@", currentSortBy, sortBy)
+        currentSortBy = sortBy
+        saveSortPreference(sortBy)
+
+        // メニューを更新（チェックマークを更新）
+        setupSortButtonMenu()
+
+        // スニペット一覧を再読み込み
+        reloadSnippets()
+    }
+
+    /// ソート設定を保存（UserDefaults）
+    private func saveSortPreference(_ sortBy: String) {
+        UserDefaults.standard.set(sortBy, forKey: sortPreferenceKey)
+        NSLog("💾 [Sort] Saved sort preference: %@", sortBy)
+    }
+
+    /// ソート設定を読み込み（UserDefaults）
+    private func loadSortPreference() -> String {
+        let sortBy = UserDefaults.standard.string(forKey: sortPreferenceKey) ?? "created"
+        return sortBy
+    }
+
+    /// スニペットにソートを適用
+    private func applySortOrder(_ snippets: [Snippet]) -> [Snippet] {
+        switch currentSortBy {
+        case "created":
+            return snippets.sorted { $0.createdAt > $1.createdAt }
+        case "updated":
+            return snippets.sorted { $0.updatedAt > $1.updatedAt }
+        case "title":
+            return snippets.sorted { ($0.title ?? "") < ($1.title ?? "") }
+        case "usage":
+            return snippets.sorted { $0.copyCount > $1.copyCount }
+        default:
+            return snippets.sorted { $0.createdAt > $1.createdAt }
+        }
+    }
+
+    /// バッジの表示/非表示を更新
+    /// デフォルト（created）以外の時にバッジを表示
+    private func updateSortBadgeVisibility() {
+        let isDefaultSort = currentSortBy == "created"
+        sortBadgeView.isHidden = isDefaultSort
     }
 }
 

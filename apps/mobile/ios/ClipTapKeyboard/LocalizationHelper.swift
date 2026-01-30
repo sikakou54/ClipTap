@@ -230,6 +230,29 @@ enum L10n {
 
         /// "コピーボタン" / "Copy button"
         static let copyButton = localized("accessibility.copy_button")
+
+        /// "並び替えボタン" / "Sort button"
+        static let sortButton = localized("accessibility.sort_button")
+    }
+
+    // MARK: - Sort (ソート関連)
+
+    /// ソート関連の翻訳
+    enum Sort {
+        /// "並順" / "Sort"
+        static let label = localized("sort.label")
+
+        /// "作成日時" / "Created"
+        static let created = localized("sort.created")
+
+        /// "更新日時" / "Updated"
+        static let updated = localized("sort.updated")
+
+        /// "タイトル" / "Title"
+        static let title = localized("sort.title")
+
+        /// "使用頻度" / "Frequency"
+        static let usage = localized("sort.usage")
     }
 
     // MARK: - Localization Helper
@@ -336,6 +359,14 @@ enum L10n {
         case "accessibility.snippet_item": return isJapanese ? "スニペット項目" : "Snippet item"
         case "accessibility.close_button": return isJapanese ? "閉じるボタン" : "Close button"
         case "accessibility.copy_button": return isJapanese ? "コピーボタン" : "Copy button"
+        case "accessibility.sort_button": return isJapanese ? "並び替えボタン" : "Sort button"
+
+        // Sort
+        case "sort.label": return isJapanese ? "並順" : "Sort"
+        case "sort.created": return isJapanese ? "作成日時" : "Created"
+        case "sort.updated": return isJapanese ? "更新日時" : "Updated"
+        case "sort.title": return isJapanese ? "タイトル" : "Title"
+        case "sort.usage": return isJapanese ? "使用頻度" : "Frequency"
 
         default: return key
         }

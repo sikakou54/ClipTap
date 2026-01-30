@@ -156,14 +156,18 @@ class SnippetService private constructor(private val context: Context) {
         // 本文の変数置換
         val content = variableReplacer.replace(snippet.content, variablesMap)
 
-        // テキストを挿入
+        /* テキストを挿入 */
         val textToInsert = title + content
         inputConnection.commitText(textToInsert, 1)
 
         Log.d(TAG, "✅ Snippet inserted: ${snippet.id}")
 
-        // 振動フィードバック
+        /* 振動フィードバック */
         performHapticFeedback()
+
+        /* 使用頻度（copyCount）をインクリメント
+           使用頻度順ソートに反映するため、挿入時にカウントを加算 */
+        snippetMapper.incrementCopyCount(snippet.id)
     }
 
     /**

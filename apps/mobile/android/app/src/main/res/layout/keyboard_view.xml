@@ -15,15 +15,46 @@
     android:background="?android:attr/colorBackground"
     android:padding="8dp">
 
-    <!-- 統合フィルターエリア（環境ドロップダウン + カテゴリスクロール） -->
+    <!-- 統合フィルターエリア（ソートボタン + 環境ドロップダウン + カテゴリスクロール） -->
     <LinearLayout
         android:id="@+id/filterContainer"
         android:layout_width="match_parent"
         android:layout_height="44dp"
         android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:background="@android:color/transparent">
 
-        <!-- 環境選択ドロップダウンボタン（左端固定、固定幅100dp） -->
+        <!-- ソートボタン + バッジコンテナ（左端固定） -->
+        <FrameLayout
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="4dp">
+
+            <!-- ソートボタン -->
+            <ImageButton
+                android:id="@+id/sortButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_sort"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/keyboard_sort_label"
+                android:scaleType="center"
+                android:padding="8dp" />
+
+            <!-- ソートバッジ（デフォルト以外の時に表示） -->
+            <View
+                android:id="@+id/sortBadge"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="2dp"
+                android:background="@drawable/sort_badge_background"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+        <!-- 環境選択ドロップダウンボタン（固定幅100dp） -->
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/profileChipGroup"
             android:layout_width="100dp"
@@ -31,7 +62,7 @@
             app:singleSelection="true"
             app:chipSpacing="0dp" />
 
-        <!-- カテゴリ選択チップグループ（残りのスペースを使用） -->
+        <!-- カテゴリ選択チップグループ（残りスペースを使用） -->
         <HorizontalScrollView
             android:layout_width="0dp"
             android:layout_height="match_parent"

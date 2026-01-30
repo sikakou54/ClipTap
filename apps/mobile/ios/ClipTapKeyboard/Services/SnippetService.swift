@@ -211,14 +211,18 @@ class SnippetService {
         os_log("📝 Resolved text: %@", log: snippetServiceLog, type: .info, resolvedText)
         NSLog("📝 [SnippetService] Resolved text: %@", resolvedText)
 
-        // キーボードからテキストを挿入
-        // この処理により、LINEやメモアプリなど、どのアプリの入力欄にもテキストが入力されます
+        /* キーボードからテキストを挿入
+           この処理により、LINEやメモアプリなど、どのアプリの入力欄にもテキストが入力されます */
         textDocumentProxy.insertText(resolvedText)
 
-        // 振動フィードバック（軽い「ブッ」という振動）
-        // ユーザーに「テキストが挿入されました」と触覚でフィードバック
+        /* 振動フィードバック（軽い「ブッ」という振動）
+           ユーザーに「テキストが挿入されました」と触覚でフィードバック */
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()
+
+        /* 使用頻度（copyCount）をインクリメント
+           使用頻度順ソートに反映するため、挿入時にカウントを加算 */
+        snippetMapper.incrementCopyCount(for: snippet.id)
     }
 
     /// プレビュー生成（変数置換後のテキスト）

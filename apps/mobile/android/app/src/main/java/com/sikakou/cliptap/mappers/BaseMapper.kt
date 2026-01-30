@@ -33,6 +33,13 @@ abstract class BaseMapper(protected val context: Context) {
     }
 
     /**
+     * 更新クエリを実行（INSERT/UPDATE/DELETE用）
+     */
+    protected fun executeUpdate(query: String, args: Array<String>? = null) {
+        getDb().execSQL(query, args ?: emptyArray())
+    }
+
+    /**
      * Cursorから文字列を取得（null許容）
      */
     protected fun Cursor.getStringOrNull(columnIndex: Int): String? {
