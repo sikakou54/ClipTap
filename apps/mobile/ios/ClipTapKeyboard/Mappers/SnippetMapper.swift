@@ -21,6 +21,25 @@ class SnippetMapper: BaseMapper {
         super.init(tableName: "snippets")
     }
 
+    // MARK: - Helper Methods
+
+    /// ソート条件に応じたORDER BY句を生成
+    /// メインアプリ（TypeScript版 SnippetMapper.ts）の getSorted() と同等のソート条件
+    private func orderClause(for sortBy: String) -> String {
+        switch sortBy {
+        case "created":
+            return "ORDER BY createdAt DESC, title ASC"
+        case "updated":
+            return "ORDER BY updatedAt DESC, title ASC"
+        case "title":
+            return "ORDER BY title ASC, createdAt DESC"
+        case "usage":
+            return "ORDER BY copyCount DESC, createdAt DESC"
+        default:
+            return "ORDER BY createdAt DESC, title ASC"
+        }
+    }
+
     // MARK: - Read Operations
 
     /// ID指定でスニペットを取得
@@ -36,8 +55,12 @@ class SnippetMapper: BaseMapper {
         }
     }
 
-    /// 全スニペットを取得（プロファイルフィルタ対応）
-    func getAll(filterByProfileId profileId: String? = nil) -> [Snippet] {
+    /// 全スニペットを取得（プロファイルフィルタ・ソート対応）
+    /// - Parameters:
+    ///   - profileId: プロファイルID（指定時はそのプロファイルに紐付くスニペットのみ取得）
+    ///   - sortBy: ソート条件（"created", "updated", "title", "usage"）
+    func getAll(filterByProfileId profileId: String? = nil, sortBy: String = "created") -> [Snippet] {
+        let order = orderClause(for: sortBy)
         var query: String
         var parameters: [Any] = []
 
@@ -48,7 +71,7 @@ class SnippetMapper: BaseMapper {
                 FROM \(tableName) s
                 WHERE s.id NOT IN (SELECT snippetId FROM snippet_profiles)
                    OR s.id IN (SELECT snippetId FROM snippet_profiles WHERE profileId = ?)
-                ORDER BY s.createdAt DESC
+                \(order)
             """
             parameters = [profileId]
         } else {
@@ -56,7 +79,7 @@ class SnippetMapper: BaseMapper {
             query = """
                 SELECT id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt
                 FROM \(tableName)
-                ORDER BY createdAt DESC
+                \(order)
             """
         }
 
@@ -65,8 +88,13 @@ class SnippetMapper: BaseMapper {
         }
     }
 
-    /// カテゴリ別にスニペットを取得（プロファイルフィルタ対応）
-    func getByCategoryId(_ categoryId: String, filterByProfileId profileId: String? = nil) -> [Snippet] {
+    /// カテゴリ別にスニペットを取得（プロファイルフィルタ・ソート対応）
+    /// - Parameters:
+    ///   - categoryId: カテゴリID
+    ///   - profileId: プロファイルID（指定時はそのプロファイルに紐付くスニペットのみ取得）
+    ///   - sortBy: ソート条件（"created", "updated", "title", "usage"）
+    func getByCategoryId(_ categoryId: String, filterByProfileId profileId: String? = nil, sortBy: String = "created") -> [Snippet] {
+        let order = orderClause(for: sortBy)
         var query: String
         var parameters: [Any] = [categoryId]
 
@@ -77,7 +105,7 @@ class SnippetMapper: BaseMapper {
                 WHERE s.categoryId = ?
                   AND (s.id NOT IN (SELECT snippetId FROM snippet_profiles)
                    OR s.id IN (SELECT snippetId FROM snippet_profiles WHERE profileId = ?))
-                ORDER BY s.createdAt DESC
+                \(order)
             """
             parameters.append(profileId)
         } else {
@@ -85,7 +113,7 @@ class SnippetMapper: BaseMapper {
                 SELECT id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt
                 FROM \(tableName)
                 WHERE categoryId = ?
-                ORDER BY createdAt DESC
+                \(order)
             """
         }
 
@@ -174,6 +202,9 @@ class SnippetMapper: BaseMapper {
 
         _ = executeUpdate(query, parameters: [snippetId])
         NSLog("[SnippetMapper] ✅ Incremented copyCount for snippet: %@", snippetId)
+
+        /* WALチェックポイントを実行してメインDBに即座に反映 */
+        db.checkpoint()
     }
 
     // MARK: - Mapping

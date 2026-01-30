@@ -26,11 +26,26 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
     }
 
     /**
-     * 全スニペットを取得
-     * プロファイルIDでフィルタリング可能
+     * ソート条件に応じたORDER BY句を生成
+     * メインアプリ（TypeScript版 SnippetMapper.ts）の getSorted() と同等のソート条件
      */
-    fun getAll(filterByProfileId: String? = null): List<Snippet> {
+    private fun orderClause(sortBy: String): String {
+        return when (sortBy) {
+            "created" -> "ORDER BY createdAt DESC, title ASC"
+            "updated" -> "ORDER BY updatedAt DESC, title ASC"
+            "title" -> "ORDER BY title ASC, createdAt DESC"
+            "usage" -> "ORDER BY copyCount DESC, createdAt DESC"
+            else -> "ORDER BY createdAt DESC, title ASC"
+        }
+    }
+
+    /**
+     * 全スニペットを取得
+     * プロファイルIDでフィルタリング可能、ソート条件を指定可能
+     */
+    fun getAll(filterByProfileId: String? = null, sortBy: String = "created"): List<Snippet> {
         val snippets = mutableListOf<Snippet>()
+        val order = orderClause(sortBy)
 
         val query = if (filterByProfileId != null) {
             """
@@ -38,13 +53,13 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
             FROM snippets s
             WHERE s.id NOT IN (SELECT snippetId FROM snippet_profiles)
                OR s.id IN (SELECT snippetId FROM snippet_profiles WHERE profileId = ?)
-            ORDER BY s.createdAt DESC
+            $order
             """
         } else {
             """
             SELECT id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt
             FROM snippets
-            ORDER BY createdAt DESC
+            $order
             """
         }
 
@@ -71,16 +86,17 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
             }
         }
 
-        Log.d(TAG, "Loaded ${snippets.size} snippets (profileId: $filterByProfileId)")
+        Log.d(TAG, "Loaded ${snippets.size} snippets (profileId: $filterByProfileId, sortBy: $sortBy)")
         return snippets
     }
 
     /**
      * カテゴリIDでスニペットを取得
-     * プロファイルIDでフィルタリング可能
+     * プロファイルIDでフィルタリング可能、ソート条件を指定可能
      */
-    fun getByCategoryId(categoryId: String, filterByProfileId: String? = null): List<Snippet> {
+    fun getByCategoryId(categoryId: String, filterByProfileId: String? = null, sortBy: String = "created"): List<Snippet> {
         val snippets = mutableListOf<Snippet>()
+        val order = orderClause(sortBy)
 
         val query = if (filterByProfileId != null) {
             """
@@ -89,14 +105,14 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
             WHERE s.categoryId = ?
               AND (s.id NOT IN (SELECT snippetId FROM snippet_profiles)
                    OR s.id IN (SELECT snippetId FROM snippet_profiles WHERE profileId = ?))
-            ORDER BY s.createdAt DESC
+            $order
             """
         } else {
             """
             SELECT id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt
             FROM snippets
             WHERE categoryId = ?
-            ORDER BY createdAt DESC
+            $order
             """
         }
 
@@ -123,7 +139,7 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
             }
         }
 
-        Log.d(TAG, "Loaded ${snippets.size} snippets (categoryId: $categoryId, profileId: $filterByProfileId)")
+        Log.d(TAG, "Loaded ${snippets.size} snippets (categoryId: $categoryId, profileId: $filterByProfileId, sortBy: $sortBy)")
         return snippets
     }
 

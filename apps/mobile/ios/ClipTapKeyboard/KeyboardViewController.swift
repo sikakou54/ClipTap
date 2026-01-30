@@ -359,6 +359,11 @@ class KeyboardViewController: UIInputViewController {
         NSLog("============================================================")
 
         view.backgroundColor = .systemBackground  // 背景色を設定
+
+        /* ソート設定を初期読み込み（setupUIより前に実行する必要あり） */
+        currentSortBy = loadSortPreference()
+        NSLog("🔄 [Sort] Initial sort preference loaded: %@", currentSortBy)
+
         setupUI()  // UI部品を画面に配置（即座に表示）
 
         // キャッシュをクリアして最新状態を取得
@@ -958,17 +963,17 @@ class KeyboardViewController: UIInputViewController {
         }
 
         // SnippetMapperを使ってデータベースから取得
-        // プロファイルとカテゴリの両方でフィルタリングされます
+        // プロファイルとカテゴリの両方でフィルタリングされ、SQLのORDER BYでソート済み
         if let categoryId = currentCategory?.id {
             // カテゴリが選択されている場合
-            os_log("🔍 Loading snippets for category: %@ with profile: %@", log: keyboardLog, type: .info, categoryId, profileId)
-            NSLog("🔍 [reloadSnippets] Loading snippets for category: %@ with profile: %@", categoryId, profileId)
-            allSnippets = SnippetMapper.shared.getByCategoryId(categoryId, filterByProfileId: profileId)
+            os_log("🔍 Loading snippets for category: %@ with profile: %@ sortBy: %@", log: keyboardLog, type: .info, categoryId, profileId, currentSortBy)
+            NSLog("🔍 [reloadSnippets] Loading snippets for category: %@ with profile: %@ sortBy: %@", categoryId, profileId, currentSortBy)
+            allSnippets = SnippetMapper.shared.getByCategoryId(categoryId, filterByProfileId: profileId, sortBy: currentSortBy)
         } else {
             // 「すべて」が選択されている場合（カテゴリフィルタなし）
-            os_log("🔍 Loading all snippets with profile: %@", log: keyboardLog, type: .info, profileId)
-            NSLog("🔍 [reloadSnippets] Loading all snippets with profile: %@", profileId)
-            allSnippets = SnippetMapper.shared.getAll(filterByProfileId: profileId)
+            os_log("🔍 Loading all snippets with profile: %@ sortBy: %@", log: keyboardLog, type: .info, profileId, currentSortBy)
+            NSLog("🔍 [reloadSnippets] Loading all snippets with profile: %@ sortBy: %@", profileId, currentSortBy)
+            allSnippets = SnippetMapper.shared.getAll(filterByProfileId: profileId, sortBy: currentSortBy)
         }
 
         // デバッグ用：取得したスニペットの情報を出力
@@ -983,10 +988,15 @@ class KeyboardViewController: UIInputViewController {
             NSLog("  ... and %d more snippets", allSnippets.count - 5)
         }
 
-        // ソートを適用して表示用のリストにコピー
-        filteredSnippets = applySortOrder(allSnippets)
-        os_log("✅ Filtered and sorted snippets: %d (sortBy: %@)", log: keyboardLog, type: .info, filteredSnippets.count, currentSortBy)
-        NSLog("✅ [reloadSnippets] Filtered and sorted snippets: %d (sortBy: %@)", filteredSnippets.count, currentSortBy)
+        // MapperでORDER BYを使ってソート済みなので、そのまま表示用にコピー
+        filteredSnippets = allSnippets
+        os_log("✅ Loaded and sorted snippets: %d (sortBy: %@)", log: keyboardLog, type: .info, filteredSnippets.count, currentSortBy)
+        NSLog("✅ [reloadSnippets] Loaded and sorted snippets: %d (sortBy: %@)", filteredSnippets.count, currentSortBy)
+
+        // テーブルビューを更新（同期的に実行）
+        // 注意: UIMenuのアクションは既にメインスレッドで実行されるため、非同期にする必要はない
+        tableView.reloadData()
+        NSLog("✅ [reloadSnippets] tableView.reloadData() called")
 
         // 空状態の表示/非表示を更新
         updateEmptyState()
@@ -1008,10 +1018,7 @@ class KeyboardViewController: UIInputViewController {
         let isEmpty = filteredSnippets.isEmpty
         emptyLabel.isHidden = !isEmpty
         tableView.isHidden = isEmpty
-
-        if !isEmpty {
-            tableView.reloadData()
-        }
+        /* 注意: tableView.reloadData() は reloadSnippets() でメインスレッドで直接呼び出すため、ここでは呼ばない */
     }
 
     /// スニペットの詳細画面（プレビュー）を表示
@@ -1147,9 +1154,9 @@ class KeyboardViewController: UIInputViewController {
     /// ソートボタンのメニューを設定
     /// iOS 14以降のUIMenuを使用して、タップ時にメニューを表示
     private func setupSortButtonMenu() {
-        // 保存されたソート設定を読み込み
-        currentSortBy = loadSortPreference()
-        NSLog("🔄 [Sort] Loaded sort preference: %@", currentSortBy)
+        /* 注意: currentSortByは呼び出し元で設定済みのため、ここでは再読み込みしない
+           viewDidLoad時にloadSortPreference()で初期化される */
+        NSLog("🔄 [Sort] Building menu with sort preference: %@", currentSortBy)
 
         // メニュー項目を作成
         let createdAction = UIAction(
@@ -1211,22 +1218,6 @@ class KeyboardViewController: UIInputViewController {
     private func loadSortPreference() -> String {
         let sortBy = UserDefaults.standard.string(forKey: sortPreferenceKey) ?? "created"
         return sortBy
-    }
-
-    /// スニペットにソートを適用
-    private func applySortOrder(_ snippets: [Snippet]) -> [Snippet] {
-        switch currentSortBy {
-        case "created":
-            return snippets.sorted { $0.createdAt > $1.createdAt }
-        case "updated":
-            return snippets.sorted { $0.updatedAt > $1.updatedAt }
-        case "title":
-            return snippets.sorted { ($0.title ?? "") < ($1.title ?? "") }
-        case "usage":
-            return snippets.sorted { $0.copyCount > $1.copyCount }
-        default:
-            return snippets.sorted { $0.createdAt > $1.createdAt }
-        }
     }
 
     /// バッジの表示/非表示を更新

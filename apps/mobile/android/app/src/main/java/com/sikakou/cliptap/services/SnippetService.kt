@@ -60,12 +60,13 @@ class SnippetService private constructor(private val context: Context) {
      *
      * 【引数】
      * @param profileId プロファイルID（nullの場合はプロファイルフィルタなし）
+     * @param sortBy ソート条件（"created", "updated", "title", "usage"）
      *
      * 【戻り値】
-     * スニペットのリスト（作成日時の降順）
+     * スニペットのリスト（ソート条件に従って並び替え済み）
      */
-    fun getAllSnippets(profileId: String? = null): List<Snippet> {
-        return snippetMapper.getAll(profileId)
+    fun getAllSnippets(profileId: String? = null, sortBy: String = "created"): List<Snippet> {
+        return snippetMapper.getAll(profileId, sortBy)
     }
 
     /**
@@ -80,12 +81,13 @@ class SnippetService private constructor(private val context: Context) {
      * 【引数】
      * @param categoryId カテゴリID
      * @param profileId プロファイルID（nullの場合はプロファイルフィルタなし）
+     * @param sortBy ソート条件（"created", "updated", "title", "usage"）
      *
      * 【戻り値】
-     * 指定カテゴリのスニペットリスト
+     * 指定カテゴリのスニペットリスト（ソート条件に従って並び替え済み）
      */
-    fun getSnippetsByCategory(categoryId: String, profileId: String? = null): List<Snippet> {
-        return snippetMapper.getByCategoryId(categoryId, profileId)
+    fun getSnippetsByCategory(categoryId: String, profileId: String? = null, sortBy: String = "created"): List<Snippet> {
+        return snippetMapper.getByCategoryId(categoryId, profileId, sortBy)
     }
 
     /**

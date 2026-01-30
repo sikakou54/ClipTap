@@ -687,17 +687,14 @@ class ClipTapKeyboardService : InputMethodService() {
 
         val categoryId = currentCategory?.id
 
-        // Serviceを使用してスニペットを取得
-        val loadedSnippets = if (categoryId != null) {
-            snippetService.getSnippetsByCategory(categoryId, profileId)
+        // Serviceを使用してスニペットを取得（SQLのORDER BYでソート済み）
+        allSnippets = if (categoryId != null) {
+            snippetService.getSnippetsByCategory(categoryId, profileId, currentSortBy)
         } else {
-            snippetService.getAllSnippets(profileId)
+            snippetService.getAllSnippets(profileId, currentSortBy)
         }
 
-        // ソートを適用
-        allSnippets = applySortOrder(loadedSnippets)
-
-        Log.d(TAG, "✅ Loaded and sorted ${allSnippets.size} snippets (sortBy: $currentSortBy)")
+        Log.d(TAG, "✅ Loaded ${allSnippets.size} snippets (sortBy: $currentSortBy)")
 
         // アダプターに変数マップを設定（タイトルの変数置換に使用）
         snippetAdapter.variablesMap = variablesMap
@@ -1154,19 +1151,6 @@ class ClipTapKeyboardService : InputMethodService() {
         val sortBy = prefs.getString(SORT_PREFERENCE_KEY, "created") ?: "created"
         Log.d(TAG, "📂 [Sort] Loaded sort preference: $sortBy")
         return sortBy
-    }
-
-    /**
-     * スニペットにソートを適用
-     */
-    private fun applySortOrder(snippets: List<Snippet>): List<Snippet> {
-        return when (currentSortBy) {
-            "created" -> snippets.sortedByDescending { it.createdAt }
-            "updated" -> snippets.sortedByDescending { it.updatedAt }
-            "title" -> snippets.sortedBy { it.title ?: "" }
-            "usage" -> snippets.sortedByDescending { it.copyCount }
-            else -> snippets.sortedByDescending { it.createdAt }
-        }
     }
 
     /**
