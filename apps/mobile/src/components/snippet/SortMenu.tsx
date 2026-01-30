@@ -67,7 +67,7 @@ export function SortMenu({ currentSort, onSortChange }: SortMenuProps) {
         {/* ソートアイコン */}
         <Ionicons
           name="swap-vertical-outline"
-          size={16}
+          size={20}
           color={colors.text}
         />
         {/* バッジ（デフォルト以外のソートが選択されている時） */}
