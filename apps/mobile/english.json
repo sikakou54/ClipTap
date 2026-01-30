@@ -4,6 +4,12 @@
         "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you."
     },
     "android": {
-        "app_name": "ClipTap"
+        "app_name": "ClipTap",
+        "accessibility_sort_button": "Sort button",
+        "keyboard_sort_label": "Sort",
+        "keyboard_sort_created": "Created",
+        "keyboard_sort_updated": "Updated",
+        "keyboard_sort_title": "Title",
+        "keyboard_sort_usage": "Usage"
     }
 }

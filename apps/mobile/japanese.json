@@ -4,6 +4,12 @@
         "NSUserTrackingUsageDescription": "関連性の高い広告を表示するためにIDをトラッキングいたします。"
     },
     "android": {
-        "app_name": "ClipTap"
+        "app_name": "ClipTap",
+        "accessibility_sort_button": "並び替えボタン",
+        "keyboard_sort_label": "並順",
+        "keyboard_sort_created": "作成日時",
+        "keyboard_sort_updated": "更新日時",
+        "keyboard_sort_title": "タイトル",
+        "keyboard_sort_usage": "使用頻度"
     }
 }
