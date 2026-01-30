@@ -5,12 +5,13 @@
  * ダッシュボード画面の最上部に固定表示されるヘッダー。
  * 環境切り替え、検索、カテゴリフィルター、列数変更、新規作成等の機能を提供。
  */
-import { useTranslation } from '@cliptap/shared';
+import { useTranslation, type SnippetSortBy } from '@cliptap/shared';
 import type { Profile, Category } from '@cliptap/shared';
 import { CategoryFilterBar } from '@components/common/CategoryFilterBar';
 import { ProfileDropdown } from './ProfileDropdown';
 import { SearchBar } from './SearchBar';
 import { GridColumnsSelector } from './GridColumnsSelector';
+import { SortMenu } from './SortMenu';
 
 interface DashboardHeaderProps {
   validProfiles: Profile[];
@@ -29,6 +30,8 @@ interface DashboardHeaderProps {
   onCreate: () => void;
   gridColumns: 1 | 2 | 3;
   setGridColumns: (cols: 1 | 2 | 3) => void;
+  currentSort: SnippetSortBy;
+  onSortChange: (sort: SnippetSortBy) => void;
 }
 
 export function DashboardHeader({
@@ -48,6 +51,8 @@ export function DashboardHeader({
   onCreate,
   gridColumns,
   setGridColumns,
+  currentSort,
+  onSortChange,
 }: DashboardHeaderProps) {
   const { t } = useTranslation();
 
@@ -99,9 +104,12 @@ export function DashboardHeader({
             />
           )}
 
-          {/* 右側：列数選択 + 検索ボタン + 新規作成ボタン
-              グリッドの列数（1〜3列）を切り替え、検索バーを開く、新規スニペットを作成。 */}
+          {/* 右側：ソート + 列数選択 + 検索ボタン + 新規作成ボタン
+              ソートメニュー、グリッドの列数（1〜3列）を切り替え、検索バーを開く、新規スニペットを作成。 */}
           <div className="flex items-center gap-1">
+            {/* ソートメニュー（ドロップダウン形式）
+                作成日時/更新日時/タイトル/使用頻度でソート可能。 */}
+            <SortMenu currentSort={currentSort} onSortChange={onSortChange} />
             {/* グリッド列数選択（デスクトップのみ表示）
                 1列・2列・3列のいずれかを選択可能。モバイルでは常に1列表示。 */}
             <GridColumnsSelector gridColumns={gridColumns} setGridColumns={setGridColumns} />
