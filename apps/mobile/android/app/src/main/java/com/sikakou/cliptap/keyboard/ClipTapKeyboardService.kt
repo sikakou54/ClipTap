@@ -1093,6 +1093,9 @@ class ClipTapKeyboardService : InputMethodService() {
 
         // バッジ表示を更新
         updateSortBadgeVisibility()
+
+        // リストのトップにスクロール
+        snippetRecyclerView.scrollToPosition(0)
     }
 
     /**

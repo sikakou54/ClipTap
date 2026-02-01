@@ -1364,6 +1364,11 @@ class KeyboardViewController: UIInputViewController {
 
         // スニペット一覧を再読み込み
         reloadSnippets()
+
+        // リストのトップにスクロール
+        if !filteredSnippets.isEmpty {
+            tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+        }
     }
 
     /// ソート設定を保存（UserDefaults）
