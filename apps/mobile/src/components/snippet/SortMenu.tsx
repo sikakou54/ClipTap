@@ -92,39 +92,70 @@ export function SortMenu({ currentSort, onSortChange }: SortMenuProps) {
               {t('sort.title')}
             </Text>
             {/* ソートオプション一覧 */}
-            {sortOptions.map((option, index) => (
-              <TouchableOpacity
-                key={option.value}
-                style={[
-                  styles.option,
-                  index < sortOptions.length - 1 && styles.optionBorder,
-                  { borderBottomColor: colors.border }
-                ]}
-                onPress={() => handleSelect(option.value)}
-              >
-                {/* オプションアイコン */}
-                <Ionicons
-                  name={option.icon}
-                  size={22}
-                  color={currentSort === option.value ? colors.primary : colors.text}
-                />
-                {/* オプションラベル */}
-                <Text style={[
-                  styles.optionText,
-                  {
-                    color: currentSort === option.value ? colors.primary : colors.text,
-                    fontSize: responsiveFontSizes.base,
-                    lineHeight: responsiveLineHeights.base
-                  }
-                ]}>
-                  {option.label}
-                </Text>
-                {/* 選択中のチェックマーク */}
-                {currentSort === option.value && (
-                  <Ionicons name="checkmark" size={22} color={colors.primary} />
-                )}
-              </TouchableOpacity>
-            ))}
+            {sortOptions.map((option, index) => {
+              /* オプションの色を決定（disabled時はグレーアウト） */
+              const optionColor = option.disabled
+                ? colors.textSecondary
+                : currentSort === option.value
+                  ? colors.primary
+                  : colors.text;
+
+              return (
+                <View key={option.value}>
+                  <TouchableOpacity
+                    style={[
+                      styles.option,
+                      index < sortOptions.length - 1 && !option.disabled && styles.optionBorder,
+                      { borderBottomColor: colors.border },
+                    ]}
+                    onPress={() => !option.disabled && handleSelect(option.value)}
+                    disabled={option.disabled}
+                  >
+                    {/* オプションアイコン */}
+                    <Ionicons name={option.icon} size={22} color={optionColor} />
+                    {/* オプションラベル */}
+                    <Text
+                      style={[
+                        styles.optionText,
+                        {
+                          color: optionColor,
+                          fontSize: responsiveFontSizes.base,
+                          lineHeight: responsiveLineHeights.base,
+                        },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                    {/* 選択中のチェックマーク */}
+                    {currentSort === option.value && !option.disabled && (
+                      <Ionicons name="checkmark" size={22} color={colors.primary} />
+                    )}
+                    {/* disabled時はロックアイコンを表示 */}
+                    {option.disabled && (
+                      <Ionicons
+                        name="lock-closed-outline"
+                        size={18}
+                        color={colors.textSecondary}
+                      />
+                    )}
+                  </TouchableOpacity>
+                  {/* 使用頻度オプションがdisabledの場合、説明文を表示 */}
+                  {option.value === 'usage' && option.disabled && (
+                    <Text
+                      style={[
+                        styles.disabledHint,
+                        {
+                          color: colors.textSecondary,
+                          fontSize: responsiveFontSizes.xs,
+                        },
+                      ]}
+                    >
+                      {t('sort.usage_requires_full_access')}
+                    </Text>
+                  )}
+                </View>
+              );
+            })}
           </Pressable>
         </Pressable>
       </Modal>
@@ -187,5 +218,10 @@ const styles = StyleSheet.create({
   optionText: {
     flex: 1,
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.MEDIUM,
+  },
+  disabledHint: {
+    paddingHorizontal: UI_CONSTANTS.GAP.MD,
+    paddingBottom: UI_CONSTANTS.GAP.MD,
+    marginLeft: UI_CONSTANTS.GAP.MD + 22,
   },
 });

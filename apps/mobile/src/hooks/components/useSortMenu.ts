@@ -8,13 +8,15 @@
  * - モーダル表示状態管理
  * - ソートオプションの生成
  * - ソート選択処理
+ * - 使用頻度追跡設定に応じた使用頻度オプションの表示制御
  *
  * @see components/snippet/SortMenu.tsx - UIコンポーネント
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from '@cliptap/shared';
 import { SnippetSortBy } from '@cliptap/shared';
+import { FullAccessAdapter } from '@adapters/FullAccessAdapter';
 import { type VariableIconName } from '@constants/ui';
 
 /**
@@ -24,6 +26,7 @@ export interface SortOption {
   value: SnippetSortBy;
   label: string;
   icon: VariableIconName;
+  disabled?: boolean;
 }
 
 /**
@@ -70,16 +73,34 @@ export function useSortMenu({
   const { t } = useTranslation();
 
   const [visible, setVisible] = useState(false);
+  const [isUsageEnabled, setIsUsageEnabled] = useState(false);
+
+  /**
+   * 使用頻度追跡状態を取得
+   * フルアクセス許可かつキーボード設定で使用頻度追跡がONの場合にtrue
+   */
+  useEffect(() => {
+    FullAccessAdapter.isUsageTrackingEnabled().then(setIsUsageEnabled);
+  }, []);
 
   /**
    * ソートオプション一覧
+   * 使用頻度追跡が無効の場合は「使用頻度」をdisabledで表示
    */
-  const sortOptions: SortOption[] = useMemo(() => [
-    { value: 'created', label: t('sort.created'), icon: 'create-outline' },
-    { value: 'updated', label: t('sort.updated'), icon: 'time-outline' },
-    { value: 'title', label: t('sort.title_sort'), icon: 'text-outline' },
-    { value: 'usage', label: t('sort.usage'), icon: 'stats-chart-outline' },
-  ], [t]);
+  const sortOptions: SortOption[] = useMemo(
+    () => [
+      { value: 'created', label: t('sort.created'), icon: 'create-outline' },
+      { value: 'updated', label: t('sort.updated'), icon: 'time-outline' },
+      { value: 'title', label: t('sort.title_sort'), icon: 'text-outline' },
+      {
+        value: 'usage',
+        label: t('sort.usage'),
+        icon: 'stats-chart-outline',
+        disabled: !isUsageEnabled,
+      },
+    ],
+    [t, isUsageEnabled],
+  );
 
   /**
    * デフォルトソートかどうか

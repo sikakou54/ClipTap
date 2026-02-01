@@ -41,6 +41,7 @@ import { MobileAuthAdapter } from '@adapters/MobileAuthAdapter';
 import { MobileExportAdapter } from '@adapters/MobileExportAdapter';
 import { MobileImportAdapter } from '@adapters/MobileImportAdapter';
 import { MobileSortPreferenceAdapter } from '@adapters/MobileSortPreferenceAdapter';
+import { MobileUsageTrackingAdapter } from '@adapters/MobileUsageTrackingAdapter';
 
 /* ======================================== */
 /* 型定義 */
@@ -101,6 +102,7 @@ export function useAdapterInitialization(): UseAdapterInitializationReturn {
         export: new MobileExportAdapter(fileIOAdapter, fileShareAdapter),
         import: new MobileImportAdapter(fileIOAdapter),
         sortPreference: new MobileSortPreferenceAdapter(),
+        usageTracking: new MobileUsageTrackingAdapter(),
       },
       adapterOptions: {
         subscription: {

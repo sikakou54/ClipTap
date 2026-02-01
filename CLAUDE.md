@@ -256,6 +256,16 @@ clipTap/
 - 既存のマイグレーションファイルは**絶対に編集しない**
 - マイグレーションは順次実行される前提で設計
 
+#### iOS ネイティブファイルの追加
+- **ClipTap（メインアプリ）またはClipTapKeyboard（拡張キーボード）にSwift/Objective-Cファイルを追加する際は、必ず`project.pbxproj`を更新すること**
+- 更新が必要なセクション:
+  1. `PBXFileReference` - ファイル参照を追加
+  2. `PBXGroup` - 対象グループ（ClipTapまたはClipTapKeyboard）のchildrenに追加
+  3. `PBXBuildFile` - ビルドファイルエントリを追加
+  4. `PBXSourcesBuildPhase` - 対象ターゲットのソースビルドフェーズに追加
+- 既存の類似ファイル（例: SubscriptionBridge.swift/m）のパターンを参考にすること
+- UUIDは24文字の16進数で一意に生成すること
+
 #### テストとデバッグ
 - 型チェック: `npx tsc --noEmit`
 - iOS実行: `npm run ios`

@@ -255,6 +255,26 @@ enum L10n {
         static let usage = localized("sort.usage")
     }
 
+    // MARK: - Settings (設定関連)
+
+    /// 設定関連の翻訳
+    enum Settings {
+        /// "設定" / "Settings"
+        static let title = localized("settings.title")
+
+        /// "使用頻度をカウントする" / "Track Usage Frequency"
+        static let usageTrackingEnabled = localized("settings.usage_tracking_enabled")
+
+        /// "使用頻度をカウントする" / "Track Usage Frequency"
+        static let usageTrackingDisabled = localized("settings.usage_tracking_disabled")
+
+        /// "この機能を使用するにはフルアクセスの許可が必要です" / "Full access is required to use this feature"
+        static let usageTrackingRequiresFullAccess = localized("settings.usage_tracking_requires_full_access")
+
+        /// フルアクセス許可手順
+        static let fullAccessInstructions = localized("settings.full_access_instructions")
+    }
+
     // MARK: - Localization Helper
 
     /// 翻訳キーから翻訳済みの文字列を取得する内部ヘルパー関数
@@ -367,6 +387,16 @@ enum L10n {
         case "sort.updated": return isJapanese ? "更新日時" : "Updated"
         case "sort.title": return isJapanese ? "タイトル" : "Title"
         case "sort.usage": return isJapanese ? "使用頻度" : "Frequency"
+
+        // Settings
+        case "settings.title": return isJapanese ? "設定" : "Settings"
+        case "settings.usage_tracking_enabled": return isJapanese ? "使用頻度をカウントする" : "Track Usage Frequency"
+        case "settings.usage_tracking_disabled": return isJapanese ? "使用頻度をカウントする" : "Track Usage Frequency"
+        case "settings.usage_tracking_requires_full_access": return isJapanese ? "この機能を使用するにはフルアクセスの許可が必要です" : "Full access is required to use this feature"
+        case "settings.full_access_instructions":
+            return isJapanese
+                ? "1. 設定アプリを開く\n2. 「ClipTap」→「キーボード」を選択\n3. 「フルアクセスを許可」をON"
+                : "1. Open Settings app\n2. Go to \"ClipTap\" → \"Keyboards\"\n3. Turn on \"Allow Full Access\""
 
         default: return key
         }

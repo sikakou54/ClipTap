@@ -211,6 +211,7 @@
     "created": "Created",
     "updated": "Updated",
     "usage": "Most Used",
+    "usage_requires_full_access": "Please enable \"Track usage frequency\" in keyboard extension settings",
     "title_sort": "Title",
     "pinned": "Pinned"
   },

@@ -54,11 +54,44 @@ class SnippetService {
     /// {{today}} → 2025/11/17 などの変換を担当
     private let variableReplacer = VariableReplacer()
 
+    /// App Group識別子
+    private let appGroupIdentifier = "group.com.sikakou.cliptap"
+
+    /// フルアクセス状態を共有するUserDefaultsキー
+    private let fullAccessStateKey = "keyboardHasFullAccess"
+
+    /// 使用頻度追跡設定のUserDefaultsキー
+    private let usageTrackingKey = "usageTrackingEnabled"
+
+    /// 使用頻度追跡設定が設定されたかどうかのUserDefaultsキー
+    private let usageTrackingEnabledSetKey = "usageTrackingEnabledSet"
+
     // MARK: - Initialization（初期化）
 
     /// プライベートイニシャライザ（外部からのインスタンス生成を禁止）
     /// シングルトンパターンのため、SnippetService.sharedのみ使用可能
     private init() {}
+
+    // MARK: - Computed Properties（計算プロパティ）
+
+    /// 使用頻度追跡が有効かどうか
+    /// フルアクセス許可かつ使用頻度追跡設定がONの場合にtrue
+    private var isUsageTrackingEnabled: Bool {
+        guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
+            return false
+        }
+        /* フルアクセスがない場合はfalse */
+        let hasFullAccess = userDefaults.bool(forKey: fullAccessStateKey)
+        if !hasFullAccess {
+            return false
+        }
+        /* 設定されていない場合はデフォルトtrue */
+        let usageEnabledSet = userDefaults.bool(forKey: usageTrackingEnabledSetKey)
+        if !usageEnabledSet {
+            return true
+        }
+        return userDefaults.bool(forKey: usageTrackingKey)
+    }
 
     // MARK: - Read Operations（読み取り操作）
 
@@ -220,9 +253,13 @@ class SnippetService {
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()
 
-        /* 使用頻度（copyCount）をインクリメント
-           使用頻度順ソートに反映するため、挿入時にカウントを加算 */
-        snippetMapper.incrementCopyCount(for: snippet.id)
+        /* 使用頻度追跡が有効な場合のみ、copyCountをインクリメント */
+        if isUsageTrackingEnabled {
+            snippetMapper.incrementCopyCount(for: snippet.id)
+            NSLog("📊 [SnippetService] Incremented copy count for snippet: %@", snippet.id)
+        } else {
+            NSLog("📊 [SnippetService] Skipped copy count increment (usage tracking disabled)")
+        }
     }
 
     /// プレビュー生成（変数置換後のテキスト）
