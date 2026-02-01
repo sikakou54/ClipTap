@@ -6,4 +6,6 @@
   <string name="keyboard_sort_updated">"Updated"</string>
   <string name="keyboard_sort_title">"Title"</string>
   <string name="keyboard_sort_usage">"Usage"</string>
+  <string name="category_all">"All"</string>
+  <string name="snippet_empty">"No snippets"</string>
 </resources>

@@ -10,6 +10,8 @@
         "keyboard_sort_created": "作成日時",
         "keyboard_sort_updated": "更新日時",
         "keyboard_sort_title": "タイトル",
-        "keyboard_sort_usage": "使用頻度"
+        "keyboard_sort_usage": "使用頻度",
+        "category_all": "すべて",
+        "snippet_empty": "スニペットがありません"
     }
 }
