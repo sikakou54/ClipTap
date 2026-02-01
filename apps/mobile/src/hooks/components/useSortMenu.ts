@@ -14,6 +14,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 import { useTranslation } from '@cliptap/shared';
 import { SnippetSortBy } from '@cliptap/shared';
 import { FullAccessAdapter } from '@adapters/FullAccessAdapter';
@@ -78,9 +79,24 @@ export function useSortMenu({
   /**
    * 使用頻度追跡状態を取得
    * フルアクセス許可かつキーボード設定で使用頻度追跡がONの場合にtrue
+   * フォアグラウンド復帰時にも再取得（設定変更を反映）
    */
   useEffect(() => {
+    /* 初回取得 */
     FullAccessAdapter.isUsageTrackingEnabled().then(setIsUsageEnabled);
+
+    /* フォアグラウンド復帰時に再取得 */
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        FullAccessAdapter.isUsageTrackingEnabled().then(setIsUsageEnabled);
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   /**
