@@ -153,24 +153,31 @@ class KeyboardViewController: UIInputViewController {
         return imageView
     }()
 
-    /// カテゴリボタンを横スクロールで表示するためのスクロールビュー
-    /// 環境ドロップダウンの右側に配置され、残りのスペースを使用
-    private let categoryScrollView: UIScrollView = {
-        let sv = UIScrollView()
-        sv.showsHorizontalScrollIndicator = false
-        sv.translatesAutoresizingMaskIntoConstraints = false
-        sv.backgroundColor = .clear  // 背景色を透明に
-        return sv
+    /// カテゴリ選択ドロップダウンボタン（環境ドロップダウンの右隣、固定幅）
+    /// タップするとカテゴリ一覧メニューが表示される
+    private let categoryDropdownButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.titleLabel?.font = .systemFont(ofSize: 12, weight: .medium)
+        button.contentHorizontalAlignment = .left
+        button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 28)
+        button.layer.cornerRadius = 16
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.systemGray.cgColor
+        button.backgroundColor = .systemGray6
+        button.setTitleColor(.label, for: .normal)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
     }()
 
-    /// カテゴリボタンを横一列に並べるためのスタックビュー
-    private let categoryStackView: UIStackView = {
-        let sv = UIStackView()
-        sv.axis = .horizontal
-        sv.spacing = 8
-        sv.translatesAutoresizingMaskIntoConstraints = false
-        sv.backgroundColor = .clear  // 背景色を透明に
-        return sv
+    /// カテゴリ用シェブロンアイコン（ドロップダウンボタンの右端に固定配置）
+    private let categoryChevronImageView: UIImageView = {
+        let config = UIImage.SymbolConfiguration(pointSize: 10, weight: .medium)
+        let image = UIImage(systemName: "chevron.down", withConfiguration: config)
+        let imageView = UIImageView(image: image)
+        imageView.tintColor = .secondaryLabel
+        imageView.contentMode = .center
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
     }()
 
     /// ソートボタン（左端に固定配置）
@@ -607,7 +614,7 @@ class KeyboardViewController: UIInputViewController {
             if categoriesChanged {
                 NSLog("📝 [Refresh] Categories changed: %d → %d", categories.count, newCategories.count)
                 categories = newCategories
-                setupCategoryButtons()
+                setupCategoryDropdown()
             } else {
                 NSLog("✓ [Refresh] Categories unchanged: %d categories", categories.count)
             }
@@ -632,16 +639,16 @@ class KeyboardViewController: UIInputViewController {
     }
 
     private func setupUI() {
-        // 統合フィルターコンテナ（環境ドロップダウン + カテゴリスクロールビュー + ソートボタン + 設定ボタン）
+        // 統合フィルターコンテナ（環境ドロップダウン + カテゴリドロップダウン + ソートボタン + 設定ボタン）
         view.addSubview(filterContainerView)
         filterContainerView.addSubview(profileDropdownButton)
-        filterContainerView.addSubview(categoryScrollView)
+        filterContainerView.addSubview(categoryDropdownButton)
         filterContainerView.addSubview(sortButton)
         filterContainerView.addSubview(settingsButton)
-        categoryScrollView.addSubview(categoryStackView)
 
         // シェブロンアイコンをボタンの上に配置
         profileDropdownButton.addSubview(chevronImageView)
+        categoryDropdownButton.addSubview(categoryChevronImageView)
 
         // ソートバッジをボタンに追加
         sortButton.addSubview(sortBadgeView)
@@ -659,26 +666,8 @@ class KeyboardViewController: UIInputViewController {
             filterContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
             filterContainerView.heightAnchor.constraint(equalToConstant: 36),
 
-            /* ソートボタン: 左端に固定、固定幅36pt */
-            sortButton.leadingAnchor.constraint(equalTo: filterContainerView.leadingAnchor),
-            sortButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
-            sortButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
-            sortButton.widthAnchor.constraint(equalToConstant: 36),
-
-            /* ソートバッジ: ボタン右上に配置、8x8ptの円 */
-            sortBadgeView.widthAnchor.constraint(equalToConstant: 8),
-            sortBadgeView.heightAnchor.constraint(equalToConstant: 8),
-            sortBadgeView.topAnchor.constraint(equalTo: sortButton.topAnchor, constant: 2),
-            sortBadgeView.trailingAnchor.constraint(equalTo: sortButton.trailingAnchor, constant: -2),
-
-            /* 設定ボタン: ソートボタンの右隣、固定幅36pt */
-            settingsButton.leadingAnchor.constraint(equalTo: sortButton.trailingAnchor, constant: 4),
-            settingsButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
-            settingsButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
-            settingsButton.widthAnchor.constraint(equalToConstant: 36),
-
-            /* 環境ドロップダウンボタン: 設定ボタンの右隣、固定幅100pt */
-            profileDropdownButton.leadingAnchor.constraint(equalTo: settingsButton.trailingAnchor, constant: 4),
+            /* 環境ドロップダウンボタン: 左端に固定、固定幅100pt */
+            profileDropdownButton.leadingAnchor.constraint(equalTo: filterContainerView.leadingAnchor),
             profileDropdownButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
             profileDropdownButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
             profileDropdownButton.widthAnchor.constraint(equalToConstant: 100),
@@ -689,18 +678,35 @@ class KeyboardViewController: UIInputViewController {
             chevronImageView.widthAnchor.constraint(equalToConstant: 12),
             chevronImageView.heightAnchor.constraint(equalToConstant: 12),
 
-            /* カテゴリスクロールビュー: 環境ドロップダウンの右から右端まで */
-            categoryScrollView.leadingAnchor.constraint(equalTo: profileDropdownButton.trailingAnchor, constant: 8),
-            categoryScrollView.trailingAnchor.constraint(equalTo: filterContainerView.trailingAnchor),
-            categoryScrollView.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
-            categoryScrollView.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
+            /* カテゴリドロップダウンボタン: 環境ドロップダウンの右隣、固定幅100pt */
+            categoryDropdownButton.leadingAnchor.constraint(equalTo: profileDropdownButton.trailingAnchor, constant: 8),
+            categoryDropdownButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
+            categoryDropdownButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
+            categoryDropdownButton.widthAnchor.constraint(equalToConstant: 100),
 
-            /* カテゴリスタックビュー: スクロールビュー内に配置 */
-            categoryStackView.topAnchor.constraint(equalTo: categoryScrollView.topAnchor),
-            categoryStackView.leadingAnchor.constraint(equalTo: categoryScrollView.leadingAnchor),
-            categoryStackView.trailingAnchor.constraint(equalTo: categoryScrollView.trailingAnchor),
-            categoryStackView.bottomAnchor.constraint(equalTo: categoryScrollView.bottomAnchor),
-            categoryStackView.heightAnchor.constraint(equalTo: categoryScrollView.heightAnchor)
+            /* カテゴリ用シェブロンアイコン: ボタンの右端に固定配置 */
+            categoryChevronImageView.trailingAnchor.constraint(equalTo: categoryDropdownButton.trailingAnchor, constant: -10),
+            categoryChevronImageView.centerYAnchor.constraint(equalTo: categoryDropdownButton.centerYAnchor),
+            categoryChevronImageView.widthAnchor.constraint(equalToConstant: 12),
+            categoryChevronImageView.heightAnchor.constraint(equalToConstant: 12),
+
+            /* 設定ボタン: 右端に固定、固定幅36pt */
+            settingsButton.trailingAnchor.constraint(equalTo: filterContainerView.trailingAnchor),
+            settingsButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
+            settingsButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
+            settingsButton.widthAnchor.constraint(equalToConstant: 36),
+
+            /* ソートボタン: 設定ボタンの左隣、固定幅36pt */
+            sortButton.trailingAnchor.constraint(equalTo: settingsButton.leadingAnchor, constant: -4),
+            sortButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
+            sortButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
+            sortButton.widthAnchor.constraint(equalToConstant: 36),
+
+            /* ソートバッジ: ボタン右上に配置、8x8ptの円 */
+            sortBadgeView.widthAnchor.constraint(equalToConstant: 8),
+            sortBadgeView.heightAnchor.constraint(equalToConstant: 8),
+            sortBadgeView.topAnchor.constraint(equalTo: sortButton.topAnchor, constant: 2),
+            sortBadgeView.trailingAnchor.constraint(equalTo: sortButton.trailingAnchor, constant: -2)
         ])
 
         // TableView: フィルターコンテナの下に配置（+36ptの表示エリア拡大）
@@ -922,7 +928,7 @@ class KeyboardViewController: UIInputViewController {
 
             // UI更新（既にメインスレッドで実行されているため、asyncは不要）
             self.setupProfileDropdown()
-            self.setupCategoryButtons()
+            self.setupCategoryDropdown()
 
             if self.currentProfile != nil {
                 self.reloadSnippets()
@@ -978,60 +984,62 @@ class KeyboardViewController: UIInputViewController {
         profileDropdownButton.setTitle(title, for: .normal)
     }
 
-    private func setupCategoryButtons() {
-        // Clear existing buttons
-        categoryStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+    /// カテゴリドロップダウンボタンの初期設定
+    /// カテゴリが読み込まれた後に呼ばれる
+    private func setupCategoryDropdown() {
+        // 初期タイトルを設定
+        updateCategoryDropdownTitle()
+        // メニューを設定
+        updateCategoryDropdownMenu()
+    }
 
-        // "すべて" ボタン / "All" button
-        // 多言語対応: "すべて" / "All"
-        let allButton = createCategoryButton(title: L10n.Category.all, color: nil, isSelected: true)
-        allButton.tag = -1
-        categoryStackView.addArrangedSubview(allButton)
+    /// カテゴリドロップダウンのタイトルを更新
+    /// 現在選択中のカテゴリ名を表示（未選択時は「すべて」）
+    private func updateCategoryDropdownTitle() {
+        let title = currentCategory?.name ?? L10n.Category.all
+        categoryDropdownButton.setTitle(title, for: .normal)
+    }
 
-        // カテゴリボタン
-        for (index, category) in categories.enumerated() {
-            let button = createCategoryButton(title: category.name, color: category.color, isSelected: false)
-            button.tag = index
-            categoryStackView.addArrangedSubview(button)
+    /// カテゴリドロップダウンメニューを更新
+    /// カテゴリ一覧のメニューを生成してボタンに設定
+    private func updateCategoryDropdownMenu() {
+        var menuActions: [UIAction] = []
+
+        // 「すべて」オプション
+        let allAction = UIAction(
+            title: L10n.Category.all,
+            state: currentCategory == nil ? .on : .off
+        ) { [weak self] _ in
+            self?.selectCategory(nil)
+        }
+        menuActions.append(allAction)
+
+        // カテゴリオプション
+        for category in categories {
+            let action = UIAction(
+                title: category.name,
+                state: category.id == currentCategory?.id ? .on : .off
+            ) { [weak self] _ in
+                self?.selectCategory(category)
+            }
+            menuActions.append(action)
+        }
+
+        let menu = UIMenu(title: "", children: menuActions)
+
+        // iOS 14+: UIButtonのmenuプロパティを使用
+        if #available(iOS 14.0, *) {
+            categoryDropdownButton.menu = menu
+            categoryDropdownButton.showsMenuAsPrimaryAction = true
         }
     }
 
-    private func createCategoryButton(title: String, color: String?, isSelected: Bool) -> UIButton {
-        let button = UIButton(type: .system)
-        button.setTitle(title, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 12, weight: .medium)
-        // iOS 15.1をサポートするため、UIButton.Configurationを使用せず
-        // レガシーAPIでパディングを設定（警告は無視）
-        button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
-        button.layer.cornerRadius = 16
-        button.layer.borderWidth = 1
-
-        // カテゴリ色の適用
-        if let colorHex = color, let uiColor = UIColor(hex: colorHex) {
-            if isSelected {
-                button.backgroundColor = uiColor
-                button.setTitleColor(.white, for: .normal)
-                button.layer.borderColor = uiColor.cgColor
-            } else {
-                button.backgroundColor = .clear
-                button.setTitleColor(uiColor, for: .normal)
-                button.layer.borderColor = uiColor.cgColor
-            }
-        } else {
-            // デフォルト色（グレー）
-            if isSelected {
-                button.backgroundColor = .systemBlue
-                button.setTitleColor(.white, for: .normal)
-                button.layer.borderColor = UIColor.systemBlue.cgColor
-            } else {
-                button.backgroundColor = .clear
-                button.setTitleColor(.systemBlue, for: .normal)
-                button.layer.borderColor = UIColor.systemBlue.cgColor
-            }
-        }
-
-        button.addTarget(self, action: #selector(categoryButtonTapped(_:)), for: .touchUpInside)
-        return button
+    /// カテゴリを選択する
+    private func selectCategory(_ category: Category?) {
+        currentCategory = category
+        updateCategoryDropdownTitle()
+        updateCategoryDropdownMenu()  // メニューの選択状態を更新
+        reloadSnippets()
     }
 
     /// 環境ドロップダウンメニューを更新
@@ -1070,60 +1078,6 @@ class KeyboardViewController: UIInputViewController {
         NSLog("✅ [KeyboardViewController] Reloaded %d variables for profile: %@", variablesMap.count, profile.name)
 
         reloadSnippets()
-    }
-
-    @objc private func categoryButtonTapped(_ sender: UIButton) {
-        let selectedTag = sender.tag
-
-        // すべてのボタンを未選択状態に
-        categoryStackView.arrangedSubviews.forEach { view in
-            if let button = view as? UIButton {
-                let isSelected = button.tag == selectedTag
-
-                if button.tag == -1 {
-                    // "すべて" ボタン
-                    updateButtonAppearance(button, isSelected: isSelected, color: nil)
-                } else if button.tag >= 0 && button.tag < categories.count {
-                    // カテゴリボタン
-                    let category = categories[button.tag]
-                    updateButtonAppearance(button, isSelected: isSelected, color: category.color)
-                }
-            }
-        }
-
-        // カテゴリフィルター更新
-        if selectedTag == -1 {
-            currentCategory = nil
-        } else if selectedTag >= 0 && selectedTag < categories.count {
-            currentCategory = categories[selectedTag]
-        }
-
-        // カテゴリ変更時もDBから再読み込み
-        reloadSnippets()
-    }
-
-    private func updateButtonAppearance(_ button: UIButton, isSelected: Bool, color: String?) {
-        if let colorHex = color, let uiColor = UIColor(hex: colorHex) {
-            if isSelected {
-                button.backgroundColor = uiColor
-                button.setTitleColor(.white, for: .normal)
-                button.layer.borderColor = uiColor.cgColor
-            } else {
-                button.backgroundColor = .clear
-                button.setTitleColor(uiColor, for: .normal)
-                button.layer.borderColor = uiColor.cgColor
-            }
-        } else {
-            if isSelected {
-                button.backgroundColor = .systemBlue
-                button.setTitleColor(.white, for: .normal)
-                button.layer.borderColor = UIColor.systemBlue.cgColor
-            } else {
-                button.backgroundColor = .clear
-                button.setTitleColor(.systemBlue, for: .normal)
-                button.layer.borderColor = UIColor.systemBlue.cgColor
-            }
-        }
     }
 
     /// スニペット一覧を再読み込み

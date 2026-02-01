@@ -454,83 +454,79 @@ class ClipTapKeyboardService : InputMethodService() {
     }
 
     /**
-     * カテゴリチップを設定
+     * カテゴリドロップダウンを設定
      *
      * 【目的】
-     * カテゴリフィルターのチップを横スクロール表示します。
+     * カテゴリ選択ドロップダウンのUIを構築します。
      *
      * 【何をするか】
      * 1. 既存のチップを全て削除
-     * 2. "すべて"チップを追加（デフォルト選択、青色）
-     * 3. 各カテゴリのチップを追加
-     *    - 選択中：カテゴリ色の背景 + 白文字
-     *    - 非選択：透明背景 + カテゴリ色の文字
-     * 4. クリック時にonCategorySelected()を呼ぶ
+     * 2. 現在選択中のカテゴリ名を表示するチップを1つ作成
+     *    - 未選択時は「すべて」を表示
+     * 3. クリック時にshowCategorySelectionMenu()を呼ぶリスナーを設定
      *
      * 【理由】
-     * iOS版と同じUIを実現するため、選択状態で背景色とテキスト色を切り替えます。
-     * カテゴリごとの色を使うことで、視覚的に区別しやすくなります。
+     * iOS版と同じように、ドロップダウン風のUIを実現するため、
+     * 常に1つのチップのみ表示し、クリック時にPopupMenuで選択肢を表示します。
      */
     private fun setupCategoryChips() {
         categoryChipGroup.removeAllViews()
 
-        // "すべて" チップ（デフォルト色：青）
-        val allChip = Chip(themedContext).apply {
-            text = "すべて"
+        // 現在選択中のカテゴリ名（未選択時は「すべて」）
+        val categoryName = currentCategory?.name ?: getString(R.string.category_all)
+        val chip = Chip(themedContext).apply {
+            text = categoryName
             isCheckable = false
             isClickable = true
 
             // シャドー（elevation）を削除
             elevation = 0f
 
-            // 選択状態の背景色を設定
-            if (currentCategory == null) {
-                setChipBackgroundColorResource(android.R.color.holo_blue_light)
-                setTextColor(resources.getColor(android.R.color.white, null))
-            } else {
-                setChipBackgroundColorResource(android.R.color.transparent)
-                setTextColor(resources.getColor(android.R.color.holo_blue_light, null))
-            }
+            // クリック時にカテゴリ選択メニューを表示
             setOnClickListener {
-                onCategorySelected(null)
+                showCategorySelectionMenu(it)
             }
         }
-        categoryChipGroup.addView(allChip)
+        categoryChipGroup.addView(chip)
+    }
 
-        // カテゴリチップ（カテゴリの色を使用）
-        categories.forEach { category ->
-            val chip = Chip(themedContext).apply {
-                text = category.name
-                isCheckable = false
-                isClickable = true
+    /**
+     * カテゴリ選択メニューを表示
+     *
+     * 【目的】
+     * クリックされたチップの下にポップアップメニューを表示します。
+     *
+     * 【何をするか】
+     * 1. PopupMenuを作成（アンカービューの下に表示）
+     * 2. 「すべて」オプションを追加
+     * 3. カテゴリ一覧をメニューアイテムとして追加
+     * 4. 選択時にonCategorySelected()を呼ぶ
+     *
+     * 【理由】
+     * プロファイル選択と同じUIパターンを使用し、一貫性を保ちます。
+     */
+    private fun showCategorySelectionMenu(anchor: android.view.View) {
+        val popupMenu = android.widget.PopupMenu(this, anchor)
 
-                // シャドー（elevation）を削除
-                elevation = 0f
+        // 「すべて」オプション
+        popupMenu.menu.add(0, -1, 0, getString(R.string.category_all))
 
-                // カテゴリの色を取得
-                val categoryColor = parseColor(category.color)
-
-                // 選択状態の背景色とテキスト色を設定
-                if (category.id == currentCategory?.id) {
-                    // 選択時：カテゴリ色の背景 + 白文字
-                    setChipBackgroundColor(android.content.res.ColorStateList.valueOf(categoryColor))
-                    setTextColor(resources.getColor(android.R.color.white, null))
-                } else {
-                    // 非選択時：透明背景 + カテゴリ色の文字
-                    setChipBackgroundColorResource(android.R.color.transparent)
-                    setTextColor(categoryColor)
-                }
-
-                // ボーダー色もカテゴリ色に設定
-                chipStrokeColor = android.content.res.ColorStateList.valueOf(categoryColor)
-                chipStrokeWidth = 2f
-
-                setOnClickListener {
-                    onCategorySelected(category)
-                }
-            }
-            categoryChipGroup.addView(chip)
+        // カテゴリオプション
+        categories.forEachIndexed { index, category ->
+            popupMenu.menu.add(0, index, index + 1, category.name)
         }
+
+        popupMenu.setOnMenuItemClickListener { item ->
+            val selectedCategory = if (item.itemId == -1) {
+                null
+            } else {
+                categories.getOrNull(item.itemId)
+            }
+            onCategorySelected(selectedCategory)
+            true
+        }
+
+        popupMenu.show()
     }
 
     /**
@@ -597,13 +593,11 @@ class ClipTapKeyboardService : InputMethodService() {
      * カテゴリ選択時の処理
      *
      * 【目的】
-     * ユーザーがカテゴリフィルターを変更した時の処理を実行します。
+     * ユーザーがカテゴリを変更した時の処理を実行します。
      *
      * 【何をするか】
      * 1. 選択されたカテゴリをcurrentCategoryに保存（nullは"すべて"）
-     * 2. 全てのチップの選択状態を更新
-     *    - 選択中：カテゴリ色の背景 + 白文字
-     *    - 非選択：透明背景 + カテゴリ色の文字
+     * 2. チップのテキストを更新
      * 3. reloadSnippets()でスニペット一覧を再読み込み
      *
      * 【理由】
@@ -615,43 +609,10 @@ class ClipTapKeyboardService : InputMethodService() {
             currentCategory = category
             Log.d(TAG, "✅ Category selected: ${category?.name ?: "all"}")
 
-            // チップの選択状態を更新（背景色とテキスト色を変更）
-            for (i in 0 until categoryChipGroup.childCount) {
-                val chip = categoryChipGroup.getChildAt(i) as? Chip ?: continue
-
-                val isSelected = if (category == null) {
-                    chip.text == "すべて"
-                } else {
-                    chip.text == category.name
-                }
-
-                if (i == 0) {
-                    // "すべて" チップ（デフォルト色：青）
-                    if (isSelected) {
-                        chip.setChipBackgroundColorResource(android.R.color.holo_blue_light)
-                        chip.setTextColor(resources.getColor(android.R.color.white, null))
-                    } else {
-                        chip.setChipBackgroundColorResource(android.R.color.transparent)
-                        chip.setTextColor(resources.getColor(android.R.color.holo_blue_light, null))
-                    }
-                } else {
-                    // カテゴリチップ（カテゴリの色を使用）
-                    val categoryIndex = i - 1 // "すべて"の分をオフセット
-                    if (categoryIndex < categories.size) {
-                        val cat = categories[categoryIndex]
-                        val categoryColor = parseColor(cat.color)
-
-                        if (isSelected) {
-                            // 選択時：カテゴリ色の背景 + 白文字
-                            chip.setChipBackgroundColor(android.content.res.ColorStateList.valueOf(categoryColor))
-                            chip.setTextColor(resources.getColor(android.R.color.white, null))
-                        } else {
-                            // 非選択時：透明背景 + カテゴリ色の文字
-                            chip.setChipBackgroundColorResource(android.R.color.transparent)
-                            chip.setTextColor(categoryColor)
-                        }
-                    }
-                }
+            // チップのテキストを更新
+            if (categoryChipGroup.childCount > 0) {
+                val chip = categoryChipGroup.getChildAt(0) as? Chip
+                chip?.text = category?.name ?: getString(R.string.category_all)
             }
 
             reloadSnippets()
