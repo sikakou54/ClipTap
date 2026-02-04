@@ -93,13 +93,14 @@ const SnippetProfileQueries = {
  * @returns Snippet型のオブジェクト
  */
 const toEntity = (row: any): Snippet => ({
-  id: row.id, // スニペットID
-  title: row.title || null, // スニペットタイトル（未設定時はnull）
-  content: row.content, // スニペット本文
-  categoryId: row.categoryId || null, // カテゴリID（未分類の場合はnull）
-  copyWithTitle: Boolean(row.copyWithTitle), // タイトルと一緒にコピーするか（SQLiteでは0/1で格納）
-  createdAt: row.createdAt, // 作成日時
-  updatedAt: row.updatedAt, // 最終更新日時
+  id: row.id, /* スニペットID */
+  title: row.title || null, /* スニペットタイトル（未設定時はnull） */
+  content: row.content, /* スニペット本文 */
+  categoryId: row.categoryId || null, /* カテゴリID（未分類の場合はnull） */
+  copyWithTitle: Boolean(row.copyWithTitle), /* タイトルと一緒にコピーするか（SQLiteでは0/1で格納） */
+  copyCount: row.copyCount ?? 0, /* コピー回数（使用頻度ソート用） */
+  createdAt: row.createdAt, /* 作成日時 */
+  updatedAt: row.updatedAt, /* 最終更新日時 */
 });
 
 /**
@@ -327,28 +328,47 @@ export class SnippetMapper {
 
   /**
    * ソート条件を指定してスニペットを取得
-   * @param sortBy - ソート条件（'recent'または'title'）
+   * @param sortBy - ソート条件（'created', 'recent', 'title', 'usage'）
    * @returns ソート済みスニペット一覧
    */
   static getSorted(sortBy: SnippetSortBy): Snippet[] {
     const db = getMainDbAdapter();
     let orderClause = '';
     switch (sortBy) {
-      case 'recent':
-        /* 作成日時順（古い順 = ASC、新しいものが後） */
-        /* 注意: UIでは新しい順に表示したい場合は、取得後にreverse()する */
-        orderClause = 'ORDER BY createdAt ASC';
+      case 'created':
+        /* 作成日時順（新しい順）、同日時はタイトル順 */
+        orderClause = 'ORDER BY createdAt DESC, title ASC NULLS LAST';
+        break;
+      case 'updated':
+        /* 更新日時順（新しい順）、同日時はタイトル順 */
+        orderClause = 'ORDER BY updatedAt DESC, title ASC NULLS LAST';
         break;
       case 'title':
-        /* NULLS LASTにより、タイトルがnullのスニペットは最後に配置 */
-        orderClause = 'ORDER BY title ASC NULLS LAST';
+        /* タイトル順、同タイトルは作成日時順。NULLS LASTでnullは最後に配置 */
+        orderClause = 'ORDER BY title ASC NULLS LAST, createdAt DESC';
+        break;
+      case 'usage':
+        /* コピー回数順（多い順）、同数は作成日時順 */
+        orderClause = 'ORDER BY copyCount DESC, createdAt DESC';
         break;
       default:
-        orderClause = 'ORDER BY createdAt ASC';
+        /* デフォルトは作成日時順、同日時はタイトル順 */
+        orderClause = 'ORDER BY createdAt DESC, title ASC NULLS LAST';
     }
 
     const rows = db.all<any>(`SELECT * FROM snippets ${orderClause}`);
     return toEntities(rows);
+  }
+
+  /**
+   * スニペットのコピー回数をインクリメント
+   * @param id - スニペットID
+   * @description
+   * コピー操作が成功した後に呼び出し、使用頻度を記録する
+   */
+  static incrementCopyCount(id: string): void {
+    const db = getMainDbAdapter();
+    db.run('UPDATE snippets SET copyCount = copyCount + 1 WHERE id = ?', [id]);
   }
 
   /**

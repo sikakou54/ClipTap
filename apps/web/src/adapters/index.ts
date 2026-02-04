@@ -45,3 +45,7 @@ export { WebAuthAdapter } from './WebAuthAdapter';
 export { WebExportAdapter } from './WebExportAdapter';
 /* ImportAdapter - shared層のImportServiceから使用されるインポート処理アダプター */
 export { WebImportAdapter } from './WebImportAdapter';
+
+/* === SortPreference（ソート設定） === */
+/* localStorageを使用したソート設定アダプターをエクスポート */
+export { WebSortPreferenceAdapter } from './WebSortPreferenceAdapter';

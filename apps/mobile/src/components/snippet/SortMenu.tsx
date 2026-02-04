@@ -1,18 +1,21 @@
 /**
  * ソートメニューコンポーネント
  *
- * スニペット一覧のソート順を変更するドロップダウンメニュー。
- * 現在のソート順を表示し、タップでモーダルを開いて変更可能。
+ * スニペット一覧のソート順を変更するアイコンボタン。
+ * カテゴリフィルターの「すべて」の左隣に配置され、タップでモーダルを開いて変更可能。
+ * デフォルト以外のソートが選択されている時はバッジを表示。
  *
  * ソートオプション:
- * - recent: 最近使用した順（デフォルト）
+ * - created: 作成日時順（デフォルト）
+ * - recent: 更新日時順
  * - title: タイトル順（アルファベット/あいうえお順）
+ * - usage: 使用頻度順（コピー回数が多い順）
  *
- * @see app/(tabs)/index.tsx - メイン画面での使用例
+ * @see app/index.tsx - メイン画面での使用例
  */
 
 import React from 'react';
-import { Text, TouchableOpacity, StyleSheet, Modal, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '@cliptap/shared';
 import { useTheme } from '@lib/themeSystem';
@@ -42,7 +45,7 @@ export function SortMenu({ currentSort, onSortChange }: SortMenuProps) {
   const {
     visible,
     sortOptions,
-    currentOption,
+    isDefaultSort,
     handlePress,
     handleSelect,
     handleClose,
@@ -50,23 +53,27 @@ export function SortMenu({ currentSort, onSortChange }: SortMenuProps) {
 
   return (
     <>
-      {/* ソートボタン（現在のソート順を表示） */}
+      {/* ソートボタン（アイコンのみ、カテゴリチップと同じ高さ） */}
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: colors.surface }]}
+        style={[
+          styles.button,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+          },
+        ]}
         onPress={handlePress}
       >
         {/* ソートアイコン */}
         <Ionicons
-          name={currentOption?.icon}
-          size={18}
+          name="swap-vertical-outline"
+          size={20}
           color={colors.text}
         />
-        {/* ソートラベル */}
-        <Text style={[styles.label, { color: colors.text, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
-          {currentOption?.label}
-        </Text>
-        {/* ドロップダウンアイコン */}
-        <Ionicons name="chevron-down" size={18} color={colors.textSecondary} />
+        {/* バッジ（デフォルト以外のソートが選択されている時） */}
+        {!isDefaultSort && (
+          <View style={[styles.badge, { backgroundColor: colors.primary }]} />
+        )}
       </TouchableOpacity>
 
       {/* ソート選択モーダル */}
@@ -85,39 +92,70 @@ export function SortMenu({ currentSort, onSortChange }: SortMenuProps) {
               {t('sort.title')}
             </Text>
             {/* ソートオプション一覧 */}
-            {sortOptions.map((option, index) => (
-              <TouchableOpacity
-                key={option.value}
-                style={[
-                  styles.option,
-                  index < sortOptions.length - 1 && styles.optionBorder,
-                  { borderBottomColor: colors.border }
-                ]}
-                onPress={() => handleSelect(option.value)}
-              >
-                {/* オプションアイコン */}
-                <Ionicons
-                  name={option.icon}
-                  size={22}
-                  color={currentSort === option.value ? colors.primary : colors.text}
-                />
-                {/* オプションラベル */}
-                <Text style={[
-                  styles.optionText,
-                  {
-                    color: currentSort === option.value ? colors.primary : colors.text,
-                    fontSize: responsiveFontSizes.base,
-                    lineHeight: responsiveLineHeights.base
-                  }
-                ]}>
-                  {option.label}
-                </Text>
-                {/* 選択中のチェックマーク */}
-                {currentSort === option.value && (
-                  <Ionicons name="checkmark" size={22} color={colors.primary} />
-                )}
-              </TouchableOpacity>
-            ))}
+            {sortOptions.map((option, index) => {
+              /* オプションの色を決定（disabled時はグレーアウト） */
+              const optionColor = option.disabled
+                ? colors.textSecondary
+                : currentSort === option.value
+                  ? colors.primary
+                  : colors.text;
+
+              return (
+                <View key={option.value}>
+                  <TouchableOpacity
+                    style={[
+                      styles.option,
+                      index < sortOptions.length - 1 && !option.disabled && styles.optionBorder,
+                      { borderBottomColor: colors.border },
+                    ]}
+                    onPress={() => !option.disabled && handleSelect(option.value)}
+                    disabled={option.disabled}
+                  >
+                    {/* オプションアイコン */}
+                    <Ionicons name={option.icon} size={22} color={optionColor} />
+                    {/* オプションラベル */}
+                    <Text
+                      style={[
+                        styles.optionText,
+                        {
+                          color: optionColor,
+                          fontSize: responsiveFontSizes.base,
+                          lineHeight: responsiveLineHeights.base,
+                        },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                    {/* 選択中のチェックマーク */}
+                    {currentSort === option.value && !option.disabled && (
+                      <Ionicons name="checkmark" size={22} color={colors.primary} />
+                    )}
+                    {/* disabled時はロックアイコンを表示 */}
+                    {option.disabled && (
+                      <Ionicons
+                        name="lock-closed-outline"
+                        size={18}
+                        color={colors.textSecondary}
+                      />
+                    )}
+                  </TouchableOpacity>
+                  {/* 使用頻度オプションがdisabledの場合、説明文を表示 */}
+                  {option.value === 'usage' && option.disabled && (
+                    <Text
+                      style={[
+                        styles.disabledHint,
+                        {
+                          color: colors.textSecondary,
+                          fontSize: responsiveFontSizes.xs,
+                        },
+                      ]}
+                    >
+                      {t('sort.usage_requires_full_access')}
+                    </Text>
+                  )}
+                </View>
+              );
+            })}
           </Pressable>
         </Pressable>
       </Modal>
@@ -127,15 +165,24 @@ export function SortMenu({ currentSort, onSortChange }: SortMenuProps) {
 
 const styles = StyleSheet.create({
   button: {
+    position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    gap: 6,
+    justifyContent: 'center',
+    paddingHorizontal: UI_CONSTANTS.GAP.BASE,
+    paddingVertical: UI_CONSTANTS.GAP.SM,
+    borderRadius: UI_CONSTANTS.BORDER_RADIUS.XL,
+    borderWidth: UI_CONSTANTS.BORDER_WIDTH.THIN,
+    height: UI_CONSTANTS.SIZE.ICON_CONTAINER_MD,
+    minWidth: UI_CONSTANTS.SIZE.ICON_CONTAINER_MD,
   },
-  label: {
-    fontWeight: '500',
+  badge: {
+    position: 'absolute',
+    top: 0,
+    right: 2,
+    width: 12,
+    height: 12,
+    borderRadius: 100,
   },
   overlay: {
     flex: 1,
@@ -171,5 +218,10 @@ const styles = StyleSheet.create({
   optionText: {
     flex: 1,
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.MEDIUM,
+  },
+  disabledHint: {
+    paddingHorizontal: UI_CONSTANTS.GAP.MD,
+    paddingBottom: UI_CONSTANTS.GAP.MD,
+    marginLeft: UI_CONSTANTS.GAP.MD + 22,
   },
 });

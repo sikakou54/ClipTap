@@ -20,7 +20,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from '@cliptap/shared';
 import i18next from '@i18n/config';
-import { useSnippets, useCategories, useProfiles, useVariables, useFilteredSnippets, filterCategoriesWithSnippets, type Category, type SnippetWithDisplay } from '@cliptap/shared';
+import { useSnippets, useCategories, useProfiles, useVariables, useFilteredSnippets, filterCategoriesWithSnippets, type Category, type SnippetWithDisplay, type SnippetSortBy } from '@cliptap/shared';
 import { showErrorAlert } from '@utils/alerts';
 
 /**
@@ -31,6 +31,7 @@ export interface UseHomeScreenReturn {
   selectedCategoryId: string | null;
   refreshing: boolean;
   activeProfileId: string | undefined;
+  currentSort: SnippetSortBy;
 
   /* データ */
   snippets: SnippetWithDisplay[];
@@ -48,6 +49,7 @@ export interface UseHomeScreenReturn {
   handleNavigateToSearch: () => void;
   handleNavigateToCreate: () => void;
   handleProfileChange: () => void;
+  handleSortChange: (sortBy: SnippetSortBy) => void;
 }
 
 /**
@@ -89,6 +91,8 @@ export function useHomeScreen(): UseHomeScreenReturn {
     refresh,
     copySnippet,
     deleteSnippet,
+    sortBy: currentSort,
+    setSortBy: handleSortChange,
   } = useSnippets();
 
   /* 共通フィルタリングフックを使用（カテゴリフィルタ適用） */
@@ -214,6 +218,7 @@ export function useHomeScreen(): UseHomeScreenReturn {
     selectedCategoryId,
     refreshing,
     activeProfileId,
+    currentSort,
     snippets,
     categories,
     filteredCategories,
@@ -227,5 +232,6 @@ export function useHomeScreen(): UseHomeScreenReturn {
     handleNavigateToSearch,
     handleNavigateToCreate,
     handleProfileChange,
+    handleSortChange,
   };
 }

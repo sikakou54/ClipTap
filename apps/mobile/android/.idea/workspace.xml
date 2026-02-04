@@ -4,7 +4,47 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="10a2b4ef-ebc3-4bda-8184-616d6b5af8e4" name="Changes" comment="" />
+    <list default="true" id="10a2b4ef-ebc3-4bda-8184-616d6b5af8e4" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../../../CLAUDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../CNAME" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../app-ads.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/Description(4000chars).txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/EULA_License_Agreement.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/PromotionalText(170chars).txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/WhatsNew.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/screen/1-templates.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/screen/2-variables.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/screen/3-keyboard.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/screen/4-profiles.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/screen/5-sns.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/screen/6-web-sync.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/store_en.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/store_ja.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/プロモーションテキスト(170文字).txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/最新情報.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AppStoreConnect/概要(4000文字).txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sikakou/cliptap/keyboard/ClipTapKeyboardService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sikakou/cliptap/keyboard/ClipTapKeyboardService.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sikakou/cliptap/mappers/SnippetMapper.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sikakou/cliptap/mappers/SnippetMapper.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sikakou/cliptap/services/SnippetService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sikakou/cliptap/services/SnippetService.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-b+en/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-b+en/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-b+ja/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-b+ja/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/reports/problems/problems-report.html" beforeDir="false" afterPath="$PROJECT_DIR$/build/reports/problems/problems-report.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app.json" beforeDir="false" afterPath="$PROJECT_DIR$/../app.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../assets/web/privacy.html" beforeDir="false" afterPath="$PROJECT_DIR$/../assets/web/privacy.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../assets/web/terms.html" beforeDir="false" afterPath="$PROJECT_DIR$/../assets/web/terms.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../english.json" beforeDir="false" afterPath="$PROJECT_DIR$/../english.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ios/ClipTap.xcodeproj/project.pbxproj" beforeDir="false" afterPath="$PROJECT_DIR$/../ios/ClipTap.xcodeproj/project.pbxproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ios/ClipTap/Info.plist" beforeDir="false" afterPath="$PROJECT_DIR$/../ios/ClipTap/Info.plist" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ios/ClipTapKeyboard/Database/Database.swift" beforeDir="false" afterPath="$PROJECT_DIR$/../ios/ClipTapKeyboard/Database/Database.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ios/ClipTapKeyboard/Info.plist" beforeDir="false" afterPath="$PROJECT_DIR$/../ios/ClipTapKeyboard/Info.plist" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ios/ClipTapKeyboard/KeyboardViewController.swift" beforeDir="false" afterPath="$PROJECT_DIR$/../ios/ClipTapKeyboard/KeyboardViewController.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ios/ClipTapKeyboard/Mappers/SnippetMapper.swift" beforeDir="false" afterPath="$PROJECT_DIR$/../ios/ClipTapKeyboard/Mappers/SnippetMapper.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../japanese.json" beforeDir="false" afterPath="$PROJECT_DIR$/../japanese.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../web/public/privacy.html" beforeDir="false" afterPath="$PROJECT_DIR$/../../web/public/privacy.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../web/public/terms.html" beforeDir="false" afterPath="$PROJECT_DIR$/../../web/public/terms.html" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -13,7 +53,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=PhysicalDevice, isTemplate=false, identifier=serial=22221JEGR01473)]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=/Users/sasakikouhei/.android/avd/Pixel_9_Pro.avd)]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -59,7 +99,7 @@
     &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
     &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
     &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/1.2.0&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;future/1.2.1&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.gradle&quot;
   }

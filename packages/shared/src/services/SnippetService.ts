@@ -118,11 +118,22 @@ export class SnippetService {
   /**
    * ソート済みスニペットを取得
    *
-   * @param sortBy - ソート基準（'recent', 'title'）
+   * @param sortBy - ソート基準（'created', 'updated', 'title', 'usage'）
    * @returns 指定された基準でソートされたスニペットの配列
    */
   static getSorted(sortBy: SnippetSortBy): Snippet[] {
     return SnippetMapper.getSorted(sortBy);
+  }
+
+  /**
+   * スニペットのコピー回数をインクリメント
+   *
+   * @param id - スニペットのID
+   * @description
+   * コピー操作が成功した後に呼び出し、使用頻度を記録する
+   */
+  static incrementCopyCount(id: string): void {
+    SnippetMapper.incrementCopyCount(id);
   }
 
   /**

@@ -15,9 +15,10 @@ struct Snippet {
     let content: String
     let categoryId: String?
     let copyWithTitle: Bool
+    let copyCount: Int         /* コピー回数（使用頻度ソート用） */
     let createdAt: String
     let updatedAt: String
-    var profileIds: [String] = []  // snippet_profilesから取得（遅延ロード）
+    var profileIds: [String] = []  /* snippet_profilesから取得（遅延ロード） */
 }
 
 // MARK: - Category

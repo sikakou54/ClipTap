@@ -50,4 +50,10 @@
   <string name="accessibility_snippet_item">Snippet item</string>
   <string name="accessibility_close_button">Close button</string>
   <string name="accessibility_copy_button">Copy button</string>
+  <string name="accessibility_sort_button">Sort button</string>
+  <string name="keyboard_sort_label">Sort</string>
+  <string name="keyboard_sort_created">Created</string>
+  <string name="keyboard_sort_updated">Updated</string>
+  <string name="keyboard_sort_title">Title</string>
+  <string name="keyboard_sort_usage">Frequency</string>
 </resources>

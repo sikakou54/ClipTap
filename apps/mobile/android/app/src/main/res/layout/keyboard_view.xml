@@ -15,15 +15,16 @@
     android:background="?android:attr/colorBackground"
     android:padding="8dp">
 
-    <!-- 統合フィルターエリア（環境ドロップダウン + カテゴリスクロール） -->
+    <!-- 統合フィルターエリア（環境ドロップダウン + カテゴリドロップダウン + ソートボタン） -->
     <LinearLayout
         android:id="@+id/filterContainer"
         android:layout_width="match_parent"
         android:layout_height="44dp"
         android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:background="@android:color/transparent">
 
-        <!-- 環境選択ドロップダウンボタン（左端固定、固定幅100dp） -->
+        <!-- 環境選択ドロップダウンボタン（左端、固定幅100dp） -->
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/profileChipGroup"
             android:layout_width="100dp"
@@ -31,22 +32,50 @@
             app:singleSelection="true"
             app:chipSpacing="0dp" />
 
-        <!-- カテゴリ選択チップグループ（残りのスペースを使用） -->
-        <HorizontalScrollView
+        <!-- カテゴリ選択ドロップダウンボタン（固定幅100dp） -->
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/categoryChipGroup"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            app:singleSelection="true"
+            app:chipSpacing="0dp" />
+
+        <!-- スペーサー（残り領域を埋める） -->
+        <View
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:scrollbars="none">
+            android:layout_weight="1" />
 
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/categoryChipGroup"
-                android:layout_width="wrap_content"
+        <!-- ソートボタン + バッジコンテナ（右端固定） -->
+        <FrameLayout
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="4dp">
+
+            <!-- ソートボタン -->
+            <ImageButton
+                android:id="@+id/sortButton"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:singleSelection="true"
-                app:chipSpacing="8dp" />
+                android:src="@drawable/ic_sort"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/keyboard_sort_label"
+                android:scaleType="center"
+                android:padding="8dp" />
 
-        </HorizontalScrollView>
+            <!-- ソートバッジ（デフォルト以外の時に表示） -->
+            <View
+                android:id="@+id/sortBadge"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="2dp"
+                android:background="@drawable/sort_badge_background"
+                android:visibility="gone" />
+
+        </FrameLayout>
 
     </LinearLayout>
 

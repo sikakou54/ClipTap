@@ -26,25 +26,40 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
     }
 
     /**
-     * 全スニペットを取得
-     * プロファイルIDでフィルタリング可能
+     * ソート条件に応じたORDER BY句を生成
+     * メインアプリ（TypeScript版 SnippetMapper.ts）の getSorted() と同等のソート条件
      */
-    fun getAll(filterByProfileId: String? = null): List<Snippet> {
+    private fun orderClause(sortBy: String): String {
+        return when (sortBy) {
+            "created" -> "ORDER BY createdAt DESC, title ASC"
+            "updated" -> "ORDER BY updatedAt DESC, title ASC"
+            "title" -> "ORDER BY title ASC, createdAt DESC"
+            "usage" -> "ORDER BY copyCount DESC, createdAt DESC"
+            else -> "ORDER BY createdAt DESC, title ASC"
+        }
+    }
+
+    /**
+     * 全スニペットを取得
+     * プロファイルIDでフィルタリング可能、ソート条件を指定可能
+     */
+    fun getAll(filterByProfileId: String? = null, sortBy: String = "created"): List<Snippet> {
         val snippets = mutableListOf<Snippet>()
+        val order = orderClause(sortBy)
 
         val query = if (filterByProfileId != null) {
             """
-            SELECT DISTINCT s.id, s.title, s.content, s.categoryId, s.copyWithTitle, s.createdAt, s.updatedAt
+            SELECT DISTINCT s.id, s.title, s.content, s.categoryId, s.copyWithTitle, s.copyCount, s.createdAt, s.updatedAt
             FROM snippets s
             WHERE s.id NOT IN (SELECT snippetId FROM snippet_profiles)
                OR s.id IN (SELECT snippetId FROM snippet_profiles WHERE profileId = ?)
-            ORDER BY s.createdAt ASC
+            $order
             """
         } else {
             """
-            SELECT id, title, content, categoryId, copyWithTitle, createdAt, updatedAt
+            SELECT id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt
             FROM snippets
-            ORDER BY createdAt ASC
+            $order
             """
         }
 
@@ -63,39 +78,41 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
                         content = it.getString(2),
                         categoryId = it.getStringOrNull(3),
                         copyWithTitle = it.getBoolean(4),
-                        createdAt = it.getString(5),
-                        updatedAt = it.getString(6)
+                        copyCount = it.getInt(5),
+                        createdAt = it.getString(6),
+                        updatedAt = it.getString(7)
                     )
                 )
             }
         }
 
-        Log.d(TAG, "Loaded ${snippets.size} snippets (profileId: $filterByProfileId)")
+        Log.d(TAG, "Loaded ${snippets.size} snippets (profileId: $filterByProfileId, sortBy: $sortBy)")
         return snippets
     }
 
     /**
      * カテゴリIDでスニペットを取得
-     * プロファイルIDでフィルタリング可能
+     * プロファイルIDでフィルタリング可能、ソート条件を指定可能
      */
-    fun getByCategoryId(categoryId: String, filterByProfileId: String? = null): List<Snippet> {
+    fun getByCategoryId(categoryId: String, filterByProfileId: String? = null, sortBy: String = "created"): List<Snippet> {
         val snippets = mutableListOf<Snippet>()
+        val order = orderClause(sortBy)
 
         val query = if (filterByProfileId != null) {
             """
-            SELECT DISTINCT s.id, s.title, s.content, s.categoryId, s.copyWithTitle, s.createdAt, s.updatedAt
+            SELECT DISTINCT s.id, s.title, s.content, s.categoryId, s.copyWithTitle, s.copyCount, s.createdAt, s.updatedAt
             FROM snippets s
             WHERE s.categoryId = ?
               AND (s.id NOT IN (SELECT snippetId FROM snippet_profiles)
                    OR s.id IN (SELECT snippetId FROM snippet_profiles WHERE profileId = ?))
-            ORDER BY s.createdAt ASC
+            $order
             """
         } else {
             """
-            SELECT id, title, content, categoryId, copyWithTitle, createdAt, updatedAt
+            SELECT id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt
             FROM snippets
             WHERE categoryId = ?
-            ORDER BY createdAt ASC
+            $order
             """
         }
 
@@ -114,14 +131,15 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
                         content = it.getString(2),
                         categoryId = it.getStringOrNull(3),
                         copyWithTitle = it.getBoolean(4),
-                        createdAt = it.getString(5),
-                        updatedAt = it.getString(6)
+                        copyCount = it.getInt(5),
+                        createdAt = it.getString(6),
+                        updatedAt = it.getString(7)
                     )
                 )
             }
         }
 
-        Log.d(TAG, "Loaded ${snippets.size} snippets (categoryId: $categoryId, profileId: $filterByProfileId)")
+        Log.d(TAG, "Loaded ${snippets.size} snippets (categoryId: $categoryId, profileId: $filterByProfileId, sortBy: $sortBy)")
         return snippets
     }
 
@@ -130,7 +148,7 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
      */
     fun getById(id: String): Snippet? {
         val query = """
-            SELECT id, title, content, categoryId, copyWithTitle, createdAt, updatedAt
+            SELECT id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt
             FROM snippets
             WHERE id = ?
         """
@@ -144,12 +162,29 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
                     content = it.getString(2),
                     categoryId = it.getStringOrNull(3),
                     copyWithTitle = it.getBoolean(4),
-                    createdAt = it.getString(5),
-                    updatedAt = it.getString(6)
+                    copyCount = it.getInt(5),
+                    createdAt = it.getString(6),
+                    updatedAt = it.getString(7)
                 )
             }
         }
 
         return null
+    }
+
+    /**
+     * スニペットのコピー回数をインクリメント
+     * 拡張キーボードでスニペットを使用した際に呼び出し、使用頻度を記録する
+     * TypeScript版 SnippetMapper.incrementCopyCount() と同等
+     */
+    fun incrementCopyCount(snippetId: String) {
+        val query = """
+            UPDATE snippets
+            SET copyCount = copyCount + 1
+            WHERE id = ?
+        """
+
+        executeUpdate(query, arrayOf(snippetId))
+        Log.d(TAG, "✅ Incremented copyCount for snippet: $snippetId")
     }
 }

@@ -12,6 +12,7 @@ import { WebFilePickerAdapter } from '@adapters/WebFilePickerAdapter';
 import { WebAuthAdapter } from '@adapters/WebAuthAdapter';
 import { WebExportAdapter } from '@adapters/WebExportAdapter';
 import { WebImportAdapter } from '@adapters/WebImportAdapter';
+import { WebSortPreferenceAdapter } from '@adapters/WebSortPreferenceAdapter';
 import { webDbCacheManager } from '@adapters/WebDbCacheManager';
 
 /**
@@ -51,6 +52,7 @@ export function useAdapterInitialization() {
         auth: new WebAuthAdapter(),
         export: new WebExportAdapter(fileShareAdapter, fileIOAdapter),
         import: new WebImportAdapter(fileIOAdapter),
+        sortPreference: new WebSortPreferenceAdapter(),
       },
       adapterOptions: {
         subscription: {

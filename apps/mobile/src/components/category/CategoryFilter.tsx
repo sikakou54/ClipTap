@@ -29,17 +29,20 @@ import { UI_CONSTANTS } from '@constants/ui';
  * @property categories - フィルター対象のカテゴリ一覧
  * @property selectedCategoryId - 現在選択中のカテゴリID（nullで「すべて」）
  * @property onSelectCategory - カテゴリ選択時のコールバック
+ * @property sortMenu - ソートメニューコンポーネント（オプション、「すべて」の左に配置）
  */
 interface CategoryFilterProps {
   categories: Category[];
   selectedCategoryId: string | null;
   onSelectCategory: (categoryId: string | null) => void;
+  sortMenu?: React.ReactNode;
 }
 
 export function CategoryFilter({
   categories,
   selectedCategoryId,
   onSelectCategory,
+  sortMenu,
 }: CategoryFilterProps) {
   const { t } = useTranslation();
   const { colors, responsiveFontSizes } = useTheme();
@@ -60,6 +63,8 @@ export function CategoryFilter({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.container}
       >
+        {/* ソートメニュー（「すべて」の左隣に配置） */}
+        {sortMenu}
         {options.map((option) => {
           const isSelected = option.id === selectedCategoryId;
           const categoryColor = option.id ? (categories.find(c => c.id === option.id)?.color || colors.primary) : colors.primary;

@@ -375,7 +375,11 @@ class Database {
                 let bindIndex = Int32(index + 1)
 
                 if let stringValue = param as? String {
-                    sqlite3_bind_text(statement, bindIndex, stringValue, -1, nil)
+                    /* SQLITE_TRANSIENT を使用してSQLiteに文字列のコピーを作成させる
+                       Swiftの文字列は一時的なメモリを使用するため、nil（SQLITE_STATIC）だと
+                       メモリ解放後に不正な値を参照してしまう */
+                    let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+                    sqlite3_bind_text(statement, bindIndex, stringValue, -1, SQLITE_TRANSIENT)
                 } else if let intValue = param as? Int {
                     sqlite3_bind_int(statement, bindIndex, Int32(intValue))
                 } else if let boolValue = param as? Bool {
@@ -462,6 +466,48 @@ class Database {
     func getBool(_ statement: OpaquePointer, at index: Int32) -> Bool {
         // 1ならtrue、0ならfalseに変換
         return sqlite3_column_int(statement, index) == 1
+    }
+
+    /// WALチェックポイントを実行
+    ///
+    /// 【目的】
+    /// 拡張キーボードでの書き込み（copyCountインクリメントなど）を
+    /// メインDBファイルに即座に反映させるために使用します。
+    ///
+    /// 【WALモードとは】
+    /// SQLiteのデフォルトのジャーナルモードはWAL（Write-Ahead Logging）です。
+    /// WALモードでは、書き込みが一時的に.walファイルに記録され、
+    /// チェックポイント時にメインDBにマージされます。
+    ///
+    /// 【なぜ必要か】
+    /// 拡張キーボードとメインアプリは別プロセスで動作するため、
+    /// 拡張キーボードでの書き込みがメインアプリに反映されない場合があります。
+    /// チェックポイントを実行することで、確実に反映されます。
+    ///
+    /// 【スレッドセーフティ】
+    /// dbQueue.syncでシリアルキューを使用し、複数スレッドからの同時アクセスを防ぎます
+    func checkpoint() {
+        dbQueue.sync {
+            guard let db = db else {
+                NSLog("[Database] ⚠️ checkpoint() called but database not opened")
+                return
+            }
+
+            let result = sqlite3_wal_checkpoint_v2(
+                db,
+                nil,  /* すべてのデータベース */
+                SQLITE_CHECKPOINT_FULL,  /* フルチェックポイント */
+                nil,  /* 書き込まれたページ数（不要） */
+                nil   /* チェックポイントされたページ数（不要） */
+            )
+
+            if result == SQLITE_OK {
+                NSLog("[Database] ✅ WAL checkpoint completed")
+            } else {
+                let errorMsg = String(cString: sqlite3_errmsg(db))
+                NSLog("[Database] ⚠️ WAL checkpoint failed: %@", errorMsg)
+            }
+        }
     }
 
     // MARK: - Errors（エラー型定義）

@@ -21,6 +21,8 @@ import type { I18nAdapter } from './I18nAdapter';
 import type { AuthAdapter } from './AuthAdapter';
 import type { ExportAdapter } from './ExportAdapter';
 import type { ImportAdapter } from './ImportAdapter';
+import type { SortPreferenceAdapter } from './SortPreferenceAdapter';
+import type { UsageTrackingAdapter } from './UsageTrackingAdapter';
 
 import { setCryptoAdapter } from './CryptoAdapter';
 import {
@@ -37,6 +39,8 @@ import { setI18nAdapter } from './I18nAdapter';
 import { setAuthAdapter } from './AuthAdapter';
 import { setExportAdapter } from './ExportAdapter';
 import { setImportAdapter } from './ImportAdapter';
+import { setSortPreferenceAdapter } from './SortPreferenceAdapter';
+import { setUsageTrackingAdapter } from './UsageTrackingAdapter';
 import { SubscriptionService } from '../services/SubscriptionService';
 
 /**
@@ -122,6 +126,10 @@ export interface AllAdapters {
   export?: ExportAdapter;
   /** インポートアダプター（インポート処理を抽象化） */
   import?: ImportAdapter;
+  /** ソート設定アダプター（ソート設定の保存・取得を抽象化） */
+  sortPreference?: SortPreferenceAdapter;
+  /** 使用頻度追跡アダプター（使用頻度追跡設定を抽象化） */
+  usageTracking?: UsageTrackingAdapter;
 }
 
 /**
@@ -192,5 +200,11 @@ export function setAllAdapters(
   }
   if (adapters.import) {
     setImportAdapter(adapters.import);
+  }
+  if (adapters.sortPreference) {
+    setSortPreferenceAdapter(adapters.sortPreference);
+  }
+  if (adapters.usageTracking) {
+    setUsageTrackingAdapter(adapters.usageTracking);
   }
 }

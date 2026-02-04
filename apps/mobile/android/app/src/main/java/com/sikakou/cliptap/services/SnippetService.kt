@@ -60,12 +60,13 @@ class SnippetService private constructor(private val context: Context) {
      *
      * 【引数】
      * @param profileId プロファイルID（nullの場合はプロファイルフィルタなし）
+     * @param sortBy ソート条件（"created", "updated", "title", "usage"）
      *
      * 【戻り値】
-     * スニペットのリスト（作成日時の降順）
+     * スニペットのリスト（ソート条件に従って並び替え済み）
      */
-    fun getAllSnippets(profileId: String? = null): List<Snippet> {
-        return snippetMapper.getAll(profileId)
+    fun getAllSnippets(profileId: String? = null, sortBy: String = "created"): List<Snippet> {
+        return snippetMapper.getAll(profileId, sortBy)
     }
 
     /**
@@ -80,12 +81,13 @@ class SnippetService private constructor(private val context: Context) {
      * 【引数】
      * @param categoryId カテゴリID
      * @param profileId プロファイルID（nullの場合はプロファイルフィルタなし）
+     * @param sortBy ソート条件（"created", "updated", "title", "usage"）
      *
      * 【戻り値】
-     * 指定カテゴリのスニペットリスト
+     * 指定カテゴリのスニペットリスト（ソート条件に従って並び替え済み）
      */
-    fun getSnippetsByCategory(categoryId: String, profileId: String? = null): List<Snippet> {
-        return snippetMapper.getByCategoryId(categoryId, profileId)
+    fun getSnippetsByCategory(categoryId: String, profileId: String? = null, sortBy: String = "created"): List<Snippet> {
+        return snippetMapper.getByCategoryId(categoryId, profileId, sortBy)
     }
 
     /**
@@ -156,14 +158,18 @@ class SnippetService private constructor(private val context: Context) {
         // 本文の変数置換
         val content = variableReplacer.replace(snippet.content, variablesMap)
 
-        // テキストを挿入
+        /* テキストを挿入 */
         val textToInsert = title + content
         inputConnection.commitText(textToInsert, 1)
 
         Log.d(TAG, "✅ Snippet inserted: ${snippet.id}")
 
-        // 振動フィードバック
+        /* 振動フィードバック */
         performHapticFeedback()
+
+        /* 使用頻度（copyCount）をインクリメント
+           使用頻度順ソートに反映するため、挿入時にカウントを加算 */
+        snippetMapper.incrementCopyCount(snippet.id)
     }
 
     /**

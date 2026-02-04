@@ -8,13 +8,16 @@
  * - モーダル表示状態管理
  * - ソートオプションの生成
  * - ソート選択処理
+ * - 使用頻度追跡設定に応じた使用頻度オプションの表示制御
  *
  * @see components/snippet/SortMenu.tsx - UIコンポーネント
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 import { useTranslation } from '@cliptap/shared';
 import { SnippetSortBy } from '@cliptap/shared';
+import { FullAccessAdapter } from '@adapters/FullAccessAdapter';
 import { type VariableIconName } from '@constants/ui';
 
 /**
@@ -24,6 +27,7 @@ export interface SortOption {
   value: SnippetSortBy;
   label: string;
   icon: VariableIconName;
+  disabled?: boolean;
 }
 
 /**
@@ -44,12 +48,18 @@ export interface UseSortMenuReturn {
   visible: boolean;
   sortOptions: SortOption[];
   currentOption: SortOption | undefined;
+  isDefaultSort: boolean;
 
   /* ハンドラ */
   handlePress: () => void;
   handleSelect: (value: SnippetSortBy) => void;
   handleClose: () => void;
 }
+
+/**
+ * デフォルトのソート順
+ */
+const DEFAULT_SORT: SnippetSortBy = 'created';
 
 /**
  * ソートメニューのビジネスロジックフック
@@ -64,14 +74,54 @@ export function useSortMenu({
   const { t } = useTranslation();
 
   const [visible, setVisible] = useState(false);
+  const [isUsageEnabled, setIsUsageEnabled] = useState(false);
+
+  /**
+   * 使用頻度追跡状態を取得
+   * フルアクセス許可かつキーボード設定で使用頻度追跡がONの場合にtrue
+   * フォアグラウンド復帰時にも再取得（設定変更を反映）
+   */
+  useEffect(() => {
+    /* 初回取得 */
+    FullAccessAdapter.isUsageTrackingEnabled().then(setIsUsageEnabled);
+
+    /* フォアグラウンド復帰時に再取得 */
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        FullAccessAdapter.isUsageTrackingEnabled().then(setIsUsageEnabled);
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   /**
    * ソートオプション一覧
+   * 使用頻度追跡が無効の場合は「使用頻度」をdisabledで表示
    */
-  const sortOptions: SortOption[] = useMemo(() => [
-    { value: 'recent', label: t('sort.recent'), icon: 'time-outline' },
-    { value: 'title', label: t('sort.title_sort'), icon: 'text-outline' },
-  ], [t]);
+  const sortOptions: SortOption[] = useMemo(
+    () => [
+      { value: 'created', label: t('sort.created'), icon: 'create-outline' },
+      { value: 'updated', label: t('sort.updated'), icon: 'time-outline' },
+      { value: 'title', label: t('sort.title_sort'), icon: 'text-outline' },
+      {
+        value: 'usage',
+        label: t('sort.usage'),
+        icon: 'stats-chart-outline',
+        disabled: !isUsageEnabled,
+      },
+    ],
+    [t, isUsageEnabled],
+  );
+
+  /**
+   * デフォルトソートかどうか
+   */
+  const isDefaultSort = currentSort === DEFAULT_SORT;
 
   /**
    * 現在選択中のオプション
@@ -106,6 +156,7 @@ export function useSortMenu({
     visible,
     sortOptions,
     currentOption,
+    isDefaultSort,
     handlePress,
     handleSelect,
     handleClose,

@@ -14,10 +14,10 @@
  * @see app/(tabs)/index.tsx - メイン画面での使用例
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from '@cliptap/shared';
-import { FlashList, ListRenderItemInfo } from '@mobile-types/flashlist';
+import { FlashList, ListRenderItemInfo, type FlashListRef } from '@mobile-types/flashlist';
 import { useTheme } from '@lib/themeSystem';
 import { SnippetCard } from './SnippetCard';
 import EmptyState from '@components/common/EmptyState';
@@ -34,6 +34,7 @@ import { Category } from '@cliptap/shared';
  * @property onRefresh - プルリフレッシュ時のコールバック（省略可）
  * @property disableCopy - コピー機能を無効化（省略可、デフォルト: false）
  * @property categories - カテゴリ一覧（省略可：パフォーマンス最適化のため親から渡す）
+ * @property extraData - FlashListの再描画トリガー用（ソート順変更時など）
  */
 interface SnippetListProps {
   snippets: SnippetWithDisplay[];
@@ -45,6 +46,7 @@ interface SnippetListProps {
   disableCopy?: boolean;
   overrideProfileId?: string | null;
   categories?: Category[];
+  extraData?: unknown;
 }
 
 export function SnippetList({
@@ -56,12 +58,30 @@ export function SnippetList({
   onRefresh,
   disableCopy = false,
   categories,
+  extraData,
 }: SnippetListProps) {
   const { t } = useTranslation();
   const { responsiveSpacing, isTablet } = useTheme();
 
   const numColumns = isTablet ? 2 : 1;
   const columnGap = responsiveSpacing.cardGap;
+
+  /* FlashListへの参照（スクロール制御用） */
+  const listRef = useRef<FlashListRef<SnippetWithDisplay>>(null);
+
+  /**
+   * extraData（ソート順）が変更された時にリストをトップにスクロール
+   * 初回レンダリング時はスクロールしない
+   */
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    /* ソート変更時にトップへスクロール */
+    listRef.current?.scrollToTop({ animated: true });
+  }, [extraData]);
 
   /**
    * カテゴリIDをキーとしたMapを作成
@@ -118,7 +138,9 @@ export function SnippetList({
     <View style={styles.listStyle}>
       {/* FlashList: FlatListの代替として使用（大量データでも高速） */}
       <FlashList<SnippetWithDisplay>
+        ref={listRef}
         data={snippets}
+        extraData={extraData}
         estimatedItemSize={120}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}

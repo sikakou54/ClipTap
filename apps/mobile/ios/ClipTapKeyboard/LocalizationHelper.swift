@@ -230,6 +230,49 @@ enum L10n {
 
         /// "コピーボタン" / "Copy button"
         static let copyButton = localized("accessibility.copy_button")
+
+        /// "並び替えボタン" / "Sort button"
+        static let sortButton = localized("accessibility.sort_button")
+    }
+
+    // MARK: - Sort (ソート関連)
+
+    /// ソート関連の翻訳
+    enum Sort {
+        /// "並順" / "Sort"
+        static let label = localized("sort.label")
+
+        /// "作成日時" / "Created"
+        static let created = localized("sort.created")
+
+        /// "更新日時" / "Updated"
+        static let updated = localized("sort.updated")
+
+        /// "タイトル" / "Title"
+        static let title = localized("sort.title")
+
+        /// "使用頻度" / "Frequency"
+        static let usage = localized("sort.usage")
+    }
+
+    // MARK: - Settings (設定関連)
+
+    /// 設定関連の翻訳
+    enum Settings {
+        /// "設定" / "Settings"
+        static let title = localized("settings.title")
+
+        /// "使用頻度をカウントする" / "Track Usage Frequency"
+        static let usageTrackingEnabled = localized("settings.usage_tracking_enabled")
+
+        /// "使用頻度をカウントする" / "Track Usage Frequency"
+        static let usageTrackingDisabled = localized("settings.usage_tracking_disabled")
+
+        /// "この機能を使用するにはフルアクセスの許可が必要です" / "Full access is required to use this feature"
+        static let usageTrackingRequiresFullAccess = localized("settings.usage_tracking_requires_full_access")
+
+        /// フルアクセス許可手順
+        static let fullAccessInstructions = localized("settings.full_access_instructions")
     }
 
     // MARK: - Localization Helper
@@ -336,6 +379,24 @@ enum L10n {
         case "accessibility.snippet_item": return isJapanese ? "スニペット項目" : "Snippet item"
         case "accessibility.close_button": return isJapanese ? "閉じるボタン" : "Close button"
         case "accessibility.copy_button": return isJapanese ? "コピーボタン" : "Copy button"
+        case "accessibility.sort_button": return isJapanese ? "並び替えボタン" : "Sort button"
+
+        // Sort
+        case "sort.label": return isJapanese ? "並順" : "Sort"
+        case "sort.created": return isJapanese ? "作成日時" : "Created"
+        case "sort.updated": return isJapanese ? "更新日時" : "Updated"
+        case "sort.title": return isJapanese ? "タイトル" : "Title"
+        case "sort.usage": return isJapanese ? "使用頻度" : "Frequency"
+
+        // Settings
+        case "settings.title": return isJapanese ? "設定" : "Settings"
+        case "settings.usage_tracking_enabled": return isJapanese ? "使用頻度をカウントする" : "Track Usage Frequency"
+        case "settings.usage_tracking_disabled": return isJapanese ? "使用頻度をカウントする" : "Track Usage Frequency"
+        case "settings.usage_tracking_requires_full_access": return isJapanese ? "この機能を使用するにはフルアクセスの許可が必要です" : "Full access is required to use this feature"
+        case "settings.full_access_instructions":
+            return isJapanese
+                ? "1. 設定アプリを開く\n2. 「ClipTap」→「キーボード」を選択\n3. 「フルアクセスを許可」をON"
+                : "1. Open Settings app\n2. Go to \"ClipTap\" → \"Keyboards\"\n3. Turn on \"Allow Full Access\""
 
         default: return key
         }

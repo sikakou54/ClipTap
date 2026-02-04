@@ -1,11 +1,20 @@
 [Title]
-ClipTap – Snippets & Templates
+ClipTap : snippets & templates
 
 [Subtitle]
-One-tap text templates for work & SNS
+Save time with text templates
 
 [Promo text]
-Turn your everyday phrases into one-tap templates. Save time on emails, SNS posts, and freelance admin so you can focus on the work and ideas that really matter.
+Stop typing the same text over and over.
+ClipTap lets you save text templates, auto-insert dates and names, and use them anywhere via a custom keyboard and web editor.
+
+[What's New]
+Added template sorting feature!
+
+• Choose from 4 sorting options: Created, Updated, Title, or Usage Frequency
+• Sort now available in the keyboard extension
+
+A handy feature for users with growing template libraries.
 
 [Description]
 
@@ -19,32 +28,34 @@ With the ClipTap keyboard extension, you can call templates directly from Gmail,
 
 Who is ClipTap for?
 
-1. Business professionals who send similar emails and chats every day and need to switch signatures or company names between multiple roles.  
-2. Daily SNS users who post recurring series, reuse almost the same captions and hashtag blocks, and want standard bios ready to paste.  
-3. Freelancers and solo entrepreneurs who send many semi-templated messages (quotes, invoices, reminders, Zoom links) and prefer to keep client data on their device.
+Business professionals who send similar emails and chats every day and need to switch signatures or company names between multiple roles.
+
+Daily SNS users who post recurring series, reuse almost the same captions and hashtag blocks, and want standard bios ready to paste.
+
+Freelancers and solo entrepreneurs who send many semi-templated messages (quotes, invoices, reminders, Zoom links) and prefer to keep client data on their device.
 
 Main features
 
-• Keyboard extension  
+• Keyboard extension
 Insert templates from the ClipTap keyboard in any app. No app-switching, no copy-and-paste loops.
 
-• One-tap copy / one-tap insert  
+• One-tap copy / one-tap insert
 Tap a template in the app to copy it, or tap it on the keyboard to insert it straight into the text field.
 
-• Variables for the parts that change  
+• Variables for the parts that change
 Use system variables for dates and times ({{today}}, {{now}}, {{year}}, etc.), and with Pro add custom variables for your own data ({{name}}, {{email}}, {{company}}, {{client}}, {{fee}}). Register this information once and reuse it across many templates.
 
-• Environments (profiles)  
-Create profiles like “Company A”, “Company B”, “Side business” and “Personal”. Switching profiles automatically changes company names, titles and signatures while using the same templates.  
+• Environments (profiles)
+Create profiles like “Company A”, “Company B”, “Side business” and “Personal”. Switching profiles automatically changes company names, titles and signatures while using the same templates.
 Free: up to 3 profiles / Pro: unlimited.
 
-• Web version (PC)  
+• Web version (PC)
 Export your data as a .cliptap file, edit and organize templates on a PC, then import the updated file back into the app. Ideal if you write on PC but send from your phone.
 
-• Categories & search  
+• Categories & search
 Group templates into categories such as “Work”, “SNS”, “Freelance admin”, “Code” and “Daily life”, and find them quickly with keyword search.
 
-• Import / export sync  
+• Import / export sync
 Export templates to a file and import them on another device. Useful when changing phones or sharing the same setup between iPhone, iPad and the web version.
 
 Security & privacy
@@ -57,9 +68,9 @@ Pro offers a monthly and a yearly subscription. It removes ads, unlocks unlimite
 
 Example use cases
 
-• Sales / CS: scheduling emails, thank-you and apology messages, periodic reports, internal announcements  
-• SNS: series post formats, hashtag sets and profile templates  
-• Freelancers: quotes, invoices, reminders, Zoom invitations, contract-related text  
+• Sales / CS: scheduling emails, thank-you and apology messages, periodic reports, internal announcements
+• SNS: series post formats, hashtag sets and profile templates
+• Freelancers: quotes, invoices, reminders, Zoom invitations, contract-related text
 • Everyday life: address, phone number, email and frequently used fixed phrases
 
 From the developer

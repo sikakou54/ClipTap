@@ -52,6 +52,9 @@ export function Dashboard() {
     exportScreen,
     importScreen,
 
+    currentSort,
+    handleSortChange,
+
     filteredSnippets,
     categories,
     validProfiles,
@@ -116,6 +119,8 @@ export function Dashboard() {
           onCreate={snippetModal.handleCreate}
           gridColumns={gridColumns}
           setGridColumns={setGridColumns}
+          currentSort={currentSort}
+          onSortChange={handleSortChange}
         />
 
         {/* メインコンテンツ（定型文グリッド）

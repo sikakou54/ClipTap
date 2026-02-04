@@ -98,6 +98,19 @@ class KeyboardViewController: UIInputViewController {
     /// ユーザーがスニペットをタップすると、このプロパティに保存されます
     private var selectedSnippet: Snippet?
 
+    /// 現在のソート順
+    /// 値: "created" | "updated" | "title" | "usage"
+    private var currentSortBy: String = "created"
+
+    /// ソート設定を保存するUserDefaultsキー
+    private let sortPreferenceKey = "keyboard_snippet_sort_by"
+
+    /// フルアクセス状態を共有するApp GroupのUserDefaultsキー
+    private let fullAccessStateKey = "keyboardHasFullAccess"
+
+    /// App Group識別子
+    private let appGroupIdentifier = "group.com.sikakou.cliptap"
+
     // MARK: - UI Components（画面を構成するUI部品）
 
     // === 統合フィルターエリア（環境 + カテゴリを1行に配置）===
@@ -140,25 +153,77 @@ class KeyboardViewController: UIInputViewController {
         return imageView
     }()
 
-    /// カテゴリボタンを横スクロールで表示するためのスクロールビュー
-    /// 環境ドロップダウンの右側に配置され、残りのスペースを使用
-    private let categoryScrollView: UIScrollView = {
-        let sv = UIScrollView()
-        sv.showsHorizontalScrollIndicator = false
-        sv.translatesAutoresizingMaskIntoConstraints = false
-        sv.backgroundColor = .clear  // 背景色を透明に
-        return sv
+    /// カテゴリ選択ドロップダウンボタン（環境ドロップダウンの右隣、固定幅）
+    /// タップするとカテゴリ一覧メニューが表示される
+    private let categoryDropdownButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.titleLabel?.font = .systemFont(ofSize: 12, weight: .medium)
+        button.contentHorizontalAlignment = .left
+        button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 28)
+        button.layer.cornerRadius = 16
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.systemGray.cgColor
+        button.backgroundColor = .systemGray6
+        button.setTitleColor(.label, for: .normal)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
     }()
 
-    /// カテゴリボタンを横一列に並べるためのスタックビュー
-    private let categoryStackView: UIStackView = {
-        let sv = UIStackView()
-        sv.axis = .horizontal
-        sv.spacing = 8
-        sv.translatesAutoresizingMaskIntoConstraints = false
-        sv.backgroundColor = .clear  // 背景色を透明に
-        return sv
+    /// カテゴリ用シェブロンアイコン（ドロップダウンボタンの右端に固定配置）
+    private let categoryChevronImageView: UIImageView = {
+        let config = UIImage.SymbolConfiguration(pointSize: 10, weight: .medium)
+        let image = UIImage(systemName: "chevron.down", withConfiguration: config)
+        let imageView = UIImageView(image: image)
+        imageView.tintColor = .secondaryLabel
+        imageView.contentMode = .center
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
     }()
+
+    /// ソートボタン（左端に固定配置）
+    /// タップするとソートオプションメニューが表示される
+    private let sortButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        let image = UIImage(systemName: "arrow.up.arrow.down", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.tintColor = .secondaryLabel
+        button.backgroundColor = .clear
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.showsMenuAsPrimaryAction = true
+        button.accessibilityLabel = L10n.Accessibility.sortButton
+        return button
+    }()
+
+    /// ソートボタンのバッジ（デフォルト以外の時に表示）
+    /// プライマリカラーの小さな丸で、デフォルト以外のソートが選択されていることを示す
+    private let sortBadgeView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBlue
+        view.layer.cornerRadius = 4
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isHidden = true
+        return view
+    }()
+
+    /// 設定ボタン（ソートボタンの右隣に配置）
+    /// タップすると設定画面が表示される
+    private let settingsButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        let image = UIImage(systemName: "gearshape", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.tintColor = .secondaryLabel
+        button.backgroundColor = .clear
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+
+    /// 使用頻度追跡を有効にするかどうかのUserDefaultsキー
+    private let usageTrackingKey = "usageTrackingEnabled"
+
+    /// 使用頻度追跡が有効かどうかを設定したことがあるかのUserDefaultsキー
+    private let usageTrackingEnabledSetKey = "usageTrackingEnabledSet"
 
     // === スニペット一覧エリア ===
 
@@ -308,6 +373,93 @@ class KeyboardViewController: UIInputViewController {
         return label
     }()
 
+    // === 設定画面エリア ===
+
+    /// 設定画面全体を包むビュー（全画面表示）
+    private let settingsView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBackground
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isHidden = true
+        return view
+    }()
+
+    /// 設定画面のヘッダービュー
+    private let settingsHeaderView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBackground
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+
+    /// 設定画面のタイトルラベル
+    private let settingsTitleLabel: UILabel = {
+        let label = UILabel()
+        label.font = .boldSystemFont(ofSize: 16)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    /// 設定画面の閉じるボタン
+    private let settingsCloseButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        let image = UIImage(systemName: "xmark", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.backgroundColor = .systemGray5
+        button.tintColor = .label
+        button.layer.cornerRadius = 15
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+
+    /// 使用頻度スイッチの行コンテナ
+    private let usageTrackingRowView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .secondarySystemBackground
+        view.layer.cornerRadius = 10
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+
+    /// 使用頻度ラベル
+    private let usageTrackingLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 15)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    /// 使用頻度スイッチ
+    private let usageTrackingSwitch: UISwitch = {
+        let switchControl = UISwitch()
+        switchControl.translatesAutoresizingMaskIntoConstraints = false
+        return switchControl
+    }()
+
+    /// フルアクセス必要ヒントラベル
+    private let fullAccessHintLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .secondaryLabel
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        return label
+    }()
+
+    /// フルアクセス許可手順ラベル
+    private let fullAccessInstructionsLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .tertiaryLabel
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        return label
+    }()
+
     // MARK: - Lifecycle Methods（ライフサイクルメソッド：画面の表示・非表示時に呼ばれる）
 
     /// 画面が最初に読み込まれたときに1回だけ呼ばれるメソッド
@@ -326,6 +478,22 @@ class KeyboardViewController: UIInputViewController {
         NSLog("============================================================")
 
         view.backgroundColor = .systemBackground  // 背景色を設定
+
+        /* フルアクセス状態をApp Group UserDefaultsに保存（メインアプリと共有） */
+        saveFullAccessState()
+
+        /* ソート設定を初期読み込み（setupUIより前に実行する必要あり） */
+        currentSortBy = loadSortPreference()
+
+        /* フルアクセスOFFで使用頻度ソートが選択されている場合はデフォルトにリセット */
+        if !self.hasFullAccess && currentSortBy == "usage" {
+            currentSortBy = "created"
+            saveSortPreference(currentSortBy)
+            NSLog("🔄 [Sort] Reset sort preference to 'created' because full access is OFF")
+        }
+
+        NSLog("🔄 [Sort] Initial sort preference loaded: %@", currentSortBy)
+
         setupUI()  // UI部品を画面に配置（即座に表示）
 
         // キャッシュをクリアして最新状態を取得
@@ -446,7 +614,7 @@ class KeyboardViewController: UIInputViewController {
             if categoriesChanged {
                 NSLog("📝 [Refresh] Categories changed: %d → %d", categories.count, newCategories.count)
                 categories = newCategories
-                setupCategoryButtons()
+                setupCategoryDropdown()
             } else {
                 NSLog("✓ [Refresh] Categories unchanged: %d categories", categories.count)
             }
@@ -471,46 +639,74 @@ class KeyboardViewController: UIInputViewController {
     }
 
     private func setupUI() {
-        // 統合フィルターコンテナ（環境ドロップダウン + カテゴリスクロールビュー）
+        // 統合フィルターコンテナ（環境ドロップダウン + カテゴリドロップダウン + ソートボタン + 設定ボタン）
         view.addSubview(filterContainerView)
         filterContainerView.addSubview(profileDropdownButton)
-        filterContainerView.addSubview(categoryScrollView)
-        categoryScrollView.addSubview(categoryStackView)
+        filterContainerView.addSubview(categoryDropdownButton)
+        filterContainerView.addSubview(sortButton)
+        filterContainerView.addSubview(settingsButton)
 
         // シェブロンアイコンをボタンの上に配置
         profileDropdownButton.addSubview(chevronImageView)
+        categoryDropdownButton.addSubview(categoryChevronImageView)
+
+        // ソートバッジをボタンに追加
+        sortButton.addSubview(sortBadgeView)
+
+        // ソートボタンのメニューを設定
+        setupSortButtonMenu()
+
+        // 設定ボタンのアクションを設定
+        settingsButton.addTarget(self, action: #selector(settingsButtonTapped), for: .touchUpInside)
 
         NSLayoutConstraint.activate([
-            // フィルターコンテナ: 画面上部に配置
+            /* フィルターコンテナ: 画面上部に配置 */
             filterContainerView.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
             filterContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
             filterContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
             filterContainerView.heightAnchor.constraint(equalToConstant: 36),
 
-            // 環境ドロップダウンボタン: 左端に固定、固定幅100pt
+            /* 環境ドロップダウンボタン: 左端に固定、固定幅100pt */
             profileDropdownButton.leadingAnchor.constraint(equalTo: filterContainerView.leadingAnchor),
             profileDropdownButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
             profileDropdownButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
             profileDropdownButton.widthAnchor.constraint(equalToConstant: 100),
 
-            // シェブロンアイコン: ボタンの右端に固定配置
+            /* シェブロンアイコン: ボタンの右端に固定配置 */
             chevronImageView.trailingAnchor.constraint(equalTo: profileDropdownButton.trailingAnchor, constant: -10),
             chevronImageView.centerYAnchor.constraint(equalTo: profileDropdownButton.centerYAnchor),
             chevronImageView.widthAnchor.constraint(equalToConstant: 12),
             chevronImageView.heightAnchor.constraint(equalToConstant: 12),
 
-            // カテゴリスクロールビュー: 環境ドロップダウンの右側、残りスペースを使用
-            categoryScrollView.leadingAnchor.constraint(equalTo: profileDropdownButton.trailingAnchor, constant: 8),
-            categoryScrollView.trailingAnchor.constraint(equalTo: filterContainerView.trailingAnchor),
-            categoryScrollView.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
-            categoryScrollView.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
+            /* カテゴリドロップダウンボタン: 環境ドロップダウンの右隣、固定幅100pt */
+            categoryDropdownButton.leadingAnchor.constraint(equalTo: profileDropdownButton.trailingAnchor, constant: 8),
+            categoryDropdownButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
+            categoryDropdownButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
+            categoryDropdownButton.widthAnchor.constraint(equalToConstant: 100),
 
-            // カテゴリスタックビュー: スクロールビュー内に配置
-            categoryStackView.topAnchor.constraint(equalTo: categoryScrollView.topAnchor),
-            categoryStackView.leadingAnchor.constraint(equalTo: categoryScrollView.leadingAnchor),
-            categoryStackView.trailingAnchor.constraint(equalTo: categoryScrollView.trailingAnchor),
-            categoryStackView.bottomAnchor.constraint(equalTo: categoryScrollView.bottomAnchor),
-            categoryStackView.heightAnchor.constraint(equalTo: categoryScrollView.heightAnchor)
+            /* カテゴリ用シェブロンアイコン: ボタンの右端に固定配置 */
+            categoryChevronImageView.trailingAnchor.constraint(equalTo: categoryDropdownButton.trailingAnchor, constant: -10),
+            categoryChevronImageView.centerYAnchor.constraint(equalTo: categoryDropdownButton.centerYAnchor),
+            categoryChevronImageView.widthAnchor.constraint(equalToConstant: 12),
+            categoryChevronImageView.heightAnchor.constraint(equalToConstant: 12),
+
+            /* 設定ボタン: 右端に固定、固定幅36pt */
+            settingsButton.trailingAnchor.constraint(equalTo: filterContainerView.trailingAnchor),
+            settingsButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
+            settingsButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
+            settingsButton.widthAnchor.constraint(equalToConstant: 36),
+
+            /* ソートボタン: 設定ボタンの左隣、固定幅36pt */
+            sortButton.trailingAnchor.constraint(equalTo: settingsButton.leadingAnchor, constant: -4),
+            sortButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
+            sortButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
+            sortButton.widthAnchor.constraint(equalToConstant: 36),
+
+            /* ソートバッジ: ボタン右上に配置、8x8ptの円 */
+            sortBadgeView.widthAnchor.constraint(equalToConstant: 8),
+            sortBadgeView.heightAnchor.constraint(equalToConstant: 8),
+            sortBadgeView.topAnchor.constraint(equalTo: sortButton.topAnchor, constant: 2),
+            sortBadgeView.trailingAnchor.constraint(equalTo: sortButton.trailingAnchor, constant: -2)
         ])
 
         // TableView: フィルターコンテナの下に配置（+36ptの表示エリア拡大）
@@ -621,6 +817,69 @@ class KeyboardViewController: UIInputViewController {
         NSLayoutConstraint.activate([
             view.heightAnchor.constraint(equalToConstant: 280)
         ])
+
+        // Settings View (設定画面 - 全画面表示)
+        view.addSubview(settingsView)
+        settingsView.addSubview(settingsHeaderView)
+        settingsHeaderView.addSubview(settingsTitleLabel)
+        settingsHeaderView.addSubview(settingsCloseButton)
+        settingsView.addSubview(usageTrackingRowView)
+        usageTrackingRowView.addSubview(usageTrackingLabel)
+        usageTrackingRowView.addSubview(usageTrackingSwitch)
+        settingsView.addSubview(fullAccessHintLabel)
+        settingsView.addSubview(fullAccessInstructionsLabel)
+
+        // 設定画面のアクションを設定
+        settingsCloseButton.addTarget(self, action: #selector(closeSettingsView), for: .touchUpInside)
+        usageTrackingSwitch.addTarget(self, action: #selector(usageTrackingSwitchChanged(_:)), for: .valueChanged)
+
+        NSLayoutConstraint.activate([
+            // Settings View: 全画面表示
+            settingsView.topAnchor.constraint(equalTo: view.topAnchor),
+            settingsView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            settingsView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            settingsView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            // Settings Header: 上部に固定
+            settingsHeaderView.topAnchor.constraint(equalTo: settingsView.topAnchor),
+            settingsHeaderView.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor),
+            settingsHeaderView.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor),
+            settingsHeaderView.heightAnchor.constraint(equalToConstant: 44),
+
+            // Settings Title: ヘッダー中央
+            settingsTitleLabel.centerXAnchor.constraint(equalTo: settingsHeaderView.centerXAnchor),
+            settingsTitleLabel.centerYAnchor.constraint(equalTo: settingsHeaderView.centerYAnchor),
+
+            // Settings Close Button: ヘッダー右端
+            settingsCloseButton.trailingAnchor.constraint(equalTo: settingsHeaderView.trailingAnchor, constant: -12),
+            settingsCloseButton.centerYAnchor.constraint(equalTo: settingsHeaderView.centerYAnchor),
+            settingsCloseButton.widthAnchor.constraint(equalToConstant: 30),
+            settingsCloseButton.heightAnchor.constraint(equalToConstant: 30),
+
+            // Usage Tracking Row: ヘッダーの下
+            usageTrackingRowView.topAnchor.constraint(equalTo: settingsHeaderView.bottomAnchor, constant: 16),
+            usageTrackingRowView.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor, constant: 12),
+            usageTrackingRowView.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor, constant: -12),
+            usageTrackingRowView.heightAnchor.constraint(equalToConstant: 52),
+
+            // Usage Tracking Label: 行の左側
+            usageTrackingLabel.leadingAnchor.constraint(equalTo: usageTrackingRowView.leadingAnchor, constant: 16),
+            usageTrackingLabel.centerYAnchor.constraint(equalTo: usageTrackingRowView.centerYAnchor),
+
+            // Usage Tracking Switch: 行の右側
+            usageTrackingSwitch.trailingAnchor.constraint(equalTo: usageTrackingRowView.trailingAnchor, constant: -16),
+            usageTrackingSwitch.centerYAnchor.constraint(equalTo: usageTrackingRowView.centerYAnchor),
+
+            // Full Access Hint: 行の下
+            fullAccessHintLabel.topAnchor.constraint(equalTo: usageTrackingRowView.bottomAnchor, constant: 8),
+            fullAccessHintLabel.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor, constant: 16),
+            fullAccessHintLabel.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor, constant: -16),
+
+            // Full Access Instructions: ヒントの下
+            fullAccessInstructionsLabel.topAnchor.constraint(equalTo: fullAccessHintLabel.bottomAnchor, constant: 12),
+            fullAccessInstructionsLabel.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor, constant: 16),
+            fullAccessInstructionsLabel.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor, constant: -16)
+        ])
     }
 
     private func loadInitialData() {
@@ -669,7 +928,7 @@ class KeyboardViewController: UIInputViewController {
 
             // UI更新（既にメインスレッドで実行されているため、asyncは不要）
             self.setupProfileDropdown()
-            self.setupCategoryButtons()
+            self.setupCategoryDropdown()
 
             if self.currentProfile != nil {
                 self.reloadSnippets()
@@ -725,60 +984,62 @@ class KeyboardViewController: UIInputViewController {
         profileDropdownButton.setTitle(title, for: .normal)
     }
 
-    private func setupCategoryButtons() {
-        // Clear existing buttons
-        categoryStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+    /// カテゴリドロップダウンボタンの初期設定
+    /// カテゴリが読み込まれた後に呼ばれる
+    private func setupCategoryDropdown() {
+        // 初期タイトルを設定
+        updateCategoryDropdownTitle()
+        // メニューを設定
+        updateCategoryDropdownMenu()
+    }
 
-        // "すべて" ボタン / "All" button
-        // 多言語対応: "すべて" / "All"
-        let allButton = createCategoryButton(title: L10n.Category.all, color: nil, isSelected: true)
-        allButton.tag = -1
-        categoryStackView.addArrangedSubview(allButton)
+    /// カテゴリドロップダウンのタイトルを更新
+    /// 現在選択中のカテゴリ名を表示（未選択時は「すべて」）
+    private func updateCategoryDropdownTitle() {
+        let title = currentCategory?.name ?? L10n.Category.all
+        categoryDropdownButton.setTitle(title, for: .normal)
+    }
 
-        // カテゴリボタン
-        for (index, category) in categories.enumerated() {
-            let button = createCategoryButton(title: category.name, color: category.color, isSelected: false)
-            button.tag = index
-            categoryStackView.addArrangedSubview(button)
+    /// カテゴリドロップダウンメニューを更新
+    /// カテゴリ一覧のメニューを生成してボタンに設定
+    private func updateCategoryDropdownMenu() {
+        var menuActions: [UIAction] = []
+
+        // 「すべて」オプション
+        let allAction = UIAction(
+            title: L10n.Category.all,
+            state: currentCategory == nil ? .on : .off
+        ) { [weak self] _ in
+            self?.selectCategory(nil)
+        }
+        menuActions.append(allAction)
+
+        // カテゴリオプション
+        for category in categories {
+            let action = UIAction(
+                title: category.name,
+                state: category.id == currentCategory?.id ? .on : .off
+            ) { [weak self] _ in
+                self?.selectCategory(category)
+            }
+            menuActions.append(action)
+        }
+
+        let menu = UIMenu(title: "", children: menuActions)
+
+        // iOS 14+: UIButtonのmenuプロパティを使用
+        if #available(iOS 14.0, *) {
+            categoryDropdownButton.menu = menu
+            categoryDropdownButton.showsMenuAsPrimaryAction = true
         }
     }
 
-    private func createCategoryButton(title: String, color: String?, isSelected: Bool) -> UIButton {
-        let button = UIButton(type: .system)
-        button.setTitle(title, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 12, weight: .medium)
-        // iOS 15.1をサポートするため、UIButton.Configurationを使用せず
-        // レガシーAPIでパディングを設定（警告は無視）
-        button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
-        button.layer.cornerRadius = 16
-        button.layer.borderWidth = 1
-
-        // カテゴリ色の適用
-        if let colorHex = color, let uiColor = UIColor(hex: colorHex) {
-            if isSelected {
-                button.backgroundColor = uiColor
-                button.setTitleColor(.white, for: .normal)
-                button.layer.borderColor = uiColor.cgColor
-            } else {
-                button.backgroundColor = .clear
-                button.setTitleColor(uiColor, for: .normal)
-                button.layer.borderColor = uiColor.cgColor
-            }
-        } else {
-            // デフォルト色（グレー）
-            if isSelected {
-                button.backgroundColor = .systemBlue
-                button.setTitleColor(.white, for: .normal)
-                button.layer.borderColor = UIColor.systemBlue.cgColor
-            } else {
-                button.backgroundColor = .clear
-                button.setTitleColor(.systemBlue, for: .normal)
-                button.layer.borderColor = UIColor.systemBlue.cgColor
-            }
-        }
-
-        button.addTarget(self, action: #selector(categoryButtonTapped(_:)), for: .touchUpInside)
-        return button
+    /// カテゴリを選択する
+    private func selectCategory(_ category: Category?) {
+        currentCategory = category
+        updateCategoryDropdownTitle()
+        updateCategoryDropdownMenu()  // メニューの選択状態を更新
+        reloadSnippets()
     }
 
     /// 環境ドロップダウンメニューを更新
@@ -819,60 +1080,6 @@ class KeyboardViewController: UIInputViewController {
         reloadSnippets()
     }
 
-    @objc private func categoryButtonTapped(_ sender: UIButton) {
-        let selectedTag = sender.tag
-
-        // すべてのボタンを未選択状態に
-        categoryStackView.arrangedSubviews.forEach { view in
-            if let button = view as? UIButton {
-                let isSelected = button.tag == selectedTag
-
-                if button.tag == -1 {
-                    // "すべて" ボタン
-                    updateButtonAppearance(button, isSelected: isSelected, color: nil)
-                } else if button.tag >= 0 && button.tag < categories.count {
-                    // カテゴリボタン
-                    let category = categories[button.tag]
-                    updateButtonAppearance(button, isSelected: isSelected, color: category.color)
-                }
-            }
-        }
-
-        // カテゴリフィルター更新
-        if selectedTag == -1 {
-            currentCategory = nil
-        } else if selectedTag >= 0 && selectedTag < categories.count {
-            currentCategory = categories[selectedTag]
-        }
-
-        // カテゴリ変更時もDBから再読み込み
-        reloadSnippets()
-    }
-
-    private func updateButtonAppearance(_ button: UIButton, isSelected: Bool, color: String?) {
-        if let colorHex = color, let uiColor = UIColor(hex: colorHex) {
-            if isSelected {
-                button.backgroundColor = uiColor
-                button.setTitleColor(.white, for: .normal)
-                button.layer.borderColor = uiColor.cgColor
-            } else {
-                button.backgroundColor = .clear
-                button.setTitleColor(uiColor, for: .normal)
-                button.layer.borderColor = uiColor.cgColor
-            }
-        } else {
-            if isSelected {
-                button.backgroundColor = .systemBlue
-                button.setTitleColor(.white, for: .normal)
-                button.layer.borderColor = UIColor.systemBlue.cgColor
-            } else {
-                button.backgroundColor = .clear
-                button.setTitleColor(.systemBlue, for: .normal)
-                button.layer.borderColor = UIColor.systemBlue.cgColor
-            }
-        }
-    }
-
     /// スニペット一覧を再読み込み
     ///
     /// 【呼ばれるタイミング】
@@ -906,17 +1113,17 @@ class KeyboardViewController: UIInputViewController {
         }
 
         // SnippetMapperを使ってデータベースから取得
-        // プロファイルとカテゴリの両方でフィルタリングされます
+        // プロファイルとカテゴリの両方でフィルタリングされ、SQLのORDER BYでソート済み
         if let categoryId = currentCategory?.id {
             // カテゴリが選択されている場合
-            os_log("🔍 Loading snippets for category: %@ with profile: %@", log: keyboardLog, type: .info, categoryId, profileId)
-            NSLog("🔍 [reloadSnippets] Loading snippets for category: %@ with profile: %@", categoryId, profileId)
-            allSnippets = SnippetMapper.shared.getByCategoryId(categoryId, filterByProfileId: profileId)
+            os_log("🔍 Loading snippets for category: %@ with profile: %@ sortBy: %@", log: keyboardLog, type: .info, categoryId, profileId, currentSortBy)
+            NSLog("🔍 [reloadSnippets] Loading snippets for category: %@ with profile: %@ sortBy: %@", categoryId, profileId, currentSortBy)
+            allSnippets = SnippetMapper.shared.getByCategoryId(categoryId, filterByProfileId: profileId, sortBy: currentSortBy)
         } else {
             // 「すべて」が選択されている場合（カテゴリフィルタなし）
-            os_log("🔍 Loading all snippets with profile: %@", log: keyboardLog, type: .info, profileId)
-            NSLog("🔍 [reloadSnippets] Loading all snippets with profile: %@", profileId)
-            allSnippets = SnippetMapper.shared.getAll(filterByProfileId: profileId)
+            os_log("🔍 Loading all snippets with profile: %@ sortBy: %@", log: keyboardLog, type: .info, profileId, currentSortBy)
+            NSLog("🔍 [reloadSnippets] Loading all snippets with profile: %@ sortBy: %@", profileId, currentSortBy)
+            allSnippets = SnippetMapper.shared.getAll(filterByProfileId: profileId, sortBy: currentSortBy)
         }
 
         // デバッグ用：取得したスニペットの情報を出力
@@ -931,10 +1138,15 @@ class KeyboardViewController: UIInputViewController {
             NSLog("  ... and %d more snippets", allSnippets.count - 5)
         }
 
-        // 表示用のリストにコピー（現在は追加フィルタなし）
+        // MapperでORDER BYを使ってソート済みなので、そのまま表示用にコピー
         filteredSnippets = allSnippets
-        os_log("✅ Filtered snippets: %d", log: keyboardLog, type: .info, filteredSnippets.count)
-        NSLog("✅ [reloadSnippets] Filtered snippets: %d", filteredSnippets.count)
+        os_log("✅ Loaded and sorted snippets: %d (sortBy: %@)", log: keyboardLog, type: .info, filteredSnippets.count, currentSortBy)
+        NSLog("✅ [reloadSnippets] Loaded and sorted snippets: %d (sortBy: %@)", filteredSnippets.count, currentSortBy)
+
+        // テーブルビューを更新（同期的に実行）
+        // 注意: UIMenuのアクションは既にメインスレッドで実行されるため、非同期にする必要はない
+        tableView.reloadData()
+        NSLog("✅ [reloadSnippets] tableView.reloadData() called")
 
         // 空状態の表示/非表示を更新
         updateEmptyState()
@@ -956,10 +1168,7 @@ class KeyboardViewController: UIInputViewController {
         let isEmpty = filteredSnippets.isEmpty
         emptyLabel.isHidden = !isEmpty
         tableView.isHidden = isEmpty
-
-        if !isEmpty {
-            tableView.reloadData()
-        }
+        /* 注意: tableView.reloadData() は reloadSnippets() でメインスレッドで直接呼び出すため、ここでは呼ばない */
     }
 
     /// スニペットの詳細画面（プレビュー）を表示
@@ -1088,6 +1297,199 @@ class KeyboardViewController: UIInputViewController {
 
         os_log("✅ insertSnippet completed", log: keyboardLog, type: .info)
         NSLog("✅ [KeyboardViewController] insertSnippet completed")
+    }
+
+    // MARK: - Sort Methods（ソート関連メソッド）
+
+    /// ソートボタンのメニューを設定
+    /// iOS 14以降のUIMenuを使用して、タップ時にメニューを表示
+    /// フルアクセス許可かつ使用頻度追跡が有効な場合のみ「使用頻度」オプションを表示
+    private func setupSortButtonMenu() {
+        /* 注意: currentSortByは呼び出し元で設定済みのため、ここでは再読み込みしない
+           viewDidLoad時にloadSortPreference()で初期化される */
+        NSLog("🔄 [Sort] Building menu with sort preference: %@, hasFullAccess: %@, isUsageTrackingEnabled: %@",
+              currentSortBy, self.hasFullAccess ? "true" : "false", isUsageTrackingEnabled ? "true" : "false")
+
+        // メニュー項目を作成
+        let createdAction = UIAction(
+            title: L10n.Sort.created,
+            image: currentSortBy == "created" ? UIImage(systemName: "checkmark") : nil
+        ) { [weak self] _ in
+            self?.updateSortPreference("created")
+        }
+
+        let updatedAction = UIAction(
+            title: L10n.Sort.updated,
+            image: currentSortBy == "updated" ? UIImage(systemName: "checkmark") : nil
+        ) { [weak self] _ in
+            self?.updateSortPreference("updated")
+        }
+
+        let titleAction = UIAction(
+            title: L10n.Sort.title,
+            image: currentSortBy == "title" ? UIImage(systemName: "checkmark") : nil
+        ) { [weak self] _ in
+            self?.updateSortPreference("title")
+        }
+
+        /* メニュー項目の配列を構築（フルアクセス許可かつ使用頻度追跡有効時のみ使用頻度を追加） */
+        var menuChildren: [UIAction] = [createdAction, updatedAction, titleAction]
+
+        if isUsageTrackingEnabled {
+            let usageAction = UIAction(
+                title: L10n.Sort.usage,
+                image: currentSortBy == "usage" ? UIImage(systemName: "checkmark") : nil
+            ) { [weak self] _ in
+                self?.updateSortPreference("usage")
+            }
+            menuChildren.append(usageAction)
+        }
+
+        // メニューを作成してボタンに設定
+        let menu = UIMenu(title: L10n.Sort.label, children: menuChildren)
+        sortButton.menu = menu
+
+        // バッジ表示を更新
+        updateSortBadgeVisibility()
+    }
+
+    /// ソート設定を更新
+    private func updateSortPreference(_ sortBy: String) {
+        NSLog("🔄 [Sort] Updating sort preference: %@ → %@", currentSortBy, sortBy)
+        currentSortBy = sortBy
+        saveSortPreference(sortBy)
+
+        // メニューを更新（チェックマークを更新）
+        setupSortButtonMenu()
+
+        // スニペット一覧を再読み込み
+        reloadSnippets()
+
+        // リストのトップにスクロール
+        if !filteredSnippets.isEmpty {
+            tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+        }
+    }
+
+    /// ソート設定を保存（UserDefaults）
+    private func saveSortPreference(_ sortBy: String) {
+        UserDefaults.standard.set(sortBy, forKey: sortPreferenceKey)
+        NSLog("💾 [Sort] Saved sort preference: %@", sortBy)
+    }
+
+    /// ソート設定を読み込み（UserDefaults）
+    private func loadSortPreference() -> String {
+        let sortBy = UserDefaults.standard.string(forKey: sortPreferenceKey) ?? "created"
+        return sortBy
+    }
+
+    /// フルアクセス状態をApp Group UserDefaultsに保存
+    /// メインアプリからフルアクセス状態を参照できるようにする
+    private func saveFullAccessState() {
+        guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
+            NSLog("⚠️ [FullAccess] Failed to get App Group UserDefaults")
+            return
+        }
+        userDefaults.set(self.hasFullAccess, forKey: fullAccessStateKey)
+        NSLog("💾 [FullAccess] Saved full access state: %@", self.hasFullAccess ? "true" : "false")
+    }
+
+    /// バッジの表示/非表示を更新
+    /// デフォルト（created）以外の時にバッジを表示
+    private func updateSortBadgeVisibility() {
+        let isDefaultSort = currentSortBy == "created"
+        sortBadgeView.isHidden = isDefaultSort
+    }
+
+    // MARK: - Settings（設定関連）
+
+    /// 使用頻度追跡が有効かどうか
+    /// フルアクセスが許可されていて、かつ使用頻度追跡がONの場合にtrue
+    private var isUsageTrackingEnabled: Bool {
+        get {
+            guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
+                return false
+            }
+            /* フルアクセスがない場合はfalse */
+            if !self.hasFullAccess {
+                return false
+            }
+            /* 設定されていない場合はデフォルトtrue */
+            let usageEnabledSet = userDefaults.bool(forKey: usageTrackingEnabledSetKey)
+            if !usageEnabledSet {
+                return true
+            }
+            return userDefaults.bool(forKey: usageTrackingKey)
+        }
+        set {
+            guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
+                return
+            }
+            userDefaults.set(newValue, forKey: usageTrackingKey)
+            userDefaults.set(true, forKey: usageTrackingEnabledSetKey)
+            NSLog("💾 [Settings] Saved usage tracking enabled: %@", newValue ? "true" : "false")
+        }
+    }
+
+    /// 設定ボタンがタップされた時のアクション
+    @objc private func settingsButtonTapped() {
+        NSLog("⚙️ [Settings] Settings button tapped")
+        showSettingsView()
+    }
+
+    /// 設定画面を表示
+    private func showSettingsView() {
+        // タイトルを設定
+        settingsTitleLabel.text = L10n.Settings.title
+
+        // ラベルを設定
+        usageTrackingLabel.text = L10n.Settings.usageTrackingEnabled
+
+        // スイッチの状態を更新
+        // フルアクセスがない場合はfalseを表示するが、
+        // フルアクセスがある場合は設定値を表示
+        if self.hasFullAccess {
+            usageTrackingSwitch.isOn = isUsageTrackingEnabled
+        } else {
+            usageTrackingSwitch.isOn = false
+        }
+        usageTrackingSwitch.isEnabled = self.hasFullAccess
+
+        // フルアクセスヒントの表示/非表示
+        fullAccessHintLabel.text = L10n.Settings.usageTrackingRequiresFullAccess
+        fullAccessHintLabel.isHidden = self.hasFullAccess
+
+        // フルアクセス許可手順の表示/非表示
+        fullAccessInstructionsLabel.text = L10n.Settings.fullAccessInstructions
+        fullAccessInstructionsLabel.isHidden = self.hasFullAccess
+
+        // ラベルとスイッチの色を更新
+        usageTrackingLabel.textColor = self.hasFullAccess ? .label : .secondaryLabel
+
+        // 設定画面を表示
+        settingsView.isHidden = false
+    }
+
+    /// 設定画面を閉じる
+    @objc private func closeSettingsView() {
+        NSLog("⚙️ [Settings] Closing settings view")
+        settingsView.isHidden = true
+    }
+
+    /// 使用頻度スイッチが変更された時のアクション
+    @objc private func usageTrackingSwitchChanged(_ sender: UISwitch) {
+        NSLog("⚙️ [Settings] Usage tracking switch changed: %@", sender.isOn ? "ON" : "OFF")
+
+        // 設定を保存
+        isUsageTrackingEnabled = sender.isOn
+
+        // 使用頻度がOFFになった場合、ソートをリセット
+        if !sender.isOn && currentSortBy == "usage" {
+            updateSortPreference("created")
+        }
+
+        // ソートメニューを再構築
+        setupSortButtonMenu()
     }
 }
 

@@ -17,3 +17,4 @@ export {
   type AppInitializationOptions,
 } from './useAppInitialization';
 export * from './useTranslation';
+export * from './useSortPreference';

@@ -34,6 +34,7 @@ data class Snippet(
     val content: String,
     val categoryId: String?,
     val copyWithTitle: Boolean,
+    val copyCount: Int,      /* コピー回数（使用頻度ソート用） */
     val createdAt: String,
     val updatedAt: String
 )

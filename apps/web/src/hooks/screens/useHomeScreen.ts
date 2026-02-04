@@ -27,6 +27,7 @@ import {
   type Variable,
   type ProfileVariable,
   type SnippetWithDisplay,
+  type SnippetSortBy,
 } from '@cliptap/shared';
 import { useDatabase } from '@cliptap/shared';
 import { useTheme } from '@providers/WebThemeProvider';
@@ -81,6 +82,10 @@ export interface UseHomeScreenReturn {
   activeProfileId: string | null;
   defaultProfileId: string | null;
 
+  /* ソート */
+  currentSort: SnippetSortBy;
+  handleSortChange: (sort: SnippetSortBy) => void;
+
   /* UI設定ハンドラ */
   setSearchQuery: (query: string) => void;
   setSelectedCategory: (categoryId: string | null) => void;
@@ -107,7 +112,7 @@ export interface UseHomeScreenReturn {
 export function useHomeScreen(): UseHomeScreenReturn {
   const { t, language } = useTranslation();
   const { isLoaded, setLoaded } = useDatabase();
-  const { allSnippets, snippetProfiles, copySnippet, deleteSnippet, refresh: refreshSnippets } = useSnippets();
+  const { allSnippets, snippetProfiles, copySnippet, deleteSnippet, refresh: refreshSnippets, sortBy, setSortBy } = useSnippets();
   const { categories, getById: getCategoryById } = useCategories();
   const { profiles, profileVariables, activeProfile, defaultProfile, setActiveProfile } = useProfiles();
   const { variables } = useVariables();
@@ -257,6 +262,10 @@ export function useHomeScreen(): UseHomeScreenReturn {
 
     /* モーダル表示状態 */
     isModalOpen,
+
+    /* ソート */
+    currentSort: sortBy,
+    handleSortChange: setSortBy,
 
     /* データ */
     filteredSnippets,

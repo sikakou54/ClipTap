@@ -208,8 +208,10 @@
   },
   "sort": {
     "title": "並べ替え",
-    "recent": "更新日時",
+    "created": "作成日時",
+    "updated": "更新日時",
     "usage": "使用頻度",
+    "usage_requires_full_access": "拡張キーボードの設定で「使用頻度をカウントする」をONにしてください",
     "title_sort": "タイトル",
     "pinned": "ピン留め"
   },
