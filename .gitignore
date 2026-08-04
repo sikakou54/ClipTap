@@ -40,6 +40,10 @@ xcuserdata/
 # local env files
 .env*.local
 
+# Cloudflare Workers
+.dev.vars
+.wrangler/
+
 # typescript
 *.tsbuildinfo
 

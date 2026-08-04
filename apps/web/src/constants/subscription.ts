@@ -2,19 +2,14 @@
  * サブスクリプション関連の定数
  *
  * @description
- * RevenueCat Web SDKで使用する設定値を一元管理。
- * SubscriptionServiceとWebSubscriptionAdapterで共有。
+ * Web版のプラン判定で使用する設定値を一元管理。
+ * プラン判定は ClipTap API（Cloudflare Worker）経由で行うため、
+ * 課金プロバイダの認証情報はブラウザ側に一切保持しない。
  */
 
 /**
- * RevenueCat Web Billing Public API Key
- * 環境変数VITE_REVENUECAT_API_KEYが設定されていればそれを使用、なければデフォルト値
+ * ClipTap API のベースURL
+ * 環境変数 VITE_API_BASE_URL で指定する（未設定の場合は無料プランとして扱う）
  */
-export const REVENUECAT_API_KEY =
-  import.meta.env.VITE_REVENUECAT_API_KEY || 'rcb_qcMuaWWCINBBdlypjHaNQwHsStkh';
-
-/**
- * Proプランの権限（Entitlement）識別子
- * RevenueCatダッシュボードで設定した値と一致させる必要がある
- */
-export const ENTITLEMENT_ID = 'Pro';
+export const SUBSCRIPTION_API_BASE_URL: string =
+  import.meta.env.VITE_API_BASE_URL ?? '';

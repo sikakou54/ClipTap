@@ -50,8 +50,6 @@ export default defineConfig({
           'vendor-sql': ['sql.js'],
           /* UI関連 */
           'vendor-ui': ['@headlessui/react'],
-          /* RevenueCat関連 */
-          'vendor-revenuecat': ['@revenuecat/purchases-js'],
         },
       },
     },

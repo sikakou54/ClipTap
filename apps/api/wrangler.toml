@@ -1,0 +1,34 @@
+name = "cliptap-api-local"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# デプロイ・起動は必ず --env で環境を指定する。
+#   本番: wrangler deploy --env production  -> cliptap-api
+#   開発: wrangler deploy --env dev         -> cliptap-api-dev
+# 環境を省略した場合は上記いずれにも影響しない cliptap-api-local が対象になる。
+
+[vars]
+ENVIRONMENT = "development"
+FIREBASE_PROJECT_ID = "cliptap-194b5"
+ENTITLEMENT_ID = "Pro"
+
+# === Production (wrangler deploy --env production) ===
+[env.production]
+name = "cliptap-api"
+
+[env.production.vars]
+ENVIRONMENT = "production"
+FIREBASE_PROJECT_ID = "cliptap-194b5"
+ENTITLEMENT_ID = "Pro"
+
+# === Development (wrangler deploy --env dev) ===
+[env.dev]
+name = "cliptap-api-dev"
+
+[env.dev.vars]
+ENVIRONMENT = "development"
+FIREBASE_PROJECT_ID = "cliptap-194b5"
+ENTITLEMENT_ID = "Pro"
+
+# Secrets は環境ごとに個別登録が必要（wrangler secret put --env <env>）:
+# REVENUECAT_API_KEY  ... RevenueCat Secret API Key (sk_ で始まるキー / 公開キーではない)

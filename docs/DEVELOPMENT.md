@@ -1,7 +1,8 @@
 # ClipTap Development Setup Guide
 
-**Version**: 1.2.0
-**Last Updated**: 2025-12-17
+**Version**: 1.2.1
+
+**Last Updated**: 2026-08-03
 
 このガイドは、新規開発者がClipTapプロジェクトをセットアップし、開発を開始するための完全なリファレンスです。
 
@@ -27,14 +28,14 @@
 ### 必須ツール
 
 #### Node.js & npm
-- **Node.js**: v18.x以上（推奨: v20.x LTS）
-- **npm**: v9.x以上
+- **Node.js**: v20.19.0以上、またはv22.12.0以上（Vite 7の要件）
+- **npm**: 使用するNode.js同梱の現行版
 - インストール: [https://nodejs.org/](https://nodejs.org/)
 
 ```bash
 # バージョン確認
-node --version  # v18.0.0以上
-npm --version   # v9.0.0以上
+node --version  # v20.19.0以上、またはv22.12.0以上
+npm --version
 ```
 
 #### Git
@@ -90,8 +91,8 @@ java -version  # 17以上
 #### Android SDK
 Android Studioをインストール後、以下のコンポーネントをSDK Managerからインストール:
 
-- Android SDK Platform 34
-- Android SDK Build-Tools 34.0.0
+- Android SDK Platform 35
+- Android SDK Build-Tools 35.x
 - Android Emulator
 - Android SDK Platform-Tools
 
@@ -145,13 +146,13 @@ ANDROID_HOME=C:\Users\YOUR_USERNAME\AppData\Local\Android\Sdk
 ### 1. リポジトリのクローン
 
 ```bash
-# HTTPSでクローン
-git clone https://github.com/YOUR_ORG/clipTap.git
-cd clipTap
+# GitHubからクローン
+git clone https://github.com/sikakou54/ClipTap.git
+cd ClipTap
 
-# または、SSHでクローン
-git clone git@github.com:YOUR_ORG/clipTap.git
-cd clipTap
+# または、Bitbucketのoriginからクローン
+git clone git@bitbucket.org:sikakou-workspace/cliptap.git
+cd cliptap
 ```
 
 ### 2. npm Workspacesの理解
@@ -207,25 +208,62 @@ ClipTapは以下の外部サービスと連携しています。開発を開始�
 2. iOSアプリとAndroidアプリを追加
 3. 設定ファイルを配置:
 
-**iOS**: `apps/mobile/ios/GoogleService-Info.plist`
+**iOS（Expo設定の入力）**: `apps/mobile/GoogleService-Info.plist`
 
 ```bash
 # Firebase Consoleからダウンロードした GoogleService-Info.plist を配置
-cp path/to/GoogleService-Info.plist apps/mobile/ios/
+cp path/to/GoogleService-Info.plist apps/mobile/
 ```
 
-**Android**: `apps/mobile/android/app/google-services.json`
+**Android（Expo設定の入力）**: `apps/mobile/google-services.json`
 
 ```bash
 # Firebase Consoleからダウンロードした google-services.json を配置
-cp path/to/google-services.json apps/mobile/android/app/
+cp path/to/google-services.json apps/mobile/
 ```
+
+ネイティブプロジェクト内のコピーはprebuildで生成・更新されるため、設定元として直接編集しません。
 
 #### RevenueCat設定（サブスクリプション）
 
 1. [RevenueCat Dashboard](https://app.revenuecat.com/)でプロジェクトを作成
-2. APIキーを取得
-3. アプリコード内で使用（環境変数は不要、コードに直接埋め込み）
+2. 各プラットフォーム用の公開SDKキーを取得
+3. モバイルのネイティブ設定と、下記Web環境変数へ設定
+
+秘密のREST APIキーやサービスアカウント資格情報はクライアントへ設定しないでください。
+
+#### Web環境変数
+
+Vite のモード別読み込みを使い、Firebase設定は全モード共通、ClipTap APIの向き先だけを環境ごとに切り替えます。
+
+| ファイル | 読み込まれるタイミング | 内容 |
+|---|---|---|
+| `apps/web/.env` | 全モード共通 | Firebaseの6項目 |
+| `apps/web/.env.development` | `npm run dev:web` | `VITE_API_BASE_URL`（既定はローカルの `wrangler dev`） |
+| `apps/web/.env.production` | `npm run build:web` | `VITE_API_BASE_URL`（本番Worker） |
+| `apps/web/.env.development.local` | 開発モード（任意・gitignore済み） | 上記の上書き用 |
+
+```dotenv
+# apps/web/.env
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+
+# apps/web/.env.development
+VITE_API_BASE_URL=http://localhost:8787
+
+# apps/web/.env.production
+VITE_API_BASE_URL=https://<本番Workerのホスト>
+```
+
+Webは課金プロバイダのSDKキーを保持しません。Pro権利の判定はClipTap API（Cloudflare Worker）経由で行い、RevenueCatのSecret API KeyはWorkerのシークレットとしてのみ保持します。
+
+デプロイ済みの開発用Worker（`cliptap-api-dev`）へ向けたい場合は、`apps/web/.env.development.local` を作成して `VITE_API_BASE_URL` を上書きしてください。
+
+GitHub Pagesの本番ビルドはFirebaseの6項目をGitHub Actions Secretsから受け取ります。`VITE_API_BASE_URL` はワークフローから注入せず、`.env.production` を正とします（未設定のActions変数を渡すと空文字で上書きされ、全利用者がFree扱いになるため）。AdSense用環境変数は現行Webアプリでは使用していません。
 
 #### Google Sign In設定
 
@@ -362,6 +400,63 @@ http://localhost:5173
 - React Developer Toolsブラウザ拡張機能を推奨
 - Network、Console、Sourcesタブを活用
 
+### API（Cloudflare Workers）
+
+Web版のPro判定を中継するWorkerです。RevenueCatのSecret API Keyをサーバー側に隔離するため、ブラウザから課金プロバイダへ直接アクセスしません。
+
+#### 環境構成
+
+`apps/api/wrangler.toml` で本番用と開発用の2つのWorkerを定義しています。設定値は環境ごとに独立しており、シークレットも個別に登録が必要です。
+
+| 環境 | Worker名 | `--env` | `ENVIRONMENT` | 許可オリジン |
+|---|---|---|---|---|
+| 本番 | `cliptap-api` | `production` | `production` | `cliptap.net`、`www.cliptap.net` |
+| 開発 | `cliptap-api-dev` | `dev` | `development` | 上記＋`localhost:5173`、`127.0.0.1:5173` |
+
+デプロイ・起動時は**必ず `--env` を指定**してください。省略した場合はどちらにも影響しない `cliptap-api-local` が対象になります。
+
+#### ローカル起動
+
+```bash
+# ルートディレクトリから（wrangler dev が http://localhost:8787 で待ち受ける）
+npm run dev:api
+
+# Web側は既定でこのURLを参照するため、別ターミナルで並行起動する
+npm run dev:web
+```
+
+#### シークレットの設定
+
+Secret API Keyは`wrangler secret`で登録します。環境ごとに個別登録が必要で、リポジトリには絶対にコミットしないでください。
+
+```bash
+cd apps/api
+
+# 開発環境
+npx wrangler secret put REVENUECAT_API_KEY --env dev
+
+# 本番環境
+npx wrangler secret put REVENUECAT_API_KEY --env production
+```
+
+`wrangler dev` でのローカル実行時は `apps/api/.dev.vars` に同じキーを記載します（`.gitignore` 済み）。
+
+```dotenv
+# apps/api/.dev.vars
+REVENUECAT_API_KEY=sk_...
+```
+
+#### 動作確認
+
+```bash
+# ヘルスチェック（environmentの値で環境を判別できる）
+curl https://<デプロイ先ホスト>/health
+
+# Pro判定（Firebase IDトークンが必要）
+curl -H "Authorization: Bearer <Firebase IDトークン>" \
+  https://<デプロイ先ホスト>/subscription/status
+```
+
 ---
 
 ## コード構造の理解
@@ -382,7 +477,8 @@ clipTap/
 │   │   │   ├── services/   # サービス
 │   │   │   └── utils/      # ユーティリティ
 │   │   ├── assets/         # 画像、フォント等
-│   │   ├── locales/        # 翻訳ファイル（ja/en）
+│   │   ├── english.json    # Expoネイティブ向け英語ローカライズ
+│   │   ├── japanese.json   # Expoネイティブ向け日本語ローカライズ
 │   │   ├── ios/            # iOSネイティブコード
 │   │   ├── android/        # Androidネイティブコード
 │   │   └── package.json    # モバイルアプリの依存関係
@@ -394,7 +490,7 @@ clipTap/
 │
 ├── packages/
 │   └── shared/              # @cliptap/shared
-│       ├── src/            # 共通の型定義、バリデーション、ユーティリティ
+│       ├── src/            # 共通の型、業務ロジック、DB、i18n（ja/en）
 │       └── package.json    # 共通パッケージの依存関係
 │
 └── package.json             # ルートのpackage.json（workspaces定義）
@@ -476,7 +572,7 @@ ClipTapは以下の3層アーキテクチャを採用しています:
 ┌─────────────────▼───────────────────────────────┐
 │  Database (SQLite)                              │
 │  - src/database/database.ts                     │
-│  - packages/shared/src/database/schema.ts (V5)  │
+│  - packages/shared/src/database/schema.ts (V6)  │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -504,34 +600,16 @@ export default function HomeScreen() {
 #### 2. Business Logic Layer（ビジネスロジックレイヤー）
 
 - **責務**: アプリケーションのビジネスルール、状態管理、データ変換
-- **実装場所**: `packages/shared/src/services/*.ts`、`src/hooks/*.ts`
+- **実装場所**: `packages/shared/src/services/*.ts`、`packages/shared/src/hooks/*.ts`、各アプリの `src/hooks/*.ts`
 - **原則**: UIとデータアクセスを橋渡し、複雑なロジックを集約
 
-```typescript
-/* 例: packages/shared/src/services/SnippetService.ts */
-export class SnippetService {
-  async copySnippet(snippetId: string): Promise<void> {
-    const snippet = await snippetMapper.getById(snippetId);
-    const expandedContent = variableParser.expand(snippet.content);
-    await ClipboardService.setString(expandedContent);
-  }
-}
-```
+共有Serviceは既存実装に合わせて静的メソッドで業務検証を行い、Mapperへデータ操作を委譲します。クリップボード、認証、課金などのプラットフォーム機能はAdapter経由で扱います。
 
 #### 3. Data Access Layer（データアクセスレイヤー）
 
 - **責務**: データベースとの直接的なやり取り、CRUD操作
 - **実装場所**: `packages/shared/src/mappers/*.ts`
-- **原則**: SQL直書き禁止、BaseMapperを継承
-
-```typescript
-// 例: packages/shared/src/mappers/SnippetMapper.ts
-export class SnippetMapper extends BaseMapper<Snippet> {
-  async getAll(): Promise<Snippet[]> {
-    return this.db.getAllAsync('SELECT * FROM snippets ORDER BY created_at DESC');
-  }
-}
-```
+- **原則**: SQLはMapper内に閉じ込め、共有DB Adapterを取得して静的メソッドから実行する。UI、Hook、Serviceから直接SQLを実行しない。
 
 ### ファイル配置のルール
 
@@ -575,7 +653,6 @@ packages/shared/src/services/
 
 ```
 packages/shared/src/mappers/
-├── BaseMapper.ts          # 基底クラス
 ├── SnippetMapper.ts
 ├── CategoryMapper.ts
 ├── ProfileMapper.ts
@@ -584,9 +661,9 @@ packages/shared/src/mappers/
 ```
 
 **必須**:
-- `BaseMapper<T>`を継承
-- 型パラメータを明示
-- SQL直書き禁止
+- 既存Mapperと同じ静的メソッド形式にする
+- DB行からドメイン型への変換をMapper内に閉じ込める
+- プレースホルダーを使用し、UI、Hook、ServiceへSQLを漏らさない
 
 ---
 
@@ -598,194 +675,40 @@ packages/shared/src/mappers/
 
 #### ステップ1: スキーマ定義
 
-データベースに新しいテーブルが必要な場合、マイグレーションファイルを作成します。
+データベースに新しいテーブルが必要な場合、共通マイグレーションへ次の連続バージョンを追加します。
 
 ```bash
-# 新しいマイグレーションファイルを作成
-# packages/shared/src/database/migrations.ts に追加
+# 現行の packages/shared/src/database/migrations.ts に V6 → V7 を追加
 ```
 
 **例**: `packages/shared/src/database/migrations.ts`
 
 ```typescript
-export const V5_MIGRATION = `
-  CREATE TABLE IF NOT EXISTS new_table (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
-  );
-`;
+export async function migrateV6ToV7(db: DbAdapter): Promise<void> {
+  // V6のfixtureからV7へ移行できる処理と回帰テストを追加する
+}
 ```
 
 **重要**:
-- 既存のマイグレーションファイルは**絶対に編集しない**
-- 新しいバージョンとして追加する
+- リリース済みの移行ステップは原則変更せず、新しいバージョンとして追加する
+- 既存ステップの不具合修正が必要な場合は、対象旧版のfixtureと回帰テストを追加する
 - `packages/shared/src/database/schema.ts`でバージョンをインクリメント
 
 #### ステップ2: Mapper作成
 
-データアクセスレイヤーを作成します。
-
-**例**: `packages/shared/src/mappers/NewTableMapper.ts`
-
-```typescript
-import { BaseMapper } from './BaseMapper';
-import type { NewTable } from '../types/newTable';
-
-export class NewTableMapper extends BaseMapper<NewTable> {
-  protected tableName = 'new_table';
-
-  async getByName(name: string): Promise<NewTable | null> {
-    return this.db.getFirstAsync(
-      `SELECT * FROM ${this.tableName} WHERE name = ?`,
-      [name]
-    );
-  }
-
-  // その他のカスタムメソッド
-}
-
-export const newTableMapper = new NewTableMapper();
-```
+既存Mapperと同じ静的クラスを作成します。共有DB Adapterを取得し、クエリ定数、プレースホルダー、DB行からドメイン型への変換をMapper内に閉じ込めます。作成・更新・削除の関連整合性と、必要な索引も合わせて設計してください。
 
 #### ステップ3: Service作成
 
-ビジネスロジックを実装します。
-
-**例**: `packages/shared/src/services/NewTableService.ts`
-
-```typescript
-import { newTableMapper } from '../mappers/NewTableMapper';
-import type { NewTable } from '../types/newTable';
-
-export class NewTableService {
-  async createItem(name: string): Promise<NewTable> {
-    const newItem: NewTable = {
-      id: generateId(),
-      name,
-      created_at: Date.now(),
-      updated_at: Date.now(),
-    };
-
-    await newTableMapper.create(newItem);
-    return newItem;
-  }
-
-  async getAllItems(): Promise<NewTable[]> {
-    return newTableMapper.getAll();
-  }
-
-  // その他のビジネスロジック
-}
-
-export const newTableService = new NewTableService();
-```
+既存Serviceと同じ静的クラスに、入力の正規化、検証、重複・プラン制限などの業務ルールを実装し、データ操作をMapperへ委譲します。利用者向けエラーは共通エラー型と日英翻訳を追加します。
 
 #### ステップ4: Hook作成
 
-UI状態管理のためのフックを作成します。
-
-**例**: `packages/shared/src/hooks/useNewTable.ts`
-
-```typescript
-import { useState, useEffect } from 'react';
-import { newTableService } from '../services/NewTableService';
-import type { NewTable } from '../types/newTable';
-
-export function useNewTable() {
-  const [items, setItems] = useState<NewTable[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadItems = async () => {
-    try {
-      setLoading(true);
-      const data = await newTableService.getAllItems();
-      setItems(data);
-    } catch (error) {
-      console.error('Failed to load items:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const createItem = async (name: string) => {
-    try {
-      const newItem = await newTableService.createItem(name);
-      setItems(prev => [newItem, ...prev]);
-    } catch (error) {
-      console.error('Failed to create item:', error);
-      throw error;
-    }
-  };
-
-  useEffect(() => {
-    loadItems();
-  }, []);
-
-  return {
-    items,
-    loading,
-    createItem,
-    refresh: loadItems,
-  };
-}
-```
+共有できる取得・更新状態は共有Hook、画面固有の遷移・モーダル・入力状態は各アプリのHookへ配置します。既存Providerの再読込契機、エラー変換、effect依存配列まで同種機能に合わせます。
 
 #### ステップ5: UI実装
 
-コンポーネントとスクリーンを実装します。
-
-**例**: `apps/mobile/components/newTable/NewTableCard.tsx`
-
-```typescript
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import type { NewTable } from '../../lib/types/newTable';
-
-interface Props {
-  item: NewTable;
-  onPress: () => void;
-}
-
-export function NewTableCard({ item, onPress }: Props) {
-  return (
-    <TouchableOpacity onPress={onPress}>
-      <View>
-        <Text>{item.name}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-}
-```
-
-**例**: `apps/mobile/app/newTable/index.tsx`
-
-```typescript
-import React from 'react';
-import { View, FlatList } from 'react-native';
-import { useNewTable } from '../../lib/hooks/useNewTable';
-import { NewTableCard } from '../../components/newTable/NewTableCard';
-
-export default function NewTableScreen() {
-  const { items, loading, createItem } = useNewTable();
-
-  return (
-    <View>
-      <FlatList
-        data={items}
-        renderItem={({ item }) => (
-          <NewTableCard
-            item={item}
-            onPress={() => console.log('Pressed:', item.id)}
-          />
-        )}
-        keyExtractor={item => item.id}
-      />
-    </View>
-  );
-}
-```
+モバイル画面は `apps/mobile/app`、再利用コンポーネントは `apps/mobile/src/components`、Web画面は `apps/web/src/pages` と `apps/web/src/components` に配置します。既存のパスエイリアス、共通テーマ、翻訳、FlashList利用規則に従い、モバイルとWebの仕様差は機能仕様書へ記録します。
 
 ### コミット前のチェック
 
@@ -818,12 +741,9 @@ npm run lint
 npm run lint -- --fix
 ```
 
-#### 3. フォーマッター実行（将来追加予定）
+#### 3. フォーマット確認
 
-```bash
-# Prettier（将来追加予定）
-npm run format
-```
+現行ルートには `format` スクリプトがありません。変更ファイルは既存の書式に合わせ、フォーマッターを導入する場合はルートスクリプトとCIを同じ変更で追加してください。
 
 #### 4. 動作確認
 
@@ -880,16 +800,18 @@ apps/mobile/app/index.tsx:23:5 - error TS2322: Type 'string' is not assignable t
 
 1. エラーメッセージを読む
 2. ファイルと行番号を確認
-3. 型定義を確認（`lib/types/*.ts`）
+3. 型定義を確認（`packages/shared/src/types/*.ts` と `packages/shared/src/schema.ts`）
 4. `any`型の使用は最小限に
 
-### ユニットテストの実行（将来的に）
+### ユニットテストの実行
 
-現在、ClipTapにはユニットテストが未実装ですが、将来的に以下のツールを使用する予定です:
+共有パッケージには変数パーサーのVitestテストがあります。現行package scriptsには `test` がないため、次のように対象を明示して実行します。
 
-- **Vitest**: 高速なユニットテストフレームワーク
-- **React Testing Library**: コンポーネントテスト
-- **Jest**: スナップショットテスト
+```bash
+npx vitest run packages/shared/tests/parser.test.ts
+```
+
+新機能では同じテスト基盤へ回帰ケースを追加し、標準の `test` スクリプトを整備する場合はルートと対象ワークスペースを同時に更新してください。
 
 ### デバッグのベストプラクティス
 
@@ -943,8 +865,6 @@ Flipperの「Databases」プラグインを使用すると、SQLiteの内容をG
 # Metroキャッシュをクリア
 npm run dev:mobile -- --clear
 
-# または
-expo start --clear
 ```
 
 #### エラー2: `Unable to resolve module`
@@ -1043,7 +963,7 @@ npm run android
 npm run preview:mobile
 
 # EAS Buildの進捗はWebで確認
-# https://expo.dev/accounts/YOUR_ACCOUNT/projects/cliptap/builds
+# https://expo.dev/accounts/sikakou/projects/cliptap/builds
 ```
 
 #### Production Build
@@ -1057,7 +977,7 @@ npm run build:mobile
 
 **ビルド前の準備**:
 
-1. アプリバージョンをインクリメント（`apps/mobile/package.json`）
+1. アプリバージョンをインクリメント（`apps/mobile/app.json`）
 2. 法的文書を同期（利用規約、プライバシーポリシー）
 
 ```bash
@@ -1068,8 +988,8 @@ npm run sync-legal --workspace=@cliptap/mobile
 4. Git tagを作成
 
 ```bash
-git tag -a v1.0.8 -m "Release v1.0.8"
-git push origin v1.0.8
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin vX.Y.Z
 ```
 
 #### App Store提出（iOS）
@@ -1111,32 +1031,36 @@ npm run preview
 
 #### デプロイ
 
-デプロイ先（例: Vercel, Netlify, Firebase Hosting）に応じて、デプロイ方法が異なります。
+本番WebはGitHub Pagesへデプロイします。
 
-**Vercel（推奨）**:
+- `release/prod` ブランチへのpush、またはGitHub Actionsの手動実行で開始
+- Node.js 20で依存関係をインストールし、`npm run build:web` を実行
+- `apps/web/dist` をGitHub Pagesへアップロード
+- `apps/web/public/CNAME` により `cliptap.net` を使用
 
-```bash
-# Vercel CLIのインストール
-npm install -g vercel
+事前にGitHubリポジトリのPagesをGitHub Actions配信に設定し、Web環境変数のFirebase 6項目をActions Secretsへ登録してください。`VITE_API_BASE_URL` はワークフローから注入せず `apps/web/.env.production` を正とします。`apps/web/vercel.json` は現行配布では使わない残存設定です。
 
-# デプロイ
-cd apps/web
-vercel
-```
+### API（Cloudflare Workers）
 
-**Firebase Hosting**:
+本番用（`cliptap-api`）と開発用（`cliptap-api-dev`）の2つを個別にデプロイします。
 
 ```bash
-# Firebase CLIのインストール
-npm install -g firebase-tools
+# 本番へデプロイ
+npm run deploy:api
 
-# ログイン
-firebase login
-
-# デプロイ
-cd apps/web
-firebase deploy --only hosting
+# 開発環境へデプロイ
+npm run deploy:api:dev
 ```
+
+初回は次の順序で実施してください。シークレットは環境ごとに個別登録が必要です。
+
+1. `npx wrangler login` でCloudflareへログイン
+2. `npm run deploy:api:dev` / `npm run deploy:api` でWorkerを作成
+3. `npx wrangler secret put REVENUECAT_API_KEY --env <dev|production>` でSecret API Keyを登録
+4. デプロイ出力で確定したホスト名を `apps/web/.env.production`（本番）に反映
+5. `curl https://<ホスト>/health` で `environment` が期待どおりか確認
+
+本番Workerの入れ替えは、開発用Workerで疎通と権利判定を確認してから行ってください。
 
 ---
 
@@ -1148,9 +1072,6 @@ Metroのキャッシュが原因で問題が発生する場合があります。
 
 ```bash
 # Expoキャッシュをクリア
-expo start --clear
-
-# または、npm経由
 npm run dev:mobile -- --clear
 ```
 
@@ -1280,7 +1201,7 @@ const [data, setData] = useState<MyType[]>([]);
 npm install expo-router --workspace=@cliptap/mobile
 
 # キャッシュクリア
-expo start --clear
+npm run dev:mobile -- --clear
 ```
 
 #### エラー: `Invariant Violation: "main" has not been registered`
@@ -1469,18 +1390,9 @@ const expandedContent = variableParser.expand(snippet.content, profile);
 
 **1. ユーザー入力のバリデーション**
 
-```typescript
-import { z } from 'zod';
-
-const snippetSchema = z.object({
-  title: z.string().min(1).max(100),
-  content: z.string().max(10000),
-  categoryId: z.string().uuid(),
-});
-
-// バリデーション
-const validated = snippetSchema.parse(userInput);
-```
+- 入力制約は [機能仕様書](./機能仕様書.md) を正とし、各画面へ同じ数値を重複定義しない
+- 共有の定数・検証処理を再利用し、モバイル、Web、インポートで同じ結果にする
+- タイトルは現行方針上必須・30文字、本文は必須、カテゴリは任意。ただし既知の実装差は機能仕様書の未確定事項に従って解消する
 
 **2. SQLインジェクション対策**
 
@@ -1499,16 +1411,16 @@ await db.getAllAsync(
 
 **3. センシティブ情報の保護**
 
-- APIキー、認証情報はコードに直接埋め込まない
-- 環境変数、またはネイティブモジュールで管理
-- `.gitignore`に追加して、リポジトリにコミットしない
+- 秘密のREST APIキー、サービスアカウント、秘密鍵、認証トークンはコードへ埋め込まず、CI Secretやローカル環境で管理する
+- Firebaseクライアント設定とRevenueCat公開SDKキーは秘密鍵ではないが、用途・Bundle ID・API制限を設定する
+- Webのローカル値や秘密ファイルは `.gitignore` に追加し、リポジトリへコミットしない
 
 ```bash
 # .gitignore
-apps/mobile/ios/GoogleService-Info.plist
-apps/mobile/android/app/google-services.json
 .env
 .env.local
+*-service-account*.json
+*.p8
 ```
 
 ---
@@ -1518,7 +1430,7 @@ apps/mobile/android/app/google-services.json
 ### プロジェクト内ドキュメント
 
 - **CLAUDE.md**: プロジェクト概要、アーキテクチャ、コーディング規約
-- **docs/API.md**: API仕様書
+- **docs/機能仕様書.md**: 機能、画面、外部IF、ファイル、DB、非機能、未確定事項の正本
 - **docs/DEVELOPMENT.md**: 開発セットアップガイド（このファイル）
 
 ### 外部ドキュメント

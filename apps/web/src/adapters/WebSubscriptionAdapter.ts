@@ -2,7 +2,10 @@
  * Web用サブスクリプションアダプター
  *
  * @description
- * RevenueCat Web SDKを使用してサブスクリプション状態を管理。
+ * ClipTap API（Cloudflare Worker）経由でサブスクリプション状態を取得する。
+ * 課金プロバイダの認証情報はWorker側に隔離されており、ブラウザには一切保持しない。
+ * App User ID は Worker が Firebase IDトークンから導出するため、クライアントからの詐称はできない。
+ *
  * SubscriptionAdapterインターフェースを実装し、SubscriptionServiceに注入する。
  *
  * @module WebSubscriptionAdapter
@@ -16,28 +19,38 @@ import type {
   PurchaseResult
 } from '@cliptap/shared';
 
-import { Purchases } from '@revenuecat/purchases-js';
-import { REVENUECAT_API_KEY, ENTITLEMENT_ID } from '@constants/subscription';
+import { SUBSCRIPTION_API_BASE_URL } from '@constants/subscription';
+import { auth } from '@services/FirebaseService';
 import { Logger } from '@cliptap/shared';
 
 /**
+ * 無料プラン（未契約）を示す既定のサブスクリプション状態
+ * 通信失敗時も安全側に倒してこの値を使用する
+ */
+const FREE_STATUS: SubscriptionStatus = {
+  isSubscribed: false,
+  expirationDate: null,
+  activePlanId: null,
+  willRenew: false,
+  managementURL: null,
+};
+
+/**
  * Web用サブスクリプションアダプター実装クラス
- * RevenueCat Web SDKを使用してProプランの購読状態を管理する
+ * ClipTap API経由でProプランの購読状態を管理する
  */
 class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
   /** 購読状態（Pro会員かどうか） */
   private _isSubscribed: boolean = false;
   /** ローディング中かどうか（サブスクリプション確認中） */
   private _isLoading: boolean = false;
-  /** RevenueCat SDKが初期化済みかどうか */
-  private isInitialized: boolean = false;
-  /** 現在のユーザーID（RevenueCatのApp User ID） */
+  /** 現在のユーザーID（RevenueCatのApp User IDに相当） */
   private currentAppUserId: string | null = null;
   /** 購読状態の変更を監視するリスナーのセット */
   private listeners: Set<SubscriptionListener> = new Set();
 
-  /** 最新のCustomerInfo（キャッシュ） */
-  private _customerInfo: any = null;
+  /** 最新のサブスクリプション状態（キャッシュ） */
+  private _status: SubscriptionStatus = FREE_STATUS;
 
   /**
    * 購読状態を取得
@@ -67,41 +80,8 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
   }
 
   /**
-   * RevenueCat SDKを初期化
-   * 同じユーザーIDで既に初期化されている場合はスキップ
-   * @param appUserId - RevenueCatのApp User ID（FirebaseのUID）
-   * @returns 初期化が成功した場合はtrue、失敗した場合はfalse
-   */
-  private initializeSDK(appUserId: string): boolean {
-    /* 既に同じユーザーで初期化されている場合はスキップ */
-    if (this.isInitialized && this.currentAppUserId === appUserId) {
-      return true;
-    }
-
-    /* API Keyが設定されていない場合は失敗 */
-    if (!REVENUECAT_API_KEY) {
-      Logger.warn('[WebSubscriptionAdapter] API Key is not configured');
-      return false;
-    }
-
-    try {
-      /* RevenueCat SDKを設定（API KeyとユーザーIDを渡す） */
-      Purchases.configure(REVENUECAT_API_KEY, appUserId);
-      this.isInitialized = true;
-      this.currentAppUserId = appUserId;
-      Logger.info('[WebSubscriptionAdapter] SDK initialized for user:', appUserId);
-      return true;
-    } catch (error) {
-      Logger.error('[WebSubscriptionAdapter] Failed to initialize SDK:', error);
-      this.isInitialized = false;
-      this.currentAppUserId = null;
-      return false;
-    }
-  }
-
-  /**
    * サブスクリプション状態を検証
-   * RevenueCatから最新のサブスクリプション情報を取得し、Proプランの有効性を確認
+   * ClipTap APIから最新のサブスクリプション情報を取得し、Proプランの有効性を確認する
    * @param userId - ユーザーID（FirebaseのUID）
    * @returns Pro会員の場合はtrue、無料会員の場合はfalse
    */
@@ -113,49 +93,61 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
       return false;
     }
 
-    /* 2. API Keyが設定されていない場合 */
-    if (!REVENUECAT_API_KEY) {
-      Logger.warn('[WebSubscriptionAdapter] API Key not configured, treating as free user');
+    /* 2. APIベースURLが設定されていない場合 */
+    if (!SUBSCRIPTION_API_BASE_URL) {
+      Logger.warn('[WebSubscriptionAdapter] API base URL is not configured, treating as free user');
       this.reset();
       return false;
     }
 
-    /* 3. ローディング状態を開始 */
+    /* 3. ローディング状態を開始し、キャッシュキーとなるユーザーIDを保持 */
     this._isLoading = true;
+    this.currentAppUserId = userId;
 
     try {
-      /* 4. RevenueCat SDKを初期化 */
-      const initialized = this.initializeSDK(userId);
+      /* 4. Firebase IDトークンを取得（Workerでの認証に使用） */
+      const idToken = await auth.currentUser?.getIdToken();
 
-      /* 初期化に失敗した場合 */
-      if (!initialized) {
-        Logger.warn('[WebSubscriptionAdapter] SDK initialization failed, treating as free user');
+      /* トークンが取得できない場合は無料ユーザーとして扱う */
+      if (!idToken) {
+        Logger.warn('[WebSubscriptionAdapter] ID token is unavailable, treating as free user');
         this.reset();
         return false;
       }
 
-      /* 5. RevenueCatから顧客情報を取得（ネットワーク通信発生） */
-      const customerInfo = await Purchases.getSharedInstance().getCustomerInfo();
-      this._customerInfo = customerInfo;
+      /* 5. ClipTap APIへ問い合わせ（ネットワーク通信発生） */
+      const response = await fetch(`${SUBSCRIPTION_API_BASE_URL}/subscription/status`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
 
-      /* 6. 特定のEntitlement ID（Proプラン）が有効かどうかを判定 */
-      /* activeオブジェクト内にIDが存在すれば有効とみなす */
-      const isSubscribed = ENTITLEMENT_ID in customerInfo.entitlements.active;
+      /* レスポンスが正常でない場合は無料ユーザーとして扱う */
+      if (!response.ok) {
+        Logger.warn('[WebSubscriptionAdapter] API returned an error status:', response.status);
+        this.reset();
+        return false;
+      }
+
+      /* 6. サブスクリプション状態を取得（Proプランの判定はWorker側で完了している） */
+      const status = await response.json() as SubscriptionStatus;
 
       Logger.debug('[WebSubscriptionAdapter] Subscription check result:', {
         userId,
-        isSubscribed,
-        activeEntitlements: Object.keys(customerInfo.entitlements.active),
+        isSubscribed: status.isSubscribed,
+        activePlanId: status.activePlanId,
       });
 
       /* 7. 状態を更新 */
-      this._isSubscribed = isSubscribed;
+      this._status = status;
+      this._isSubscribed = status.isSubscribed;
       this._isLoading = false;
 
       /* 8. 変更をリスナーに通知 */
       this.notifyListeners();
 
-      return isSubscribed;
+      return status.isSubscribed;
     } catch (error) {
       Logger.error('[WebSubscriptionAdapter] Failed to verify subscription:', error);
       /* 安全のため、エラー時は無料ユーザーとして扱う */
@@ -194,9 +186,9 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
    * ログアウト時などに呼び出され、購読状態を初期化する
    */
   reset(): void {
-    /* 購読状態をfalseに設定 */
+    /* 購読状態を無料プランに戻す */
     this._isSubscribed = false;
-    this._customerInfo = null;
+    this._status = FREE_STATUS;
     /* ローディング状態をfalseに設定 */
     this._isLoading = false;
     /* リスナーに通知 */
@@ -209,26 +201,15 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
 
   /**
    * 現在のサブスクリプションステータスを取得
+   * @returns 最後に取得したサブスクリプション状態
    */
   async getStatus(): Promise<SubscriptionStatus> {
-    const entitlement = this._customerInfo?.entitlements?.active?.[ENTITLEMENT_ID];
-
-    /* 有効期限の取得（Web SDKの型定義に依存するためanyキャスト等が必要な場合あり） */
-    const expirationDate = entitlement?.expirationDate || null;
-    const activePlanId = entitlement?.productIdentifier || null;
-
-    return {
-      isSubscribed: this._isSubscribed,
-      expirationDate,
-      activePlanId,
-      willRenew: !!expirationDate, /* Web版は簡易判定 */
-      managementURL: null, /* Web版の管理URL（Stripe等）があればここで返す */
-    };
+    return this._status;
   }
 
   /**
    * 利用可能なプラン一覧を取得
-   * Web版は現在の実装ではプラン一覧を持たないため空配列を返す
+   * Web版は購入機能を持たないため空配列を返す
    */
   async getPlans(): Promise<SubscriptionPlan[]> {
     return [];
