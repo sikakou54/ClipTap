@@ -1,6 +1,7 @@
 package com.sikakou.cliptap.utils
 
 import android.content.Context
+import android.os.LocaleList
 import com.sikakou.cliptap.R
 
 /**
@@ -26,6 +27,33 @@ import com.sikakou.cliptap.R
  * ios/ClipTapKeyboard/LocalizationHelper.swift と同等
  */
 class LocalizationHelper(private val context: Context) {
+
+    companion object {
+        /**
+         * 拡張キーボードの表示言語が日本語かどうか
+         *
+         * 【Locale.getDefault() / configuration.locales[0] を使わない理由】
+         * これらはAPKに含まれるリソースのロケールで絞り込まれた結果を返す。
+         * build.gradleにresConfigs/localeFiltersの指定が無く、依存ライブラリが中国語等の翻訳を同梱するため、
+         * 優先言語が[中国語, 日本語]の端末では中国語に解決され、日本語と判定されない。
+         *
+         * 【単一の判定箇所】
+         * 拡張キーボード内の言語判定はすべてこのプロパティを使用すること。
+         * iOS版のL10n.isJapanese（ios/ClipTapKeyboard/LocalizationHelper.swift）と同じく、
+         * 端末の優先言語リストを順に走査して対応言語（ja/en）の初出を採用する。
+         */
+        val isJapanese: Boolean
+            get() {
+                val locales = LocaleList.getDefault()
+                for (i in 0 until locales.size()) {
+                    when (locales[i].language) {
+                        "ja" -> return true
+                        "en" -> return false
+                    }
+                }
+                return false
+            }
+    }
 
     /**
      * 翻訳キーから翻訳済みテキストを取得

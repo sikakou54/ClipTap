@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "generate:starter": "node scripts/generateStarterFile.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "claude": "claude --dangerously-skip-permissions"

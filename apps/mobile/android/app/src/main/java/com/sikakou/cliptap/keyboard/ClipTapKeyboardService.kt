@@ -22,6 +22,7 @@ import com.sikakou.cliptap.services.VariableService
 import com.sikakou.cliptap.services.SubscriptionManager
 import com.sikakou.cliptap.services.SubscriptionStatus
 import com.sikakou.cliptap.database.Database
+import com.sikakou.cliptap.utils.LocalizationHelper
 
 /**
  * ClipTap カスタムキーボードサービス
@@ -988,13 +989,11 @@ class ClipTapKeyboardService : InputMethodService() {
      * @return (iconResId, title, message, backgroundColor)
      */
     private fun getMessageContent(status: SubscriptionStatus): Quadruple {
-        // より確実な言語判定：複数の方法を試す
-        val locale = resources.configuration.locales[0]
-        val language = locale.language
-        val isJapanese = language == "ja" || language.startsWith("ja")
+        // 表示言語を取得（判定ロジックはLocalizationHelperに一本化されている）
+        val isJapanese = LocalizationHelper.isJapanese
 
         // デバッグ用：言語情報をログ出力
-        android.util.Log.d("ClipTapKeyboard", "Locale: $locale, Language: $language, isJapanese: $isJapanese")
+        android.util.Log.d("ClipTapKeyboard", "Locales: ${android.os.LocaleList.getDefault()}, isJapanese: $isJapanese")
 
         return when (status) {
             SubscriptionStatus.FREE -> {

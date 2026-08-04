@@ -1670,13 +1670,11 @@ extension KeyboardViewController: UITableViewDelegate {
     }
 
     private func getMessageContent(for status: SubscriptionStatus) -> (iconName: String, title: String, message: String, backgroundColor: UIColor) {
-        // 優先言語を取得（最初の優先言語を使用）
-        let preferredLanguage = Locale.preferredLanguages.first ?? ""
-        let isJapanese = preferredLanguage.hasPrefix("ja")
+        // 表示言語を取得（判定ロジックはL10nに一本化されている）
+        let isJapanese = L10n.isJapanese
 
         // デバッグ用：言語情報をログ出力
-        print("[KeyboardViewController] Preferred language: \(preferredLanguage), isJapanese: \(isJapanese)")
-        print("[KeyboardViewController] Locale.current.languageCode: \(Locale.current.languageCode ?? "nil")")
+        print("[KeyboardViewController] Preferred languages: \(Locale.preferredLanguages), isJapanese: \(isJapanese)")
 
         switch status {
         case .free:

@@ -6,23 +6,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 📚 最初に読むべきドキュメント
 
-**作業開始前に必ず [docs/INDEX.md](docs/INDEX.md) を確認してください。**
+**作業開始前に必ず [docs/機能仕様書.md](docs/機能仕様書.md) を確認してください。**
 
 ### ドキュメント構造
 
 | ドキュメント | 内容 | いつ読むか |
 |-------------|------|-----------|
-| [docs/INDEX.md](docs/INDEX.md) | ドキュメントインデックス | 最初に必ず |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 3層アーキテクチャ・データフロー | 設計理解・新機能追加前 |
-| [docs/CODE_READING_GUIDE.md](docs/CODE_READING_GUIDE.md) | コードの読み方・実装パターン | コーディング前 |
-| [docs/API.md](docs/API.md) | Service/Mapper API仕様 | 実装時の参照用 |
+| [docs/機能仕様書.md](docs/機能仕様書.md) | 機能、画面、外部IF、DB、非機能、未確定事項の正本 | 最初に必ず。仕様変更前 |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | 環境構築・トラブルシューティング | セットアップ時・エラー時 |
-| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Git運用・PR作成手順 | コミット・PR作成前 |
+| [docs/MARKETING_STRATEGY.md](docs/MARKETING_STRATEGY.md) | グロース・マーケティング戦略 | マーケティング施策の検討時 |
 
 ### このファイル（CLAUDE.md）の役割
 
 このファイルには **日々の開発で絶対に守るべきルール** のみを記載しています。
-詳細な技術仕様・実装パターン・アーキテクチャは `docs/` を参照してください。
+機能仕様は `docs/機能仕様書.md`、環境構築・実装上の手順は `docs/DEVELOPMENT.md` を参照してください。
+
+### 仕様書の運用ルール
+
+- 利用者向け動作、プラン、画面、入出力、外部IF、DB、最低OSを変更するときは、実装と同じ変更で `docs/機能仕様書.md` を更新する。
+- 機能別の重複仕様書を新設しない。詳細が必要な場合も正本から参照できる形にする。
+- 実装と公開文書の差を発見したら、黙って既存記述を消さず、第15章「未確定事項」に根拠と影響を記録する。
+- 差異の方針が確定したら、実装または仕様書の誤っている側を同じ変更で修正し、未確定事項を解消する。
+- アプリ版は `apps/mobile/app.json`、DB版は共通スキーマ定義を正として確認する。
 
 ---
 
@@ -66,9 +71,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **テスト**: Vitest 4.0.14
 
 ### 現在のバージョン情報
-- **アプリバージョン**: 1.2.0
-- **データベーススキーマ**: V5
-- **対応OS**: iOS 15.1以上、Android 8.0 (API 24) 以上
+- **アプリバージョン**: 1.2.1
+- **データベーススキーマ**: V6
+- **対応OS**: iOS 15.1以上、Android 7.0 (API 24) 以上
 - **新アーキテクチャ**: 対応済み（React Native）
 - **JSエンジン**: Hermes
 
@@ -98,7 +103,7 @@ Data Access Layer (packages/shared/src/mappers/)
 Database (SQLite)
 ```
 
-**詳細**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) を参照
+**機能・データ設計の詳細**: [docs/機能仕様書.md](docs/機能仕様書.md) を参照
 
 ---
 
@@ -129,7 +134,7 @@ clipTap/
             └── types/      # 型定義・Zodスキーマ
 ```
 
-**詳細**: [docs/CODE_READING_GUIDE.md](docs/CODE_READING_GUIDE.md) を参照
+**機能上の責務とデータ設計**: [docs/機能仕様書.md](docs/機能仕様書.md) を参照
 
 ---
 
@@ -144,13 +149,18 @@ clipTap/
 
 #### 2. **型安全性**
 - すべてのコードはTypeScript型チェックに合格すること
-- `npx tsc --noEmit`でエラー0件を保証
+- `npm run type-check`で全ワークスペースのエラー0件を保証
 - `any`型の使用は最小限に（やむを得ない場合のみ）
 
 #### 3. **オフライン動作**
 - ネットワーク接続を前提としないこと
 - すべての機能はオフラインで完全動作必須
 - サブスクリプション確認以外は外部通信禁止
+- 定型文、カテゴリ、プロファイル、変数の業務データはネットワーク接続を前提としないこと
+- 認証、サブスクリプション、広告、ストア遷移は外部通信を行うため、失敗してもローカル業務機能を壊さないこと
+- 業務データをFirebaseやRevenueCatへ同期しないこと
+
+上記の既存オフラインルールはコア業務機能の目標として維持する。現行の外部通信例外と障害時挙動は `docs/機能仕様書.md` を正とする。
 
 #### 4. **UIレスポンス速度**
 - タップ操作は即座に反応（100ms以内）
@@ -160,7 +170,7 @@ clipTap/
 #### 5. **多言語対応**
 - すべてのユーザー向けテキストは i18next 経由
 - ハードコードされた日本語・英語文字列は禁止
-- 新しいテキストを追加する際は、ja/translation.json と en/translation.json 両方に追加
+- 新しい共有テキストを追加する際は、`packages/shared/src/i18n/ja.json` と `packages/shared/src/i18n/en.json` の両方に追加
 
 #### 6. **テーマシステム**
 - すべてのカラーは `src/themeSystem.tsx` から取得
@@ -234,6 +244,7 @@ clipTap/
 - すべてのデータは端末内ローカル保存
 - クラウド同期なし（ユーザーのプライバシー重視）
 - エクスポートデータはパスワード保護 + チェックサム検証
+- エクスポートデータはパスワード一致確認 + チェックサム検証（暗号化・機密性保護ではない）
 
 #### サブスクリプション管理
 - App Store/Google Play の領収書検証必須
@@ -244,8 +255,11 @@ clipTap/
 - パスワード + バージョンのSHA-256ハッシュ化
 - 全フィールドのチェックサム検証（改竄検知）
 - アプリバージョンが異なる場合はエラー
+- チェックサムが存在するファイルは必ず検証
+- `.cliptap` の二重Base64を暗号化と表現しない
+- 現行より新しいDBスキーマは拒否し、対応する旧スキーマは移行して読み込む
 
----
+後半3項目が現行実装の事実であり、前半の既存ルールとの差は機能仕様書の未確定事項として解消する。
 
 ---
 
@@ -254,7 +268,21 @@ clipTap/
 #### データベースマイグレーション
 - 新しいテーブル・カラムを追加する際は必ず新しいマイグレーションファイルを作成
 - 既存のマイグレーションファイルは**絶対に編集しない**
+- 新しいテーブル・カラムを追加する際は、共通マイグレーションに新しい連続した版の処理を追加する
+- リリース済みの移行処理は原則変更せず、修正が必要な場合は旧版fixtureの回帰テストを伴わせる
 - マイグレーションは順次実行される前提で設計
+
+現行は共通の単一マイグレーションファイルで管理しているため、新規変更は既存のリリース済みステップを書き換えず、同ファイルへ新しい連続ステップとして追加する。
+
+#### Web版ベースファイル（`.cliptap`）の再生成
+- Web版のファイル読込画面は、モバイルアプリ未所持でも開始できるよう `apps/web/public/starter_v{SCHEMA_VERSION}_{ja,en}.cliptap` を配布している
+- **`SCHEMA_VERSION` を更新したら、必ず再生成してコミットすること**
+  ```bash
+  npm run generate:starter --workspace=@cliptap/web
+  ```
+- サンプルデータの定義は `apps/web/scripts/starterData.json`、生成処理は `apps/web/scripts/generateStarterFile.mjs`
+- スキーマ定義・エクスポート形式・パスワードは実装から読み込むため、生成スクリプト側に再定義しないこと
+- ファイル名に `SCHEMA_VERSION` を含めているため、再生成漏れ時は古いファイルが配信されずダウンロードが404になる（静かに壊れない設計）
 
 #### iOS ネイティブファイルの追加
 - **ClipTap（メインアプリ）またはClipTapKeyboard（拡張キーボード）にSwift/Objective-Cファイルを追加する際は、必ず`project.pbxproj`を更新すること**
@@ -266,11 +294,29 @@ clipTap/
 - 既存の類似ファイル（例: SubscriptionBridge.swift/m）のパターンを参考にすること
 - UUIDは24文字の16進数で一意に生成すること
 
+#### iOS リソースファイルの追加（.strings / .plist / 画像など）
+- **ソースファイルと同様に`project.pbxproj`への登録が必須**。登録漏れはビルドエラーにならず、実行時に静かに機能が壊れるため特に注意すること
+- 更新が必要なセクション（4番目がソースファイルと異なる）:
+  1. `PBXFileReference` - ファイル参照を追加
+  2. `PBXGroup` - 対象グループのchildrenに追加
+  3. `PBXBuildFile` - ビルドファイルエントリを追加
+  4. `PBXResourcesBuildPhase` - 対象ターゲットの**リソース**ビルドフェーズに追加
+- ローカライズファイル（`xx.lproj/`配下）を追加する場合は、加えて`knownRegions`に言語コードを登録すること
+- **ローカライズが1つも同梱されていないターゲットでは`Locale.current`が開発言語（en）を返す**ため、日付・曜日などの言語判定が壊れる。言語判定には`Locale.preferredLanguages`を使用すること
+- 登録後は `plutil -lint ios/ClipTap.xcodeproj/project.pbxproj` で構文を検証すること
+
+#### ⚠️ `expo prebuild --clean` の実行禁止
+- `ios/`はBare Workflowのためコミット済み。`--clean`付きprebuildは`ios/`を再生成し、**ClipTapKeyboardターゲットごと手動設定が全て失われる**
+- **`apps/mobile`ディレクトリでの`npm run clean`**はこれを実行するため使用しないこと（依存関係のリセットは`rm -rf node_modules && npm install`で行う）
+- リポジトリルートの`npm run prebuild`は`--clean`なしのため`ios/`は再生成されないが、不要な実行は避けること
+- ビルドは成功してしまい実行時に静かに壊れるため、失われたことに気付きにくい
+- EASビルドは`eas.json`の`prebuildCommand`でprebuildをスキップするため影響を受けない
+
 #### テストとデバッグ
-- 型チェック: `npx tsc --noEmit`
+- 型チェック: `npm run type-check`
 - iOS実行: `npm run ios`
 - Android実行: `npm run android`
-- キャッシュクリア: `expo start --clear`
+- キャッシュクリア: `npm run dev:mobile -- -- --clear`（`--`が2つ必要。1つだとnpmの二重run時に`--clear`が転送されず効かない）
 
 #### サブスクリプションテスト
 - **Android**: テスト環境では期間が短縮される（1ヶ月→5分、1年→30分）
@@ -282,7 +328,7 @@ clipTap/
 ### 🚀 リリース前チェックリスト
 
 #### 必須確認事項
-- [ ] TypeScript型エラー0件（`npx tsc --noEmit`）
+- [ ] TypeScript型エラー0件（`npm run type-check`）
 - [ ] すべての文字列が i18next 経由
 - [ ] オフライン動作確認
 - [ ] iOS/Android両方で動作確認
@@ -318,9 +364,7 @@ clipTap/
 
 ---
 
-### 🎯 開発の優先順位
-
-### 🛠️ 開発時の注意事項
+### 🛠️ コミット・マイグレーション確認
 
 #### コミット前の必須チェック
 ```bash
@@ -330,6 +374,8 @@ npm run type-check    # 型エラー0件を確認
 #### データベースマイグレーション
 - 既存のマイグレーションファイルは**絶対に編集しない**
 - 新しいテーブル・カラム追加時は新しいマイグレーションファイルを作成
+- 共通マイグレーションへ新しい連続版を追加する
+- リリース済み移行の修正には旧版fixtureの回帰テストを追加する
 
 **詳細**: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) を参照
 
@@ -348,8 +394,8 @@ npm run type-check    # 型エラー0件を確認
 
 ### 💡 困ったときは
 
-- **実装パターン**: [docs/CODE_READING_GUIDE.md](docs/CODE_READING_GUIDE.md) で似た実装を探す
-- **API仕様**: [docs/API.md](docs/API.md) でメソッド仕様を確認
+- **機能仕様・DB設計**: [docs/機能仕様書.md](docs/機能仕様書.md) を確認
+- **実装パターン**: リポジトリ内の同種機能と型定義を検索して確認
 - **エラー解決**: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) のトラブルシューティング
 
 ---
@@ -387,4 +433,4 @@ npm run type-check    # 型エラー0件を確認
 
 **ユーザーが求めているのは、高速で、シンプルで、確実に動作するアプリです。**
 
-詳細な技術仕様・実装パターン・開発手順は [docs/INDEX.md](docs/INDEX.md) から始めてください。
+機能仕様は [docs/機能仕様書.md](docs/機能仕様書.md)、開発手順は [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) から確認してください。

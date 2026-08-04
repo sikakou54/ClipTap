@@ -12,6 +12,8 @@
 		FA11ACCE55B71D6E5W1F7003 /* FullAccessBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA11ACCE55B71D6E5W1F7001 /* FullAccessBridge.swift */; };
 		FA11ACCE55B71D6E0B1C7004 /* FullAccessBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = FA11ACCE55B71D6E0B1C7002 /* FullAccessBridge.m */; };
 		0D561D40AD2C461499CC8596 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D3F2BD2D366B4500A02A7C4A /* InfoPlist.strings */; };
+		C1A70B4E92D3416F8A5E7303 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C1A70B4E92D3416F8A5E7301 /* Localizable.strings */; };
+		C1A70B4E92D3416F8A5E7304 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C1A70B4E92D3416F8A5E7302 /* Localizable.strings */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		191EE62F4D9DB7E1A3574F85 /* Pods_ClipTap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 568B5CAA5C6E980CA139093A /* Pods_ClipTap.framework */; };
 		24DB7647D3E99E9A1307A848 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396291AE6E289A90DA37913A /* SubscriptionManager.swift */; };
@@ -100,6 +102,8 @@
 		B07CE46E48AEA0D25A6FAC3B /* LocalizationHelper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LocalizationHelper.swift; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		BBF35E69B20BB301E0C68A83 /* VariableReplacer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VariableReplacer.swift; sourceTree = "<group>"; };
+		C1A70B4E92D3416F8A5E7301 /* Localizable.strings */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C1A70B4E92D3416F8A5E7302 /* Localizable.strings */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C1575F9A949E407AB458E0EB /* SubscriptionBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = SubscriptionBridge.m; path = ClipTap/SubscriptionBridge.m; sourceTree = "<group>"; };
 		C6691A48FD09239CA7D9C449 /* Pods-ClipTap.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ClipTap.release.xcconfig"; path = "Target Support Files/Pods-ClipTap/Pods-ClipTap.release.xcconfig"; sourceTree = "<group>"; };
 		D3F2BD2D366B4500A02A7C4A /* InfoPlist.strings */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.strings; name = InfoPlist.strings; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -242,6 +246,22 @@
 			path = ClipTap/Supporting;
 			sourceTree = "<group>";
 		};
+		C1A70B4E92D3416F8A5E7305 /* en.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				C1A70B4E92D3416F8A5E7301 /* Localizable.strings */,
+			);
+			name = en.lproj;
+			sourceTree = "<group>";
+		};
+		C1A70B4E92D3416F8A5E7306 /* ja.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				C1A70B4E92D3416F8A5E7302 /* Localizable.strings */,
+			);
+			name = ja.lproj;
+			sourceTree = "<group>";
+		};
 		C9819A7ECA36DED520708F17 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
@@ -262,6 +282,8 @@
 			isa = PBXGroup;
 			children = (
 				F826AAB62ECB2F56008F4794 /* ClipTapKeyboard.entitlements */,
+				C1A70B4E92D3416F8A5E7305 /* en.lproj */,
+				C1A70B4E92D3416F8A5E7306 /* ja.lproj */,
 				A1A4E265BB7EF49ED8764E12 /* Database.swift */,
 				4D7B2B42C20083C31CA28EEF /* KeyboardDataService.swift */,
 				4BA8D63360CEFD9CC816A334 /* KeyboardViewController.swift */,
@@ -353,6 +375,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				ja,
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
@@ -385,6 +408,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C1A70B4E92D3416F8A5E7303 /* Localizable.strings in Resources */,
+				C1A70B4E92D3416F8A5E7304 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

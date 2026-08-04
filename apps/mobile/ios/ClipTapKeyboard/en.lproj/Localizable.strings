@@ -79,3 +79,10 @@
 "sort.updated" = "Updated";
 "sort.title" = "Title";
 "sort.usage" = "Frequency";
+
+/* Settings related */
+"settings.title" = "Settings";
+"settings.usage_tracking_enabled" = "Track Usage Frequency";
+"settings.usage_tracking_disabled" = "Track Usage Frequency";
+"settings.usage_tracking_requires_full_access" = "Full access is required to use this feature";
+"settings.full_access_instructions" = "1. Open Settings app\n2. Go to \"ClipTap\" → \"Keyboards\"\n3. Turn on \"Allow Full Access\"";

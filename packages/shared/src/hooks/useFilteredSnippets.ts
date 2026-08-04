@@ -59,7 +59,7 @@ export function useFilteredSnippets({
   enableVariableExpansion = true,
   variables = [],
   profileVariables = [],
-  locale = 'ja',
+  locale = 'en',
 }: UseFilteredSnippetsParams): UseFilteredSnippetsReturn {
   const { expandVariables } = useVariableExpansion({
     variables,

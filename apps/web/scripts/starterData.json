@@ -1,0 +1,36 @@
+{
+  "ja": {
+    "categories": [
+      { "key": "business", "name": "ビジネス", "color": "#3B82F6" }
+    ],
+    "variables": [
+      { "name": "department", "label": "部署", "icon": "business-outline", "value": "開発部" },
+      { "name": "my_name", "label": "氏名", "icon": "person-outline", "value": "山田 太郎" }
+    ],
+    "snippets": [
+      {
+        "key": "daily_report",
+        "categoryKey": "business",
+        "title": "日報テンプレート",
+        "content": "【日報】{{今日}}（{{曜日}}）\n{{department}} {{my_name}}\n\n■ 本日の作業\n・\n\n■ 明日の予定\n・\n\n■ 連絡事項\n・"
+      }
+    ]
+  },
+  "en": {
+    "categories": [
+      { "key": "business", "name": "Business", "color": "#3B82F6" }
+    ],
+    "variables": [
+      { "name": "department", "label": "Department", "icon": "business-outline", "value": "Engineering" },
+      { "name": "my_name", "label": "Your name", "icon": "person-outline", "value": "Taylor Smith" }
+    ],
+    "snippets": [
+      {
+        "key": "daily_report",
+        "categoryKey": "business",
+        "title": "Daily report",
+        "content": "[Daily report] {{today}} ({{weekday}})\n{{department}} / {{my_name}}\n\n# Done today\n- \n\n# Plan for tomorrow\n- \n\n# Notes\n- "
+      }
+    ]
+  }
+}

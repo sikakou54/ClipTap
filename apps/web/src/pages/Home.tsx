@@ -3,9 +3,10 @@
  *
  * モバイルアプリからエクスポートした.cliptapファイルを読み込み、
  * Webアプリを初期化するセットアップ画面。
+ * モバイルアプリを持たない利用者向けに、サンプルデータ入りのベースファイルも配布する。
  *
  * フロー:
- * 1. ファイルをドラッグ&ドロップまたは選択
+ * 1. ファイルをドラッグ&ドロップまたは選択（未所持の場合はベースファイルをダウンロード）
  * 2. エクスポート時に設定したパスワードを入力
  * 3. 利用規約・プライバシーポリシーに同意
  * 4. 「読み込む」ボタンでデータを復元
@@ -20,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   SubscriptionService as SharedSubscriptionService,
   ImportParserService as ImportParserServiceClass,
+  ClipTapError,
   getMainDbAdapter,
   getFileIOAdapter,
   toOpfsPath,
@@ -35,6 +37,7 @@ import { useAuth, useTranslation } from '@cliptap/shared';
 import { WebPageModal } from '@components/common/WebPageModal';
 import {
   FileUploadArea,
+  StarterFileSection,
   PasswordInput,
   ErrorDisplay,
   AgreementSection,
@@ -42,6 +45,7 @@ import {
   HomeHeader,
   HowToUseSection,
 } from '@components/home';
+import { STARTER_FILE_PASSWORD } from '@constants/starterFile';
 
 const importParserService = new ImportParserServiceClass();
 
@@ -79,6 +83,11 @@ export function Home() {
     setSelectedFile(file);
     setError('');
   }, [t]);
+
+  /* ベースファイルのダウンロード時、パスワード未入力ならベースファイル用の値を補完する */
+  const handleStarterFileDownload = useCallback(() => {
+    setPassword((current) => (current === '' ? STARTER_FILE_PASSWORD : current));
+  }, []);
 
   const handleLoadFile = useCallback(async () => {
     if (!selectedFile) {
@@ -133,23 +142,28 @@ export function Home() {
       navigate('/dashboard');
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '不明なエラー';
+      /* ClipTapErrorのcodeは翻訳キーを兼ねるため、これを画面固有の文言へ対応付ける */
+      const errorCode = err instanceof ClipTapError ? err.code : null;
 
-      switch (errorMessage) {
-        case 'PASSWORD_INCORRECT':
+      switch (errorCode) {
+        case 'error.incorrect_password':
           setError(t('settings.web_specific.error_password'));
           break;
-        case 'CHECKSUM_MISMATCH':
+        case 'error.checksum_mismatch':
           setError(t('settings.web_specific.error_checksum'));
           break;
-        case 'SCHEMA_VERSION_MISMATCH':
+        case 'error.newer_version':
           setError(t('settings.web_specific.error_version'));
           break;
-        case 'INVALID_FILE':
+        case 'error.invalid_file_format':
           setError(t('settings.web_specific.error_invalid'));
           break;
         default:
-          setError(t('settings.web_specific.error_generic', { message: errorMessage }));
+          setError(
+            t('settings.web_specific.error_generic', {
+              message: err instanceof Error ? err.message : t('error.generic'),
+            })
+          );
       }
     } finally {
       setIsLoading(false);
@@ -171,6 +185,9 @@ export function Home() {
 
         {/* ファイルアップロードエリア（ドラッグ&ドロップ / ファイル選択） */}
         <FileUploadArea selectedFile={selectedFile} onFileSelect={handleFileSelect} />
+
+        {/* ベースファイル案内（モバイルアプリ未所持でも開始できるようにする） */}
+        <StarterFileSection onDownload={handleStarterFileDownload} />
 
         {/* パスワード入力 */}
         <PasswordInput

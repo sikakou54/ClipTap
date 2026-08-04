@@ -26,6 +26,31 @@ import Foundation
 /// 翻訳キーを構造化して管理し、型安全にアクセスできるようにします
 enum L10n {
 
+    // MARK: - Language (表示言語の判定)
+
+    /// キーボード拡張の表示言語が日本語かどうか
+    ///
+    /// 【Locale.currentを使わない理由】
+    /// Locale.currentは「端末の言語設定」ではなく「バンドルが持つローカライズで絞り込んだ結果」を返します。
+    /// キーボード拡張にローカライズが含まれていない場合、日本語端末でも en と判定されてしまいます。
+    ///
+    /// 【先頭だけを見ない理由】
+    /// 端末の優先言語が [中国語, 日本語] のように非対応言語が先頭の場合、先頭だけを見ると
+    /// バンドルが解決する表示言語（日本語）と判定結果（英語）が食い違います。
+    /// Bundle.main.preferredLocalizationsと同じ解決順（優先言語を順に走査して対応言語の初出を採用）にしつつ、
+    /// バンドルのローカライズ同梱状況には依存しない形で判定します。
+    ///
+    /// 【単一の判定箇所】
+    /// 拡張キーボード内の言語判定はすべてこのプロパティを使用すること。
+    /// 個別に Locale.preferredLanguages.first を見ると画面ごとに言語が食い違います。
+    static var isJapanese: Bool {
+        for language in Locale.preferredLanguages {
+            if language.hasPrefix("ja") { return true }
+            if language.hasPrefix("en") { return false }
+        }
+        return false
+    }
+
     // MARK: - Profile (環境・プロファイル関連)
 
     /// プロファイル（環境）関連の翻訳
@@ -36,8 +61,7 @@ enum L10n {
             let localized = L10n.localized(key)
             // フォールバック: 翻訳が見つからない場合は言語に応じてデフォルト値を返す
             if localized == key {
-                let preferredLanguage = Locale.preferredLanguages.first ?? "en"
-                return preferredLanguage.hasPrefix("ja") ? "すべて" : "All"
+                return L10n.isJapanese ? "すべて" : "All"
             }
             return localized
         }
@@ -59,8 +83,7 @@ enum L10n {
             let localized = L10n.localized(key)
             // フォールバック: 翻訳が見つからない場合は言語に応じてデフォルト値を返す
             if localized == key {
-                let preferredLanguage = Locale.preferredLanguages.first ?? "en"
-                return preferredLanguage.hasPrefix("ja") ? "すべて" : "All"
+                return L10n.isJapanese ? "すべて" : "All"
             }
             return localized
         }
@@ -310,8 +333,7 @@ enum L10n {
 
     /// 翻訳ファイルが見つからない場合のフォールバック値
     private static func getDefaultValue(for key: String) -> String {
-        let preferredLanguage = Locale.preferredLanguages.first ?? "en"
-        let isJapanese = preferredLanguage.hasPrefix("ja")
+        let isJapanese = L10n.isJapanese
 
         switch key {
         // Profile

@@ -13,8 +13,11 @@ FIREBASE_PROJECT_ID = "cliptap-194b5"
 ENTITLEMENT_ID = "Pro"
 
 # === Production (wrangler deploy --env production) ===
+# workers_dev は明示的に指定する。未記載だとデプロイのたびに自動で無効化され、
+# https://cliptap-api.sikakou.workers.dev が到達不能になる。
 [env.production]
 name = "cliptap-api"
+workers_dev = true
 
 [env.production.vars]
 ENVIRONMENT = "production"
@@ -24,6 +27,7 @@ ENTITLEMENT_ID = "Pro"
 # === Development (wrangler deploy --env dev) ===
 [env.dev]
 name = "cliptap-api-dev"
+workers_dev = true
 
 [env.dev.vars]
 ENVIRONMENT = "development"

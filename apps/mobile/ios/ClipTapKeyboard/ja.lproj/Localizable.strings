@@ -79,3 +79,10 @@
 "sort.updated" = "更新日時";
 "sort.title" = "タイトル";
 "sort.usage" = "使用頻度";
+
+/* 設定関連 */
+"settings.title" = "設定";
+"settings.usage_tracking_enabled" = "使用頻度をカウントする";
+"settings.usage_tracking_disabled" = "使用頻度をカウントする";
+"settings.usage_tracking_requires_full_access" = "この機能を使用するにはフルアクセスの許可が必要です";
+"settings.full_access_instructions" = "1. 設定アプリを開く\n2. 「ClipTap」→「キーボード」を選択\n3. 「フルアクセスを許可」をON";

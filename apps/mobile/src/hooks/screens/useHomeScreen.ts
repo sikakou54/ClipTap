@@ -118,7 +118,7 @@ export function useHomeScreen(): UseHomeScreenReturn {
     defaultProfileId: defaultProfileId ?? null,
     variables,
     profileVariables,
-    locale: 'ja',
+    locale: i18next.language,
   });
 
   /* 後方互換性のため、refreshAllSnippetsをrefreshにエイリアス */

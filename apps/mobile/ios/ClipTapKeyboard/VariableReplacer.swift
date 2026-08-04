@@ -36,19 +36,33 @@ enum SystemVariable: String, CaseIterable {
     case day = "day"          // 現在の日（DD形式、01〜31）
     case weekday = "weekday"  // 現在の曜日（月、火、水...）
 
+    /// 曜日の表示名（日本語）
+    /// Calendar.component(.weekday)は 1=日曜 〜 7=土曜 を返すため、-1 した値をインデックスに使う
+    private static let japaneseWeekdays = ["日", "月", "火", "水", "木", "金", "土"]
+
+    /// 曜日の表示名（英語）
+    private static let englishWeekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
+    /// 固定フォーマット文字列の出力に使用するロケール
+    ///
+    /// 端末の暦設定（和暦など）や言語設定に左右されないよう en_US_POSIX を使用します。
+    /// これにより yyyy は常に西暦（例: 2026）になります。
+    private static let fixedFormatLocale = Locale(identifier: "en_US_POSIX")
+
     /// システム変数を実際の値に変換する
     /// - Returns: 変換後の文字列（例: "2025/11/17"）
     func resolve() -> String {
         let now = Date()  // 現在日時を取得
-        let calendar = Calendar.current  // カレンダー情報を取得
-        let dateFormatter = DateFormatter()  // 日付フォーマット用
 
-        // 【多言語対応】
-        // デバイスの言語設定に応じて、日付フォーマットを自動調整
-        // - 日本語: "月"、"火"、"水"...
-        // - 英語: "Mon"、"Tue"、"Wed"...
-        // Locale.currentを使用すると、iOSの設定に従って自動的に言語が切り替わります
-        dateFormatter.locale = Locale.current
+        // 【端末設定への非依存化】
+        // 日付・時刻は固定パターンで出力するため、暦・言語設定の影響を受けないよう
+        // グレゴリオ暦 + en_US_POSIX を明示的に指定する
+        // タイムゾーンはCalendar・DateFormatterとも既定で端末のものが使われるため指定しない
+        let calendar = Calendar(identifier: .gregorian)
+
+        let dateFormatter = DateFormatter()  // 日付フォーマット用
+        dateFormatter.locale = SystemVariable.fixedFormatLocale
+        dateFormatter.calendar = calendar
 
         // 変数の種類に応じて、適切な形式で日時を返す
         switch self {
@@ -90,18 +104,20 @@ enum SystemVariable: String, CaseIterable {
             // 【多言語対応】
             // - 日本語: 月曜日 → "月"
             // - 英語: Monday → "Mon"
-            dateFormatter.dateFormat = "E"
-            let weekdayStr = dateFormatter.string(from: now)
+            //
+            // ICUの曜日シンボルではなく固定の配列を使うことで、
+            // アプリ本体・Web（packages/shared/src/variables/systemVariables.ts）と
+            // 完全に同じ表記になることを保証する
+            //
+            // 言語判定はキーボード拡張内で唯一の実装であるL10n.isJapaneseを使用する
+            // （Locale.currentはバンドルのローカライズで絞り込まれるため使用不可）
+            let weekdays = L10n.isJapanese
+                ? SystemVariable.japaneseWeekdays
+                : SystemVariable.englishWeekdays
 
-            // 言語に応じて適切な長さを取得
-            // 日本語の場合は1文字（「月」）、英語の場合は3文字（"Mon"）
-            if dateFormatter.locale?.languageCode == "ja" {
-                // 日本語: 最初の1文字だけ取得（「月曜日」→「月」）
-                return String(weekdayStr.prefix(1))
-            } else {
-                // 英語など: そのまま返す（"Mon", "Tue", etc.）
-                return weekdayStr
-            }
+            // Calendar.component(.weekday)は 1=日曜 を返すため、0始まりに変換する
+            let weekdayIndex = calendar.component(.weekday, from: now) - 1
+            return weekdays[weekdayIndex]
         }
     }
 }
