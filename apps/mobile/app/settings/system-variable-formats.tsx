@@ -1,18 +1,14 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
   DEFAULT_SYSTEM_VARIABLE_FORMATS,
   SYSTEM_VARIABLE_KEYS,
-  SYSTEM_VARIABLES,
   SystemVariableFormatMapper,
-  SnippetService,
   UI_SYSTEM_VARIABLES,
-  extractVariables,
   formatByPattern,
   normalizeLocale,
-  normalizeVariableName,
   type SystemVariableFormats,
   type SystemVariableKey,
   useTranslation,
@@ -26,8 +22,9 @@ import i18next from '@i18n/config';
 
 interface FormatListItem {
   key: SystemVariableKey;
-  usageCount: number;
 }
+
+const FORMAT_LIST_ITEMS: FormatListItem[] = SYSTEM_VARIABLE_KEYS.map((key) => ({ key }));
 
 export default function SystemVariableFormatsScreen() {
   const { t } = useTranslation();
@@ -40,19 +37,6 @@ export default function SystemVariableFormatsScreen() {
   }, []);
 
   useFocusEffect(reload);
-
-  const items = useMemo<FormatListItem[]>(() => {
-    const snippets = SnippetService.getAll();
-    return SYSTEM_VARIABLE_KEYS.map((key) => {
-      const definition = SYSTEM_VARIABLES.find((item) => item.key === key);
-      const aliases = new Set(definition?.aliases.map(normalizeVariableName) ?? []);
-      const usageCount = snippets.filter((snippet) => {
-        const names = extractVariables(`${snippet.title ?? ''}\n${snippet.content}`);
-        return names.some((name) => aliases.has(normalizeVariableName(name)));
-      }).length;
-      return { key, usageCount };
-    });
-  }, []);
 
   const handleResetAll = useCallback(() => {
     showConfirm('variables.format_reset_all_confirm', () => {
@@ -78,19 +62,9 @@ export default function SystemVariableFormatsScreen() {
         }
       />
 
-      {/* 書式の適用範囲説明 */}
-      <Text
-        style={[
-          styles.description,
-          { color: colors.textSecondary, fontSize: responsiveFontSizes.sm },
-        ]}
-      >
-        {t('variables.format_desc')}
-      </Text>
-
       {/* システム変数一覧 */}
       <FlashList
-        data={items}
+        data={FORMAT_LIST_ITEMS}
         estimatedItemSize={104}
         keyExtractor={(item) => item.key}
         renderItem={({ item }) => {
@@ -103,6 +77,15 @@ export default function SystemVariableFormatsScreen() {
               style={[styles.item, { borderBottomColor: colors.border }]}
               onPress={() => router.push({ pathname: '/variable/format-edit', params: { key: item.key } })}
             >
+              {/* システム変数アイコン */}
+              <View style={[styles.itemIcon, { backgroundColor: colors.surface }]}>
+                <Ionicons
+                  name={(definition?.icon ?? 'code-outline') as any}
+                  size={24}
+                  color={colors.primary}
+                />
+              </View>
+
               {/* 変数名と現在の書式 */}
               <View style={styles.itemContent}>
                 <Text style={[styles.label, { color: colors.text, fontSize: responsiveFontSizes.base }]}>
@@ -110,9 +93,6 @@ export default function SystemVariableFormatsScreen() {
                 </Text>
                 <Text style={[styles.token, { color: colors.textSecondary }]}>{`{{${item.key}}}`}</Text>
                 <Text style={[styles.preview, { color: colors.text }]}>{preview}</Text>
-                <Text style={{ color: colors.textSecondary, fontSize: responsiveFontSizes.xs }}>
-                  {t('variables.format_usage_count', { count: item.usageCount })}
-                </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
@@ -129,10 +109,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
-  description: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
   item: {
     minHeight: 104,
     flexDirection: 'row',
@@ -144,6 +120,14 @@ const styles = StyleSheet.create({
   itemContent: {
     flex: 1,
     gap: 3,
+  },
+  itemIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
   },
   label: {
     fontWeight: '600',

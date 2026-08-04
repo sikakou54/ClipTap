@@ -141,6 +141,7 @@
     "variable_icon": "Icon",
     "variable_preview": "Preview",
     "profiles": "Profiles",
+    "system_variable_formats": "System Variables",
     "variable_usage_hint": "Can be used as {{name}} in snippets",
     "web_specific": {
       "close_file": "Close File",
@@ -344,8 +345,7 @@
     "purchase_cancelled": "Purchase cancelled",
     "processing": "Processing...",
     "locked_feature": "This feature is Pro-only",
-    "unlock_now": "Unlock Now",
-    "system_variable_formats": "System Variable Formats"
+    "unlock_now": "Unlock Now"
   },
   "export_import": {
     "title": "Import / Export",
@@ -423,7 +423,6 @@
     "format_default": "Default",
     "format_reset_all": "Reset all to default",
     "format_reset_all_confirm": "Reset all system variable formats to default?",
-    "format_usage_count": "Used by {{count}} snippet(s)",
     "format_changed": "Format updated"
   }
 }

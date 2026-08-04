@@ -12,13 +12,35 @@ class SystemVariableFormatMapper private constructor(context: Context) : BaseMap
         }
 
         private val validPatterns = mapOf(
-            "today" to setOf("yyyy/MM/dd", "yyyy-MM-dd", "yyyy年M月d日", "yyyy年MM月dd日", "M/d", "MM/dd", "M/d/yyyy", "yyyy/MM/dd(EEE)", "M月d日(EEE)"),
-            "now" to setOf("yyyy/MM/dd HH:mm:ss", "yyyy/MM/dd HH:mm", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm", "yyyy年M月d日 HH時mm分", "M/d HH:mm"),
-            "time" to setOf("HH:mm", "HH:mm:ss", "H:mm", "HH時mm分"),
-            "year" to setOf("yyyy", "yy", "yyyy年"),
-            "month" to setOf("MM", "M", "M月", "MM月"),
-            "day" to setOf("dd", "d", "d日", "dd日"),
-            "weekday" to setOf("EEE", "EEEE", "(EEE)")
+            "today" to setOf(
+                "yyyy/MM/dd", "yyyy/M/d", "yy/MM/dd", "yy/M/d",
+                "yyyy-MM-dd", "yyyy-M-d", "yy-MM-dd", "yy-M-d",
+                "yyyy.MM.dd", "yyyy.M.d", "yy.MM.dd", "yy.M.d",
+                "yyyy年MM月dd日", "yyyy年M月d日", "yy年MM月dd日", "yy年M月d日",
+                "MM/dd", "M/d", "MM-dd", "M-d", "MM.dd", "M.d", "MM月dd日", "M月d日",
+                "MM/dd/yyyy", "M/d/yyyy", "MM/dd/yy", "M/d/yy",
+                "dd/MM/yyyy", "d/M/yyyy", "dd/MM/yy", "d/M/yy", "yyyyMMdd", "yyMMdd"
+            ),
+            "now" to setOf(
+                "yyyy/MM/dd HH:mm:ss", "yyyy/MM/dd HH:mm", "yyyy/M/d H:mm:ss", "yyyy/M/d H:mm",
+                "yy/MM/dd HH:mm:ss", "yy/MM/dd HH:mm", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm",
+                "yyyy-M-d H:mm:ss", "yyyy-M-d H:mm", "yy-MM-dd HH:mm:ss", "yy-MM-dd HH:mm",
+                "yyyy.MM.dd HH:mm:ss", "yyyy.MM.dd HH:mm", "yyyy.M.d H:mm:ss", "yyyy.M.d H:mm",
+                "yyyy年MM月dd日 HH時mm分ss秒", "yyyy年MM月dd日 HH時mm分",
+                "yyyy年M月d日 H時mm分ss秒", "yyyy年M月d日 H時mm分",
+                "yy年MM月dd日 HH時mm分ss秒", "yy年MM月dd日 HH時mm分",
+                "MM/dd/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm", "M/d/yyyy HH:mm:ss", "M/d/yyyy HH:mm",
+                "d/M/yyyy HH:mm:ss", "d/M/yyyy HH:mm", "MM/dd HH:mm:ss", "MM/dd HH:mm",
+                "M/d HH:mm:ss", "M/d HH:mm", "yyyyMMdd HHmmss", "yyyyMMdd HHmm"
+            ),
+            "time" to setOf(
+                "HH:mm", "HH:mm:ss", "H:mm", "H:mm:ss", "HH時mm分", "HH時mm分ss秒",
+                "H時mm分", "H時mm分ss秒", "HHmm", "HHmmss"
+            ),
+            "year" to setOf("yyyy", "yyyy年", "yy", "yy年"),
+            "month" to setOf("MM", "MM月", "M", "M月"),
+            "day" to setOf("dd", "dd日", "d", "d日"),
+            "weekday" to setOf("EEE", "(EEE)", "EEEE", "(EEEE)")
         )
     }
 

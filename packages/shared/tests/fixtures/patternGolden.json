@@ -1,35 +1,566 @@
 [
-  { "key": "today", "pattern": "yyyy/MM/dd", "ja": "2026/08/04", "en": "2026/08/04" },
-  { "key": "today", "pattern": "yyyy-MM-dd", "ja": "2026-08-04", "en": "2026-08-04" },
-  { "key": "today", "pattern": "yyyy年M月d日", "ja": "2026年8月4日", "en": "2026年8月4日" },
-  { "key": "today", "pattern": "yyyy年MM月dd日", "ja": "2026年08月04日", "en": "2026年08月04日" },
-  { "key": "today", "pattern": "M/d", "ja": "8/4", "en": "8/4" },
-  { "key": "today", "pattern": "MM/dd", "ja": "08/04", "en": "08/04" },
-  { "key": "today", "pattern": "M/d/yyyy", "ja": "8/4/2026", "en": "8/4/2026" },
-  { "key": "today", "pattern": "yyyy/MM/dd(EEE)", "ja": "2026/08/04(火)", "en": "2026/08/04(Tue)" },
-  { "key": "today", "pattern": "M月d日(EEE)", "ja": "8月4日(火)", "en": "8月4日(Tue)" },
-  { "key": "now", "pattern": "yyyy/MM/dd HH:mm:ss", "ja": "2026/08/04 09:05:07", "en": "2026/08/04 09:05:07" },
-  { "key": "now", "pattern": "yyyy/MM/dd HH:mm", "ja": "2026/08/04 09:05", "en": "2026/08/04 09:05" },
-  { "key": "now", "pattern": "yyyy-MM-dd HH:mm:ss", "ja": "2026-08-04 09:05:07", "en": "2026-08-04 09:05:07" },
-  { "key": "now", "pattern": "yyyy-MM-dd HH:mm", "ja": "2026-08-04 09:05", "en": "2026-08-04 09:05" },
-  { "key": "now", "pattern": "yyyy年M月d日 HH時mm分", "ja": "2026年8月4日 09時05分", "en": "2026年8月4日 09時05分" },
-  { "key": "now", "pattern": "M/d HH:mm", "ja": "8/4 09:05", "en": "8/4 09:05" },
-  { "key": "time", "pattern": "HH:mm", "ja": "09:05", "en": "09:05" },
-  { "key": "time", "pattern": "HH:mm:ss", "ja": "09:05:07", "en": "09:05:07" },
-  { "key": "time", "pattern": "H:mm", "ja": "9:05", "en": "9:05" },
-  { "key": "time", "pattern": "HH時mm分", "ja": "09時05分", "en": "09時05分" },
-  { "key": "year", "pattern": "yyyy", "ja": "2026", "en": "2026" },
-  { "key": "year", "pattern": "yy", "ja": "26", "en": "26" },
-  { "key": "year", "pattern": "yyyy年", "ja": "2026年", "en": "2026年" },
-  { "key": "month", "pattern": "MM", "ja": "08", "en": "08" },
-  { "key": "month", "pattern": "M", "ja": "8", "en": "8" },
-  { "key": "month", "pattern": "M月", "ja": "8月", "en": "8月" },
-  { "key": "month", "pattern": "MM月", "ja": "08月", "en": "08月" },
-  { "key": "day", "pattern": "dd", "ja": "04", "en": "04" },
-  { "key": "day", "pattern": "d", "ja": "4", "en": "4" },
-  { "key": "day", "pattern": "d日", "ja": "4日", "en": "4日" },
-  { "key": "day", "pattern": "dd日", "ja": "04日", "en": "04日" },
-  { "key": "weekday", "pattern": "EEE", "ja": "火", "en": "Tue" },
-  { "key": "weekday", "pattern": "EEEE", "ja": "火曜日", "en": "Tuesday" },
-  { "key": "weekday", "pattern": "(EEE)", "ja": "(火)", "en": "(Tue)" }
+  {
+    "key": "today",
+    "pattern": "yyyy/MM/dd",
+    "ja": "2026/08/04",
+    "en": "2026/08/04"
+  },
+  {
+    "key": "today",
+    "pattern": "yyyy/M/d",
+    "ja": "2026/8/4",
+    "en": "2026/8/4"
+  },
+  {
+    "key": "today",
+    "pattern": "yy/MM/dd",
+    "ja": "26/08/04",
+    "en": "26/08/04"
+  },
+  {
+    "key": "today",
+    "pattern": "yy/M/d",
+    "ja": "26/8/4",
+    "en": "26/8/4"
+  },
+  {
+    "key": "today",
+    "pattern": "yyyy-MM-dd",
+    "ja": "2026-08-04",
+    "en": "2026-08-04"
+  },
+  {
+    "key": "today",
+    "pattern": "yyyy-M-d",
+    "ja": "2026-8-4",
+    "en": "2026-8-4"
+  },
+  {
+    "key": "today",
+    "pattern": "yy-MM-dd",
+    "ja": "26-08-04",
+    "en": "26-08-04"
+  },
+  {
+    "key": "today",
+    "pattern": "yy-M-d",
+    "ja": "26-8-4",
+    "en": "26-8-4"
+  },
+  {
+    "key": "today",
+    "pattern": "yyyy.MM.dd",
+    "ja": "2026.08.04",
+    "en": "2026.08.04"
+  },
+  {
+    "key": "today",
+    "pattern": "yyyy.M.d",
+    "ja": "2026.8.4",
+    "en": "2026.8.4"
+  },
+  {
+    "key": "today",
+    "pattern": "yy.MM.dd",
+    "ja": "26.08.04",
+    "en": "26.08.04"
+  },
+  {
+    "key": "today",
+    "pattern": "yy.M.d",
+    "ja": "26.8.4",
+    "en": "26.8.4"
+  },
+  {
+    "key": "today",
+    "pattern": "yyyy年MM月dd日",
+    "ja": "2026年08月04日",
+    "en": "2026年08月04日"
+  },
+  {
+    "key": "today",
+    "pattern": "yyyy年M月d日",
+    "ja": "2026年8月4日",
+    "en": "2026年8月4日"
+  },
+  {
+    "key": "today",
+    "pattern": "yy年MM月dd日",
+    "ja": "26年08月04日",
+    "en": "26年08月04日"
+  },
+  {
+    "key": "today",
+    "pattern": "yy年M月d日",
+    "ja": "26年8月4日",
+    "en": "26年8月4日"
+  },
+  {
+    "key": "today",
+    "pattern": "MM/dd",
+    "ja": "08/04",
+    "en": "08/04"
+  },
+  {
+    "key": "today",
+    "pattern": "M/d",
+    "ja": "8/4",
+    "en": "8/4"
+  },
+  {
+    "key": "today",
+    "pattern": "MM-dd",
+    "ja": "08-04",
+    "en": "08-04"
+  },
+  {
+    "key": "today",
+    "pattern": "M-d",
+    "ja": "8-4",
+    "en": "8-4"
+  },
+  {
+    "key": "today",
+    "pattern": "MM.dd",
+    "ja": "08.04",
+    "en": "08.04"
+  },
+  {
+    "key": "today",
+    "pattern": "M.d",
+    "ja": "8.4",
+    "en": "8.4"
+  },
+  {
+    "key": "today",
+    "pattern": "MM月dd日",
+    "ja": "08月04日",
+    "en": "08月04日"
+  },
+  {
+    "key": "today",
+    "pattern": "M月d日",
+    "ja": "8月4日",
+    "en": "8月4日"
+  },
+  {
+    "key": "today",
+    "pattern": "MM/dd/yyyy",
+    "ja": "08/04/2026",
+    "en": "08/04/2026"
+  },
+  {
+    "key": "today",
+    "pattern": "M/d/yyyy",
+    "ja": "8/4/2026",
+    "en": "8/4/2026"
+  },
+  {
+    "key": "today",
+    "pattern": "MM/dd/yy",
+    "ja": "08/04/26",
+    "en": "08/04/26"
+  },
+  {
+    "key": "today",
+    "pattern": "M/d/yy",
+    "ja": "8/4/26",
+    "en": "8/4/26"
+  },
+  {
+    "key": "today",
+    "pattern": "dd/MM/yyyy",
+    "ja": "04/08/2026",
+    "en": "04/08/2026"
+  },
+  {
+    "key": "today",
+    "pattern": "d/M/yyyy",
+    "ja": "4/8/2026",
+    "en": "4/8/2026"
+  },
+  {
+    "key": "today",
+    "pattern": "dd/MM/yy",
+    "ja": "04/08/26",
+    "en": "04/08/26"
+  },
+  {
+    "key": "today",
+    "pattern": "d/M/yy",
+    "ja": "4/8/26",
+    "en": "4/8/26"
+  },
+  {
+    "key": "today",
+    "pattern": "yyyyMMdd",
+    "ja": "20260804",
+    "en": "20260804"
+  },
+  {
+    "key": "today",
+    "pattern": "yyMMdd",
+    "ja": "260804",
+    "en": "260804"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy/MM/dd HH:mm:ss",
+    "ja": "2026/08/04 09:05:07",
+    "en": "2026/08/04 09:05:07"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy/MM/dd HH:mm",
+    "ja": "2026/08/04 09:05",
+    "en": "2026/08/04 09:05"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy/M/d H:mm:ss",
+    "ja": "2026/8/4 9:05:07",
+    "en": "2026/8/4 9:05:07"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy/M/d H:mm",
+    "ja": "2026/8/4 9:05",
+    "en": "2026/8/4 9:05"
+  },
+  {
+    "key": "now",
+    "pattern": "yy/MM/dd HH:mm:ss",
+    "ja": "26/08/04 09:05:07",
+    "en": "26/08/04 09:05:07"
+  },
+  {
+    "key": "now",
+    "pattern": "yy/MM/dd HH:mm",
+    "ja": "26/08/04 09:05",
+    "en": "26/08/04 09:05"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy-MM-dd HH:mm:ss",
+    "ja": "2026-08-04 09:05:07",
+    "en": "2026-08-04 09:05:07"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy-MM-dd HH:mm",
+    "ja": "2026-08-04 09:05",
+    "en": "2026-08-04 09:05"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy-M-d H:mm:ss",
+    "ja": "2026-8-4 9:05:07",
+    "en": "2026-8-4 9:05:07"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy-M-d H:mm",
+    "ja": "2026-8-4 9:05",
+    "en": "2026-8-4 9:05"
+  },
+  {
+    "key": "now",
+    "pattern": "yy-MM-dd HH:mm:ss",
+    "ja": "26-08-04 09:05:07",
+    "en": "26-08-04 09:05:07"
+  },
+  {
+    "key": "now",
+    "pattern": "yy-MM-dd HH:mm",
+    "ja": "26-08-04 09:05",
+    "en": "26-08-04 09:05"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy.MM.dd HH:mm:ss",
+    "ja": "2026.08.04 09:05:07",
+    "en": "2026.08.04 09:05:07"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy.MM.dd HH:mm",
+    "ja": "2026.08.04 09:05",
+    "en": "2026.08.04 09:05"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy.M.d H:mm:ss",
+    "ja": "2026.8.4 9:05:07",
+    "en": "2026.8.4 9:05:07"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy.M.d H:mm",
+    "ja": "2026.8.4 9:05",
+    "en": "2026.8.4 9:05"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy年MM月dd日 HH時mm分ss秒",
+    "ja": "2026年08月04日 09時05分07秒",
+    "en": "2026年08月04日 09時05分07秒"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy年MM月dd日 HH時mm分",
+    "ja": "2026年08月04日 09時05分",
+    "en": "2026年08月04日 09時05分"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy年M月d日 H時mm分ss秒",
+    "ja": "2026年8月4日 9時05分07秒",
+    "en": "2026年8月4日 9時05分07秒"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyy年M月d日 H時mm分",
+    "ja": "2026年8月4日 9時05分",
+    "en": "2026年8月4日 9時05分"
+  },
+  {
+    "key": "now",
+    "pattern": "yy年MM月dd日 HH時mm分ss秒",
+    "ja": "26年08月04日 09時05分07秒",
+    "en": "26年08月04日 09時05分07秒"
+  },
+  {
+    "key": "now",
+    "pattern": "yy年MM月dd日 HH時mm分",
+    "ja": "26年08月04日 09時05分",
+    "en": "26年08月04日 09時05分"
+  },
+  {
+    "key": "now",
+    "pattern": "MM/dd/yyyy HH:mm:ss",
+    "ja": "08/04/2026 09:05:07",
+    "en": "08/04/2026 09:05:07"
+  },
+  {
+    "key": "now",
+    "pattern": "MM/dd/yyyy HH:mm",
+    "ja": "08/04/2026 09:05",
+    "en": "08/04/2026 09:05"
+  },
+  {
+    "key": "now",
+    "pattern": "M/d/yyyy HH:mm:ss",
+    "ja": "8/4/2026 09:05:07",
+    "en": "8/4/2026 09:05:07"
+  },
+  {
+    "key": "now",
+    "pattern": "M/d/yyyy HH:mm",
+    "ja": "8/4/2026 09:05",
+    "en": "8/4/2026 09:05"
+  },
+  {
+    "key": "now",
+    "pattern": "d/M/yyyy HH:mm:ss",
+    "ja": "4/8/2026 09:05:07",
+    "en": "4/8/2026 09:05:07"
+  },
+  {
+    "key": "now",
+    "pattern": "d/M/yyyy HH:mm",
+    "ja": "4/8/2026 09:05",
+    "en": "4/8/2026 09:05"
+  },
+  {
+    "key": "now",
+    "pattern": "MM/dd HH:mm:ss",
+    "ja": "08/04 09:05:07",
+    "en": "08/04 09:05:07"
+  },
+  {
+    "key": "now",
+    "pattern": "MM/dd HH:mm",
+    "ja": "08/04 09:05",
+    "en": "08/04 09:05"
+  },
+  {
+    "key": "now",
+    "pattern": "M/d HH:mm:ss",
+    "ja": "8/4 09:05:07",
+    "en": "8/4 09:05:07"
+  },
+  {
+    "key": "now",
+    "pattern": "M/d HH:mm",
+    "ja": "8/4 09:05",
+    "en": "8/4 09:05"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyyMMdd HHmmss",
+    "ja": "20260804 090507",
+    "en": "20260804 090507"
+  },
+  {
+    "key": "now",
+    "pattern": "yyyyMMdd HHmm",
+    "ja": "20260804 0905",
+    "en": "20260804 0905"
+  },
+  {
+    "key": "time",
+    "pattern": "HH:mm",
+    "ja": "09:05",
+    "en": "09:05"
+  },
+  {
+    "key": "time",
+    "pattern": "HH:mm:ss",
+    "ja": "09:05:07",
+    "en": "09:05:07"
+  },
+  {
+    "key": "time",
+    "pattern": "H:mm",
+    "ja": "9:05",
+    "en": "9:05"
+  },
+  {
+    "key": "time",
+    "pattern": "H:mm:ss",
+    "ja": "9:05:07",
+    "en": "9:05:07"
+  },
+  {
+    "key": "time",
+    "pattern": "HH時mm分",
+    "ja": "09時05分",
+    "en": "09時05分"
+  },
+  {
+    "key": "time",
+    "pattern": "HH時mm分ss秒",
+    "ja": "09時05分07秒",
+    "en": "09時05分07秒"
+  },
+  {
+    "key": "time",
+    "pattern": "H時mm分",
+    "ja": "9時05分",
+    "en": "9時05分"
+  },
+  {
+    "key": "time",
+    "pattern": "H時mm分ss秒",
+    "ja": "9時05分07秒",
+    "en": "9時05分07秒"
+  },
+  {
+    "key": "time",
+    "pattern": "HHmm",
+    "ja": "0905",
+    "en": "0905"
+  },
+  {
+    "key": "time",
+    "pattern": "HHmmss",
+    "ja": "090507",
+    "en": "090507"
+  },
+  {
+    "key": "year",
+    "pattern": "yyyy",
+    "ja": "2026",
+    "en": "2026"
+  },
+  {
+    "key": "year",
+    "pattern": "yyyy年",
+    "ja": "2026年",
+    "en": "2026年"
+  },
+  {
+    "key": "year",
+    "pattern": "yy",
+    "ja": "26",
+    "en": "26"
+  },
+  {
+    "key": "year",
+    "pattern": "yy年",
+    "ja": "26年",
+    "en": "26年"
+  },
+  {
+    "key": "month",
+    "pattern": "MM",
+    "ja": "08",
+    "en": "08"
+  },
+  {
+    "key": "month",
+    "pattern": "MM月",
+    "ja": "08月",
+    "en": "08月"
+  },
+  {
+    "key": "month",
+    "pattern": "M",
+    "ja": "8",
+    "en": "8"
+  },
+  {
+    "key": "month",
+    "pattern": "M月",
+    "ja": "8月",
+    "en": "8月"
+  },
+  {
+    "key": "day",
+    "pattern": "dd",
+    "ja": "04",
+    "en": "04"
+  },
+  {
+    "key": "day",
+    "pattern": "dd日",
+    "ja": "04日",
+    "en": "04日"
+  },
+  {
+    "key": "day",
+    "pattern": "d",
+    "ja": "4",
+    "en": "4"
+  },
+  {
+    "key": "day",
+    "pattern": "d日",
+    "ja": "4日",
+    "en": "4日"
+  },
+  {
+    "key": "weekday",
+    "pattern": "EEE",
+    "ja": "火",
+    "en": "Tue"
+  },
+  {
+    "key": "weekday",
+    "pattern": "(EEE)",
+    "ja": "(火)",
+    "en": "(Tue)"
+  },
+  {
+    "key": "weekday",
+    "pattern": "EEEE",
+    "ja": "火曜日",
+    "en": "Tuesday"
+  },
+  {
+    "key": "weekday",
+    "pattern": "(EEEE)",
+    "ja": "(火曜日)",
+    "en": "(Tuesday)"
+  }
 ]

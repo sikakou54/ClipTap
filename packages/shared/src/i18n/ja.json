@@ -141,6 +141,7 @@
     "variable_icon": "アイコン",
     "variable_preview": "プレビュー",
     "profiles": "プロファイル",
+    "system_variable_formats": "システム変数",
     "variable_usage_hint": "定型文内で {{name}} として使用できます",
     "web_specific": {
       "close_file": "ファイルを閉じる",
@@ -344,8 +345,7 @@
     "purchase_cancelled": "購入がキャンセルされました",
     "processing": "処理中...",
     "locked_feature": "この機能はProプラン限定です",
-    "unlock_now": "今すぐアンロック",
-    "system_variable_formats": "システム変数の書式"
+    "unlock_now": "今すぐアンロック"
   },
   "export_import": {
     "title": "インポート・エクスポート",
@@ -423,7 +423,6 @@
     "format_default": "既定",
     "format_reset_all": "すべて既定に戻す",
     "format_reset_all_confirm": "すべてのシステム変数の書式を既定に戻します。よろしいですか？",
-    "format_usage_count": "この書式を使う定型文 {{count}}件",
     "format_changed": "書式を変更しました"
   }
 }

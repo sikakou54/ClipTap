@@ -3,6 +3,7 @@ import goldenCases from './fixtures/patternGolden.json';
 import {
   DEFAULT_SYSTEM_VARIABLE_FORMATS,
   SYSTEM_VARIABLE_FORMAT_PRESETS,
+  getSystemVariableFormatPresets,
   type SystemVariableKey,
 } from '../src/constants/systemVariableFormats';
 import { formatByPattern } from '../src/utils/dateFormatter';
@@ -33,6 +34,13 @@ describe('formatByPattern', () => {
           .filter((testCase) => testCase.key === key)
           .map((testCase) => testCase.pattern)
       ).toEqual(presets);
+    }
+  });
+
+  it('keeps similar presets in the same order for every locale', () => {
+    for (const [key, presets] of Object.entries(SYSTEM_VARIABLE_FORMAT_PRESETS)) {
+      expect(getSystemVariableFormatPresets(key as SystemVariableKey, 'ja')).toEqual(presets);
+      expect(getSystemVariableFormatPresets(key as SystemVariableKey, 'en')).toEqual(presets);
     }
   });
 
