@@ -1,4 +1,5 @@
-const { getDefaultConfig } = require('@expo/metro-config');
+/* expoパッケージ経由で読み込む（@expo/metro-configはhoist配置に依存するため直接requireしない） */
+const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
 
 const projectRoot = __dirname;
