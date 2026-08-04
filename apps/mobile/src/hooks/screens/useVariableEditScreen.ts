@@ -19,7 +19,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from '@cliptap/shared';
 import {
-  RESERVED_VARIABLE_NAMES,
+  isReservedVariableName,
   useVariables,
   useProfiles,
   Profile,
@@ -128,7 +128,7 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
       return { isValid: false, errorMessage: t('error.variable_name_too_long', { max: maxLength }) };
     }
 
-    if (RESERVED_VARIABLE_NAMES.includes(trimmedName)) {
+    if (isReservedVariableName(trimmedName)) {
       return { isValid: false, errorMessage: t('error.variable_name_reserved', { name: trimmedName }) };
     }
 
@@ -154,12 +154,11 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
    */
   const canSave = useMemo(() => {
     if (!name.trim()) return false;
-    if (!label.trim()) return false;
     if (!isNameValid) return false;
     const hasStandardValue = value.trim() !== '';
     const hasProfileValue = Object.values(profileValues).some((val) => val.trim() !== '');
     return hasStandardValue || hasProfileValue;
-  }, [name, label, isNameValid, value, profileValues]);
+  }, [name, isNameValid, value, profileValues]);
 
   /* ======================================== */
   /* 初期化 */

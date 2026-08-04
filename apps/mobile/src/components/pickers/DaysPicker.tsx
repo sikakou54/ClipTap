@@ -159,7 +159,7 @@ const DaysPicker: React.FC<DaysPickerProps> = ({
           {/* プリセット選択セクション（平日/週末/毎日） */}
           <View style={{ marginBottom: spacing.lg }}>
             <Text style={[typography.h4, { color: colors.textPrimary, marginBottom: spacing.sm }]}>
-              {t('time.commonPresets', 'よく使う設定')}
+              {t('time.commonPresets')}
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
               {presetOptions.map((preset, index) => (
@@ -194,7 +194,7 @@ const DaysPicker: React.FC<DaysPickerProps> = ({
           {/* 個別曜日選択セクション */}
           <View>
             <Text style={[typography.h4, { color: colors.textPrimary, marginBottom: spacing.sm }]}>
-              {t('time.individualSelect', '個別選択')}
+              {t('time.individualSelect')}
             </Text>
             <View style={{
               flexDirection: 'row',

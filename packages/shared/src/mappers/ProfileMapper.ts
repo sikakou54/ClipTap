@@ -162,6 +162,20 @@ const toPVEntities = (rows: any[]): ProfileVariable[] => rows.map(toPVEntity);
  * プロファイル（環境）のCRUD操作を提供する静的メソッド群
  */
 export class ProfileMapper {
+  /** バックアップ行をID・日時・状態・並び順ごと逐語復元する。 */
+  static restore(profile: Profile): void {
+    getMainDbAdapter().run(ProfileQueries.INSERT, [
+      profile.id,
+      profile.name,
+      profile.isDefault ? 1 : 0,
+      profile.isActive ? 1 : 0,
+      profile.valid ? 1 : 0,
+      profile.sortOrder,
+      profile.createdAt,
+      profile.updatedAt,
+    ]);
+  }
+
   /**
    * 有効な全プロファイルを取得
    * @returns 有効なプロファイル一覧（デフォルト優先→名前順）
@@ -421,6 +435,18 @@ export class ProfileMapper {
  * プロファイルごとに異なる変数値を管理する。
  */
 export class ProfileVariableMapper {
+  /** バックアップ行をID・日時ごと逐語復元する。 */
+  static restore(profileVariable: ProfileVariable): void {
+    getMainDbAdapter().run(ProfileVariableQueries.INSERT, [
+      profileVariable.id,
+      profileVariable.profileId,
+      profileVariable.variableId,
+      profileVariable.value,
+      profileVariable.createdAt,
+      profileVariable.updatedAt,
+    ]);
+  }
+
   /**
    * プロファイルIDで変数一覧を取得
    * @param profileId - プロファイルID

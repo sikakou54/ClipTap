@@ -8,14 +8,11 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
-import { SCHEMA_VERSION } from '@database/schema';
 import { UI_CONSTANTS } from '@constants/ui';
 
 interface DeveloperMenuProps {
   onSubscriptionToggle: () => void;
   onResetDatabase: () => void;
-  onDeleteDatabase: () => void;
-  onChangeSchemaVersion: () => void;
 }
 
 interface MenuItemProps {
@@ -60,8 +57,6 @@ function DevMenuItem({ icon, iconColor, title, description, onPress }: MenuItemP
 export function DeveloperMenu({
   onSubscriptionToggle,
   onResetDatabase,
-  onDeleteDatabase,
-  onChangeSchemaVersion,
 }: DeveloperMenuProps) {
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
 
@@ -81,22 +76,6 @@ export function DeveloperMenu({
       title: 'Reset Database',
       description: 'Delete all data and runSeed test data',
       onPress: onResetDatabase,
-    },
-    {
-      id: 'delete',
-      icon: 'trash-outline' as const,
-      iconColor: colors.error || '#FF6B6B',
-      title: 'Delete Database File',
-      description: 'Completely delete database file and recreate',
-      onPress: onDeleteDatabase,
-    },
-    {
-      id: 'schema',
-      icon: 'git-branch-outline' as const,
-      iconColor: colors.text,
-      title: 'Change Schema Version',
-      description: `Test database migrations (Current: ${SCHEMA_VERSION})`,
-      onPress: onChangeSchemaVersion,
     },
   ];
 

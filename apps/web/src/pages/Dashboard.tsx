@@ -10,7 +10,8 @@
  * @see hooks/screens/useHomeScreen.ts - ビジネスロジック
  */
 import { useState, useCallback } from 'react';
-import { useAuth } from '@cliptap/shared';
+import { useAuth, useTranslation } from '@cliptap/shared';
+import { useSubscription } from '@providers/SubscriptionProvider';
 import { useHomeScreen } from '@hooks/screens/useHomeScreen';
 import { SnippetEditModal } from '@components/snippet/SnippetEditModal';
 import { DashboardHeader } from '@components/dashboard/DashboardHeader';
@@ -19,12 +20,15 @@ import { AccountLinkModal } from '@components/auth/AccountLinkModal';
 import { SideMenu } from '@components/settings/SideMenu';
 import { ImportFileModal, ImportSelectionModal, ImportModeSelectModal } from '@components/import';
 import { ExportSelectionModal } from '@components/export';
+import { shouldShowSubscriptionVerificationWarning } from '@services/SubscriptionVerificationService';
 
 /** 新規作成時のプロファイルID初期値（空配列を再利用してメモリ効率化） */
 const EMPTY_PROFILE_IDS: string[] = [];
 
 export function Dashboard() {
-  const { signInWithGoogle, signInWithApple, loading: authLoading, error: authError } = useAuth();
+  const { signInWithGoogle, signInWithApple, loading: authLoading, error: authError, user } = useAuth();
+  const { t } = useTranslation();
+  const { verificationFailed, refresh } = useSubscription();
 
   const [showAccountLinkModal, setShowAccountLinkModal] = useState(false);
 
@@ -99,6 +103,14 @@ export function Dashboard() {
       {/* メインコンテンツエリア（デスクトップではサイドメニュー分の左マージンを確保）
           サイドメニューの幅（72 = 18rem = 288px）分のマージンを左側に設定。 */}
       <div className="md:ml-72 transition-all duration-300">
+        {shouldShowSubscriptionVerificationWarning(Boolean(user), verificationFailed) && (
+          <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-center gap-3 bg-amber-100 px-4 py-2 text-sm text-amber-900 md:left-72 dark:bg-amber-900/60 dark:text-amber-100">
+            <span>{t('settings.web_specific.subscription_check_failed')}</span>
+            <button className="font-semibold underline" onClick={() => void refresh()}>
+              {t('settings.web_specific.retry_subscription')}
+            </button>
+          </div>
+        )}
         {/* ヘッダー（環境切り替え・検索・新規作成・カテゴリフィルター）
             固定表示で、スクロール時も常に上部に表示される。
             環境切り替え、検索バー、グリッド列数選択、新規作成ボタン、カテゴリフィルターを含む。 */}

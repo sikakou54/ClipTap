@@ -97,4 +97,18 @@ export class SystemVariableFormatMapper {
     });
     this.loadRegistry();
   }
+
+  /** 呼び出し側のトランザクション内で、日時を含めて逐語復元する。 */
+  static restoreAllWithinTransaction(rows: SystemVariableFormatRow[]): void {
+    const db = getMainDbAdapter();
+    db.run(SystemVariableFormatQueries.DELETE_ALL);
+    for (const row of rows) {
+      if (!isValidSystemVariableFormat(row.variableKey, row.pattern)) continue;
+      db.run(SystemVariableFormatQueries.UPSERT, [
+        row.variableKey,
+        row.pattern,
+        row.updatedAt,
+      ]);
+    }
+  }
 }

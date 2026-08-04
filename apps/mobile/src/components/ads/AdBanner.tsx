@@ -115,6 +115,10 @@ export function AdBanner({ style }: AdBannerProps) {
         unitId={adUnitId}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
         requestOptions={{
+          /*
+           * AndroidにはATTのgranted状態がないため、常に非パーソナライズ広告を要求する。
+           * EEA/UK向けCMP・UMP要件は配信地域に応じて法務確認する。
+           */
           requestNonPersonalizedAdsOnly: trackingStatus !== 'granted',
         }}
         onAdLoaded={() => {

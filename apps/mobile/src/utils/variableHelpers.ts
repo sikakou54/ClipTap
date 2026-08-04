@@ -75,7 +75,6 @@ export async function resolveSnippetVariables(
   const options = {
     locale,
     customResolver: resolver,
-    preserveUnknown: true,
     formats: SystemVariableFormatRegistry.getAll(),
   };
 
@@ -106,7 +105,6 @@ export async function resolveTextVariables(
   return replaceVariables(text, {
     locale,
     customResolver: createResolver(profileId),
-    preserveUnknown: true,
     formats: SystemVariableFormatRegistry.getAll(),
   });
 }

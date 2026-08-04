@@ -21,7 +21,6 @@ import { useDatabase } from './DatabaseProvider';
 import type { VariableResolver } from '../variables/parser';
 import type { Snippet, SnippetProfile, CreateSnippetInput, UpdateSnippetInput, SnippetSortBy } from '../schema';
 import { hasSortPreferenceAdapter, getSortPreferenceAdapter } from '../adapters/SortPreferenceAdapter';
-import { hasUsageTrackingAdapter, getUsageTrackingAdapter } from '../adapters/UsageTrackingAdapter';
 
 /* ======================================== */
 /* 型定義 */
@@ -281,23 +280,11 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
     if (hasClipboardAdapter()) {
       await getClipboardAdapter().copy(textToCopy);
 
-      /* 使用頻度追跡が有効な場合のみ、コピー回数をインクリメント */
-      let shouldIncrementCopyCount = false;
-      if (hasUsageTrackingAdapter()) {
-        try {
-          shouldIncrementCopyCount = await getUsageTrackingAdapter().isUsageTrackingEnabled();
-        } catch (err) {
-          Logger.warn('[SnippetProvider] Failed to check usage tracking status:', err);
-        }
-      }
-
-      if (shouldIncrementCopyCount) {
-        SnippetService.incrementCopyCount(id);
-        /* ローカルステートも更新（UIへの即座反映のため） */
-        setAllSnippets(prev => prev.map(s =>
-          s.id === id ? { ...s, copyCount: (s.copyCount ?? 0) + 1 } : s
-        ));
-      }
+      /* アプリ本体とWebではコピーの入口にかかわらず使用回数を加算 */
+      SnippetService.incrementCopyCount(id);
+      setAllSnippets(prev => prev.map(s =>
+        s.id === id ? { ...s, copyCount: (s.copyCount ?? 0) + 1 } : s
+      ));
     }
   }, []);
 
@@ -394,5 +381,4 @@ export function useSnippets(): SnippetContextValue {
   }
   return context;
 }
-
 

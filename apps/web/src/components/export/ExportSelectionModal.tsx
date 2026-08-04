@@ -374,7 +374,7 @@ export function ExportSelectionModal({
     /* パスワードが未入力の場合はエラー */
     if (!password.trim()) {
       const { showAlert } = await import('@utils/alerts');
-      showAlert('', t('backup.password_required'));
+      showAlert('', t('error.password_required'));
       return;
     }
 

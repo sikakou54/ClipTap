@@ -97,18 +97,6 @@ export default function ManageSubscriptionScreen() {
           </Text>
 
           <View style={[styles.featureCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Ionicons name="keypad-outline" size={24} color={colors.primary} />
-            <View style={styles.featureText}>
-              <Text style={[styles.featureTitle, { color: colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
-                {t('subscription.feature_keyboard_extension')}
-              </Text>
-              <Text style={[styles.featureDescription, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
-                {t('subscription.feature_keyboard_extension_desc')}
-              </Text>
-            </View>
-          </View>
-
-          <View style={[styles.featureCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Ionicons name="close-circle-outline" size={24} color={colors.primary} />
             <View style={styles.featureText}>
               <Text style={[styles.featureTitle, { color: colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
@@ -175,18 +163,16 @@ export default function ManageSubscriptionScreen() {
             <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
 
-          {isSubscribed && (
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-              onPress={handleOpenKeyboardSettings}
-            >
-              <Ionicons name="keypad-outline" size={24} color={colors.text} />
-              <Text style={[styles.actionButtonText, { color: colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
-                {t('subscription.enable_keyboard')}
-              </Text>
-              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={handleOpenKeyboardSettings}
+          >
+            <Ionicons name="keypad-outline" size={24} color={colors.text} />
+            <Text style={[styles.actionButtonText, { color: colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
+              {t('subscription.enable_keyboard')}
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
 
           {!isSubscribed && (
             <TouchableOpacity

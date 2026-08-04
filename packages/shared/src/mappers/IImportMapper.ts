@@ -27,6 +27,7 @@ export interface SnippetImportRow {
   categoryId?: string | null;
   categoryName: string | null; // LEFT JOINで取得
   copyWithTitle?: number | boolean; // SQLiteでは0/1、JSではboolean
+  copyCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -49,9 +50,12 @@ export interface ProfileImportRow {
  * プロファイル変数（profile_variablesテーブルの行）
  */
 export interface ProfileVariableRow {
+  id: string;
   profileId: string;
   variableId: string;
   value: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**

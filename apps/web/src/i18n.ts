@@ -27,7 +27,7 @@ i18n
         translation: ja,
       },
     },
-    fallbackLng: 'ja',
+    fallbackLng: 'en',
     interpolation: {
       escapeValue: false,
     },
@@ -39,4 +39,3 @@ i18n
   });
 
 export default i18n;
-

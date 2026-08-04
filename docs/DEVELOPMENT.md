@@ -229,6 +229,8 @@ cp path/to/google-services.json apps/mobile/
 1. [RevenueCat Dashboard](https://app.revenuecat.com/)でプロジェクトを作成
 2. 各プラットフォーム用の公開SDKキーを取得
 3. モバイルのネイティブ設定と、下記Web環境変数へ設定
+4. Restore Behaviorを「既存権利を維持し、同一App User IDへ統合する」製品方針に合わせて設定
+5. リリース前に購入サンドボックスで Free→Free、Free→Pro、Pro→Free、Pro→Pro の4組合せを確認し、採用された有効期限を記録
 
 秘密のREST APIキーやサービスアカウント資格情報はクライアントへ設定しないでください。
 
@@ -352,6 +354,14 @@ npm run android
 2. Expo Goアプリではなく、開発ビルドアプリを使用
 3. 同じWi-Fiネットワークに接続
 4. QRコードをスキャン、またはURLを直接入力
+
+リリース前の実機確認:
+
+- [ ] OTA無効化後も開発メニューの再読込がiOS/Androidで動く
+- [ ] 30文字を超える既存タイトルを編集画面で開いても、保存前に値が欠落しない
+- [ ] キーボードをFree状態で起動し、件数制限なく入力できる
+- [ ] iOSはフルアクセス・使用頻度追跡の各組合せ、Androidは通常入力で使用回数が仕様どおり更新される
+- [ ] チェックサムなし旧 `.cliptap` の非対応をリリースノートへ記載した
 
 #### ホットリロード
 
@@ -693,6 +703,7 @@ export async function migrateV6ToV7(db: DbAdapter): Promise<void> {
 - リリース済みの移行ステップは原則変更せず、新しいバージョンとして追加する
 - 既存ステップの不具合修正が必要な場合は、対象旧版のfixtureと回帰テストを追加する
 - `packages/shared/src/database/schema.ts`でバージョンをインクリメント
+- `MIN_SUPPORTED_SCHEMA_VERSION` の据置可否と `migrateImportTempDb` の新しいcaseを確認
 
 #### ステップ2: Mapper作成
 
@@ -1038,7 +1049,7 @@ npm run preview
 - `apps/web/dist` をGitHub Pagesへアップロード
 - `apps/web/public/CNAME` により `cliptap.net` を使用
 
-事前にGitHubリポジトリのPagesをGitHub Actions配信に設定し、Web環境変数のFirebase 6項目をActions Secretsへ登録してください。`VITE_API_BASE_URL` はワークフローから注入せず `apps/web/.env.production` を正とします。`apps/web/vercel.json` は現行配布では使わない残存設定です。
+事前にGitHubリポジトリのPagesをGitHub Actions配信に設定し、Web環境変数のFirebase 6項目をActions Secretsへ登録してください。`VITE_API_BASE_URL` はワークフローから注入せず `apps/web/.env.production` を正とします。Vercel向け設定は保持せず、GitHub Pagesのワークフローを配布設定の正本とします。
 
 ### API（Cloudflare Workers）
 

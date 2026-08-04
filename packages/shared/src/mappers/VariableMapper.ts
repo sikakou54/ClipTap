@@ -90,6 +90,21 @@ const toEntities = (rows: any[]): Variable[] => rows.map(toEntity);
  * 変数（カスタム変数）のCRUD操作を提供する静的メソッド群
  */
 export class VariableMapper {
+  /** バックアップ行をID・日時・有効状態・並び順ごと逐語復元する。 */
+  static restore(variable: Variable): void {
+    getMainDbAdapter().run(VariableQueries.INSERT, [
+      variable.id,
+      variable.name,
+      variable.label,
+      variable.icon,
+      variable.type,
+      variable.valid ? 1 : 0,
+      variable.sortOrder,
+      variable.createdAt,
+      variable.updatedAt,
+    ]);
+  }
+
   /**
    * 有効な全変数を取得
    * @returns 有効な変数一覧（作成日時順）

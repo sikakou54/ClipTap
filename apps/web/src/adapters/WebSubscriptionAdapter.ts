@@ -51,6 +51,11 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
 
   /** 最新のサブスクリプション状態（キャッシュ） */
   private _status: SubscriptionStatus = FREE_STATUS;
+  private verificationFailed = false;
+
+  hasVerificationFailed(): boolean {
+    return this.verificationFailed;
+  }
 
   /**
    * 購読状態を取得
@@ -89,6 +94,7 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
     /* 1. ユーザーIDが存在しない（ログアウト状態）場合 */
     if (!userId) {
       /* 状態をリセットして通知 */
+      this.verificationFailed = false;
       this.reset();
       return false;
     }
@@ -96,7 +102,8 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
     /* 2. APIベースURLが設定されていない場合 */
     if (!SUBSCRIPTION_API_BASE_URL) {
       Logger.warn('[WebSubscriptionAdapter] API base URL is not configured, treating as free user');
-      this.reset();
+      this.verificationFailed = true;
+      this.reset(false);
       return false;
     }
 
@@ -111,7 +118,8 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
       /* トークンが取得できない場合は無料ユーザーとして扱う */
       if (!idToken) {
         Logger.warn('[WebSubscriptionAdapter] ID token is unavailable, treating as free user');
-        this.reset();
+        this.verificationFailed = true;
+        this.reset(false);
         return false;
       }
 
@@ -126,7 +134,8 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
       /* レスポンスが正常でない場合は無料ユーザーとして扱う */
       if (!response.ok) {
         Logger.warn('[WebSubscriptionAdapter] API returned an error status:', response.status);
-        this.reset();
+        this.verificationFailed = true;
+        this.reset(false);
         return false;
       }
 
@@ -141,6 +150,7 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
 
       /* 7. 状態を更新 */
       this._status = status;
+      this.verificationFailed = false;
       this._isSubscribed = status.isSubscribed;
       this._isLoading = false;
 
@@ -150,8 +160,9 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
       return status.isSubscribed;
     } catch (error) {
       Logger.error('[WebSubscriptionAdapter] Failed to verify subscription:', error);
+      this.verificationFailed = true;
       /* 安全のため、エラー時は無料ユーザーとして扱う */
-      this.reset();
+      this.reset(false);
       return false;
     }
   }
@@ -185,14 +196,14 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
    * 状態をリセット
    * ログアウト時などに呼び出され、購読状態を初期化する
    */
-  reset(): void {
+  reset(notify = true): void {
     /* 購読状態を無料プランに戻す */
     this._isSubscribed = false;
     this._status = FREE_STATUS;
     /* ローディング状態をfalseに設定 */
     this._isLoading = false;
     /* リスナーに通知 */
-    this.notifyListeners();
+    if (notify) this.notifyListeners();
   }
 
   /* ======================================== */

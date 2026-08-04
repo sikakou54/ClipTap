@@ -42,7 +42,11 @@ function createWebPlatformAdapter(userId: string | null): SubscriptionPlatformAd
       if (!userId) {
         return false;
       }
-      return subscriptionService.checkSubscription(userId);
+      const subscribed = await subscriptionService.checkSubscription(userId);
+      if (subscriptionService.hasVerificationFailed()) {
+        throw new Error('Subscription verification failed');
+      }
+      return subscribed;
     },
 
     /**
@@ -51,6 +55,9 @@ function createWebPlatformAdapter(userId: string | null): SubscriptionPlatformAd
     refresh: async () => {
       if (userId) {
         await subscriptionService.checkSubscription(userId);
+        if (subscriptionService.hasVerificationFailed()) {
+          throw new Error('Subscription verification failed');
+        }
       }
     },
 
@@ -126,4 +133,3 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 export function useSubscription(): SubscriptionContextValue {
   return useSharedSubscription();
 }
-

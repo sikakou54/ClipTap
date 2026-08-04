@@ -31,11 +31,11 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
      */
     private fun orderClause(sortBy: String): String {
         return when (sortBy) {
-            "created" -> "ORDER BY createdAt DESC, title ASC"
-            "updated" -> "ORDER BY updatedAt DESC, title ASC"
-            "title" -> "ORDER BY title ASC, createdAt DESC"
+            "created" -> "ORDER BY createdAt DESC, title IS NULL, title ASC"
+            "updated" -> "ORDER BY updatedAt DESC, title IS NULL, title ASC"
+            "title" -> "ORDER BY title IS NULL, title ASC, createdAt DESC"
             "usage" -> "ORDER BY copyCount DESC, createdAt DESC"
-            else -> "ORDER BY createdAt DESC, title ASC"
+            else -> "ORDER BY createdAt DESC, title IS NULL, title ASC"
         }
     }
 
@@ -86,7 +86,7 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
             }
         }
 
-        Log.d(TAG, "Loaded ${snippets.size} snippets (profileId: $filterByProfileId, sortBy: $sortBy)")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Loaded ${snippets.size} snippets (profileId: $filterByProfileId, sortBy: $sortBy)")
         return snippets
     }
 
@@ -139,7 +139,7 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
             }
         }
 
-        Log.d(TAG, "Loaded ${snippets.size} snippets (categoryId: $categoryId, profileId: $filterByProfileId, sortBy: $sortBy)")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Loaded ${snippets.size} snippets (categoryId: $categoryId, profileId: $filterByProfileId, sortBy: $sortBy)")
         return snippets
     }
 
@@ -185,6 +185,6 @@ class SnippetMapper private constructor(context: Context) : BaseMapper(context) 
         """
 
         executeUpdate(query, arrayOf(snippetId))
-        Log.d(TAG, "✅ Incremented copyCount for snippet: $snippetId")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Incremented copyCount for snippet: $snippetId")
     }
 }

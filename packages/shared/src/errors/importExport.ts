@@ -109,7 +109,7 @@ export class FileReadError extends ImportExportError {
  */
 export class InvalidFileTypeError extends ImportExportError {
   constructor(message: string = 'Invalid file type') {
-    super(message, 'backup.select_cliptap_file');
+    super(message, 'error.invalid_file_type');
     this.name = 'InvalidFileTypeError';
   }
 }
@@ -133,7 +133,7 @@ export class InvalidFileFormatError extends ImportExportError {
  */
 export class PasswordRequiredError extends ImportExportError {
   constructor(message: string = 'Password is required') {
-    super(message, 'backup.password_incorrect');
+    super(message, 'error.password_required');
     this.name = 'PasswordRequiredError';
   }
 }

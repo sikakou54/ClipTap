@@ -26,8 +26,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useAuth, Logger } from '@cliptap/shared';
+import { useAuth, Logger, SubscriptionService } from '@cliptap/shared';
 import type { UseAppInitializationReturn } from '@cliptap/shared';
+import { useSubscription } from '@providers/SubscriptionProvider';
 import { database } from '@database/database';
 import { runSeed } from '@database/seed';
 
@@ -40,6 +41,7 @@ import { runSeed } from '@database/seed';
  */
 export function useAppInitialization(): UseAppInitializationReturn {
   const { loading: authLoading } = useAuth();
+  const { isLoading: subscriptionLoading, verificationFailed } = useSubscription();
   const [isInitializing, setIsInitializing] = useState(true);
   const [isLoaded, setLoaded] = useState(false);
   const [isDbInitialized, setIsDbInitialized] = useState(false);
@@ -76,10 +78,14 @@ export function useAppInitialization(): UseAppInitializationReturn {
   /* ======================================== */
   useEffect(() => {
     if (authLoading || !isDbInitialized) return;
-
-    /* validフラグ更新はSubscriptionProviderのonInitializeCompleteで実行済み */
     setIsInitializing(false);
   }, [authLoading, isDbInitialized]);
+
+  /* Providerの初回更新よりDB初期化が遅かった場合も、確定した権利で再計算する。 */
+  useEffect(() => {
+    if (!isDbInitialized || subscriptionLoading || verificationFailed) return;
+    SubscriptionService.updateValidFlags();
+  }, [isDbInitialized, subscriptionLoading, verificationFailed]);
 
   return {
     isAppReady: !isInitializing,

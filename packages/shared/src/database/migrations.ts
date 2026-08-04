@@ -14,6 +14,7 @@
  */
 
 import type { DbAdapter } from '../adapters/DbAdapter';
+import { VersionMismatchError } from '../errors';
 import { Logger } from '../utils/logger';
 import { generateUniqueId, getCurrentTimestamp } from '../utils/dateHelpers';
 import { CREATE_TABLES, CREATE_INDEXES, SCHEMA_VERSION } from './schema';
@@ -417,9 +418,11 @@ async function copyDataFromSystemDatabase(
     const variables = systemDb.all<Record<string, unknown>>('SELECT * FROM variables');
     Logger.info(`[Migration V3→V4] Found ${variables.length} variables`);
     for (const variable of variables) {
+      const createdAt = (variable.createdAt as string | undefined) ?? getCurrentTimestamp();
+      const updatedAt = (variable.updatedAt as string | undefined) ?? createdAt;
       sharedDb.run(
-        `INSERT OR IGNORE INTO variables (id, name, label, icon, type, createdAt, valid) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [variable.id, variable.name, variable.label, variable.icon, variable.type, variable.createdAt, (variable.valid as number | undefined) ?? 1] as unknown[]
+        `INSERT OR IGNORE INTO variables (id, name, label, icon, type, createdAt, updatedAt, valid) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [variable.id, variable.name, variable.label, variable.icon, variable.type, createdAt, updatedAt, (variable.valid as number | undefined) ?? 1] as unknown[]
       );
     }
   } catch {
@@ -431,9 +434,11 @@ async function copyDataFromSystemDatabase(
     const profileVariables = systemDb.all<Record<string, unknown>>('SELECT * FROM profile_variables');
     Logger.info(`[Migration V3→V4] Found ${profileVariables.length} profile variables`);
     for (const pv of profileVariables) {
+      const createdAt = (pv.createdAt as string | undefined) ?? getCurrentTimestamp();
+      const updatedAt = (pv.updatedAt as string | undefined) ?? createdAt;
       sharedDb.run(
-        `INSERT OR IGNORE INTO profile_variables (profileId, variableId, value) VALUES (?, ?, ?)`,
-        [pv.profileId, pv.variableId, pv.value] as unknown[]
+        `INSERT OR IGNORE INTO profile_variables (id, profileId, variableId, value, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)`,
+        [(pv.id as string | undefined) ?? generateUniqueId(), pv.profileId, pv.variableId, pv.value, createdAt, updatedAt] as unknown[]
       );
     }
   } catch {
@@ -724,6 +729,9 @@ export async function migrateImportTempDb(db: DbAdapter, fromVersion: number): P
     Logger.info(`[Import Migration] Running migration: V${currentVersion} → V${nextVersion}`);
 
     switch (nextVersion) {
+      case 4:
+        /* V3→V4は保存場所だけの変更で、一時DBのテーブル定義は同一 */
+        break;
       case 5:
         await migrateV4ToV5(db);
         break;
@@ -734,8 +742,7 @@ export async function migrateImportTempDb(db: DbAdapter, fromVersion: number): P
         await migrateV6ToV7(db);
         break;
       default:
-        Logger.warn(`[Import Migration] No migration defined for version ${nextVersion}`);
-        break;
+        throw new VersionMismatchError(SCHEMA_VERSION, currentVersion);
     }
 
     currentVersion = nextVersion;

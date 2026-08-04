@@ -20,6 +20,7 @@
   <string name="snippet_preview">Preview</string>
   <string name="snippet_detail">Details</string>
   <string name="snippet_close">Close</string>
+  <string name="snippet_no_title">(No Title)</string>
   <string name="search_placeholder">Search snippets</string>
   <string name="search_clear">Clear</string>
   <string name="search_no_results">No search results</string>

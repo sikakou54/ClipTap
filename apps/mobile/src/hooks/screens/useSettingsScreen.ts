@@ -108,8 +108,8 @@ export function useSettingsScreen(): UseSettingsScreenReturn {
     Logger.error('[useSettingsScreen] Account auth failed:', error);
     const errorObj = error as { message?: string } | null;
     showAlert(
-      t('error.account_auth_failed_title', 'アカウント認証失敗'),
-      errorObj?.message || t('error.account_auth_failed_message', 'アカウント連携中にエラーが発生しました。')
+      t('error.account_auth_failed_title'),
+      errorObj?.message || t('error.account_auth_failed_message')
     );
   }, [t]);
 
@@ -166,7 +166,7 @@ export function useSettingsScreen(): UseSettingsScreenReturn {
 
     /* 確認ダイアログを表示 */
     showConfirm(
-      t('settings.account_auth.confirm_logout', '現在のアカウント連携を解除しますか？'),
+      t('settings.account_auth.confirm_logout'),
       async () => {
         /* OKが押されたらログアウト処理開始 */
         setIsLinkingAccount(true);
@@ -175,15 +175,15 @@ export function useSettingsScreen(): UseSettingsScreenReturn {
           await authSignOut();
           /* 成功アラートを表示 */
           showAlert(
-            t('settings.account_auth.logout_success_title', '連携を解除しました'),
-            t('settings.account_auth.logout_success_message', 'アカウント連携が解除されました。')
+            t('settings.account_auth.logout_success_title'),
+            t('settings.account_auth.logout_success_message')
           );
         } catch (error) {
           /* エラーログ出力とアラート表示 */
           Logger.error('[useSettingsScreen] Logout failed:', error);
           showAlert(
-            t('error.logout_failed_title', 'ログアウト失敗'),
-            t('error.logout_failed_message', 'ログアウト中にエラーが発生しました。')
+            t('error.logout_failed_title'),
+            t('error.logout_failed_message')
           );
         } finally {
           /* 処理終了 */
@@ -210,8 +210,8 @@ export function useSettingsScreen(): UseSettingsScreenReturn {
   /* ======================================== */
 
   const accountAuthStatus = user
-    ? t('settings.account_auth.status_authenticated', '連携済')
-    : t('settings.account_auth.status_unauthenticated', '未連携');
+    ? t('settings.account_auth.status_authenticated')
+    : t('settings.account_auth.status_unauthenticated');
 
   /* ======================================== */
   /* メニュー項目定義 */

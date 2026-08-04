@@ -17,6 +17,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@cliptap/shared';
 import { SnippetWithDisplay, Category, useCategories } from '@cliptap/shared';
 import { showConfirm } from '@utils/alerts';
+import { UI_CONSTANTS } from '@constants/ui';
 
 /**
  * useSnippetCardのProps
@@ -74,7 +75,7 @@ export function useSnippetCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const [category, setCategory] = useState<Category | null>(null);
 
-  const displayTitle = snippet.displayTitle;
+  const displayTitle = snippet.displayTitle || t('snippet.no_title');
   const displayContent = snippet.displayContent;
 
   /**
@@ -99,7 +100,7 @@ export function useSnippetCard({
 
     const timeoutId = setTimeout(() => {
       setIsCopied(false);
-    }, 2000);
+    }, UI_CONSTANTS.COPY_SUCCESS_DURATION_MS);
 
     return () => clearTimeout(timeoutId);
   }, [isCopied]);

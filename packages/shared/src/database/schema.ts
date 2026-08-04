@@ -9,6 +9,9 @@
  */
 export const SCHEMA_VERSION = 7;
 
+/** インポートで受け付ける最古のスキーマバージョン */
+export const MIN_SUPPORTED_SCHEMA_VERSION = 3;
+
 /**
  * テーブル作成SQL定義
  */

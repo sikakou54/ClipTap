@@ -11,7 +11,6 @@
  * ```
  */
 
-import * as SQLite from 'expo-sqlite';
 import {
   type FileIOAdapter,
   getFileIOAdapter,
@@ -39,8 +38,6 @@ import { runMigrations, getSchemaVersionFromDb } from './DatabaseMigrations';
  * データベースの初期化・マイグレーション・トランザクション処理を担当します。
  */
 class Database {
-  /* データベースインスタンス（初期化されるまではnull） */
-  private db: SQLite.SQLiteDatabase | null = null;
   /* 初期化完了フラグ（重複初期化を防ぐ） */
   private isInitialized = false;
   /* FileIOAdapterインスタンス（依存注入） */
@@ -186,54 +183,6 @@ class Database {
   }
 
   /**
-   * データベースが新規作成されたかどうかを返す
-   */
-  /**
-   * データベースが新規作成されたかどうかを返す
-   *
-   * user_versionが0の場合は新規作成されたDBと判断します。
-   * （実際には使用されていない可能性があります）
-   */
-  isNewDatabase(): boolean {
-    try {
-      /* PRAGMA user_versionでバージョン番号を取得 */
-      const version = this.db?.getFirstSync<{ user_version: number }>('PRAGMA user_version');
-      /* バージョンが0の場合は新規DBと判断 */
-      return version?.user_version === 0;
-    } catch {
-      /* エラーが発生した場合はfalseを返す */
-      return false;
-    }
-  }
-
-  /**
-   * 現在のスキーマバージョンを取得（開発者メニュー用）
-   */
-  async getSchemaVersion(): Promise<number> {
-    if (!this.db) throw new Error('Database not initialized');
-    const result = this.db.getFirstSync<{ user_version: number }>('PRAGMA user_version');
-    return result?.user_version ?? 0;
-  }
-
-  /**
-   * データベースバージョンを手動で変更（開発者メニュー用）
-   *
-   * デバッグ目的でバージョンを変更する機能です。
-   * マイグレーションのテストなどで使用されます。
-   */
-  async setVersionManually(version: number): Promise<void> {
-    /* データベースが初期化されていない場合はエラー */
-    if (!this.db) throw new Error('Database not initialized');
-
-    /* 警告ログを出力（手動変更は通常の運用では行わない） */
-    Logger.warn(`[Dev] Manually changing database version to ${version}`);
-    /* PRAGMA user_versionでバージョン番号を設定 */
-    await this.db.execAsync(`PRAGMA user_version = ${version}`);
-    /* バージョン変更完了ログを出力 */
-    Logger.success(`[Dev] Database version changed to ${version}`);
-  }
-
-  /**
    * 全テーブル削除
    *
    * データベースリセット時に使用されます。
@@ -254,31 +203,6 @@ class Database {
       Logger.error('Failed to drop tables:', error);
       throw error;
     }
-  }
-
-  /**
-   * トランザクション実行
-   *
-   * 複数のデータベース操作を1つのまとまりとして実行し、
-   * 途中でエラーが発生した場合は全ての変更を取り消します。
-   */
-  async transaction<T>(callback: () => Promise<T>): Promise<T> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    try {
-      await this.db.execAsync('BEGIN TRANSACTION;');
-      const result = await callback();
-      await this.db.execAsync('COMMIT;');
-      return result;
-    } catch (error) {
-      await this.db.execAsync('ROLLBACK;');
-      throw error;
-    }
-  }
-
-  getDB(): SQLite.SQLiteDatabase {
-    if (!this.db) throw new Error('Database not initialized');
-    return this.db;
   }
 
   /**
@@ -303,21 +227,6 @@ class Database {
     return await getSharedDatabaseFile(this.fileIO);
   }
 
-  getFirstSync<T = any>(query: string, params: any[] = []): T | null {
-    if (!this.db) throw new Error('Database not initialized');
-    return this.db.getFirstSync<T>(query, params);
-  }
-
-  getAllSync<T = any>(query: string, params: any[] = []): T[] {
-    if (!this.db) throw new Error('Database not initialized');
-    return this.db.getAllSync<T>(query, params);
-  }
-
-  runSync(query: string, params: any[] = []): SQLite.SQLiteRunResult {
-    if (!this.db) throw new Error('Database not initialized');
-    return this.db.runSync(query, params);
-  }
-
   async reset(): Promise<void> {
     /* FileIOAdapterが初期化されていない場合はエラー */
     if (!this.fileIO) {
@@ -340,7 +249,10 @@ class Database {
       await createTablesWithDb(mainDbAdapter);
       await createIndexesWithDb(mainDbAdapter);
       await createDefaultProfileIfNeeded(mainDbAdapter);
-      await mainDbAdapter.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
+      const systemDbAdapter = getSystemDbAdapter();
+      const systemDbPath = await this.getDatabaseFilePath('system');
+      await systemDbAdapter.open(systemDbPath);
+      await systemDbAdapter.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
       Logger.info(`Database reset successfully to version ${SCHEMA_VERSION}`);
     } finally {
       /* リセット後もデータベースは開いたままにしておく（init()と同様） */
@@ -348,15 +260,6 @@ class Database {
     }
   }
 
-  /**
-   * データベースファイルを完全に削除して再作成
-   *
-   * 注: この機能は現在使用していません。reset() を使用してください。
-   */
-  async deleteAndRecreate(): Promise<void> {
-    await this.reset();
-    Logger.info('Database recreated successfully');
-  }
 }
 
 export const database = new Database();

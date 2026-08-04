@@ -22,6 +22,7 @@ function getWebSubscriptionAdapter(): WebSubscriptionAdapter | null {
 export const subscriptionService = {
   /** 現在のユーザーIDを取得（キャッシュキー用） */
   getCustomerId: () => getWebSubscriptionAdapter()?.getCustomerId() ?? null,
+  hasVerificationFailed: () => getWebSubscriptionAdapter()?.hasVerificationFailed() ?? false,
 
   /** サブスクリプション状態を検証（Firebase認証経由でRevenueCatに問い合わせ） */
   checkSubscription: (userId: string | null) => {

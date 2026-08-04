@@ -212,7 +212,10 @@ export default function VariableEditModal() {
                 },
               ]}
             >
-              {t('settings.variable_label')} *
+              {t('settings.variable_label')}
+              <Text style={{ color: colors.textSecondary, fontSize: responsiveFontSizes.xs }}>
+                {' '}({label.length}/{UI_CONSTANTS.INPUT_LIMITS.VARIABLE_LABEL_MAX})
+              </Text>
             </Text>
             <View style={styles.labelWithIconRow}>
               <TouchableOpacity
@@ -243,6 +246,7 @@ export default function VariableEditModal() {
                 onChangeText={setLabel}
                 placeholder={t('settings.variable_label_placeholder')}
                 placeholderTextColor={colors.textSecondary}
+                maxLength={UI_CONSTANTS.INPUT_LIMITS.VARIABLE_LABEL_MAX}
               />
             </View>
             <Text

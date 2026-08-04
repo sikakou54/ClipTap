@@ -71,7 +71,7 @@ export function ImportFileModal({ isOpen, onClose, onFileSelected, isLoading }: 
    * 選択されたファイルとパスワードを親コンポーネントに渡す
    */
   const handleSubmit = async () => {
-    if (!selectedFile || !password) return;
+    if (!selectedFile || !password.trim()) return;
 
     try {
       await onFileSelected(selectedFile, password);
@@ -162,9 +162,9 @@ export function ImportFileModal({ isOpen, onClose, onFileSelected, isLoading }: 
             {/* 次へボタン（ファイルとパスワードが入力されている場合のみ有効） */}
             <button
               onClick={handleSubmit}
-              disabled={!selectedFile || !password || isLoading}
+              disabled={!selectedFile || !password.trim() || isLoading}
               className={`px-4 py-2 text-sm font-medium text-white rounded-lg ${
-                !selectedFile || !password || isLoading
+                !selectedFile || !password.trim() || isLoading
                   ? 'bg-blue-400 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700'
               }`}
@@ -177,4 +177,3 @@ export function ImportFileModal({ isOpen, onClose, onFileSelected, isLoading }: 
     </Dialog>
   );
 }
-

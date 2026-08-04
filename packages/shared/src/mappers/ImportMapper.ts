@@ -24,6 +24,25 @@ import type {
   ProfileImportRow,
 } from './IImportMapper';
 import type { DbAdapter } from '../adapters/DbAdapter';
+import type {
+  Category,
+  Profile,
+  ProfileVariable,
+  Snippet,
+  SnippetProfile,
+  Variable,
+} from '../schema';
+import type { SystemVariableFormatRow } from './SystemVariableFormatMapper';
+
+export interface FullRestoreData {
+  categories: Category[];
+  variables: Variable[];
+  profiles: Profile[];
+  profileVariables: ProfileVariable[];
+  snippets: Snippet[];
+  snippetProfiles: SnippetProfile[];
+  systemVariableFormats: SystemVariableFormatRow[];
+}
 
 /**
  * SQLプレースホルダーを生成
@@ -132,6 +151,27 @@ export class ImportMapper {
     };
   }
 
+  /** 全復元用に、業務データを加工せず取得する。 */
+  getFullRestoreData(): FullRestoreData {
+    const hasFormats = Boolean(
+      this.adapter.get<{ name: string }>(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'system_variable_formats'"
+      )
+    );
+
+    return {
+      categories: this.adapter.all<Category>('SELECT * FROM categories'),
+      variables: this.adapter.all<Variable>("SELECT * FROM variables WHERE type = 'custom'"),
+      profiles: this.adapter.all<Profile>('SELECT * FROM profiles'),
+      profileVariables: this.adapter.all<ProfileVariable>('SELECT * FROM profile_variables'),
+      snippets: this.adapter.all<Snippet>('SELECT * FROM snippets'),
+      snippetProfiles: this.adapter.all<SnippetProfile>('SELECT * FROM snippet_profiles'),
+      systemVariableFormats: hasFormats
+        ? this.adapter.all<SystemVariableFormatRow>('SELECT * FROM system_variable_formats')
+        : [],
+    };
+  }
+
   getCategories(ids: string[]): ImportCandidateCategory[] {
     if (ids.length === 0) return [];
 
@@ -212,7 +252,7 @@ export class ImportMapper {
     return this.adapter.all(
       `
       SELECT
-        s.id, s.title, s.content, s.copyWithTitle, s.categoryId,
+        s.id, s.title, s.content, s.copyWithTitle, s.copyCount, s.categoryId,
         s.createdAt, s.updatedAt,
         c.name as categoryName
       FROM snippets s

@@ -16,6 +16,7 @@ import type {
   UpdateProfileInput,
 } from '../schema';
 import { NotFoundError, DefaultProfileDeleteError, DuplicateNameError, EmptyContentError } from '../errors';
+import { Logger } from '../utils/logger';
 
 /**
  * プロファイルサービス
@@ -209,6 +210,22 @@ export class ProfileService {
 
     /* Mapper層に処理を委譲（全プロファイルのisDefaultをリセット後、指定プロファイルのみデフォルト化） */
     ProfileMapper.setDefault(id);
+  }
+
+  /** 標準・アクティブプロファイルが欠けている場合に同じ対象で補完する */
+  static ensureDefaultAndActive(importedDefaultProfileId: string | null = null): void {
+    const defaultProfile = this.getDefault();
+    const activeProfile = this.getActive();
+    if (defaultProfile && activeProfile) return;
+
+    const targetProfileId = importedDefaultProfileId ?? this.getAll()[0]?.id;
+    if (!targetProfileId || !this.getById(targetProfileId)) {
+      Logger.warn('[ProfileService] No profile available for default/active state');
+      return;
+    }
+
+    if (!defaultProfile) this.setDefault(targetProfileId);
+    if (!activeProfile) this.setActive(targetProfileId);
   }
 
   /**

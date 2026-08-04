@@ -47,61 +47,8 @@ class VariableMapper private constructor(context: Context) : BaseMapper(context)
             }
         }
 
-        Log.d(TAG, "Loaded ${variablesMap.size} variables for profile: $profileId")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Loaded ${variablesMap.size} variables for profile: $profileId")
         return variablesMap
     }
 
-    /**
-     * validフラグを更新（サブスクリプション状態に応じて）
-     *
-     * 処理内容：
-     * 1. すべてのカスタム変数のvalidを0にする
-     * 2. 作成日時の古い順にlimit件を有効化（valid=1）
-     * 3. システム変数（type='system'）は常に有効
-     *
-     * @param limit 有効にする最大カスタム変数数
-     */
-    fun updateValidFlags(limit: Int) {
-        Log.d(TAG, "🔄 updateValidFlags called with limit: $limit")
-
-        val db = getDb()
-
-        try {
-            db.beginTransaction()
-
-            // 1. すべてのカスタム変数を無効にする（システム変数は除く）
-            db.execSQL("UPDATE variables SET valid = 0 WHERE type = 'custom'")
-            Log.d(TAG, "✅ Set all custom variables to invalid")
-
-            // 2. システム変数は常に有効
-            db.execSQL("UPDATE variables SET valid = 1 WHERE type = 'system'")
-            Log.d(TAG, "✅ Set system variables to valid")
-
-            // 3. sortOrder順にlimit件のカスタム変数を有効化
-            if (limit > 0) {
-                db.execSQL(
-                    """
-                    UPDATE variables
-                    SET valid = 1
-                    WHERE id IN (
-                        SELECT id FROM variables
-                        WHERE type = 'custom'
-                        ORDER BY sortOrder ASC
-                        LIMIT ?
-                    )
-                    """,
-                    arrayOf(limit)
-                )
-                Log.d(TAG, "✅ Set $limit custom variables to valid")
-            }
-
-            db.setTransactionSuccessful()
-            Log.d(TAG, "✅ updateValidFlags completed successfully")
-
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ updateValidFlags failed", e)
-        } finally {
-            db.endTransaction()
-        }
-    }
 }

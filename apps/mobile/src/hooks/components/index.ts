@@ -11,7 +11,6 @@ export { useCategoryModal, type UseCategoryModalProps, type UseCategoryModalRetu
 export { useCategoryPicker, type UseCategoryPickerProps, type UseCategoryPickerReturn, type CategoryOption } from './useCategoryPicker';
 
 /* Variable */
-export { useVariableModal, type UseVariableModalProps, type UseVariableModalReturn } from './useVariableModal';
 export { useVariablePickerModal, type UseVariablePickerModalProps, type UseVariablePickerModalReturn } from './useVariablePickerModal';
 export { useVariableToolbar, type UseVariableToolbarReturn } from './useVariableToolbar';
 

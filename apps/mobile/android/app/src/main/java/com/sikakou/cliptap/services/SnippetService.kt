@@ -165,7 +165,7 @@ class SnippetService private constructor(private val context: Context) {
         val textToInsert = title + content
         inputConnection.commitText(textToInsert, 1)
 
-        Log.d(TAG, "✅ Snippet inserted: ${snippet.id}")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Snippet inserted: ${snippet.id}")
 
         /* 振動フィードバック */
         performHapticFeedback()

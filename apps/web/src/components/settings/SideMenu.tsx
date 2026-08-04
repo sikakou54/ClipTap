@@ -18,6 +18,11 @@ import { showConfirm, showErrorAlert } from '@utils/alerts';
 import { SideMenuHeader } from './SideMenuHeader';
 import { SideMenuNavigation } from './SideMenuNavigation';
 import { SideMenuFooter } from './SideMenuFooter';
+import { database } from '@database/database';
+import { CacheService } from '@services/CacheService';
+import { closeWorkspace } from '@services/WorkspaceService';
+import { useDatabase } from '@cliptap/shared';
+import { useNavigate } from 'react-router-dom';
 
 
 interface SideMenuProps {
@@ -38,8 +43,26 @@ export function SideMenu({ onExport, onImport, isOpen, onClose, onAccountLink }:
   const { t } = useTranslation();
   const { isSubscribed } = useSubscription();
   const resetSubscription = () => SubscriptionService.reset();
-  const { isDark, setThemeMode } = useTheme();
+  const { isDark, themeMode, setThemeMode } = useTheme();
   const { signOut, user } = useAuth();
+  const { setLoaded } = useDatabase();
+  const navigate = useNavigate();
+
+  const handleCloseFile = () => {
+    showConfirm('settings.web_specific.confirm_close_file', async () => {
+      try {
+        await closeWorkspace({
+          resetDatabase: () => database.reset(),
+          clearCache: () => CacheService.clear(),
+        });
+        setLoaded(false);
+        onClose();
+        navigate('/');
+      } catch (error) {
+        showErrorAlert(translateError(error));
+      }
+    });
+  };
 
   /**
    * アカウント連携解除処理
@@ -55,7 +78,7 @@ export function SideMenu({ onExport, onImport, isOpen, onClose, onAccountLink }:
         onClose();
       } catch (error) {
         console.error('Unlink account failed:', error);
-        const message = translateError(error) || t('error.unlink_failed', 'アカウント連携の解除に失敗しました');
+        const message = translateError(error) || t('error.unlink_failed');
         showErrorAlert(message);
       }
     });
@@ -113,13 +136,17 @@ export function SideMenu({ onExport, onImport, isOpen, onClose, onAccountLink }:
           onClose={onClose}
           onImport={onImport}
           onExport={onExport}
+          onCloseFile={handleCloseFile}
           isSubscribed={isSubscribed}
         />
 
         <SideMenuFooter
           isDark={isDark}
+          themeMode={themeMode}
           user={user}
-          onToggleTheme={() => setThemeMode(isDark ? 'light' : 'dark')}
+          onToggleTheme={() => setThemeMode(
+            themeMode === 'auto' ? 'light' : themeMode === 'light' ? 'dark' : 'auto'
+          )}
           onUnlinkAccount={handleUnlinkAccount}
           onAccountLink={onAccountLink}
           onClose={onClose}

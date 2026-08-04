@@ -17,8 +17,6 @@
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Logger } from '@cliptap/shared';
 
 /* ======================================== */
 /* 翻訳リソースのインポート */
@@ -26,15 +24,6 @@ import { Logger } from '@cliptap/shared';
 
 import en from '@cliptap/shared/i18n/en.json';
 import ja from '@cliptap/shared/i18n/ja.json';
-
-/* ======================================== */
-/* 定数 */
-/* ======================================== */
-
-/**
- * AsyncStorageで言語設定を保存するキー
- */
-const LANGUAGE_KEY = 'app_language';
 
 /* ======================================== */
 /* ヘルパー関数 */
@@ -57,23 +46,6 @@ const getDeviceLanguage = (): string => {
   return ['ja', 'en'].includes(languageCode) ? languageCode : 'en';
 };
 
-/**
- * 保存された言語設定を取得
- *
- * AsyncStorageから以前保存した言語設定を読み込みます。
- * 保存されていない場合やエラー時はnullを返します。
- *
- * @returns {Promise<string | null>} 保存された言語コード、またはnull
- */
-const getSavedLanguage = async (): Promise<string | null> => {
-  try {
-    return await AsyncStorage.getItem(LANGUAGE_KEY);
-  } catch (error) {
-    Logger.error('Failed to get saved language:', error);
-    return null;
-  }
-};
-
 /* ======================================== */
 /* 公開API */
 /* ======================================== */
@@ -82,16 +54,12 @@ const getSavedLanguage = async (): Promise<string | null> => {
  * i18nextを初期化
  *
  * アプリ起動時に一度だけ呼び出される初期化関数。
- * 以下の順序で初期言語を決定します:
- * 1. AsyncStorageに保存された言語設定
- * 2. デバイスの言語設定（サポート言語のみ）
+ * デバイスの言語設定から初期言語を決定します。
  *
  * @returns {Promise<void>}
  */
 export const initI18n = async (): Promise<void> => {
-  /* 保存された言語設定を優先、なければデバイス設定を使用 */
-  const savedLanguage = await getSavedLanguage();
-  const initialLanguage = savedLanguage || getDeviceLanguage();
+  const initialLanguage = getDeviceLanguage();
 
   await i18next.use(initReactI18next).init({
     /* 翻訳リソース */

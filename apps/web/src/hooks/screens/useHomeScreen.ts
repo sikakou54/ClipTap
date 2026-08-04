@@ -21,6 +21,7 @@ import {
   useVariables,
   useAuth,
   useFilteredSnippets,
+  useDebounce,
   type Snippet,
   type Category,
   type Profile,
@@ -139,6 +140,7 @@ export function useHomeScreen(): UseHomeScreenReturn {
   /* UI状態 */
   /* ======================================== */
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [expandedSnippetId, setExpandedSnippetId] = useState<string | null>(null);
@@ -173,7 +175,7 @@ export function useHomeScreen(): UseHomeScreenReturn {
   const { filteredSnippets } = useFilteredSnippets({
     snippets: allSnippets,
     snippetProfiles,
-    searchQuery,
+    searchQuery: searchQuery === '' ? '' : debouncedSearchQuery,
     selectedCategory,
     activeProfileId,
     defaultProfileId,

@@ -28,6 +28,7 @@ import { VariableToolbar } from './VariableToolbar';
 import { Header } from '@components/common/Header';
 import { commonStyles } from '@lib/styles/commonStyles';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { INPUT_LIMITS } from '@cliptap/shared';
 
 /* ========================================
    Props定義
@@ -118,7 +119,8 @@ export function TextInputScreen({ type, initialValue, hasOnSave }: TextInputScre
               lineHeight: responsiveFontSizes.base * 1.5,
             },
           ]}
-          multiline
+          multiline={type === 'content'}
+          maxLength={type === 'title' ? INPUT_LIMITS.SNIPPET_TITLE_MAX : undefined}
           textAlignVertical="top"
           scrollEnabled={true}
         />

@@ -21,7 +21,6 @@ import {
 } from '@cliptap/shared';
 import { purchaseService } from '@services/PurchaseService';
 import { type MobileSubscriptionAdapter, type PurchaseServiceCallbacks } from '@adapters/MobileSubscriptionAdapter';
-import { keyboardExtensionService } from '@services/KeyboardExtensionService';
 import type { PurchasesPackage } from 'react-native-purchases';
 
 /* ========================================
@@ -148,14 +147,6 @@ function createMobilePlatformAdapter(): SubscriptionPlatformAdapter {
       return () => {
         purchaseService.setOnSubscriptionChange(null);
       };
-    },
-
-    /**
-     * サブスク状態変更時のMobile固有処理
-     * KeyboardExtensionへのサブスク状態同期
-     */
-    onSubscriptionStateChanged: (isSubscribed: boolean, expirationDate: Date | null) => {
-      keyboardExtensionService.saveSubscriptionStatus(isSubscribed, expirationDate);
     },
 
     /**

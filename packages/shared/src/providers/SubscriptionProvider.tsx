@@ -29,6 +29,8 @@ export interface SubscriptionContextValue {
   isSubscribed: boolean;
   /** 初期化中フラグ */
   isLoading: boolean;
+  /** 権利確認に失敗し、Free表示へフォールバックしているか */
+  verificationFailed: boolean;
   /** 広告を表示すべきか判定 */
   shouldShowAds: () => boolean;
   /** カスタム変数を追加可能か判定 */
@@ -77,14 +79,6 @@ export interface SubscriptionPlatformAdapter {
   /** サブスク状態変更時のコールバックを登録 */
   onSubscriptionChange?: (callback: (isSubscribed: boolean) => void) => () => void;
 
-  /* ======================================== */
-  /* オプショナルなコールバック（Mobile固有機能など） */
-  /* ======================================== */
-
-  /** サブスク状態変更時に追加で実行する処理（KeyboardExtension同期など） */
-  onSubscriptionStateChanged?: (isSubscribed: boolean, expirationDate: Date | null) => void;
-  /** 初期化完了後に実行する処理（validFlags更新など） */
-  onInitializeComplete?: () => void;
   /** DEVオーバーライド状態を取得（開発環境用） */
   getDevSubscriptionOverride?: () => boolean | null;
   /** DEVオーバーライドを設定（開発環境用） */
@@ -125,34 +119,19 @@ export function SubscriptionProvider({
 }: SubscriptionProviderProps) {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [verificationFailed, setVerificationFailed] = useState(false);
 
   /**
    * サブスク状態変更時の内部処理
    * 1. ローカル状態の更新
-   * 2. プラットフォーム固有処理（KeyboardExtension同期など）
-   * 3. 初期化完了後のvalidFlags更新
+   * 2. validFlags更新
    */
-  const handleSubscriptionChange = useCallback((subscribed: boolean) => {
+  const handleSubscriptionChange = useCallback((subscribed: boolean, updateValidity = true) => {
     setIsSubscribed(subscribed);
+    setVerificationFailed(false);
 
-    if (platformAdapter.onSubscriptionStateChanged) {
-      platformAdapter.onSubscriptionStateChanged(
-        subscribed,
-        platformAdapter.getExpirationDate()
-      );
-    }
-
-    /* プラットフォーム固有の状態変更時処理 */
-    if (isInitialized && platformAdapter.onInitializeComplete) {
-      platformAdapter.onInitializeComplete();
-    }
-
-    /* validFlags更新（共通処理） */
-    if (isInitialized) {
-      SubscriptionService.updateValidFlags();
-    }
-  }, [platformAdapter, isInitialized]);
+    if (updateValidity) SubscriptionService.updateValidFlags();
+  }, [platformAdapter]);
 
   useEffect(() => {
     const initialize = async () => {
@@ -174,28 +153,20 @@ export function SubscriptionProvider({
 
         await platformAdapter.initialize();
         const subscribed = await platformAdapter.checkSubscription();
-        setIsSubscribed(subscribed);
-
-        /* プラットフォーム固有の初期化完了処理 */
-        if (platformAdapter.onInitializeComplete) {
-          platformAdapter.onInitializeComplete();
-        }
-
-        /* validFlags更新（共通処理） */
-        SubscriptionService.updateValidFlags();
-
-        setIsInitialized(true);
+        handleSubscriptionChange(subscribed);
         onInitialized?.();
       } catch (error) {
         Logger.error('[SubscriptionProvider] Init failed:', error);
         setIsSubscribed(false);
+        setVerificationFailed(true);
+        onInitialized?.();
       } finally {
         setIsLoading(false);
       }
     };
 
     void initialize();
-  }, [platformAdapter, onInitialized]);
+  }, [platformAdapter, onInitialized, handleSubscriptionChange]);
 
   useEffect(() => {
     if (!platformAdapter.onSubscriptionChange) return;
@@ -212,6 +183,8 @@ export function SubscriptionProvider({
       handleSubscriptionChange(subscribed);
     } catch (error) {
       Logger.error('[SubscriptionProvider] Refresh failed:', error);
+      setIsSubscribed(false);
+      setVerificationFailed(true);
     }
   }, [platformAdapter, handleSubscriptionChange]);
 
@@ -235,6 +208,7 @@ export function SubscriptionProvider({
   const value = useMemo<SubscriptionContextValue>(() => ({
     isSubscribed,
     isLoading,
+    verificationFailed,
     shouldShowAds: () => !SubscriptionService.isSubscribed(),
     canAddCustomVariable: (count) => SubscriptionService.canAddVariable(count),
     canAddProfile: (count) => SubscriptionService.canAddProfile(count),
@@ -246,7 +220,7 @@ export function SubscriptionProvider({
     purchasePackage,
     getDevSubscriptionOverride: () => platformAdapter.getDevSubscriptionOverride?.() ?? null,
     setDevSubscriptionOverride,
-  }), [isSubscribed, isLoading, refresh, platformAdapter, restorePurchases, purchasePackage, setDevSubscriptionOverride]);
+  }), [isSubscribed, isLoading, verificationFailed, refresh, platformAdapter, restorePurchases, purchasePackage, setDevSubscriptionOverride]);
 
   return (
     <SubscriptionContext.Provider value={value}>

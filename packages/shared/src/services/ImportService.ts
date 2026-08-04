@@ -31,7 +31,9 @@ import { SubscriptionService } from './SubscriptionService';
 import { AuthService } from './AuthService';
 import {
   CategoryMapper,
+  ProfileVariableMapper,
   ProfileMapper,
+  SnippetMapper,
   SystemVariableFormatMapper,
   VariableMapper,
 } from '../mappers';
@@ -426,19 +428,21 @@ export class ImportService {
       }
 
       const mapper = new ImportMapper(tempDbAdapter);
-      const importedDefaultProfileId = this.executePartialImportWithMapper(
-        mapper,
-        selectedSnippetIds,
-        selectedProfileIds,
-        selectedVariableIds,
-        selectedCategoryIds
-      );
+      getMainDbAdapter().transaction(() => {
+        const importedDefaultProfileId = this.executePartialImportWithMapper(
+          mapper,
+          selectedSnippetIds,
+          selectedProfileIds,
+          selectedVariableIds,
+          selectedCategoryIds
+        );
 
-      /* インポート後にデフォルト/アクティブプロファイルを設定（必要な場合のみ） */
-      this.ensureDefaultAndActiveProfile(importedDefaultProfileId);
+        /* インポート後にデフォルト/アクティブプロファイルを設定（必要な場合のみ） */
+        ProfileService.ensureDefaultAndActive(importedDefaultProfileId);
 
-      /* インポート後に有効フラグを更新 */
-      SubscriptionService.updateValidFlags();
+        /* インポート後に有効フラグを更新 */
+        SubscriptionService.updateValidFlags();
+      });
 
       Logger.info('[ImportService] Partial import completed');
     } catch (error) {
@@ -543,19 +547,10 @@ export class ImportService {
     }
 
     Logger.info('[ImportService] Starting database import from temp DB...');
-    Logger.info(`[ImportService] Temp DB path: ${tempDbPath}`);
-
     const tempDbAdapter = getTempDbAdapter();
     await tempDbAdapter.open?.(tempDbPath);
 
     try {
-      Logger.info('[ImportService] Deleting existing data...');
-
-      /* 既存データを削除（外部キー制約を考慮した順序） */
-      this.deleteAllExistingData();
-
-      Logger.info('[ImportService] Importing data from backup...');
-
       /* インポート前にサブスクリプション状態を更新（updateValidFlagsで使用されるため） */
       const currentUser = AuthService.getCurrentUser();
       if (currentUser) {
@@ -563,35 +558,8 @@ export class ImportService {
         await SubscriptionService.refreshCustomerInfo();
       }
 
-      /* 一時DBから全データを取得 */
       const mapper = new ImportMapper(tempDbAdapter);
-      const candidates = mapper.getAllCandidates();
-
-      /* 全IDを抽出 */
-      const allSnippetIds = candidates.snippets.map((s) => s.id);
-      const allProfileIds = candidates.profiles.map((p) => p.id);
-      const allVariableIds = candidates.variables.map((v) => v.id);
-      const allCategoryIds = candidates.categories.map((c) => c.id);
-
-      /* 全データをインポート */
-      const importedDefaultProfileId = this.executePartialImportWithMapper(
-        mapper,
-        allSnippetIds,
-        allProfileIds,
-        allVariableIds,
-        allCategoryIds
-      );
-
-      /* 全復元だけがグローバル書式設定を引き継ぐ */
-      SystemVariableFormatMapper.replaceAll(
-        SystemVariableFormatMapper.getAllFrom(tempDbAdapter)
-      );
-
-      /* インポート後にデフォルト/アクティブプロファイルを設定（インポート元の標準プロファイルを使用） */
-      this.ensureDefaultAndActiveProfile(importedDefaultProfileId);
-
-      /* インポート後に有効フラグを更新 */
-      SubscriptionService.updateValidFlags();
+      this.executeFullRestoreWithMapper(mapper);
 
       Logger.info('[ImportService] Import completed successfully');
     } catch (error) {
@@ -606,6 +574,39 @@ export class ImportService {
   }
 
   /**
+   * 全復元を単一トランザクションで実行する。
+   * 通常のupsert経路を通さず、バックアップの識別子とメタデータを保持する。
+   */
+  private static executeFullRestoreWithMapper(importMapper: ImportMapper): void {
+    const restoreData = importMapper.getFullRestoreData();
+    const mainDbAdapter = getMainDbAdapter();
+
+    mainDbAdapter.transaction(() => {
+      this.deleteAllExistingData();
+
+      restoreData.categories.forEach((row) => CategoryMapper.restore(row));
+      restoreData.variables.forEach((row) => VariableMapper.restore(row));
+      restoreData.profiles.forEach((row) => ProfileMapper.restore(row));
+      restoreData.snippets.forEach((row) => SnippetMapper.restore(row));
+      restoreData.profileVariables.forEach((row) =>
+        ProfileVariableMapper.restore(row)
+      );
+      restoreData.snippetProfiles.forEach((row) =>
+        SnippetMapper.restoreProfileLink(row)
+      );
+      SystemVariableFormatMapper.restoreAllWithinTransaction(
+        restoreData.systemVariableFormats
+      );
+
+      /* 壊れたバックアップに標準・アクティブが無い場合だけ補完する。 */
+      ProfileService.ensureDefaultAndActive();
+      SubscriptionService.updateValidFlags();
+    });
+
+    SystemVariableFormatMapper.loadRegistry();
+  }
+
+  /**
    * 既存の全データを削除（外部キー制約を考慮した順序）
    *
    * @remarks
@@ -615,7 +616,7 @@ export class ImportService {
     const mainDbAdapter = getMainDbAdapter();
 
     try {
-      SystemVariableFormatMapper.deleteAll();
+      mainDbAdapter.run('DELETE FROM system_variable_formats');
 
       /* 外部キー制約を考慮した削除順序 */
       /* 1. 中間テーブル（外部キー参照） */
@@ -637,55 +638,6 @@ export class ImportService {
     } catch (error) {
       Logger.error('[ImportService] Failed to delete existing data:', error);
       throw error;
-    }
-  }
-
-  /**
-   * デフォルト/アクティブプロファイルがなければ設定
-   *
-   * @param importedDefaultProfileId - インポート元でデフォルトだったプロファイルの新ID（優先的に使用）
-   *
-   * @remarks
-   * フルリストア後、インポートされたプロファイルにはisDefault/isActiveフラグが設定されていない。
-   * インポート元でデフォルト（標準）だったプロファイルを優先的にデフォルト＆アクティブに設定する。
-   */
-  private static ensureDefaultAndActiveProfile(importedDefaultProfileId: string | null): void {
-    const defaultProfile = ProfileService.getDefault();
-    const activeProfile = ProfileService.getActive();
-
-    /* デフォルトもアクティブも存在する場合は何もしない */
-    if (defaultProfile && activeProfile) {
-      return;
-    }
-
-    /* インポート元のデフォルトプロファイルを優先、なければ最初のプロファイルを使用 */
-    let targetProfileId = importedDefaultProfileId;
-    if (!targetProfileId) {
-      const profiles = ProfileService.getAll();
-      const firstProfile = profiles[0];
-      if (!firstProfile) {
-        Logger.warn('[ImportService] No profiles available to set as default/active');
-        return;
-      }
-      targetProfileId = firstProfile.id;
-    }
-
-    /* 対象プロファイルを取得 */
-    const targetProfile = ProfileService.getById(targetProfileId);
-    if (!targetProfile) {
-      Logger.warn('[ImportService] Target profile not found:', targetProfileId);
-      return;
-    }
-
-    /* 対象プロファイルをデフォルトとアクティブに設定 */
-    if (!defaultProfile) {
-      ProfileService.setDefault(targetProfileId);
-      Logger.info('[ImportService] Set default profile:', targetProfile.name);
-    }
-
-    if (!activeProfile) {
-      ProfileService.setActive(targetProfileId);
-      Logger.info('[ImportService] Set active profile:', targetProfile.name);
     }
   }
 

@@ -90,7 +90,7 @@ export function AccountAuthSection({
                     },
                   ]}
                 >
-                  {t('settings.account_auth.title', 'アカウント連携')}
+                  {t('settings.account_auth.title')}
                 </Text>
                 {/* 認証状態バッジ（例: "Apple", "Google"） */}
                 <View
@@ -149,7 +149,7 @@ export function AccountAuthSection({
                 },
               ]}
             >
-              {t('settings.account_auth.title', 'アカウント連携')}
+              {t('settings.account_auth.title')}
             </Text>
             {/* 説明文 */}
             <Text
@@ -162,10 +162,7 @@ export function AccountAuthSection({
                 },
               ]}
             >
-              {t(
-                'settings.account_auth.description',
-                'Web版や他端末でもProプランを利用できます。'
-              )}
+              {t('settings.account_auth.description')}
             </Text>
           </View>
 

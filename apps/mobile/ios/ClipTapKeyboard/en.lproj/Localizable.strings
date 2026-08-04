@@ -27,6 +27,7 @@
 "snippet.preview" = "Preview";
 "snippet.detail" = "Details";
 "snippet.close" = "Close";
+"snippet_no_title" = "(No Title)";
 
 /* Search related */
 "search.placeholder" = "Search snippets";
@@ -82,7 +83,7 @@
 
 /* Settings related */
 "settings.title" = "Settings";
-"settings.usage_tracking_enabled" = "Track Usage Frequency";
-"settings.usage_tracking_disabled" = "Track Usage Frequency";
+"settings.usage_tracking_enabled" = "Count Usage from Keyboard Input";
+"settings.usage_tracking_disabled" = "Count Usage from Keyboard Input";
 "settings.usage_tracking_requires_full_access" = "Full access is required to use this feature";
 "settings.full_access_instructions" = "1. Open Settings app\n2. Go to \"ClipTap\" → \"Keyboards\"\n3. Turn on \"Allow Full Access\"";

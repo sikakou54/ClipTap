@@ -53,11 +53,13 @@ export const UI_CONSTANTS = {
    * 機能制限（@cliptap/sharedから再エクスポート）
    * 無料プランとProプランで異なる機能制限値
    * サブスクリプション管理に使用
-   * - FREE_SNIPPETS_LIMIT: 無料プランのスニペット数制限
    * - FREE_PROFILES_LIMIT: 無料プランの環境数制限
    * - FREE_VARIABLES_LIMIT: 無料プランのカスタム変数数制限
    */
   FEATURE_LIMITS,
+
+  /** コピー成功表示時間 */
+  COPY_SUCCESS_DURATION_MS: 2000,
 
   /**
    * 共通デザイントークン（@cliptap/sharedから展開）

@@ -250,9 +250,9 @@ export class SubscriptionService {
    * 無料版では上限を超えたアイテムをinvalidにする。
    * アクティブプロファイルが無効になった場合、デフォルトに自動切り替え。
    */
-  static updateValidFlags(): void {
+  static updateValidFlags(): boolean {
     if (!this.validFlagsUpdater?.hasDbAdapter()) {
-      return;
+      return false;
     }
 
     try {
@@ -277,9 +277,9 @@ export class SubscriptionService {
           }
         }
       }
-
+      return true;
     } catch {
-      /* 起動直後などDB未初期化時の正常エラーのため、ログ出力なし */
+      return false;
     }
   }
 

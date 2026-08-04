@@ -8,18 +8,17 @@
     "module": "ESNext",
     "types": ["vite/client", "node"],
     "skipLibCheck": true,
-    "baseUrl": ".",
     "paths": {
-      "@components/*": ["src/components/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@adapters/*": ["src/adapters/*"],
-      "@services/*": ["src/services/*"],
-      "@utils/*": ["src/utils/*"],
-      "@constants/*": ["src/constants/*"],
-      "@database/*": ["src/database/*"],
-      "@providers/*": ["src/providers/*"],
-      "@pages/*": ["src/pages/*"],
-      "@src/*": ["src/*"]
+      "@components/*": ["./src/components/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@adapters/*": ["./src/adapters/*"],
+      "@services/*": ["./src/services/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@constants/*": ["./src/constants/*"],
+      "@database/*": ["./src/database/*"],
+      "@providers/*": ["./src/providers/*"],
+      "@pages/*": ["./src/pages/*"],
+      "@src/*": ["./src/*"]
     },
 
     /* Bundler mode */

@@ -35,7 +35,7 @@ import os.log
 
 // ログ出力用の設定（デバッグやエラー追跡に使用）
 // 開発中の動作確認や、本番環境でのトラブルシューティングに役立ちます
-let keyboardLog = OSLog(subsystem: "com.sikakou.cliptap.keyboard", category: "KeyboardViewController")
+let keyboardLog = OSLog.disabled
 
 /// カスタムキーボードのメインビューコントローラー
 /// UIInputViewControllerを継承することで、iOSのカスタムキーボード機能を実装できます
@@ -60,7 +60,6 @@ class KeyboardViewController: UIInputViewController {
     private let variableService = VariableService.shared
 
     /// サブスクリプション（有料機能）の管理を行うマネージャー
-    private let subscriptionManager = SubscriptionManager.shared
 
     // MARK: - State（状態管理：画面の現在の状態を保持）
 
@@ -474,9 +473,9 @@ class KeyboardViewController: UIInputViewController {
         super.viewDidLoad()
 
         // デバッグ用のログ出力（開発中の動作確認用）
-        NSLog("============================================================")
-        NSLog("🎯🎯🎯 [KeyboardViewController] viewDidLoad CALLED 🎯🎯🎯")
-        NSLog("============================================================")
+        KeyboardLog.debug("============================================================")
+        KeyboardLog.debug("🎯🎯🎯 [KeyboardViewController] viewDidLoad CALLED 🎯🎯🎯")
+        KeyboardLog.debug("============================================================")
 
         view.backgroundColor = .systemBackground  // 背景色を設定
 
@@ -490,26 +489,12 @@ class KeyboardViewController: UIInputViewController {
         if !self.hasFullAccess && currentSortBy == "usage" {
             currentSortBy = "created"
             saveSortPreference(currentSortBy)
-            NSLog("🔄 [Sort] Reset sort preference to 'created' because full access is OFF")
+            KeyboardLog.debug("🔄 [Sort] Reset sort preference to 'created' because full access is OFF")
         }
 
-        NSLog("🔄 [Sort] Initial sort preference loaded: %@", currentSortBy)
+        KeyboardLog.debug("🔄 [Sort] Initial sort preference loaded: %@", currentSortBy)
 
         setupUI()  // UI部品を画面に配置（即座に表示）
-
-        // キャッシュをクリアして最新状態を取得
-        subscriptionManager.invalidateCache()
-
-        // App Groupからサブスクリプション状態を取得
-        let status = subscriptionManager.getSubscriptionStatus()
-        NSLog("🔐 [KeyboardViewController] Subscription status from App Group: \(status)")
-
-        // データなし、期限切れの場合はメッセージを表示
-        // FREE版でも拡張キーボードを使えるように変更
-        if status == .noData || status == .expired {
-            showSubscriptionMessage(status: status)
-            return
-        }
 
         // ローディング画面を表示
         showLoading()
@@ -528,21 +513,9 @@ class KeyboardViewController: UIInputViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
-        NSLog("============================================================")
-        NSLog("👁️👁️👁️ [KeyboardViewController] viewWillAppear CALLED 👁️👁️👁️")
-        NSLog("============================================================")
-
-        // キャッシュをクリアして最新状態を取得
-        subscriptionManager.invalidateCache()
-
-        // サブスクリプション状態をチェック
-        let status = subscriptionManager.getSubscriptionStatus()
-
-        if status == .noData || status == .expired {
-            // データなし or 期限切れの場合は何もしない（viewDidLoadで既にメッセージ表示済み）
-            NSLog("🔒 [KeyboardViewController] viewWillAppear - Status: \(status), skipping refresh")
-            return
-        }
+        KeyboardLog.debug("============================================================")
+        KeyboardLog.debug("👁️👁️👁️ [KeyboardViewController] viewWillAppear CALLED 👁️👁️👁️")
+        KeyboardLog.debug("============================================================")
 
         // キーボードの高さを設定（コンパクトに）
         let heightConstraint = NSLayoutConstraint(
@@ -559,7 +532,7 @@ class KeyboardViewController: UIInputViewController {
 
         // キーボードが表示される度に全データをリフレッシュ
         // これにより、メインアプリでの変更がキーボードにも即座に反映されます
-        NSLog("🔄 [KeyboardViewController] viewWillAppear - Refreshing all data...")
+        KeyboardLog.debug("🔄 [KeyboardViewController] viewWillAppear - Refreshing all data...")
         refreshAllData()
     }
 
@@ -577,7 +550,7 @@ class KeyboardViewController: UIInputViewController {
     /// データ件数やIDが変わっていなければ、ボタンの再作成をスキップします
     /// これにより、無駄な処理を減らしてパフォーマンスを向上させています
     private func refreshAllData() {
-        NSLog("🔄🔄🔄 [refreshAllData] STARTED 🔄🔄🔄")
+        KeyboardLog.debug("🔄🔄🔄 [refreshAllData] STARTED 🔄🔄🔄")
         do {
             // データベースが初期化されているか確認
             try Database.shared.initialize()
@@ -589,7 +562,7 @@ class KeyboardViewController: UIInputViewController {
             }
 
             // プロファイルを再読み込み
-            NSLog("🔄 [Refresh] Loading profiles...")
+            KeyboardLog.debug("🔄 [Refresh] Loading profiles...")
             let newProfiles = profileService.getAllProfiles()
 
             // プロファイルが変更されたかチェック
@@ -597,7 +570,7 @@ class KeyboardViewController: UIInputViewController {
                                   profiles.map({ $0.id }) != newProfiles.map({ $0.id })
 
             if profilesChanged {
-                NSLog("📝 [Refresh] Profiles changed: %d → %d", profiles.count, newProfiles.count)
+                KeyboardLog.debug("📝 [Refresh] Profiles changed: %d → %d", profiles.count, newProfiles.count)
                 profiles = newProfiles
                 setupProfileDropdown()
 
@@ -608,7 +581,7 @@ class KeyboardViewController: UIInputViewController {
                     currentProfile = firstProfile
                 }
             } else {
-                NSLog("✓ [Refresh] Profiles unchanged: %d profiles", profiles.count)
+                KeyboardLog.debug("✓ [Refresh] Profiles unchanged: %d profiles", profiles.count)
             }
 
             if let profileId = currentProfile?.id {
@@ -616,36 +589,36 @@ class KeyboardViewController: UIInputViewController {
             }
 
             // カテゴリを再読み込み
-            NSLog("🔄 [Refresh] Loading categories...")
+            KeyboardLog.debug("🔄 [Refresh] Loading categories...")
             let newCategories = categoryService.getAll()
 
             let categoriesChanged = categories.count != newCategories.count ||
                                    categories.map({ $0.id }) != newCategories.map({ $0.id })
 
             if categoriesChanged {
-                NSLog("📝 [Refresh] Categories changed: %d → %d", categories.count, newCategories.count)
+                KeyboardLog.debug("📝 [Refresh] Categories changed: %d → %d", categories.count, newCategories.count)
                 categories = newCategories
                 setupCategoryDropdown()
             } else {
-                NSLog("✓ [Refresh] Categories unchanged: %d categories", categories.count)
+                KeyboardLog.debug("✓ [Refresh] Categories unchanged: %d categories", categories.count)
             }
 
             // スニペットを再読み込み
-            NSLog("🔄 [Refresh] Loading snippets...")
+            KeyboardLog.debug("🔄 [Refresh] Loading snippets...")
             let previousCount = allSnippets.count
             reloadSnippets()
             let newCount = allSnippets.count
 
             if previousCount != newCount {
-                NSLog("📝 [Refresh] Snippets changed: %d → %d", previousCount, newCount)
+                KeyboardLog.debug("📝 [Refresh] Snippets changed: %d → %d", previousCount, newCount)
             } else {
-                NSLog("✓ [Refresh] Snippets unchanged: %d snippets", newCount)
+                KeyboardLog.debug("✓ [Refresh] Snippets unchanged: %d snippets", newCount)
             }
 
-            NSLog("✅ [Refresh] All data refreshed successfully")
+            KeyboardLog.debug("✅ [Refresh] All data refreshed successfully")
 
         } catch {
-            NSLog("❌ [Refresh] Failed to refresh data: %@", error.localizedDescription)
+            KeyboardLog.debug("❌ [Refresh] Failed to refresh data: %@", error.localizedDescription)
         }
     }
 
@@ -895,44 +868,44 @@ class KeyboardViewController: UIInputViewController {
 
     private func loadInitialData() {
         os_log("🚀 loadInitialData started", log: keyboardLog, type: .info)
-        NSLog("🚀 [KeyboardViewController] loadInitialData started")
+        KeyboardLog.debug("🚀 [KeyboardViewController] loadInitialData started")
 
         do {
             // データベースを初期化
             os_log("📦 Initializing database...", log: keyboardLog, type: .info)
-            NSLog("📦 [KeyboardViewController] Initializing database...")
+            KeyboardLog.debug("📦 [KeyboardViewController] Initializing database...")
             try Database.shared.initialize()
             self.systemVariableFormats = SystemVariableFormatMapper.shared.getAll()
             os_log("✅ Database initialized successfully", log: keyboardLog, type: .info)
-            NSLog("✅ [KeyboardViewController] Database initialized successfully")
+            KeyboardLog.debug("✅ [KeyboardViewController] Database initialized successfully")
 
             // プロファイルを読み込み（Serviceを使用）
             os_log("📦 Loading profiles...", log: keyboardLog, type: .info)
-            NSLog("📦 [KeyboardViewController] Loading profiles...")
+            KeyboardLog.debug("📦 [KeyboardViewController] Loading profiles...")
             let loadedProfiles = profileService.getAllProfiles()
             os_log("✅ Loaded %d profiles", log: keyboardLog, type: .info, loadedProfiles.count)
-            NSLog("✅ [KeyboardViewController] Loaded %d profiles", loadedProfiles.count)
+            KeyboardLog.debug("✅ [KeyboardViewController] Loaded %d profiles", loadedProfiles.count)
 
             // カテゴリを読み込み（Serviceを使用）
             os_log("📦 Loading categories...", log: keyboardLog, type: .info)
-            NSLog("📦 [KeyboardViewController] Loading categories...")
+            KeyboardLog.debug("📦 [KeyboardViewController] Loading categories...")
             let loadedCategories = categoryService.getAll()
             os_log("✅ Loaded %d categories", log: keyboardLog, type: .info, loadedCategories.count)
-            NSLog("✅ [KeyboardViewController] Loaded %d categories", loadedCategories.count)
+            KeyboardLog.debug("✅ [KeyboardViewController] Loaded %d categories", loadedCategories.count)
 
             // 変数とスニペットを読み込み
             if let firstProfile = loadedProfiles.first {
                 os_log("✅ Setting current profile: %@", log: keyboardLog, type: .info, firstProfile.name)
-                NSLog("✅ [KeyboardViewController] Setting current profile: %@", firstProfile.name)
+                KeyboardLog.debug("✅ [KeyboardViewController] Setting current profile: %@", firstProfile.name)
                 self.currentProfile = firstProfile
 
                 // 現在のプロファイルの変数を読み込み
                 os_log("📦 Loading variables for profile...", log: keyboardLog, type: .info)
-                NSLog("📦 [KeyboardViewController] Loading variables for profile...")
+                KeyboardLog.debug("📦 [KeyboardViewController] Loading variables for profile...")
                 self.variablesMap = variableService.getVariablesMap(for: firstProfile.id)
                 self.systemVariableFormats = SystemVariableFormatMapper.shared.getAll()
                 os_log("✅ Loaded %d variables", log: keyboardLog, type: .info, self.variablesMap.count)
-                NSLog("✅ [KeyboardViewController] Loaded %d variables", self.variablesMap.count)
+                KeyboardLog.debug("✅ [KeyboardViewController] Loaded %d variables", self.variablesMap.count)
             }
 
             // データを設定
@@ -947,7 +920,7 @@ class KeyboardViewController: UIInputViewController {
                 self.reloadSnippets()
             } else {
                 os_log("⚠️ No profiles found", log: keyboardLog, type: .error)
-                NSLog("⚠️ [KeyboardViewController] No profiles found")
+                KeyboardLog.debug("⚠️ [KeyboardViewController] No profiles found")
                 self.updateEmptyState()
             }
 
@@ -955,13 +928,13 @@ class KeyboardViewController: UIInputViewController {
             self.hideLoading()
 
             os_log("🏁 loadInitialData completed", log: keyboardLog, type: .info)
-            NSLog("🏁 [KeyboardViewController] loadInitialData completed")
-            NSLog("📊 Final state: profiles=%d, categories=%d, snippets=%d",
+            KeyboardLog.debug("🏁 [KeyboardViewController] loadInitialData completed")
+            KeyboardLog.debug("📊 Final state: profiles=%d, categories=%d, snippets=%d",
                   self.profiles.count, self.categories.count, self.allSnippets.count)
 
         } catch {
             os_log("❌ Failed to load data: %@", log: keyboardLog, type: .error, error.localizedDescription)
-            NSLog("❌ [KeyboardViewController] Failed to load data: %@", error.localizedDescription)
+            KeyboardLog.debug("❌ [KeyboardViewController] Failed to load data: %@", error.localizedDescription)
 
             // ローディング画面を非表示
             self.hideLoading()
@@ -1089,7 +1062,7 @@ class KeyboardViewController: UIInputViewController {
         // プロファイル切り替え時に変数を再読み込み
         variablesMap = variableService.getVariablesMap(for: profile.id)
         systemVariableFormats = SystemVariableFormatMapper.shared.getAll()
-        NSLog("✅ [KeyboardViewController] Reloaded %d variables for profile: %@", variablesMap.count, profile.name)
+        KeyboardLog.debug("✅ [KeyboardViewController] Reloaded %d variables for profile: %@", variablesMap.count, profile.name)
 
         reloadSnippets()
     }
@@ -1112,14 +1085,14 @@ class KeyboardViewController: UIInputViewController {
     ///              → 画面に表示
     private func reloadSnippets() {
         os_log("🔄 reloadSnippets started", log: keyboardLog, type: .info)
-        NSLog("🔄 [reloadSnippets] Started")
-        NSLog("  Current profile: %@ (id: %@)", currentProfile?.name ?? "nil", currentProfile?.id ?? "nil")
-        NSLog("  Current category: %@ (id: %@)", currentCategory?.name ?? "all", currentCategory?.id ?? "nil")
+        KeyboardLog.debug("🔄 [reloadSnippets] Started")
+        KeyboardLog.debug("  Current profile: %@ (id: %@)", currentProfile?.name ?? "nil", currentProfile?.id ?? "nil")
+        KeyboardLog.debug("  Current category: %@ (id: %@)", currentCategory?.name ?? "all", currentCategory?.id ?? "nil")
 
         // プロファイルが選択されていない場合は、何も表示しない
         guard let profileId = currentProfile?.id else {
             os_log("⚠️ No profile selected, clearing snippets", log: keyboardLog, type: .error)
-            NSLog("⚠️ [reloadSnippets] No profile selected, clearing snippets")
+            KeyboardLog.debug("⚠️ [reloadSnippets] No profile selected, clearing snippets")
             allSnippets = []
             filteredSnippets = []
             updateEmptyState()  // 空状態メッセージを表示
@@ -1131,36 +1104,27 @@ class KeyboardViewController: UIInputViewController {
         if let categoryId = currentCategory?.id {
             // カテゴリが選択されている場合
             os_log("🔍 Loading snippets for category: %@ with profile: %@ sortBy: %@", log: keyboardLog, type: .info, categoryId, profileId, currentSortBy)
-            NSLog("🔍 [reloadSnippets] Loading snippets for category: %@ with profile: %@ sortBy: %@", categoryId, profileId, currentSortBy)
+            KeyboardLog.debug("🔍 [reloadSnippets] Loading snippets for category: %@ with profile: %@ sortBy: %@", categoryId, profileId, currentSortBy)
             allSnippets = SnippetMapper.shared.getByCategoryId(categoryId, filterByProfileId: profileId, sortBy: currentSortBy)
         } else {
             // 「すべて」が選択されている場合（カテゴリフィルタなし）
             os_log("🔍 Loading all snippets with profile: %@ sortBy: %@", log: keyboardLog, type: .info, profileId, currentSortBy)
-            NSLog("🔍 [reloadSnippets] Loading all snippets with profile: %@ sortBy: %@", profileId, currentSortBy)
+            KeyboardLog.debug("🔍 [reloadSnippets] Loading all snippets with profile: %@ sortBy: %@", profileId, currentSortBy)
             allSnippets = SnippetMapper.shared.getAll(filterByProfileId: profileId, sortBy: currentSortBy)
         }
 
-        // デバッグ用：取得したスニペットの情報を出力
         os_log("✅ Loaded %d snippets", log: keyboardLog, type: .info, allSnippets.count)
-        NSLog("✅ [reloadSnippets] Loaded %d snippets", allSnippets.count)
-        for (index, snippet) in allSnippets.prefix(5).enumerated() {
-            let preview = String(snippet.content.prefix(30))
-            NSLog("  [%d] Snippet: id=%@, title=%@, content=%@...",
-                  index, snippet.id, snippet.title ?? "no title", preview)
-        }
-        if allSnippets.count > 5 {
-            NSLog("  ... and %d more snippets", allSnippets.count - 5)
-        }
+        KeyboardLog.debug("✅ [reloadSnippets] Loaded %d snippets", allSnippets.count)
 
         // MapperでORDER BYを使ってソート済みなので、そのまま表示用にコピー
         filteredSnippets = allSnippets
         os_log("✅ Loaded and sorted snippets: %d (sortBy: %@)", log: keyboardLog, type: .info, filteredSnippets.count, currentSortBy)
-        NSLog("✅ [reloadSnippets] Loaded and sorted snippets: %d (sortBy: %@)", filteredSnippets.count, currentSortBy)
+        KeyboardLog.debug("✅ [reloadSnippets] Loaded and sorted snippets: %d (sortBy: %@)", filteredSnippets.count, currentSortBy)
 
         // テーブルビューを更新（同期的に実行）
         // 注意: UIMenuのアクションは既にメインスレッドで実行されるため、非同期にする必要はない
         tableView.reloadData()
-        NSLog("✅ [reloadSnippets] tableView.reloadData() called")
+        KeyboardLog.debug("✅ [reloadSnippets] tableView.reloadData() called")
 
         // 空状態の表示/非表示を更新
         updateEmptyState()
@@ -1214,7 +1178,7 @@ class KeyboardViewController: UIInputViewController {
         // タイトルもコピーする設定の場合のみ、プレビューでもタイトルを表示
         if snippet.copyWithTitle {
             // タイトルを変数置換して表示
-            let rawTitle = snippet.title ?? "（タイトルなし）"
+            let rawTitle = snippet.title ?? L10n.Snippet.noTitle
             let replacedTitle = variableReplacer.replace(
                 in: rawTitle,
                 variablesMap: variablesMap,
@@ -1276,13 +1240,11 @@ class KeyboardViewController: UIInputViewController {
         guard let snippet = selectedSnippet else {
             // 選択中のスニペットがない場合（通常は発生しない）
             os_log("⚠️ Copy button tapped but no snippet selected", log: keyboardLog, type: .error)
-            NSLog("⚠️ [KeyboardViewController] Copy button tapped but no snippet selected")
+            KeyboardLog.debug("⚠️ [KeyboardViewController] Copy button tapped but no snippet selected")
             return
         }
 
-        os_log("🔥 Copy button tapped! Snippet: %@", log: keyboardLog, type: .info, snippet.title ?? "no title")
-        NSLog("🔥 [KeyboardViewController] Copy button tapped! Snippet: %@", snippet.title ?? "no title")
-        NSLog("🔥 [KeyboardViewController] Content: %@", snippet.content)
+        KeyboardLog.debug("[KeyboardViewController] Copy button tapped")
 
         insertSnippet(snippet)  // スニペットを挿入
         closeDetailView()  // 詳細画面を閉じる
@@ -1306,8 +1268,8 @@ class KeyboardViewController: UIInputViewController {
     /// 例: LINEのメッセージ入力欄、メモアプリなど、どのアプリでも動作します
     private func insertSnippet(_ snippet: Snippet) {
         os_log("📝 insertSnippet called for snippet: %@", log: keyboardLog, type: .info, snippet.id)
-        NSLog("📝 [KeyboardViewController] insertSnippet called for snippet: %@", snippet.id)
-        NSLog("📝 [KeyboardViewController] Current profile: %@", currentProfile?.name ?? "nil")
+        KeyboardLog.debug("📝 [KeyboardViewController] insertSnippet called for snippet: %@", snippet.id)
+        KeyboardLog.debug("📝 [KeyboardViewController] Current profile: %@", currentProfile?.name ?? "nil")
 
         // Serviceを使用してスニペットを挿入（変数置換＋振動フィードバック）
         // ビジネスロジックはServiceに集約することで、コードの見通しが良くなります
@@ -1318,7 +1280,7 @@ class KeyboardViewController: UIInputViewController {
         )
 
         os_log("✅ insertSnippet completed", log: keyboardLog, type: .info)
-        NSLog("✅ [KeyboardViewController] insertSnippet completed")
+        KeyboardLog.debug("✅ [KeyboardViewController] insertSnippet completed")
     }
 
     // MARK: - Sort Methods（ソート関連メソッド）
@@ -1329,7 +1291,7 @@ class KeyboardViewController: UIInputViewController {
     private func setupSortButtonMenu() {
         /* 注意: currentSortByは呼び出し元で設定済みのため、ここでは再読み込みしない
            viewDidLoad時にloadSortPreference()で初期化される */
-        NSLog("🔄 [Sort] Building menu with sort preference: %@, hasFullAccess: %@, isUsageTrackingEnabled: %@",
+        KeyboardLog.debug("🔄 [Sort] Building menu with sort preference: %@, hasFullAccess: %@, isUsageTrackingEnabled: %@",
               currentSortBy, self.hasFullAccess ? "true" : "false", isUsageTrackingEnabled ? "true" : "false")
 
         // メニュー項目を作成
@@ -1377,7 +1339,7 @@ class KeyboardViewController: UIInputViewController {
 
     /// ソート設定を更新
     private func updateSortPreference(_ sortBy: String) {
-        NSLog("🔄 [Sort] Updating sort preference: %@ → %@", currentSortBy, sortBy)
+        KeyboardLog.debug("🔄 [Sort] Updating sort preference: %@ → %@", currentSortBy, sortBy)
         currentSortBy = sortBy
         saveSortPreference(sortBy)
 
@@ -1396,7 +1358,7 @@ class KeyboardViewController: UIInputViewController {
     /// ソート設定を保存（UserDefaults）
     private func saveSortPreference(_ sortBy: String) {
         UserDefaults.standard.set(sortBy, forKey: sortPreferenceKey)
-        NSLog("💾 [Sort] Saved sort preference: %@", sortBy)
+        KeyboardLog.debug("💾 [Sort] Saved sort preference: %@", sortBy)
     }
 
     /// ソート設定を読み込み（UserDefaults）
@@ -1409,11 +1371,11 @@ class KeyboardViewController: UIInputViewController {
     /// メインアプリからフルアクセス状態を参照できるようにする
     private func saveFullAccessState() {
         guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
-            NSLog("⚠️ [FullAccess] Failed to get App Group UserDefaults")
+            KeyboardLog.debug("⚠️ [FullAccess] Failed to get App Group UserDefaults")
             return
         }
         userDefaults.set(self.hasFullAccess, forKey: fullAccessStateKey)
-        NSLog("💾 [FullAccess] Saved full access state: %@", self.hasFullAccess ? "true" : "false")
+        KeyboardLog.debug("💾 [FullAccess] Saved full access state: %@", self.hasFullAccess ? "true" : "false")
     }
 
     /// バッジの表示/非表示を更新
@@ -1449,13 +1411,13 @@ class KeyboardViewController: UIInputViewController {
             }
             userDefaults.set(newValue, forKey: usageTrackingKey)
             userDefaults.set(true, forKey: usageTrackingEnabledSetKey)
-            NSLog("💾 [Settings] Saved usage tracking enabled: %@", newValue ? "true" : "false")
+            KeyboardLog.debug("💾 [Settings] Saved usage tracking enabled: %@", newValue ? "true" : "false")
         }
     }
 
     /// 設定ボタンがタップされた時のアクション
     @objc private func settingsButtonTapped() {
-        NSLog("⚙️ [Settings] Settings button tapped")
+        KeyboardLog.debug("⚙️ [Settings] Settings button tapped")
         showSettingsView()
     }
 
@@ -1494,13 +1456,13 @@ class KeyboardViewController: UIInputViewController {
 
     /// 設定画面を閉じる
     @objc private func closeSettingsView() {
-        NSLog("⚙️ [Settings] Closing settings view")
+        KeyboardLog.debug("⚙️ [Settings] Closing settings view")
         settingsView.isHidden = true
     }
 
     /// 使用頻度スイッチが変更された時のアクション
     @objc private func usageTrackingSwitchChanged(_ sender: UISwitch) {
-        NSLog("⚙️ [Settings] Usage tracking switch changed: %@", sender.isOn ? "ON" : "OFF")
+        KeyboardLog.debug("⚙️ [Settings] Usage tracking switch changed: %@", sender.isOn ? "ON" : "OFF")
 
         // 設定を保存
         isUsageTrackingEnabled = sender.isOn
@@ -1527,7 +1489,7 @@ extension KeyboardViewController: UITableViewDataSource {
         var config = cell.defaultContentConfiguration()
 
         // タイトルを変数置換する
-        let rawTitle = snippet.title ?? "（タイトルなし）"
+        let rawTitle = snippet.title ?? L10n.Snippet.noTitle
         let replacedTitle = variableReplacer.replace(
             in: rawTitle,
             variablesMap: variablesMap,
@@ -1546,13 +1508,12 @@ extension KeyboardViewController: UITableViewDataSource {
 extension KeyboardViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         os_log("👆 Snippet tapped at index: %d", log: keyboardLog, type: .info, indexPath.row)
-        NSLog("👆 [KeyboardViewController] Snippet tapped at index: %d", indexPath.row)
+        KeyboardLog.debug("👆 [KeyboardViewController] Snippet tapped at index: %d", indexPath.row)
 
         tableView.deselectRow(at: indexPath, animated: true)
         let snippet = filteredSnippets[indexPath.row]
 
-        os_log("👆 Showing detail for snippet: %@", log: keyboardLog, type: .info, snippet.title ?? "no title")
-        NSLog("👆 [KeyboardViewController] Showing detail for snippet: %@", snippet.title ?? "no title")
+        KeyboardLog.debug("[KeyboardViewController] Showing snippet detail")
 
         showSnippetDetail(snippet)
     }
@@ -1571,161 +1532,6 @@ extension KeyboardViewController: UITableViewDelegate {
     private func hideLoading() {
         loadingView.isHidden = true
         activityIndicator.stopAnimating()
-    }
-
-    // MARK: - Premium Required Message
-
-    /// Pro版未加入の場合に表示する制限メッセージ
-    ///
-    /// 拡張キーボード機能はPro版限定のため、
-    /// 無料版ユーザーには「Pro版へアップグレード」を促すメッセージを表示します。
-    ///
-    /// 【表示内容】
-    /// - バッジ: 🔒 Pro版限定
-    private func showPremiumRequiredMessage() {
-        let status = subscriptionManager.getSubscriptionStatus()
-        showSubscriptionMessage(status: status)
-    }
-
-    private func showSubscriptionMessage(status: SubscriptionStatus) {
-        // すべてのコンテンツを非表示
-        filterContainerView.isHidden = true
-        tableView.isHidden = true
-        loadingView.isHidden = true
-        detailView.isHidden = true
-        emptyLabel.isHidden = true
-
-        // ビューの背景を完全に隠すために、alphaも0に設定
-        filterContainerView.alpha = 0
-        tableView.alpha = 0
-        loadingView.alpha = 0
-        detailView.alpha = 0
-        emptyLabel.alpha = 0
-
-        NSLog("✅ [KeyboardViewController] All views hidden")
-
-        // 背景色を白に設定
-        view.backgroundColor = .systemBackground
-        NSLog("✅ [KeyboardViewController] Background set to systemBackground")
-
-        // コンテナビューを作成（中央配置用）
-        let containerView = UIView()
-        containerView.translatesAutoresizingMaskIntoConstraints = false
-        containerView.backgroundColor = .clear
-
-        // ステータスに応じてメッセージを変更
-        let (iconName, title, message, backgroundColor) = getMessageContent(for: status)
-
-        // バッジ背景を作成
-        let badgeBackgroundView = UIView()
-        badgeBackgroundView.backgroundColor = backgroundColor
-        badgeBackgroundView.layer.cornerRadius = 14
-        badgeBackgroundView.clipsToBounds = true
-        badgeBackgroundView.translatesAutoresizingMaskIntoConstraints = false
-
-        // アイコン（SF Symbols）
-        let iconImageView = UIImageView()
-        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
-        iconImageView.image = UIImage(systemName: iconName, withConfiguration: config)
-        iconImageView.tintColor = .white
-        iconImageView.contentMode = .scaleAspectFit
-        iconImageView.translatesAutoresizingMaskIntoConstraints = false
-
-        // タイトルラベル
-        let titleLabel = UILabel()
-        titleLabel.text = title
-        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
-        titleLabel.textColor = .white
-        titleLabel.textAlignment = .center
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-
-        // メッセージラベル
-        let messageLabel = UILabel()
-        messageLabel.text = message
-        messageLabel.font = .systemFont(ofSize: 14, weight: .regular)
-        messageLabel.textColor = .white
-        messageLabel.textAlignment = .center
-        messageLabel.numberOfLines = 0
-        messageLabel.translatesAutoresizingMaskIntoConstraints = false
-
-        // スタックビューでラベルを縦に配置
-        let stackView = UIStackView(arrangedSubviews: [iconImageView, titleLabel, messageLabel])
-        stackView.axis = .vertical
-        stackView.spacing = 8
-        stackView.alignment = .center
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-
-        // アイコンのサイズを固定
-        NSLayoutConstraint.activate([
-            iconImageView.widthAnchor.constraint(equalToConstant: 32),
-            iconImageView.heightAnchor.constraint(equalToConstant: 32)
-        ])
-
-        // 背景ビューにスタックビューを追加
-        badgeBackgroundView.addSubview(stackView)
-
-        // コンテナに追加
-        containerView.addSubview(badgeBackgroundView)
-
-        // ビューに追加（最前面に）
-        view.addSubview(containerView)
-        view.bringSubviewToFront(containerView)
-        NSLog("✅ [KeyboardViewController] Container brought to front")
-
-        // レイアウト制約を設定
-        NSLayoutConstraint.activate([
-            // コンテナを画面の中央に配置（幅を320ptに固定）
-            containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            containerView.widthAnchor.constraint(equalToConstant: 320),
-
-            // バッジ背景
-            badgeBackgroundView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            badgeBackgroundView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            badgeBackgroundView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            badgeBackgroundView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-
-            // スタックビュー（内側にパディング）
-            stackView.topAnchor.constraint(equalTo: badgeBackgroundView.topAnchor, constant: 16),
-            stackView.leadingAnchor.constraint(equalTo: badgeBackgroundView.leadingAnchor, constant: 24),
-            stackView.trailingAnchor.constraint(equalTo: badgeBackgroundView.trailingAnchor, constant: -24),
-            stackView.bottomAnchor.constraint(equalTo: badgeBackgroundView.bottomAnchor, constant: -16)
-        ])
-
-        NSLog("🔒 [KeyboardViewController] Showing subscription message: \(title)")
-    }
-
-    private func getMessageContent(for status: SubscriptionStatus) -> (iconName: String, title: String, message: String, backgroundColor: UIColor) {
-        // 表示言語を取得（判定ロジックはL10nに一本化されている）
-        let isJapanese = L10n.isJapanese
-
-        // デバッグ用：言語情報をログ出力
-        print("[KeyboardViewController] Preferred languages: \(Locale.preferredLanguages), isJapanese: \(isJapanese)")
-
-        switch status {
-        case .free:
-            let title = isJapanese ? "Pro版限定機能" : "Pro Feature Only"
-            let message = isJapanese ? "拡張キーボードはPro版限定機能です" : "Keyboard extension is a Pro-only feature"
-            return ("lock.fill", title, message, UIColor.systemOrange)
-
-        case .expired:
-            let title = isJapanese ? "アプリを起動してください" : "Please Open the App"
-            let message = isJapanese
-                ? "拡張キーボードの状態を更新するため\nClipTapアプリを起動してください"
-                : "Please launch ClipTap app\nto update keyboard extension status"
-            return ("info.circle.fill", title, message, UIColor.systemBlue)
-
-        case .noData:
-            let title = isJapanese ? "定型文がありません" : "No Templates"
-            let message = isJapanese
-                ? "アプリからデータを登録してください"
-                : "Please add templates from the app"
-            return ("info.circle.fill", title, message, UIColor.systemBlue)
-
-        default:
-            // .active は通常のキーボードが表示されるため、このメソッドは呼ばれない
-            return ("", "", "", UIColor.clear)
-        }
     }
 
 }

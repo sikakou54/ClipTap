@@ -159,7 +159,6 @@ export function VariablePreview({ title, content, selectedProfileIds = [], copyW
         const result = await VariableService.resolvePreviewText(title, content, {
           locale,
           customResolver,
-          preserveUnknown: true,
         });
 
         Logger.debug(`[VariablePreview] Resolved title: ${result.title}`);

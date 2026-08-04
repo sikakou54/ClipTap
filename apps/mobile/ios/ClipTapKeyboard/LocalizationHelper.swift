@@ -22,6 +22,21 @@
 
 import Foundation
 
+/// キーボードの詳細ログは開発ビルドだけで出力する。
+enum KeyboardLog {
+    static func debug(_ message: String) {
+#if DEBUG
+        NSLog("%@", message)
+#endif
+    }
+
+    static func debug(_ format: String, _ arguments: CVarArg...) {
+#if DEBUG
+        withVaList(arguments) { NSLogv(format, $0) }
+#endif
+    }
+}
+
 /// 多言語対応のヘルパークラス（L10n = Localization の略）
 /// 翻訳キーを構造化して管理し、型安全にアクセスできるようにします
 enum L10n {
@@ -128,6 +143,9 @@ enum L10n {
 
         /// "閉じる" / "Close"
         static let close = localized("snippet.close")
+
+        /// "タイトルなし" / "No Title"
+        static let noTitle = localized("snippet_no_title")
     }
 
     // MARK: - Search (検索関連)
@@ -285,10 +303,10 @@ enum L10n {
         /// "設定" / "Settings"
         static let title = localized("settings.title")
 
-        /// "使用頻度をカウントする" / "Track Usage Frequency"
+        /// "キーボード入力時の使用頻度をカウントする" / "Count Usage from Keyboard Input"
         static let usageTrackingEnabled = localized("settings.usage_tracking_enabled")
 
-        /// "使用頻度をカウントする" / "Track Usage Frequency"
+        /// "キーボード入力時の使用頻度をカウントする" / "Count Usage from Keyboard Input"
         static let usageTrackingDisabled = localized("settings.usage_tracking_disabled")
 
         /// "この機能を使用するにはフルアクセスの許可が必要です" / "Full access is required to use this feature"
@@ -325,7 +343,7 @@ enum L10n {
         if localizedString == key {
             // フォールバック: ハードコードされたデフォルト値
             localizedString = getDefaultValue(for: key)
-            print("[L10n] ⚠️ Translation not found for key: \(key), using fallback: \(localizedString)")
+            KeyboardLog.debug("[L10n] ⚠️ Translation not found for key: \(key), using fallback: \(localizedString)")
         }
 
         return localizedString
@@ -412,8 +430,8 @@ enum L10n {
 
         // Settings
         case "settings.title": return isJapanese ? "設定" : "Settings"
-        case "settings.usage_tracking_enabled": return isJapanese ? "使用頻度をカウントする" : "Track Usage Frequency"
-        case "settings.usage_tracking_disabled": return isJapanese ? "使用頻度をカウントする" : "Track Usage Frequency"
+        case "settings.usage_tracking_enabled": return isJapanese ? "キーボード入力時の使用頻度をカウントする" : "Count Usage from Keyboard Input"
+        case "settings.usage_tracking_disabled": return isJapanese ? "キーボード入力時の使用頻度をカウントする" : "Count Usage from Keyboard Input"
         case "settings.usage_tracking_requires_full_access": return isJapanese ? "この機能を使用するにはフルアクセスの許可が必要です" : "Full access is required to use this feature"
         case "settings.full_access_instructions":
             return isJapanese

@@ -1,6 +1,10 @@
 {
   "name": "cliptap-monorepo",
   "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"

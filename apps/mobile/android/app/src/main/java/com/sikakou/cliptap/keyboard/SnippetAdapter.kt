@@ -44,7 +44,7 @@ class SnippetAdapter(
 
         fun bind(snippet: Snippet) {
             // タイトルを変数置換する
-            val rawTitle = snippet.title ?: "(タイトルなし)"
+            val rawTitle = snippet.title ?: itemView.context.getString(R.string.snippet_no_title)
             val formats = SystemVariableFormatMapper.getInstance(itemView.context).getAll()
             val replacedTitle = variableReplacer.replace(rawTitle, variablesMap, formats)
             titleTextView.text = replacedTitle

@@ -9,7 +9,7 @@
 import Foundation
 import os.log
 
-let variableServiceLog = OSLog(subsystem: "com.sikakou.cliptap.keyboard", category: "VariableService")
+let variableServiceLog = OSLog.disabled
 
 class VariableService {
 
@@ -43,13 +43,17 @@ class VariableService {
 
     /// プロファイルIDで変数名と値のマップを取得
     func getVariablesMap(for profileId: String) -> [String: String] {
-        os_log("📝 Getting variables map for profile: %@", log: variableServiceLog, type: .info, profileId)
-        NSLog("📝 [VariableService] Getting variables map for profile: %@", profileId)
+        var map: [String: String] = [:]
+        if let defaultProfile = profileMapper.getDefault() {
+            map = profileVariableMapper.getByProfileIdWithVariableNames(defaultProfile.id)
+                .filter { !$0.value.isEmpty }
+        }
+        let profileMap = profileVariableMapper.getByProfileIdWithVariableNames(profileId)
+        for (name, value) in profileMap where !value.isEmpty {
+            map[name] = value
+        }
 
-        let map = profileVariableMapper.getByProfileIdWithVariableNames(profileId)
-
-        os_log("📝 Retrieved %d custom variable(s)", log: variableServiceLog, type: .info, map.count)
-        NSLog("📝 [VariableService] Retrieved %d custom variable(s): %@", map.count, map.description)
+        KeyboardLog.debug("[VariableService] Loaded %d custom variable(s)", map.count)
 
         return map
     }

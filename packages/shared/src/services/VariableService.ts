@@ -20,7 +20,6 @@ import {
   NotFoundError,
   DuplicateNameError,
   VariableNameRequiredError,
-  VariableNameTooLongError,
   VariableNameInvalidError,
   VariableNameReservedError,
   SystemVariableDeleteError,
@@ -39,9 +38,6 @@ export interface VariableResolverContext {
   defaultProfileVariablesMap: Record<string, string>;
 }
 
-/** 変数名の最大長 */
-const MAX_VARIABLE_NAME_LENGTH = 50;
-
 /** 変数名のパターン（英数字とアンダースコアのみ、先頭は英字またはアンダースコア） */
 const VARIABLE_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
@@ -53,10 +49,6 @@ function validateVariableName(name: string, currentId: string | null): void {
 
   if (!trimmedName) {
     throw new VariableNameRequiredError();
-  }
-
-  if (trimmedName.length > MAX_VARIABLE_NAME_LENGTH) {
-    throw new VariableNameTooLongError(MAX_VARIABLE_NAME_LENGTH, trimmedName.length);
   }
 
   if (!VARIABLE_NAME_PATTERN.test(trimmedName)) {
@@ -115,7 +107,6 @@ export class VariableService {
   /**
    * 変数を作成
    * @throws {VariableNameRequiredError} 変数名が空の場合
-   * @throws {VariableNameTooLongError} 変数名が長すぎる場合
    * @throws {VariableNameInvalidError} 変数名の形式が無効な場合
    * @throws {VariableNameReservedError} システム変数名と衝突する場合
    * @throws {DuplicateNameError} 同名の変数が既に存在する場合
@@ -135,7 +126,6 @@ export class VariableService {
    * 変数を更新
    * @throws {NotFoundError} 変数が存在しない場合
    * @throws {VariableNameRequiredError} 変数名が空の場合
-   * @throws {VariableNameTooLongError} 変数名が長すぎる場合
    * @throws {VariableNameInvalidError} 変数名の形式が無効な場合
    * @throws {VariableNameReservedError} システム変数名と衝突する場合
    * @throws {DuplicateNameError} 同名の変数が既に存在する場合
@@ -242,17 +232,17 @@ export class VariableService {
         return null;
       }
 
-      /* 値の解決優先順位: 指定プロファイル → デフォルトプロファイル → 空文字 */
-      if (context.profileVariablesMap[name] !== undefined) {
+      /* 値の解決優先順位: 指定プロファイルの非空値 → デフォルトプロファイルの非空値 → 元トークン */
+      if (context.profileVariablesMap[name]) {
         return context.profileVariablesMap[name];
       }
 
-      if (context.defaultProfileVariablesMap[name] !== undefined) {
+      if (context.defaultProfileVariablesMap[name]) {
         return context.defaultProfileVariablesMap[name];
       }
 
-      /* プロファイル変数に値が設定されていない場合は空文字を返す */
-      return '';
+      /* nullを返すと変数パーサーが元のトークンを保持する */
+      return null;
     };
   }
 
@@ -319,7 +309,6 @@ export class VariableService {
    * @param data - 変数の情報（nameで既存を検索、あれば更新、なければ新規作成）
    * @returns 作成/更新された変数
    * @throws {VariableNameRequiredError} 変数名が空の場合
-   * @throws {VariableNameTooLongError} 変数名が長すぎる場合
    * @throws {VariableNameInvalidError} 変数名の形式が無効な場合
    * @throws {VariableNameReservedError} システム変数名と衝突する場合
    * @throws {DuplicateNameError} 同名の変数が既に存在する場合（自分以外）
@@ -546,7 +535,6 @@ export class VariableService {
    * @param options - オプション
    * @param options.locale - ロケール（デフォルト: 'en'）
    * @param options.customResolver - カスタム変数リゾルバー
-   * @param options.preserveUnknown - 未知の変数をそのまま保持するか（デフォルト: true）
    * @returns 解決されたタイトルとコンテンツ
    */
   static async resolvePreviewText(
@@ -555,10 +543,9 @@ export class VariableService {
     options: {
       locale?: string;
       customResolver?: VariableResolver;
-      preserveUnknown?: boolean;
     } = {}
   ): Promise<{ title: string; content: string }> {
-    const { locale = 'en', customResolver, preserveUnknown = true } = options;
+    const { locale = 'en', customResolver } = options;
 
     const titleHasVars = hasVariables(title);
     const contentHasVars = hasVariables(content);
@@ -569,7 +556,6 @@ export class VariableService {
         ? await replaceVariables(title, {
             locale,
             customResolver,
-            preserveUnknown,
             formats: SystemVariableFormatRegistry.getAll(),
           })
         : title;
@@ -580,7 +566,6 @@ export class VariableService {
         ? await replaceVariables(content, {
             locale,
             customResolver,
-            preserveUnknown,
             formats: SystemVariableFormatRegistry.getAll(),
           })
         : content;

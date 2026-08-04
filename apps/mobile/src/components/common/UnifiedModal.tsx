@@ -362,7 +362,7 @@ export const UnifiedModal: React.FC<UnifiedModalProps> = ({
                     backgroundColor: enhancedVisuals ? colors.surface : 'transparent',
                   }}
                   onPress={animatedClose}
-                  accessibilityLabel={t('common.closeModal', 'モーダルを閉じる')}
+                  accessibilityLabel={t('common.closeModal')}
                   accessibilityRole="button"
                 >
                   <Ionicons name="close" size={24} color={colors.textSecondary} />

@@ -4,5 +4,3 @@
  * @description
  * 変数の表示・編集に関するコンポーネントを一括エクスポート
  */
-
-export { VariableModal } from './VariableModal';

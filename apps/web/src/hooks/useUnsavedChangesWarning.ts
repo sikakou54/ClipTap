@@ -63,7 +63,7 @@ export function useUnsavedChangesWarning({
       if (hasChanges) {
         /* 変更がある場合は確認ダイアログを表示 */
         import('@utils/alerts').then(({ showConfirmMessage }) => {
-          const message = t('common.unsaved_changes_warning', '入力途中のデータがあります。破棄してもよろしいですか？');
+          const message = t('common.unsaved_changes_warning');
           showConfirmMessage(message, () => {
             onClose();
           });

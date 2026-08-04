@@ -25,7 +25,7 @@ import UIKit
 import os.log
 
 // ログ出力用の設定（デバッグやエラー追跡に使用）
-let snippetServiceLog = OSLog(subsystem: "com.sikakou.cliptap.keyboard", category: "SnippetService")
+let snippetServiceLog = OSLog.disabled
 
 /// スニペットのビジネスロジックを管理するサービスクラス
 /// シングルトンパターンで実装されており、アプリ全体で1つのインスタンスを共有します
@@ -149,35 +149,6 @@ class SnippetService {
         return snippetMapper.getByCategoryId(categoryId, filterByProfileId: activeProfile.id)
     }
 
-    /// スニペットを検索
-    ///
-    /// - Parameters:
-    ///   - query: 検索クエリ（スニペットのタイトルや内容を検索）
-    ///   - categoryId: カテゴリID（省略可、指定した場合はそのカテゴリ内で検索）
-    /// - Returns: 検索結果のスニペット配列
-    ///
-    /// 【検索の仕組み】
-    /// 1. クエリが空の場合は空配列を返す（無駄な検索を避ける）
-    /// 2. アクティブなプロファイルでフィルタ
-    /// 3. タイトルや内容にクエリが含まれるスニペットを検索
-    ///
-    /// 【使用例】
-    /// search(query: "挨拶") → タイトルや内容に「挨拶」を含むスニペットを検索
-    /// search(query: "会議", categoryId: "work") → 「仕事」カテゴリ内で「会議」を検索
-    func search(query: String, categoryId: String? = nil) -> [Snippet] {
-        // 空白のみのクエリは無視
-        if query.trimmingCharacters(in: .whitespaces).isEmpty {
-            return []
-        }
-
-        guard let activeProfile = profileService.getActiveProfile() else {
-            // アクティブなプロファイルがない場合
-            return snippetMapper.search(query: query, categoryId: categoryId, filterByProfileId: nil)
-        }
-        // プロファイルでフィルタして検索
-        return snippetMapper.search(query: query, categoryId: categoryId, filterByProfileId: activeProfile.id)
-    }
-
     // MARK: - Insert Operations（挿入操作）
 
     /// スニペットをキーボードに挿入（変数置換＋振動フィードバック）
@@ -217,7 +188,7 @@ class SnippetService {
         }
 
         os_log("📝 Profile ID: %@", log: snippetServiceLog, type: .info, resolvedProfileId ?? "nil")
-        NSLog("📝 [SnippetService] Profile ID: %@", resolvedProfileId ?? "nil")
+        KeyboardLog.debug("📝 [SnippetService] Profile ID: %@", resolvedProfileId ?? "nil")
 
         // 変数マップを取得（プロファイルに紐づくカスタム変数）
         var variablesMap: [String: String] = [:]
@@ -255,9 +226,9 @@ class SnippetService {
         /* 使用頻度追跡が有効な場合のみ、copyCountをインクリメント */
         if isUsageTrackingEnabled {
             snippetMapper.incrementCopyCount(for: snippet.id)
-            NSLog("📊 [SnippetService] Incremented copy count for snippet: %@", snippet.id)
+            KeyboardLog.debug("📊 [SnippetService] Incremented copy count for snippet: %@", snippet.id)
         } else {
-            NSLog("📊 [SnippetService] Skipped copy count increment (usage tracking disabled)")
+            KeyboardLog.debug("📊 [SnippetService] Skipped copy count increment (usage tracking disabled)")
         }
     }
 

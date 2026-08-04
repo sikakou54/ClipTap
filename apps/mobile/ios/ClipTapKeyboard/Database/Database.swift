@@ -97,13 +97,13 @@ class Database {
     func initialize() throws {
         try dbQueue.sync {
             if isInitialized {
-                print("[Database] Already initialized")
+                KeyboardLog.debug("[Database] Already initialized")
                 return
             }
 
             try open()  // データベースファイルを開く
             isInitialized = true
-            print("[Database] ✅ Initialized successfully")
+            KeyboardLog.debug("[Database] ✅ Initialized successfully")
         }
     }
 
@@ -132,7 +132,7 @@ class Database {
     private func open() throws {
         // 既に開いている場合は何もしない
         if db != nil {
-            print("[Database] Already open")
+            KeyboardLog.debug("[Database] Already open")
             return
         }
 
@@ -142,12 +142,11 @@ class Database {
             forSecurityApplicationGroupIdentifier: appGroupIdentifier
         ) else {
             // 共有コンテナが見つからない = App Groupsが正しく設定されていない
-            print("❌❌❌ [Database] Container not found for: \(appGroupIdentifier)")
-            print("❌ This means App Groups is not configured correctly!")
+            KeyboardLog.debug("❌❌❌ [Database] Container not found for: \(appGroupIdentifier)")
+            KeyboardLog.debug("❌ This means App Groups is not configured correctly!")
             throw DatabaseError.containerNotFound
         }
 
-        print("✅ [Database] Container URL: \(containerURL.path)")
 
         // データベースファイルのパスを構築
         // 共有コンテナ/databases/cliptap.db
@@ -156,31 +155,20 @@ class Database {
             .appendingPathComponent("cliptap.db")  // データベースファイル名
             .path
 
-        print("📂 [Database] Full database path: \(dbPath)")
 
         // databasesディレクトリの存在確認（デバッグ用）
         let databasesDir = containerURL.appendingPathComponent("databases").path
         let dirExists = FileManager.default.fileExists(atPath: databasesDir)
-        print("📂 [Database] databases/ directory exists: \(dirExists)")
-
-        // ディレクトリ内のファイル一覧を表示（デバッグ用）
-        if dirExists {
-            do {
-                let files = try FileManager.default.contentsOfDirectory(atPath: databasesDir)
-                print("📂 [Database] Files in databases/: \(files)")
-            } catch {
-                print("⚠️ [Database] Could not list files: \(error)")
-            }
-        }
+        KeyboardLog.debug("📂 [Database] databases/ directory exists: \(dirExists)")
 
         // データベースファイルが存在するか確認
         let fileExists = FileManager.default.fileExists(atPath: dbPath)
-        print("📂 [Database] cliptap.db exists: \(fileExists)")
+        KeyboardLog.debug("📂 [Database] cliptap.db exists: \(fileExists)")
 
         if !fileExists {
             // ファイルが存在しない = メインアプリでまだデータベースが作成されていない
-            print("❌❌❌ [Database] Database file does not exist at: \(dbPath)")
-            print("❌ Please check if the app has created the database in the shared container!")
+            KeyboardLog.debug("❌❌❌ [Database] Database file does not exist")
+            KeyboardLog.debug("❌ Please check if the app has created the database in the shared container!")
             throw DatabaseError.fileNotFound
         }
 
@@ -198,11 +186,11 @@ class Database {
         if result != SQLITE_OK {
             // SQLITE_OK以外 = エラー
             let errorMsg = String(cString: sqlite3_errmsg(db))
-            print("[Database] ❌ Failed to open: \(errorMsg)")
+            KeyboardLog.debug("[Database] ❌ Failed to open: \(errorMsg)")
             throw DatabaseError.openFailed(message: errorMsg)
         }
 
-        print("[Database] ✅ Opened successfully")
+        KeyboardLog.debug("[Database] ✅ Opened successfully")
     }
 
     /// データベースを閉じる
@@ -222,7 +210,7 @@ class Database {
                 sqlite3_close(db)  // SQLite接続を閉じる
                 db = nil  // ポインタをnilに設定
                 isInitialized = false  // 初期化フラグをリセット
-                print("[Database] Closed")
+                KeyboardLog.debug("[Database] Closed")
             }
         }
     }
@@ -282,7 +270,7 @@ class Database {
         return dbQueue.sync {
             // データベースが開いていない場合は空配列を返す
             guard let db = db else {
-                print("[Database] ❌ Database not opened")
+                KeyboardLog.debug("[Database] ❌ Database not opened")
                 return []
             }
 
@@ -295,8 +283,7 @@ class Database {
             if prepareResult != SQLITE_OK {
                 // コンパイルエラー（SQL文の文法エラーなど）
                 let errorMsg = String(cString: sqlite3_errmsg(db))
-                print("[Database] ❌ Failed to prepare statement: \(errorMsg)")
-                print("[Database] ❌ Query: \(query)")
+                KeyboardLog.debug("[Database] ❌ Failed to prepare statement: \(errorMsg)")
                 return []
             }
 
@@ -307,24 +294,24 @@ class Database {
 
                 if let stringValue = param as? String {
                     // 文字列パラメータのバインド
-                    print("[Database] 🔧 Binding parameter [\(bindIndex)]: '\(stringValue)' (length: \(stringValue.count))")
+                    KeyboardLog.debug("[Database] 🔧 Binding text parameter [\(bindIndex)] (length: \(stringValue.count))")
                     let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
                     let result = sqlite3_bind_text(statement, bindIndex, stringValue, -1, SQLITE_TRANSIENT)
                     if result != SQLITE_OK {
                         let errorMsg = String(cString: sqlite3_errmsg(db))
-                        print("[Database] ❌ Failed to bind text parameter [\(bindIndex)]: \(errorMsg)")
+                        KeyboardLog.debug("[Database] ❌ Failed to bind text parameter [\(bindIndex)]: \(errorMsg)")
                     }
                 } else if let intValue = param as? Int {
                     // 整数パラメータのバインド
-                    print("[Database] 🔧 Binding parameter [\(bindIndex)]: \(intValue)")
+                    KeyboardLog.debug("[Database] 🔧 Binding parameter [\(bindIndex)]: \(intValue)")
                     sqlite3_bind_int(statement, bindIndex, Int32(intValue))
                 } else if let boolValue = param as? Bool {
                     // 真偽値パラメータのバインド（SQLiteでは0または1として保存）
-                    print("[Database] 🔧 Binding parameter [\(bindIndex)]: \(boolValue)")
+                    KeyboardLog.debug("[Database] 🔧 Binding parameter [\(bindIndex)]: \(boolValue)")
                     sqlite3_bind_int(statement, bindIndex, boolValue ? 1 : 0)
                 } else if param is NSNull {
                     // NULLパラメータのバインド
-                    print("[Database] 🔧 Binding parameter [\(bindIndex)]: NULL")
+                    KeyboardLog.debug("[Database] 🔧 Binding parameter [\(bindIndex)]: NULL")
                     sqlite3_bind_null(statement, bindIndex)
                 }
             }
@@ -340,7 +327,7 @@ class Database {
                     results.append(result)
                 }
             }
-            print("[Database] 📊 Query returned \(rowCount) row(s), transformed to \(results.count) result(s)")
+            KeyboardLog.debug("[Database] 📊 Query returned \(rowCount) row(s), transformed to \(results.count) result(s)")
 
             // ステップ4: クリーンアップ
             // sqlite3_finalize()で、コンパイル済みSQL文を破棄してメモリを解放
@@ -357,7 +344,7 @@ class Database {
     func executeUpdate(_ query: String, parameters: [Any] = []) -> Bool {
         return dbQueue.sync {
             guard let db = db else {
-                print("[Database] ❌ Database not opened")
+                KeyboardLog.debug("[Database] ❌ Database not opened")
                 return false
             }
 
@@ -366,7 +353,7 @@ class Database {
             let prepareResult = sqlite3_prepare_v2(db, query, -1, &statement, nil)
             if prepareResult != SQLITE_OK {
                 let errorMsg = String(cString: sqlite3_errmsg(db))
-                print("[Database] ❌ Failed to prepare statement: \(errorMsg)")
+                KeyboardLog.debug("[Database] ❌ Failed to prepare statement: \(errorMsg)")
                 return false
             }
 
@@ -394,7 +381,7 @@ class Database {
 
             if stepResult != SQLITE_DONE {
                 let errorMsg = String(cString: sqlite3_errmsg(db))
-                print("[Database] ❌ Failed to execute: \(errorMsg)")
+                KeyboardLog.debug("[Database] ❌ Failed to execute: \(errorMsg)")
                 return false
             }
 
@@ -489,7 +476,7 @@ class Database {
     func checkpoint() {
         dbQueue.sync {
             guard let db = db else {
-                NSLog("[Database] ⚠️ checkpoint() called but database not opened")
+                KeyboardLog.debug("[Database] ⚠️ checkpoint() called but database not opened")
                 return
             }
 
@@ -502,10 +489,10 @@ class Database {
             )
 
             if result == SQLITE_OK {
-                NSLog("[Database] ✅ WAL checkpoint completed")
+                KeyboardLog.debug("[Database] ✅ WAL checkpoint completed")
             } else {
                 let errorMsg = String(cString: sqlite3_errmsg(db))
-                NSLog("[Database] ⚠️ WAL checkpoint failed: %@", errorMsg)
+                KeyboardLog.debug("[Database] ⚠️ WAL checkpoint failed: %@", errorMsg)
             }
         }
     }

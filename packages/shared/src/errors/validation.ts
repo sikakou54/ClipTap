@@ -109,29 +109,6 @@ export class VariableNameRequiredError extends ValidationError {
 }
 
 /**
- * 変数名長さエラー
- *
- * 変数名が最大長を超えている場合にスローされます。
- */
-export class VariableNameTooLongError extends ValidationError {
-  /** 許容される最大文字数 */
-  readonly maxLength: number;
-
-  /** 実際の文字数 */
-  readonly actualLength: number;
-
-  constructor(maxLength: number, actualLength: number) {
-    super(
-      `Variable name is too long (max: ${maxLength}, actual: ${actualLength})`,
-      'error.variable_name_too_long'
-    );
-    this.name = 'VariableNameTooLongError';
-    this.maxLength = maxLength;
-    this.actualLength = actualLength;
-  }
-}
-
-/**
  * 変数名形式エラー
  *
  * 変数名に使用できない文字が含まれている場合にスローされます。

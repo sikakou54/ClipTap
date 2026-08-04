@@ -44,7 +44,6 @@ export {
   SystemVariableDeleteError,
   DefaultProfileDeleteError,
   VariableNameRequiredError,
-  VariableNameTooLongError,
   VariableNameInvalidError,
   VariableNameReservedError,
   VariableValueRequiredError,

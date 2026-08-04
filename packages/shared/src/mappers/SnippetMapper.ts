@@ -117,6 +117,33 @@ const toEntities = (rows: any[]): Snippet[] => rows.map(toEntity);
  * スニペット（定型文）のCRUD操作を提供する静的メソッド群
  */
 export class SnippetMapper {
+  /** バックアップ行をID・日時・使用回数ごと逐語復元する。 */
+  static restore(snippet: Snippet): void {
+    getMainDbAdapter().run(
+      `INSERT INTO snippets
+        (id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        snippet.id,
+        snippet.title,
+        snippet.content,
+        snippet.categoryId,
+        snippet.copyWithTitle ? 1 : 0,
+        snippet.copyCount,
+        snippet.createdAt,
+        snippet.updatedAt,
+      ]
+    );
+  }
+
+  /** バックアップのスニペット・プロファイル関連を逐語復元する。 */
+  static restoreProfileLink(link: SnippetProfile): void {
+    getMainDbAdapter().run(SnippetProfileQueries.INSERT, [
+      link.snippetId,
+      link.profileId,
+    ]);
+  }
+
   /**
    * 全スニペットを取得
    * @param filterByProfileId - プロファイルIDでフィルタ（オプション）
@@ -337,15 +364,15 @@ export class SnippetMapper {
     switch (sortBy) {
       case 'created':
         /* 作成日時順（新しい順）、同日時はタイトル順 */
-        orderClause = 'ORDER BY createdAt DESC, title ASC NULLS LAST';
+        orderClause = 'ORDER BY createdAt DESC, title IS NULL, title ASC';
         break;
       case 'updated':
         /* 更新日時順（新しい順）、同日時はタイトル順 */
-        orderClause = 'ORDER BY updatedAt DESC, title ASC NULLS LAST';
+        orderClause = 'ORDER BY updatedAt DESC, title IS NULL, title ASC';
         break;
       case 'title':
-        /* タイトル順、同タイトルは作成日時順。NULLS LASTでnullは最後に配置 */
-        orderClause = 'ORDER BY title ASC NULLS LAST, createdAt DESC';
+        /* タイトル順、同タイトルは作成日時順。NULLタイトルは末尾に配置 */
+        orderClause = 'ORDER BY title IS NULL, title ASC, createdAt DESC';
         break;
       case 'usage':
         /* コピー回数順（多い順）、同数は作成日時順 */
@@ -353,7 +380,7 @@ export class SnippetMapper {
         break;
       default:
         /* デフォルトは作成日時順、同日時はタイトル順 */
-        orderClause = 'ORDER BY createdAt DESC, title ASC NULLS LAST';
+        orderClause = 'ORDER BY createdAt DESC, title IS NULL, title ASC';
     }
 
     const rows = db.all<any>(`SELECT * FROM snippets ${orderClause}`);

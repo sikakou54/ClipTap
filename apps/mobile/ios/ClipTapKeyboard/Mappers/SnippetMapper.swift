@@ -28,15 +28,15 @@ class SnippetMapper: BaseMapper {
     private func orderClause(for sortBy: String) -> String {
         switch sortBy {
         case "created":
-            return "ORDER BY createdAt DESC, title ASC"
+            return "ORDER BY createdAt DESC, title IS NULL, title ASC"
         case "updated":
-            return "ORDER BY updatedAt DESC, title ASC"
+            return "ORDER BY updatedAt DESC, title IS NULL, title ASC"
         case "title":
-            return "ORDER BY title ASC, createdAt DESC"
+            return "ORDER BY title IS NULL, title ASC, createdAt DESC"
         case "usage":
             return "ORDER BY copyCount DESC, createdAt DESC"
         default:
-            return "ORDER BY createdAt DESC, title ASC"
+            return "ORDER BY createdAt DESC, title IS NULL, title ASC"
         }
     }
 
@@ -122,59 +122,6 @@ class SnippetMapper: BaseMapper {
         }
     }
 
-    /// スニペットを検索（タイトル・内容でLIKE検索）
-    func search(query searchQuery: String, categoryId: String? = nil, filterByProfileId profileId: String? = nil) -> [Snippet] {
-        var query: String
-        var parameters: [Any] = ["%\(searchQuery)%", "%\(searchQuery)%"]
-
-        if let profileId = profileId {
-            if let categoryId = categoryId {
-                query = """
-                    SELECT DISTINCT s.id, s.title, s.content, s.categoryId, s.copyWithTitle, s.copyCount, s.createdAt, s.updatedAt
-                    FROM \(tableName) s
-                    WHERE (s.title LIKE ? OR s.content LIKE ?)
-                      AND s.categoryId = ?
-                      AND (s.id NOT IN (SELECT snippetId FROM snippet_profiles)
-                       OR s.id IN (SELECT snippetId FROM snippet_profiles WHERE profileId = ?))
-                    ORDER BY s.createdAt DESC
-                """
-                parameters.append(categoryId)
-                parameters.append(profileId)
-            } else {
-                query = """
-                    SELECT DISTINCT s.id, s.title, s.content, s.categoryId, s.copyWithTitle, s.copyCount, s.createdAt, s.updatedAt
-                    FROM \(tableName) s
-                    WHERE (s.title LIKE ? OR s.content LIKE ?)
-                      AND (s.id NOT IN (SELECT snippetId FROM snippet_profiles)
-                       OR s.id IN (SELECT snippetId FROM snippet_profiles WHERE profileId = ?))
-                    ORDER BY s.createdAt DESC
-                """
-                parameters.append(profileId)
-            }
-        } else {
-            if let categoryId = categoryId {
-                query = """
-                    SELECT id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt
-                    FROM \(tableName)
-                    WHERE (title LIKE ? OR content LIKE ?) AND categoryId = ?
-                    ORDER BY createdAt DESC
-                """
-                parameters.append(categoryId)
-            } else {
-                query = """
-                    SELECT id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt
-                    FROM \(tableName)
-                    WHERE title LIKE ? OR content LIKE ?
-                    ORDER BY createdAt DESC
-                """
-            }
-        }
-
-        return executeQuery(query, parameters: parameters) { statement in
-            return self.mapSnippet(from: statement)
-        }
-    }
-
     /// スニペットのプロファイルIDを取得（snippet_profilesから）
     func getProfileIds(for snippetId: String) -> [String] {
         let query = """
@@ -201,7 +148,7 @@ class SnippetMapper: BaseMapper {
         """
 
         _ = executeUpdate(query, parameters: [snippetId])
-        NSLog("[SnippetMapper] ✅ Incremented copyCount for snippet: %@", snippetId)
+        KeyboardLog.debug("[SnippetMapper] ✅ Incremented copyCount for snippet: %@", snippetId)
 
         /* WALチェックポイントを実行してメインDBに即座に反映 */
         db.checkpoint()

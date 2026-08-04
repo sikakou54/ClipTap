@@ -151,13 +151,3 @@ export {
   getSortPreferenceAdapter,
   hasSortPreferenceAdapter,
 } from './SortPreferenceAdapter';
-
-/* ======================================== */
-/* UsageTrackingAdapter（使用頻度追跡設定） */
-/* ======================================== */
-export {
-  type UsageTrackingAdapter,
-  setUsageTrackingAdapter,
-  getUsageTrackingAdapter,
-  hasUsageTrackingAdapter,
-} from './UsageTrackingAdapter';

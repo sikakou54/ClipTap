@@ -18,11 +18,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { useTranslation } from '@cliptap/shared';
 import {
-  SnippetService,
-  ProfileService,
-  VariableService,
-  SubscriptionService,
-  FEATURE_LIMITS,
   useCategories,
   useProfiles,
   useSearch,
@@ -34,8 +29,6 @@ import {
   type SnippetWithDisplay,
   type Profile,
 } from '@cliptap/shared';
-import { copyToClipboard } from '@utils/clipboard';
-import i18next from '@i18n/config';
 import { Logger } from '@cliptap/shared';
 import { showErrorAlert } from '@utils/alerts';
 
@@ -78,7 +71,7 @@ export interface UseSearchScreenReturn {
  * @returns 画面に必要な全ての状態とハンドラ
  */
 export function useSearchScreen(): UseSearchScreenReturn {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const router = useRouter();
 
   /* ======================================== */
@@ -89,7 +82,7 @@ export function useSearchScreen(): UseSearchScreenReturn {
   const defaultProfileId = defaultProfile?.id;
   const { categories } = useCategories();
   const { variables } = useVariables();
-  const { allSnippets, snippetProfiles, deleteSnippet, refresh: refreshSnippets } = useSnippets();
+  const { allSnippets, snippetProfiles, deleteSnippet, copySnippet, refresh: refreshSnippets } = useSnippets();
 
   /* onErrorコールバックをメモ化（無限ループ防止） */
   const handleSearchError = useCallback((msg: string, err: unknown) => {
@@ -164,7 +157,7 @@ export function useSearchScreen(): UseSearchScreenReturn {
     defaultProfileId: defaultProfileId ?? null,
     variables,
     profileVariables,
-    locale: i18next.language,
+    locale: language,
   });
 
   /* ======================================== */
@@ -182,44 +175,17 @@ export function useSearchScreen(): UseSearchScreenReturn {
 
   /**
    * 定型文コピー
-   * 変数展開失敗時は元のテキストをコピー
+   * 一覧と同じ共通コピー経路を使用する
    */
   const handleCopySnippet = useCallback(
     async (snippet: SnippetWithDisplay) => {
       try {
-        let textToCopy: string;
-        const profileId = selectedProfileId || undefined;
-
-        try {
-          const isSubscribed = SubscriptionService.isSubscribed();
-          const profileVariablesMap = profileId
-            ? ProfileService.getProfileVariablesMap(profileId)
-            : ProfileService.getActiveProfileVariablesMap();
-          const defaultProfileVariablesMap = ProfileService.getDefaultProfileVariablesMap();
-
-          const customResolver = VariableService.createCustomVariableResolver(
-            { isSubscribed, profileVariablesMap, defaultProfileVariablesMap },
-            { freeTierLimit: FEATURE_LIMITS.FREE_TIER_VARIABLES }
-          );
-
-          textToCopy = await SnippetService.prepareForClipboard(snippet.id, {
-            locale: i18next.language,
-            customResolver,
-            shouldReplaceVariables: true,
-          });
-        } catch (varError) {
-          Logger.warn('[useSearchScreen] Variable replacement failed, copying original content:', varError);
-          textToCopy = await SnippetService.prepareForClipboard(snippet.id, {
-            shouldReplaceVariables: false,
-          });
-        }
-
-        await copyToClipboard(textToCopy);
+        await copySnippet(snippet.id, selectedProfileId || undefined);
       } catch (error) {
         showErrorAlert(t('error.generic'));
       }
     },
-    [selectedProfileId, t]
+    [copySnippet, selectedProfileId, t]
   );
 
   /**

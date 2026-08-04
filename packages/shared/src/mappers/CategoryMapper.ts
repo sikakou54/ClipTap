@@ -71,6 +71,17 @@ const toEntities = (rows: any[]): Category[] => rows.map(toEntity);
  * すべてのメソッドはgetMainDbAdapter()経由でDBアクセスを行う。
  */
 export class CategoryMapper {
+  /** バックアップ行をID・日時・並び順ごと逐語復元する。 */
+  static restore(category: Category): void {
+    getMainDbAdapter().run(CategoryQueries.INSERT, [
+      category.id,
+      category.name,
+      category.color,
+      category.sortOrder,
+      category.createdAt,
+    ]);
+  }
+
   /**
    * 全カテゴリを取得
    * @returns カテゴリ一覧（sortOrder順、次に名前順）

@@ -12,7 +12,6 @@
 		0D561D40AD2C461499CC8596 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D3F2BD2D366B4500A02A7C4A /* InfoPlist.strings */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		191EE62F4D9DB7E1A3574F85 /* Pods_ClipTap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 568B5CAA5C6E980CA139093A /* Pods_ClipTap.framework */; };
-		24DB7647D3E99E9A1307A848 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396291AE6E289A90DA37913A /* SubscriptionManager.swift */; };
 		264DB663DF9B64867924ECE5 /* VariableService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B76618D950A9ECF8A3128E /* VariableService.swift */; };
 		33CA7E9B9A27BA4945161D5C /* Pods_ClipTapKeyboard.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B1C45AC46A28F4333F4BC84 /* Pods_ClipTapKeyboard.framework */; };
 		3742E22140A0C528044B7538 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5E57BA95F5C3B8D16B999C52 /* PrivacyInfo.xcprivacy */; };
@@ -26,9 +25,7 @@
 		6BBBF01CF562044AD12FDAB8 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A4E265BB7EF49ED8764E12 /* Database.swift */; };
 		72146C91E7DBAFE02335129A /* VariableReplacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBF35E69B20BB301E0C68A83 /* VariableReplacer.swift */; };
 		7D946F2D307F4791BE59554D /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 9EE76072582C4DF497F6E919 /* InfoPlist.strings */; };
-		8276DC21CA11A0E6EDDD8579 /* KeyboardDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7B2B42C20083C31CA28EEF /* KeyboardDataService.swift */; };
 		9ED9CD021CFC0C26F98238A8 /* VariableMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89C0725F05BA12D69B304472 /* VariableMapper.swift */; };
-		A1B2C3D4E5F607182940ABCD /* SubscriptionBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = C1575F9A949E407AB458E0EB /* SubscriptionBridge.m */; };
 		B216BCAD31787BB9A9197584 /* LocalizationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07CE46E48AEA0D25A6FAC3B /* LocalizationHelper.swift */; };
 		B8F2301B4D8E9C0011223344 /* PatternFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F2301B4D8E9C0011223344 /* PatternFormatter.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
@@ -37,7 +34,6 @@
 		C1A70B4E92D3416F8A5E7303 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C1A70B4E92D3416F8A5E7301 /* Localizable.strings */; };
 		C1A70B4E92D3416F8A5E7304 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C1A70B4E92D3416F8A5E7302 /* Localizable.strings */; };
 		CF7094334FA54EF194A64966 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9364222E5A58418DA15C00D5 /* GoogleService-Info.plist */; };
-		D2A68C8730B04076A658AFB3 /* SubscriptionBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADF6ED09866041CEB442C063 /* SubscriptionBridge.swift */; };
 		DAF2301B4D8E9C0011223344 /* SystemVariableFormatMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F2301B4D8E9C0011223344 /* SystemVariableFormatMapper.swift */; };
 		E0EF7C4C39AA8CD58E6B7C4A /* ClipTapKeyboard.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 5EC637673C5C41A780789BF1 /* ClipTapKeyboard.appex */; };
 		EBE651AA7D47E45F97D52F94 /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BA8D63360CEFD9CC816A334 /* KeyboardViewController.swift */; };
@@ -79,13 +75,11 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ClipTap/Info.plist; sourceTree = "<group>"; };
 		27B76618D950A9ECF8A3128E /* VariableService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = VariableService.swift; path = Services/VariableService.swift; sourceTree = "<group>"; };
 		2B1C45AC46A28F4333F4BC84 /* Pods_ClipTapKeyboard.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ClipTapKeyboard.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		396291AE6E289A90DA37913A /* SubscriptionManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
 		39C14B5283E1E45BDDEAD68C /* Pods-ClipTapKeyboard.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ClipTapKeyboard.debug.xcconfig"; path = "Target Support Files/Pods-ClipTapKeyboard/Pods-ClipTapKeyboard.debug.xcconfig"; sourceTree = "<group>"; };
 		3B38E1267B6652ABB42AAF12 /* BaseMapper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BaseMapper.swift; path = Mappers/BaseMapper.swift; sourceTree = "<group>"; };
 		414824D96DE3F2880017017F /* Pods-ClipTapKeyboard.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ClipTapKeyboard.release.xcconfig"; path = "Target Support Files/Pods-ClipTapKeyboard/Pods-ClipTapKeyboard.release.xcconfig"; sourceTree = "<group>"; };
 		4BA8D63360CEFD9CC816A334 /* KeyboardViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
 		4BE9B11A3A3F6B7F6130A128 /* SnippetService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SnippetService.swift; path = Services/SnippetService.swift; sourceTree = "<group>"; };
-		4D7B2B42C20083C31CA28EEF /* KeyboardDataService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KeyboardDataService.swift; sourceTree = "<group>"; };
 		568B5CAA5C6E980CA139093A /* Pods_ClipTap.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ClipTap.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E57BA95F5C3B8D16B999C52 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = ClipTap/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		5EC637673C5C41A780789BF1 /* ClipTapKeyboard.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ClipTapKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -101,11 +95,9 @@
 		A98C09CBDCDC9701BB9ED9BE /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ClipTap/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = ClipTap/SplashScreen.storyboard; sourceTree = "<group>"; };
 		AB3E2D6933F9E8EE0086FF6E /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		ADF6ED09866041CEB442C063 /* SubscriptionBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SubscriptionBridge.swift; path = ClipTap/SubscriptionBridge.swift; sourceTree = "<group>"; };
 		B07CE46E48AEA0D25A6FAC3B /* LocalizationHelper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LocalizationHelper.swift; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		BBF35E69B20BB301E0C68A83 /* VariableReplacer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VariableReplacer.swift; sourceTree = "<group>"; };
-		C1575F9A949E407AB458E0EB /* SubscriptionBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = SubscriptionBridge.m; path = ClipTap/SubscriptionBridge.m; sourceTree = "<group>"; };
 		C1A70B4E92D3416F8A5E7301 /* Localizable.strings */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C1A70B4E92D3416F8A5E7302 /* Localizable.strings */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C6691A48FD09239CA7D9C449 /* Pods-ClipTap.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ClipTap.release.xcconfig"; path = "Target Support Files/Pods-ClipTap/Pods-ClipTap.release.xcconfig"; sourceTree = "<group>"; };
@@ -146,8 +138,6 @@
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				ADF6ED09866041CEB442C063 /* SubscriptionBridge.swift */,
-				C1575F9A949E407AB458E0EB /* SubscriptionBridge.m */,
 				FA11ACCE55B71D6E5W1F7001 /* FullAccessBridge.swift */,
 				FA11ACCE55B71D6E0B1C7002 /* FullAccessBridge.m */,
 				F11748442D0722820044C1D9 /* ClipTap-Bridging-Header.h */,
@@ -289,7 +279,6 @@
 				C1A70B4E92D3416F8A5E7305 /* en.lproj */,
 				C1A70B4E92D3416F8A5E7306 /* ja.lproj */,
 				A1A4E265BB7EF49ED8764E12 /* Database.swift */,
-				4D7B2B42C20083C31CA28EEF /* KeyboardDataService.swift */,
 				4BA8D63360CEFD9CC816A334 /* KeyboardViewController.swift */,
 				B07CE46E48AEA0D25A6FAC3B /* LocalizationHelper.swift */,
 				3B38E1267B6652ABB42AAF12 /* BaseMapper.swift */,
@@ -304,7 +293,6 @@
 				08EF4A375DA3B2D63F765AEE /* ProfileService.swift */,
 				4BE9B11A3A3F6B7F6130A128 /* SnippetService.swift */,
 				27B76618D950A9ECF8A3128E /* VariableService.swift */,
-				396291AE6E289A90DA37913A /* SubscriptionManager.swift */,
 				BBF35E69B20BB301E0C68A83 /* VariableReplacer.swift */,
 				A7F2301B4D8E9C0011223344 /* PatternFormatter.swift */,
 			);
@@ -651,8 +639,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				D2A68C8730B04076A658AFB3 /* SubscriptionBridge.swift in Sources */,
-				A1B2C3D4E5F607182940ABCD /* SubscriptionBridge.m in Sources */,
 				FA11ACCE55B71D6E5W1F7003 /* FullAccessBridge.swift in Sources */,
 				FA11ACCE55B71D6E0B1C7004 /* FullAccessBridge.m in Sources */,
 				45F22E56024AF24DF098B43F /* ExpoModulesProvider.swift in Sources */,
@@ -664,7 +650,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				6BBBF01CF562044AD12FDAB8 /* Database.swift in Sources */,
-				8276DC21CA11A0E6EDDD8579 /* KeyboardDataService.swift in Sources */,
 				EBE651AA7D47E45F97D52F94 /* KeyboardViewController.swift in Sources */,
 				B216BCAD31787BB9A9197584 /* LocalizationHelper.swift in Sources */,
 				BE70B1E62BBAC1D24074FBF2 /* BaseMapper.swift in Sources */,
@@ -679,7 +664,6 @@
 				6ACC58012DDAD084DB442ADB /* ProfileService.swift in Sources */,
 				515D35BB5F4BBDAFE51125B2 /* SnippetService.swift in Sources */,
 				264DB663DF9B64867924ECE5 /* VariableService.swift in Sources */,
-				24DB7647D3E99E9A1307A848 /* SubscriptionManager.swift in Sources */,
 				72146C91E7DBAFE02335129A /* VariableReplacer.swift in Sources */,
 				B8F2301B4D8E9C0011223344 /* PatternFormatter.swift in Sources */,
 			);

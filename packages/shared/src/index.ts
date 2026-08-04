@@ -118,11 +118,6 @@ export {
   getSortPreferenceAdapter,
   hasSortPreferenceAdapter,
 
-  /* UsageTrackingAdapter関連（使用頻度追跡設定） */
-  type UsageTrackingAdapter,
-  setUsageTrackingAdapter,
-  getUsageTrackingAdapter,
-  hasUsageTrackingAdapter,
 } from './adapters';
 
 /* ======================================== */

@@ -49,6 +49,7 @@ import {
   HowToUseSection,
 } from '@components/home';
 import { STARTER_FILE_PASSWORD } from '@constants/starterFile';
+import { database } from '@database/database';
 
 const importParserService = new ImportParserServiceClass();
 
@@ -98,7 +99,7 @@ export function Home() {
       return;
     }
 
-    if (!password) {
+    if (!password.trim()) {
       setError(t('settings.web_specific.error_no_password'));
       return;
     }
@@ -135,6 +136,7 @@ export function Home() {
         await migrateImportTempDb(mainDbAdapter, exportData.s);
       }
       SystemVariableFormatMapper.loadRegistry();
+      await database.finalizeInitialLoad();
 
       /* サブスクリプション状態を確認（ログイン済みの場合のみ） */
       if (user) {
@@ -191,6 +193,10 @@ export function Home() {
         {/* ヘッダー（タイトル・説明） */}
         <HomeHeader />
 
+        <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+          {t('settings.web_specific.shared_device_warning')}
+        </p>
+
         {/* ファイルアップロードエリア（ドラッグ&ドロップ / ファイル選択） */}
         <FileUploadArea selectedFile={selectedFile} onFileSelect={handleFileSelect} />
 
@@ -221,7 +227,7 @@ export function Home() {
         {/* 読み込みボタン */}
         <LoadButton
           onClick={handleLoadFile}
-          disabled={!selectedFile || !password || isLoading || !hasAgreedTerms || !hasAgreedPrivacy}
+          disabled={!selectedFile || !password.trim() || isLoading || !hasAgreedTerms || !hasAgreedPrivacy}
           isLoading={isLoading}
         />
 

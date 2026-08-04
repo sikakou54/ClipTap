@@ -82,7 +82,6 @@ async function resolveSnippetVariables(
       ? replaceVariables(title, {
           locale,
           customResolver: syncResolver,
-          preserveUnknown: true,
           formats,
         })
       : title,
@@ -90,7 +89,6 @@ async function resolveSnippetVariables(
       ? replaceVariables(content, {
           locale,
           customResolver: syncResolver,
-          preserveUnknown: true,
           formats,
         })
       : content,

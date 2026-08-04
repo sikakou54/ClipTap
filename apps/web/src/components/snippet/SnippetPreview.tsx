@@ -112,7 +112,6 @@ export function SnippetPreview({
         const result = await VariableService.resolvePreviewText(title, content, {
           locale,
           customResolver,
-          preserveUnknown: true,
         });
 
         if (!cancelled) {
@@ -194,4 +193,3 @@ export function SnippetPreview({
     </div>
   );
 }
-

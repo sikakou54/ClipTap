@@ -19,6 +19,7 @@ interface SideMenuNavigationProps {
   onClose: () => void;
   onImport: () => void;
   onExport: () => void;
+  onCloseFile: () => void;
   isSubscribed: boolean;
 }
 
@@ -27,6 +28,7 @@ export function SideMenuNavigation({
   onClose,
   onImport,
   onExport,
+  onCloseFile,
   isSubscribed,
 }: SideMenuNavigationProps) {
   const { t } = useTranslation();
@@ -76,7 +78,7 @@ export function SideMenuNavigation({
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
         </svg>
-        <span className="text-sm">{t('export_import.import', 'インポート')}</span>
+        <span className="text-sm">{t('export_import.import')}</span>
       </button>
 
       {/* エクスポートボタン */}
@@ -88,6 +90,16 @@ export function SideMenuNavigation({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
         </svg>
         <span className="text-sm">{t('export_import.export')}</span>
+      </button>
+
+      <button
+        onClick={onCloseFile}
+        className="w-full flex items-center gap-3 px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        <span className="text-sm">{t('settings.web_specific.close_file')}</span>
       </button>
 
       {/* 広告バナー（Freeプランのみ表示） */}
@@ -117,4 +129,3 @@ export function SideMenuNavigation({
     </div>
   );
 }
-

@@ -22,6 +22,9 @@ import {
   getFileIOAdapter,
   getMainDbAdapter,
   getSystemDbAdapter,
+  ProfileService,
+  SCHEMA_VERSION,
+  setSchemaVersionToDb,
 } from '@cliptap/shared';
 import { SQLiteWasm } from '@src/mappers/sqliteWasm';
 import { CacheService } from '@services/CacheService';
@@ -172,6 +175,12 @@ class Database {
    */
   hasCache(): boolean {
     return this.restoredFromCache;
+  }
+
+  /** 初回ファイル読込後のプロファイル状態とスキーマ版を確定する */
+  async finalizeInitialLoad(): Promise<void> {
+    ProfileService.ensureDefaultAndActive();
+    await setSchemaVersionToDb(getSystemDbAdapter(), SCHEMA_VERSION);
   }
 
   /**

@@ -12,8 +12,8 @@
  * - 少なくとも1つのプロファイルに値が必要
  */
 import { useState, useEffect, useMemo } from 'react';
-import { useTranslation, DEFAULT_VARIABLE_ICON } from '@cliptap/shared';
-import { useProfiles, useVariables, UI_SYSTEM_VARIABLES, INPUT_LIMITS } from '@cliptap/shared';
+import { useTranslation, DEFAULT_VARIABLE_ICON, isReservedVariableName, translateError } from '@cliptap/shared';
+import { useProfiles, useVariables, INPUT_LIMITS } from '@cliptap/shared';
 import type { VariableIconName } from '@cliptap/shared';
 import { useUnsavedChangesWarning } from '@hooks/useUnsavedChangesWarning';
 import { useBodyScrollLock } from '@hooks/useBodyScrollLock';
@@ -114,7 +114,11 @@ export function VariableEditModal({ isOpen, variableId, onClose }: VariableEditM
   const validateName = (): string => {
     if (!name.trim()) return t('error.variable_name_required');
 
-    if (UI_SYSTEM_VARIABLES.some(sv => sv.name === name.trim())) {
+    if (name.trim().length > INPUT_LIMITS.VARIABLE_NAME_MAX) {
+      return t('error.variable_name_too_long', { max: INPUT_LIMITS.VARIABLE_NAME_MAX });
+    }
+
+    if (isReservedVariableName(name.trim())) {
       return t('error.variable_name_reserved', { name: name.trim() });
     }
 
@@ -198,11 +202,7 @@ export function VariableEditModal({ isOpen, variableId, onClose }: VariableEditM
 
       onClose();
     } catch (err) {
-      if (err instanceof Error && err.message.includes('already exists')) {
-        setError(t('error.variable_name_exists', { name: name.trim() }));
-      } else {
-        setError(t('error.generic'));
-      }
+      setError(translateError(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -281,7 +281,7 @@ export function VariableEditModal({ isOpen, variableId, onClose }: VariableEditM
             {/* 表示ラベル入力（オプション） + アイコン選択 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-[#A0A0A0] mb-2">
-                {t('settings.variable_label')}
+                {t('settings.variable_label')} ({label.length}/{INPUT_LIMITS.VARIABLE_LABEL_MAX})
               </label>
               {/* アイコン選択ボタン + ラベル入力のフレックスコンテナ */}
               <div className="flex items-center gap-3">
@@ -300,6 +300,7 @@ export function VariableEditModal({ isOpen, variableId, onClose }: VariableEditM
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
                   placeholder={t('settings.variable_label_placeholder')}
+                  maxLength={INPUT_LIMITS.VARIABLE_LABEL_MAX}
                   className="flex-1 px-4 py-3 border border-gray-300 dark:border-[#2A2A2A] rounded-xl focus:outline-none bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#707070]"
                 />
               </div>

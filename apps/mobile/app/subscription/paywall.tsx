@@ -77,14 +77,6 @@ export default function PaywallScreen() {
 
         <View style={styles.featuresSection}>
           <FeatureItem
-            icon="keypad-outline"
-            title={t('subscription.feature_keyboard_extension')}
-            description={t('subscription.feature_keyboard_extension_desc')}
-            colors={colors}
-            responsiveFontSizes={responsiveFontSizes}
-            responsiveLineHeights={responsiveLineHeights}
-          />
-          <FeatureItem
             icon="close-circle-outline"
             title={t('subscription.feature_no_ads')}
             description={t('subscription.feature_no_ads_desc')}

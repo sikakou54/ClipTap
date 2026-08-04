@@ -8,10 +8,9 @@
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
     "paths": {
-      "@cliptap/shared": ["packages/shared/src/index.ts"],
-      "@cliptap/shared/*": ["packages/shared/src/*"]
+      "@cliptap/shared": ["./packages/shared/src/index.ts"],
+      "@cliptap/shared/*": ["./packages/shared/src/*"]
     }
   }
 }

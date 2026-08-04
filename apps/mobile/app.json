@@ -105,8 +105,7 @@
       "expo-asset"
     ],
     "updates": {
-      "enabled": true,
-      "url": "https://u.expo.dev/[your-project-id]"
+      "enabled": false
     },
     "extra": {
       "eas": {

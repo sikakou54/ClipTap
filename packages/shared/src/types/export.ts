@@ -165,7 +165,7 @@ export type ImportCandidates = z.infer<typeof ImportCandidatesSchema>;
  * - s: スキーマバージョン（互換性チェック）
  * - t: タイムスタンプ（ISO 8601）
  * - h: パスワードハッシュ（SHA-256）
- * - d: 暗号化されたデータ（JSON文字列）
+ * - d: 二重Base64で符号化されたSQLiteデータ（暗号化ではない）
  * - c: チェックサム（SHA-256、改竄検知）
  */
 export const ClipTapExportDataSchema = z.object({

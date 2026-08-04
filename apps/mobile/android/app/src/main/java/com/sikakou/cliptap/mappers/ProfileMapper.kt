@@ -56,7 +56,7 @@ class ProfileMapper private constructor(context: Context) : BaseMapper(context) 
             }
         }
 
-        Log.d(TAG, "Loaded ${profiles.size} profiles")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Loaded ${profiles.size} profiles")
         return profiles
     }
 
@@ -161,52 +161,7 @@ class ProfileMapper private constructor(context: Context) : BaseMapper(context) 
         // 指定されたプロファイルをアクティブにする
         db.execSQL("UPDATE profiles SET isActive = 1 WHERE id = ?", arrayOf(id))
 
-        Log.d(TAG, "Set profile $id as active")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Set profile $id as active")
     }
 
-    /**
-     * validフラグを更新（サブスクリプション状態に応じて）
-     *
-     * 処理内容：
-     * 1. すべてのプロファイルのvalidを0にする
-     * 2. デフォルトプロファイルを優先し、sortOrder順でlimit件を有効化
-     *
-     * @param limit 有効にする最大プロファイル数（無料プランは3、デフォルト込み）
-     */
-    fun updateValidFlags(limit: Int) {
-        Log.d(TAG, "🔄 updateValidFlags called with limit: $limit")
-
-        val db = getDb()
-
-        try {
-            db.beginTransaction()
-
-            /* 1. すべて無効にする */
-            db.execSQL("UPDATE profiles SET valid = 0")
-            Log.d(TAG, "✅ Set all profiles to invalid")
-
-            /* 2. デフォルトプロファイルを優先し、sortOrder順でlimit件を有効化 */
-            db.execSQL(
-                """
-                UPDATE profiles
-                SET valid = 1
-                WHERE id IN (
-                    SELECT id FROM profiles
-                    ORDER BY isDefault DESC, sortOrder ASC
-                    LIMIT ?
-                )
-                """,
-                arrayOf(limit)
-            )
-            Log.d(TAG, "✅ Set $limit profiles to valid (default first)")
-
-            db.setTransactionSuccessful()
-            Log.d(TAG, "✅ updateValidFlags completed successfully")
-
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ updateValidFlags failed", e)
-        } finally {
-            db.endTransaction()
-        }
-    }
 }

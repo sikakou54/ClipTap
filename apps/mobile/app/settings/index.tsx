@@ -61,8 +61,6 @@ export default function SettingsScreen() {
 
     handleDevSubscriptionToggle,
     handleResetDatabase,
-    handleDeleteDatabase,
-    handleChangeSchemaVersion,
   } = useSettingsScreen();
 
   /* 設定画面 */
@@ -132,8 +130,6 @@ export default function SettingsScreen() {
           <DeveloperMenu
             onSubscriptionToggle={handleDevSubscriptionToggle}
             onResetDatabase={handleResetDatabase}
-            onDeleteDatabase={handleDeleteDatabase}
-            onChangeSchemaVersion={handleChangeSchemaVersion}
           />
         )}
       </ScrollView>

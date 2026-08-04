@@ -2,6 +2,7 @@ package com.sikakou.cliptap.services
 
 import android.content.Context
 import com.sikakou.cliptap.mappers.VariableMapper
+import com.sikakou.cliptap.mappers.ProfileMapper
 
 /**
  * 変数管理サービス
@@ -28,6 +29,7 @@ import com.sikakou.cliptap.mappers.VariableMapper
 class VariableService private constructor(private val context: Context) {
 
     private val variableMapper = VariableMapper.getInstance(context)
+    private val profileMapper = ProfileMapper.getInstance(context)
 
     companion object {
         @Volatile
@@ -64,6 +66,15 @@ class VariableService private constructor(private val context: Context) {
      * // スニペットの変数置換時に使用
      */
     fun getVariablesMap(profileId: String): Map<String, String> {
-        return variableMapper.getVariablesMap(profileId)
+        val merged = mutableMapOf<String, String>()
+        profileMapper.getDefault()?.let { defaultProfile ->
+            variableMapper.getVariablesMap(defaultProfile.id)
+                .filterValues { it.isNotEmpty() }
+                .forEach { (name, value) -> merged[name] = value }
+        }
+        variableMapper.getVariablesMap(profileId)
+            .filterValues { it.isNotEmpty() }
+            .forEach { (name, value) -> merged[name] = value }
+        return merged
     }
 }
