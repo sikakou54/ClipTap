@@ -1,5 +1,6 @@
 package com.sikakou.cliptap.keyboard
 
+import android.graphics.drawable.ColorDrawable
 import android.inputmethodservice.InputMethodService
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,7 @@ import com.google.android.material.chip.ChipGroup
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ContextThemeWrapper
+import androidx.core.content.ContextCompat
 import com.sikakou.cliptap.R
 import com.sikakou.cliptap.models.Profile
 import com.sikakou.cliptap.models.Category
@@ -52,6 +54,7 @@ import com.sikakou.cliptap.utils.LocalizationHelper
 class ClipTapKeyboardService : InputMethodService() {
 
     private lateinit var keyboardView: View
+    private lateinit var mainView: View
     private lateinit var profileChipGroup: ChipGroup
     private lateinit var categoryChipGroup: ChipGroup
     private lateinit var snippetRecyclerView: RecyclerView
@@ -93,6 +96,15 @@ class ClipTapKeyboardService : InputMethodService() {
         private const val TAG = "ClipTapKeyboard"
         private const val SORT_PREFS_NAME = "ClipTapKeyboardPrefs"
         private const val SORT_PREFERENCE_KEY = "keyboard_snippet_sort_by"
+    }
+
+    /**
+     * IMEウィンドウのテーマを差し替える
+     * InputMethodService.setThemeはウィンドウ生成前にしか呼べないため、super.onCreate()より前に呼ぶ
+     */
+    override fun onCreate() {
+        setTheme(R.style.ClipTapKeyboardWindowTheme)
+        super.onCreate()
     }
 
     /**
@@ -191,6 +203,7 @@ class ClipTapKeyboardService : InputMethodService() {
     private fun initializeViews() {
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "🔧 initializeViews started")
 
+        mainView = keyboardView.findViewById(R.id.mainView)
         profileChipGroup = keyboardView.findViewById(R.id.profileChipGroup)
         categoryChipGroup = keyboardView.findViewById(R.id.categoryChipGroup)
         snippetRecyclerView = keyboardView.findViewById(R.id.snippetRecyclerView)
@@ -719,6 +732,7 @@ class ClipTapKeyboardService : InputMethodService() {
         detailContentLabel.text = replacedContent
 
         // 詳細画面を表示（フェードインアニメーション）
+        mainView.visibility = View.GONE
         detailView.visibility = View.VISIBLE
         detailView.alpha = 0f
         detailView.animate()
@@ -751,6 +765,7 @@ class ClipTapKeyboardService : InputMethodService() {
             .setDuration(200)
             .withEndAction {
                 detailView.visibility = View.GONE
+                mainView.visibility = View.VISIBLE
                 selectedSnippet = null
             }
             .start()
@@ -795,6 +810,7 @@ class ClipTapKeyboardService : InputMethodService() {
 
     override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
+        applyWindowBackground()
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "============================================================")
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "👁️ onStartInputView CALLED")
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "   restarting: $restarting")
@@ -812,6 +828,15 @@ class ClipTapKeyboardService : InputMethodService() {
             if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "   keyboardView measuredHeight: ${keyboardView.measuredHeight}")
             if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "   keyboardView width: ${keyboardView.width}")
         }
+    }
+
+    /**
+     * IMEウィンドウの背景を現在の設定（ライト/ダーク）で再適用する
+     * ウィンドウは1度しか生成されないため、表示のたびに適用して切替に追従させる
+     */
+    private fun applyWindowBackground() {
+        val color = ContextCompat.getColor(this, R.color.keyboardWindowBackground)
+        window?.window?.setBackgroundDrawable(ColorDrawable(color))
     }
 
     override fun onDestroy() {

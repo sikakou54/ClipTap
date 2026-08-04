@@ -41,6 +41,13 @@ let keyboardLog = OSLog.disabled
 /// UIInputViewControllerを継承することで、iOSのカスタムキーボード機能を実装できます
 class KeyboardViewController: UIInputViewController {
 
+    private enum ScreenState {
+        case loading
+        case list
+        case detail
+        case settings
+    }
+
     // MARK: - Services（サービス層：ビジネスロジックを担当）
     // 3層アーキテクチャを採用: UI層（ViewController） → ビジネスロジック層（Service） → データアクセス層（Mapper）
     // これにより、コードの見通しが良くなり、テストもしやすくなります
@@ -102,6 +109,9 @@ class KeyboardViewController: UIInputViewController {
     /// 値: "created" | "updated" | "title" | "usage"
     private var currentSortBy: String = "created"
 
+    /// 現在表示している画面
+    private var screenState: ScreenState = .list
+
     /// ソート設定を保存するUserDefaultsキー
     private let sortPreferenceKey = "keyboard_snippet_sort_by"
 
@@ -133,9 +143,7 @@ class KeyboardViewController: UIInputViewController {
         button.contentHorizontalAlignment = .left
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 28)  // 右側にシェブロン用のスペースを確保
         button.layer.cornerRadius = 16
-        button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.systemGray.cgColor
-        button.backgroundColor = .systemGray6
+        button.backgroundColor = .secondarySystemFill
         button.setTitleColor(.label, for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
 
@@ -161,9 +169,7 @@ class KeyboardViewController: UIInputViewController {
         button.contentHorizontalAlignment = .left
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 28)
         button.layer.cornerRadius = 16
-        button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.systemGray.cgColor
-        button.backgroundColor = .systemGray6
+        button.backgroundColor = .secondarySystemFill
         button.setTitleColor(.label, for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -187,7 +193,7 @@ class KeyboardViewController: UIInputViewController {
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         let image = UIImage(systemName: "arrow.up.arrow.down", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = .secondaryLabel
+        button.tintColor = .label
         button.backgroundColor = .clear
         button.translatesAutoresizingMaskIntoConstraints = false
         button.showsMenuAsPrimaryAction = true
@@ -213,7 +219,7 @@ class KeyboardViewController: UIInputViewController {
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         let image = UIImage(systemName: "gearshape", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = .secondaryLabel
+        button.tintColor = .label
         button.backgroundColor = .clear
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -231,7 +237,7 @@ class KeyboardViewController: UIInputViewController {
     /// 各行をタップすると、詳細画面（プレビュー）が表示されます
     private let tableView: UITableView = {
         let tv = UITableView()
-        tv.backgroundColor = .systemGroupedBackground  // iOS標準のグループ化された背景色
+        tv.backgroundColor = .clear
         tv.translatesAutoresizingMaskIntoConstraints = false
         return tv
     }()
@@ -243,7 +249,7 @@ class KeyboardViewController: UIInputViewController {
     /// 初期状態では非表示（isHidden = true）
     private let detailView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground  // システム標準の背景色（ライト/ダークモード対応）
+        view.backgroundColor = .clear
         view.translatesAutoresizingMaskIntoConstraints = false
         view.isHidden = true  // 最初は非表示
         return view
@@ -320,7 +326,7 @@ class KeyboardViewController: UIInputViewController {
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         let image = UIImage(systemName: "xmark", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.backgroundColor = .systemGray5  // 薄いグレーの背景
+        button.backgroundColor = .secondarySystemFill
         button.tintColor = .label  // システム標準のテキスト色
         button.layer.cornerRadius = 20  // 丸ボタン
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -349,7 +355,7 @@ class KeyboardViewController: UIInputViewController {
     /// ローディング画面全体を包むビュー
     private let loadingView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .clear
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -378,7 +384,7 @@ class KeyboardViewController: UIInputViewController {
     /// 設定画面全体を包むビュー（全画面表示）
     private let settingsView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .clear
         view.translatesAutoresizingMaskIntoConstraints = false
         view.isHidden = true
         return view
@@ -387,7 +393,7 @@ class KeyboardViewController: UIInputViewController {
     /// 設定画面のヘッダービュー
     private let settingsHeaderView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .clear
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -407,7 +413,7 @@ class KeyboardViewController: UIInputViewController {
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         let image = UIImage(systemName: "xmark", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.backgroundColor = .systemGray5
+        button.backgroundColor = .secondarySystemFill
         button.tintColor = .label
         button.layer.cornerRadius = 15
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -417,7 +423,7 @@ class KeyboardViewController: UIInputViewController {
     /// 使用頻度スイッチの行コンテナ
     private let usageTrackingRowView: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemBackground
+        view.backgroundColor = .tertiarySystemFill
         view.layer.cornerRadius = 10
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
@@ -453,7 +459,7 @@ class KeyboardViewController: UIInputViewController {
     private let fullAccessInstructionsLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12)
-        label.textColor = .tertiaryLabel
+        label.textColor = .secondaryLabel
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
@@ -477,7 +483,7 @@ class KeyboardViewController: UIInputViewController {
         KeyboardLog.debug("🎯🎯🎯 [KeyboardViewController] viewDidLoad CALLED 🎯🎯🎯")
         KeyboardLog.debug("============================================================")
 
-        view.backgroundColor = .systemBackground  // 背景色を設定
+        applySystemKeyboardBackground()
 
         /* フルアクセス状態をApp Group UserDefaultsに保存（メインアプリと共有） */
         saveFullAccessState()
@@ -530,10 +536,65 @@ class KeyboardViewController: UIInputViewController {
         heightConstraint.priority = .required
         view.addConstraint(heightConstraint)
 
+        applyHostKeyboardAppearance()
+
         // キーボードが表示される度に全データをリフレッシュ
         // これにより、メインアプリでの変更がキーボードにも即座に反映されます
         KeyboardLog.debug("🔄 [KeyboardViewController] viewWillAppear - Refreshing all data...")
         refreshAllData()
+    }
+
+    override func textDidChange(_ textInput: UITextInput?) {
+        super.textDidChange(textInput)
+        applyHostKeyboardAppearance()
+    }
+
+    /**
+     * OS標準キーボードの背景を適用する
+     *
+     * 独自の背景色を持たず、OSがキーボードに使う背景素材をそのまま使う。
+     * ルートビューがkeyboardスタイルのUIInputViewでない場合だけ、背面に
+     * UIInputViewを追加してキーボード素材を確実に描画する。
+     */
+    private func applySystemKeyboardBackground() {
+        view.backgroundColor = nil
+
+        if let inputView = view as? UIInputView, inputView.inputViewStyle == .keyboard {
+            KeyboardLog.debug("🎨 [Background] Root is UIInputView(.keyboard) - use system material as-is")
+            return
+        }
+
+        KeyboardLog.debug("🎨 [Background] Root is %@ - insert UIInputView backdrop",
+                          String(describing: type(of: view!)))
+        let backdrop = UIInputView(frame: .zero, inputViewStyle: .keyboard)
+        backdrop.translatesAutoresizingMaskIntoConstraints = false
+        view.insertSubview(backdrop, at: 0)
+        NSLayoutConstraint.activate([
+            backdrop.topAnchor.constraint(equalTo: view.topAnchor),
+            backdrop.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backdrop.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            backdrop.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+    }
+
+    /** 入力先アプリが要求するキーボード外観をビューとメニューへ反映する */
+    private func applyHostKeyboardAppearance() {
+        let style: UIUserInterfaceStyle
+        switch textDocumentProxy.keyboardAppearance {
+        case .dark:
+            style = .dark
+        case .light:
+            style = .light
+        default:
+            style = .unspecified
+        }
+
+        if view.overrideUserInterfaceStyle != style {
+            view.overrideUserInterfaceStyle = style
+        }
+        if let window = view.window, window.overrideUserInterfaceStyle != style {
+            window.overrideUserInterfaceStyle = style
+        }
     }
 
     // MARK: - Data Loading（データ読み込み処理）
@@ -864,6 +925,8 @@ class KeyboardViewController: UIInputViewController {
             fullAccessInstructionsLabel.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor, constant: 16),
             fullAccessInstructionsLabel.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor, constant: -16)
         ])
+
+        applyScreenState()
     }
 
     private func loadInitialData() {
@@ -941,7 +1004,6 @@ class KeyboardViewController: UIInputViewController {
 
             // 多言語対応: "エラー: データの読み込みに失敗しました" / "Failed to load data"
             self.emptyLabel.text = L10n.Error.loadFailed
-            self.emptyLabel.isHidden = false
         }
     }
 
@@ -1143,10 +1205,22 @@ class KeyboardViewController: UIInputViewController {
     }
 
     private func updateEmptyState() {
-        let isEmpty = filteredSnippets.isEmpty
-        emptyLabel.isHidden = !isEmpty
-        tableView.isHidden = isEmpty
+        applyScreenState()
         /* 注意: tableView.reloadData() は reloadSnippets() でメインスレッドで直接呼び出すため、ここでは呼ばない */
+    }
+
+    /** 現在の画面状態に応じて、一覧と全画面ビューを排他的に表示する */
+    private func applyScreenState() {
+        let isList = screenState == .list
+        let isEmpty = filteredSnippets.isEmpty
+
+        filterContainerView.isHidden = !isList
+        tableView.isHidden = !isList || isEmpty
+        emptyLabel.isHidden = !isList || !isEmpty
+
+        detailView.isHidden = screenState != .detail
+        loadingView.isHidden = screenState != .loading
+        settingsView.isHidden = screenState != .settings
     }
 
     /// スニペットの詳細画面（プレビュー）を表示
@@ -1200,9 +1274,8 @@ class KeyboardViewController: UIInputViewController {
         detailContentLabel.text = preview
 
         // アニメーションで詳細画面を表示
-        detailView.isHidden = false  // 詳細画面を表示
-        tableView.isHidden = true     // スニペット一覧を非表示
-        emptyLabel.isHidden = true    // 空状態メッセージを非表示
+        screenState = .detail
+        applyScreenState()
 
         // フェードインアニメーション（0.2秒かけて透明→不透明）
         detailView.alpha = 0
@@ -1223,9 +1296,10 @@ class KeyboardViewController: UIInputViewController {
             self.detailView.alpha = 0
         }) { _ in
             // アニメーション完了後の処理
-            self.detailView.isHidden = true  // 詳細画面を非表示
-            self.tableView.isHidden = self.filteredSnippets.isEmpty  // スニペット一覧を表示（空なら非表示）
-            self.emptyLabel.isHidden = !self.filteredSnippets.isEmpty  // 空状態メッセージの表示/非表示
+            if self.screenState == .detail {
+                self.screenState = .list
+                self.applyScreenState()
+            }
             self.selectedSnippet = nil  // 選択解除
         }
     }
@@ -1451,13 +1525,15 @@ class KeyboardViewController: UIInputViewController {
         usageTrackingLabel.textColor = self.hasFullAccess ? .label : .secondaryLabel
 
         // 設定画面を表示
-        settingsView.isHidden = false
+        screenState = .settings
+        applyScreenState()
     }
 
     /// 設定画面を閉じる
     @objc private func closeSettingsView() {
         KeyboardLog.debug("⚙️ [Settings] Closing settings view")
-        settingsView.isHidden = true
+        screenState = .list
+        applyScreenState()
     }
 
     /// 使用頻度スイッチが変更された時のアクション
@@ -1500,6 +1576,13 @@ extension KeyboardViewController: UITableViewDataSource {
         config.textProperties.font = .systemFont(ofSize: 15)
         cell.contentConfiguration = config
         cell.accessoryType = .disclosureIndicator
+        cell.backgroundColor = .clear
+
+        if cell.selectedBackgroundView == nil {
+            let selectedBackground = UIView()
+            selectedBackground.backgroundColor = .secondarySystemFill
+            cell.selectedBackgroundView = selectedBackground
+        }
 
         return cell
     }
@@ -1523,14 +1606,18 @@ extension KeyboardViewController: UITableViewDelegate {
     /// ローディング画面を表示
     /// データ読み込み開始時に呼び出されます
     private func showLoading() {
-        loadingView.isHidden = false
+        screenState = .loading
+        applyScreenState()
         activityIndicator.startAnimating()
     }
 
     /// ローディング画面を非表示
     /// データ読み込み完了時に呼び出されます
     private func hideLoading() {
-        loadingView.isHidden = true
+        if screenState == .loading {
+            screenState = .list
+            applyScreenState()
+        }
         activityIndicator.stopAnimating()
     }
 
