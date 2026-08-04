@@ -16,7 +16,13 @@
  * @module database
  */
 
-import { Logger, getMainDbAdapter, getSystemDbAdapter, getFileIOAdapter } from '@cliptap/shared';
+import {
+  Logger,
+  SystemVariableFormatMapper,
+  getFileIOAdapter,
+  getMainDbAdapter,
+  getSystemDbAdapter,
+} from '@cliptap/shared';
 import { SQLiteWasm } from '@src/mappers/sqliteWasm';
 import { CacheService } from '@services/CacheService';
 import type { WebDatabaseAdapter } from '@adapters/WebDatabaseAdapter';
@@ -139,6 +145,8 @@ class Database {
       } else {
         Logger.info('[Database] Database opened (waiting for .cliptap file import)');
       }
+
+      SystemVariableFormatMapper.loadRegistry();
 
       /* 7. 初期化完了 */
       this.isInitialized = true;

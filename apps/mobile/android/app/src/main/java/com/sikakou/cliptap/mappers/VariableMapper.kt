@@ -1,7 +1,6 @@
 package com.sikakou.cliptap.mappers
 
 import android.content.Context
-import com.sikakou.cliptap.models.Variable
 import android.util.Log
 
 /**
@@ -50,41 +49,6 @@ class VariableMapper private constructor(context: Context) : BaseMapper(context)
 
         Log.d(TAG, "Loaded ${variablesMap.size} variables for profile: $profileId")
         return variablesMap
-    }
-
-    /**
-     * 全変数を取得
-     */
-    fun getAll(): List<Variable> {
-        val variables = mutableListOf<Variable>()
-
-        val query = """
-            SELECT id, name, type, defaultValue, valid, sortOrder, createdAt, updatedAt
-            FROM variables
-            WHERE valid = 1
-            ORDER BY sortOrder ASC
-        """
-
-        val cursor = executeQuery(query)
-        cursor.use {
-            while (it.moveToNext()) {
-                variables.add(
-                    Variable(
-                        id = it.getString(0),
-                        name = it.getString(1),
-                        type = it.getString(2),
-                        defaultValue = it.getStringOrNull(3),
-                        valid = it.getBoolean(4),
-                        sortOrder = it.getInt(5),
-                        createdAt = it.getString(6),
-                        updatedAt = it.getString(7)
-                    )
-                )
-            }
-        }
-
-        Log.d(TAG, "Loaded ${variables.size} variables")
-        return variables
     }
 
     /**

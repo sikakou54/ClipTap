@@ -21,6 +21,7 @@ import {
   createDefaultProfileIfNeeded,
   createTablesWithDb,
   createIndexesWithDb,
+  SystemVariableFormatMapper,
 } from '@cliptap/shared';
 import { DROP_TABLES, SCHEMA_VERSION } from './schema';
 import {
@@ -136,6 +137,9 @@ class Database {
       const dbPath = await this.getDatabaseFilePath('main');
       const mainDbAdapter = getMainDbAdapter();
       await mainDbAdapter.open(dbPath);
+
+      /* 同期展開用の書式レジストリをDBから初期化 */
+      SystemVariableFormatMapper.loadRegistry();
 
       /* 6. 初期化完了フラグを立てる */
       this.isInitialized = true;

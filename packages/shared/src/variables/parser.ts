@@ -16,6 +16,7 @@
  */
 
 import { resolveSystemVariableValue, normalizeLocale } from './systemVariables';
+import type { SystemVariableFormats } from '../constants/systemVariableFormats';
 
 /**
  * カスタム変数リゾルバ型
@@ -149,9 +150,10 @@ export const replaceVariables = async (
     locale?: string;
     customResolver?: VariableResolver;
     preserveUnknown?: boolean;
+    formats?: SystemVariableFormats;
   } = {}
 ): Promise<string> => {
-  const { locale = 'en', customResolver, preserveUnknown = false } = options;
+  const { locale = 'en', customResolver, preserveUnknown = false, formats } = options;
   const normalizedLocale = normalizeLocale(locale);
   const matches = [...text.matchAll(new RegExp(VARIABLE_PATTERN))];
 
@@ -163,7 +165,12 @@ export const replaceVariables = async (
     const token = match[0];
     const variableName = match[1]?.trim() ?? '';
 
-    let replacement: string | null | undefined = resolveSystemVariableValue(variableName, normalizedLocale);
+    let replacement: string | null | undefined = resolveSystemVariableValue(
+      variableName,
+      normalizedLocale,
+      new Date(),
+      formats
+    );
 
     if ((replacement === null || replacement === undefined) && customResolver) {
       const resolved = customResolver(variableName);
@@ -183,4 +190,3 @@ export const replaceVariables = async (
 
   return result;
 };
-

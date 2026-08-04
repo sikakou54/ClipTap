@@ -6,6 +6,7 @@ import android.os.Vibrator
 import android.util.Log
 import android.view.inputmethod.InputConnection
 import com.sikakou.cliptap.mappers.SnippetMapper
+import com.sikakou.cliptap.mappers.SystemVariableFormatMapper
 import com.sikakou.cliptap.models.Snippet
 import com.sikakou.cliptap.utils.VariableReplacer
 
@@ -33,6 +34,7 @@ class SnippetService private constructor(private val context: Context) {
 
     private val snippetMapper = SnippetMapper.getInstance(context)
     private val variableReplacer = VariableReplacer()
+    private val systemVariableFormatMapper = SystemVariableFormatMapper.getInstance(context)
 
     companion object {
         private const val TAG = "SnippetService"
@@ -119,7 +121,7 @@ class SnippetService private constructor(private val context: Context) {
      * → "こんにちは、田中さん"
      */
     fun replaceVariables(text: String, variablesMap: Map<String, String> = emptyMap()): String {
-        return variableReplacer.replace(text, variablesMap)
+        return variableReplacer.replace(text, variablesMap, systemVariableFormatMapper.getAll())
     }
 
     /**
@@ -148,15 +150,16 @@ class SnippetService private constructor(private val context: Context) {
         inputConnection: InputConnection,
         variablesMap: Map<String, String> = emptyMap()
     ) {
+        val formats = systemVariableFormatMapper.getAll()
         // タイトルの処理
         val title = if (snippet.copyWithTitle && snippet.title != null) {
-            variableReplacer.replace(snippet.title, variablesMap) + "\n"
+            variableReplacer.replace(snippet.title, variablesMap, formats) + "\n"
         } else {
             ""
         }
 
         // 本文の変数置換
-        val content = variableReplacer.replace(snippet.content, variablesMap)
+        val content = variableReplacer.replace(snippet.content, variablesMap, formats)
 
         /* テキストを挿入 */
         val textToInsert = title + content

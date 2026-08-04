@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sikakou.cliptap.R
 import com.sikakou.cliptap.models.Snippet
+import com.sikakou.cliptap.mappers.SystemVariableFormatMapper
 import com.sikakou.cliptap.utils.VariableReplacer
 
 /**
@@ -44,7 +45,8 @@ class SnippetAdapter(
         fun bind(snippet: Snippet) {
             // タイトルを変数置換する
             val rawTitle = snippet.title ?: "(タイトルなし)"
-            val replacedTitle = variableReplacer.replace(rawTitle, variablesMap)
+            val formats = SystemVariableFormatMapper.getInstance(itemView.context).getAll()
+            val replacedTitle = variableReplacer.replace(rawTitle, variablesMap, formats)
             titleTextView.text = replacedTitle
             itemView.setOnClickListener {
                 onSnippetClick(snippet)

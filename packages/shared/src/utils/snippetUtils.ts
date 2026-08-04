@@ -8,6 +8,7 @@
 
 import type { Snippet } from '../schema';
 import * as VariableParser from '../variables/parser';
+import { SystemVariableFormatRegistry } from '../services/SystemVariableFormatRegistry';
 
 /**
  * スニペットをクリップボードにコピーする際のオプション
@@ -49,13 +50,14 @@ export const prepareSnippetForClipboard = async ({
 
   /* 変数展開が有効な場合、本文とタイトル内の変数を展開 */
   if (shouldReplaceVariables) {
+    const formats = SystemVariableFormatRegistry.getAll();
     /* 本文に変数が含まれている場合は展開 */
     if (VariableParser.hasVariables(content)) {
-      content = await VariableParser.replaceVariables(content, { customResolver, locale });
+      content = await VariableParser.replaceVariables(content, { customResolver, locale, formats });
     }
     /* タイトルに変数が含まれている場合は展開 */
     if (title && VariableParser.hasVariables(title)) {
-      title = await VariableParser.replaceVariables(title, { customResolver, locale });
+      title = await VariableParser.replaceVariables(title, { customResolver, locale, formats });
     }
   }
 

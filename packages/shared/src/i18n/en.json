@@ -344,7 +344,8 @@
     "purchase_cancelled": "Purchase cancelled",
     "processing": "Processing...",
     "locked_feature": "This feature is Pro-only",
-    "unlock_now": "Unlock Now"
+    "unlock_now": "Unlock Now",
+    "system_variable_formats": "System Variable Formats"
   },
   "export_import": {
     "title": "Import / Export",
@@ -371,7 +372,9 @@
     "export_completed": "Export completed",
     "password_required": "Please enter a password",
     "password_title": "Set Password",
-    "password_description": "Set a password to protect the export file"
+    "password_description": "Set a password to protect the export file",
+    "restore_includes_formats": "System variable formats will also be restored",
+    "partial_excludes_formats": "System variable formats are not changed"
   },
   "auth": {
     "welcome_message": "Sign in to sync your data",
@@ -414,6 +417,13 @@
     "environment_values_hint_1": "*You can set different values for each profile.",
     "environment_values_hint_2": "*If no value is entered, the default value will be used.",
     "environment_header": "Profile",
-    "value_header": "Value"
+    "value_header": "Value",
+    "format": "Format",
+    "format_desc": "Format changes apply to every snippet using this variable.",
+    "format_default": "Default",
+    "format_reset_all": "Reset all to default",
+    "format_reset_all_confirm": "Reset all system variable formats to default?",
+    "format_usage_count": "Used by {{count}} snippet(s)",
+    "format_changed": "Format updated"
   }
 }

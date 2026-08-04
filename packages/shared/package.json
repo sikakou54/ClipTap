@@ -11,7 +11,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "type-check": "tsc --noEmit",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

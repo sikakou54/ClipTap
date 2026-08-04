@@ -93,6 +93,7 @@ class KeyboardViewController: UIInputViewController {
     /// カスタム変数のマップ（変数名 → 値の辞書）
     /// 例: ["client_name": "田中", "company_name": "株式会社○○"]
     private var variablesMap: [String: String] = [:]
+    private var systemVariableFormats: [String: String] = [:]
 
     /// 詳細画面で表示中のスニペット
     /// ユーザーがスニペットをタップすると、このプロパティに保存されます
@@ -581,6 +582,12 @@ class KeyboardViewController: UIInputViewController {
             // データベースが初期化されているか確認
             try Database.shared.initialize()
 
+            // 変数値と書式設定は表示のたびに再読込する
+            systemVariableFormats = SystemVariableFormatMapper.shared.getAll()
+            if let profileId = currentProfile?.id {
+                variablesMap = variableService.getVariablesMap(for: profileId)
+            }
+
             // プロファイルを再読み込み
             NSLog("🔄 [Refresh] Loading profiles...")
             let newProfiles = profileService.getAllProfiles()
@@ -602,6 +609,10 @@ class KeyboardViewController: UIInputViewController {
                 }
             } else {
                 NSLog("✓ [Refresh] Profiles unchanged: %d profiles", profiles.count)
+            }
+
+            if let profileId = currentProfile?.id {
+                variablesMap = variableService.getVariablesMap(for: profileId)
             }
 
             // カテゴリを再読み込み
@@ -891,6 +902,7 @@ class KeyboardViewController: UIInputViewController {
             os_log("📦 Initializing database...", log: keyboardLog, type: .info)
             NSLog("📦 [KeyboardViewController] Initializing database...")
             try Database.shared.initialize()
+            self.systemVariableFormats = SystemVariableFormatMapper.shared.getAll()
             os_log("✅ Database initialized successfully", log: keyboardLog, type: .info)
             NSLog("✅ [KeyboardViewController] Database initialized successfully")
 
@@ -918,6 +930,7 @@ class KeyboardViewController: UIInputViewController {
                 os_log("📦 Loading variables for profile...", log: keyboardLog, type: .info)
                 NSLog("📦 [KeyboardViewController] Loading variables for profile...")
                 self.variablesMap = variableService.getVariablesMap(for: firstProfile.id)
+                self.systemVariableFormats = SystemVariableFormatMapper.shared.getAll()
                 os_log("✅ Loaded %d variables", log: keyboardLog, type: .info, self.variablesMap.count)
                 NSLog("✅ [KeyboardViewController] Loaded %d variables", self.variablesMap.count)
             }
@@ -1075,6 +1088,7 @@ class KeyboardViewController: UIInputViewController {
 
         // プロファイル切り替え時に変数を再読み込み
         variablesMap = variableService.getVariablesMap(for: profile.id)
+        systemVariableFormats = SystemVariableFormatMapper.shared.getAll()
         NSLog("✅ [KeyboardViewController] Reloaded %d variables for profile: %@", variablesMap.count, profile.name)
 
         reloadSnippets()
@@ -1201,7 +1215,11 @@ class KeyboardViewController: UIInputViewController {
         if snippet.copyWithTitle {
             // タイトルを変数置換して表示
             let rawTitle = snippet.title ?? "（タイトルなし）"
-            let replacedTitle = variableReplacer.replace(in: rawTitle, variablesMap: variablesMap)
+            let replacedTitle = variableReplacer.replace(
+                in: rawTitle,
+                variablesMap: variablesMap,
+                formats: systemVariableFormats
+            )
             detailTitleLabel.text = replacedTitle
             detailTitleLabel.isHidden = false
         } else {
@@ -1210,7 +1228,11 @@ class KeyboardViewController: UIInputViewController {
         }
 
         // 内容を変数置換（{{today}} → 2025/11/17など）
-        let preview = variableReplacer.replace(in: snippet.content, variablesMap: variablesMap)
+        let preview = variableReplacer.replace(
+            in: snippet.content,
+            variablesMap: variablesMap,
+            formats: systemVariableFormats
+        )
         detailContentLabel.text = preview
 
         // アニメーションで詳細画面を表示
@@ -1506,7 +1528,11 @@ extension KeyboardViewController: UITableViewDataSource {
 
         // タイトルを変数置換する
         let rawTitle = snippet.title ?? "（タイトルなし）"
-        let replacedTitle = variableReplacer.replace(in: rawTitle, variablesMap: variablesMap)
+        let replacedTitle = variableReplacer.replace(
+            in: rawTitle,
+            variablesMap: variablesMap,
+            formats: systemVariableFormats
+        )
 
         config.text = replacedTitle
         config.textProperties.font = .systemFont(ofSize: 15)

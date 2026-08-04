@@ -29,6 +29,8 @@ export default function SettingsLayout() {
       <Stack.Screen name="profiles" />
       {/* 変数管理画面 */}
       <Stack.Screen name="variables" />
+      {/* システム変数書式管理画面 */}
+      <Stack.Screen name="system-variable-formats" />
       {/* エクスポート・インポート画面 */}
       <Stack.Screen name="export-import" />
       {/* エクスポートデータ選択モーダル */}

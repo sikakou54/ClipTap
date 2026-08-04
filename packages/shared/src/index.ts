@@ -144,6 +144,7 @@ export {
   createValidFlagsUpdater,            /* ValidFlagsUpdater共通実装ファクトリ */
   ImportService,                      /* インポートサービスクラス（静的メソッドでDB操作も提供） */
   AuthService,                        /* 認証サービス */
+  SystemVariableFormatRegistry,
 } from './services';
 
 /* エクスポートサービス */
@@ -181,12 +182,14 @@ export * from './constants/iconMapping';      // アイコンマッピング（I
 export * from './constants/themeTokens';      // テーマトークン（スペーシング、フォント、タイポグラフィ）
 export * from './constants/subscription';     // サブスクリプション定数（PRO_ENTITLEMENT_ID）
 export * from './constants/variableIcons';    // 変数アイコン定数
+export * from './constants/systemVariableFormats';
 
 /* ======================================== */
 /* Utils */
 /* ======================================== */
 /* ユーティリティ関数をエクスポート */
 export * from './utils/dateHelpers';      // 日付フォーマット関数
+export * from './utils/dateFormatter';
 export * from './utils/snippetUtils';     // スニペット関連ユーティリティ
 export * from './utils/logger';           // ロガー
 export * from './utils/pathUtils';        // パス操作ユーティリティ

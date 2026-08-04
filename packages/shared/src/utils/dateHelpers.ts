@@ -1,3 +1,5 @@
+import { formatByPattern } from './dateFormatter';
+
 /**
  * @module dateHelpers
  * @description 日付・時刻処理ユーティリティ関数（モバイル・Web共通）
@@ -34,25 +36,8 @@ export const formatDate = (
   date: Date | string,
   format: string = 'yyyy/MM/dd'
 ): string => {
-  /* 文字列の場合はDateオブジェクトに変換 */
   const d = typeof date === 'string' ? new Date(date) : date;
-
-  /* 各日時要素を取得してゼロパディング（2桁）で整形 */
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0'); // getMonth()は0-11を返すため+1
-  const day = String(d.getDate()).padStart(2, '0');
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  const seconds = String(d.getSeconds()).padStart(2, '0');
-
-  /* フォーマット文字列内のプレースホルダーを実際の値に置換 */
-  return format
-    .replace('yyyy', year.toString())
-    .replace('MM', month)
-    .replace('dd', day)
-    .replace('HH', hours)
-    .replace('mm', minutes)
-    .replace('ss', seconds);
+  return formatByPattern(d, format, 'en');
 };
 
 /**

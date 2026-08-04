@@ -281,6 +281,9 @@ export default function ExportImportScreen() {
                   <Text style={[styles.modeDescription, { color: colors.textSecondary }]}>
                     {t('backup.mode_restore_desc')}
                   </Text>
+                  <Text style={[styles.modeDescription, { color: colors.textSecondary }]}>
+                    {t('export_import.restore_includes_formats')}
+                  </Text>
                 </View>
               </TouchableOpacity>
 
@@ -295,6 +298,9 @@ export default function ExportImportScreen() {
                   <Text style={[styles.modeTitle, { color: colors.text }]}>{t('backup.mode_merge')}</Text>
                   <Text style={[styles.modeDescription, { color: colors.textSecondary }]}>
                     {t('backup.mode_merge_desc')}
+                  </Text>
+                  <Text style={[styles.modeDescription, { color: colors.textSecondary }]}>
+                    {t('export_import.partial_excludes_formats')}
                   </Text>
                 </View>
               </TouchableOpacity>

@@ -19,6 +19,7 @@ import type {
 import { NotFoundError, EmptyContentError } from '../errors';
 import { hasVariables, replaceVariables, type VariableResolver } from '../variables/parser';
 import { prepareSnippetForClipboard } from '../utils/snippetUtils';
+import { SystemVariableFormatRegistry } from './SystemVariableFormatRegistry';
 
 /**
  * スニペットサービス
@@ -212,6 +213,7 @@ export class SnippetService {
     return replaceVariables(text, {
       locale: options?.locale,
       customResolver: options?.customResolver,
+      formats: SystemVariableFormatRegistry.getAll(),
     });
   }
 
@@ -247,6 +249,7 @@ export class SnippetService {
     return replaceVariables(snippet.content, {
       locale: options?.locale,
       customResolver: options?.customResolver,
+      formats: SystemVariableFormatRegistry.getAll(),
     });
   }
 

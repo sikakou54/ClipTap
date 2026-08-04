@@ -7,7 +7,7 @@
 /**
  * データベーススキーマバージョン
  */
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 /**
  * テーブル作成SQL定義
@@ -105,6 +105,17 @@ export const CREATE_TABLES = {
       FOREIGN KEY (profileId) REFERENCES profiles(id) ON DELETE CASCADE
     );
   `,
+
+  /**
+   * システム変数の書式設定テーブル
+   */
+  systemVariableFormats: `
+    CREATE TABLE IF NOT EXISTS system_variable_formats (
+      variableKey TEXT PRIMARY KEY,
+      pattern TEXT NOT NULL,
+      updatedAt TEXT NOT NULL
+    );
+  `,
 };
 
 /**
@@ -149,6 +160,7 @@ export const CREATE_INDEXES = {
  * テーブル削除SQL定義（外部キー制約のため削除順序重要）
  */
 export const DROP_TABLES = {
+  systemVariableFormats: 'DROP TABLE IF EXISTS system_variable_formats;',
   snippetProfiles: 'DROP TABLE IF EXISTS snippet_profiles;',
   profileVariables: 'DROP TABLE IF EXISTS profile_variables;',
   profiles: 'DROP TABLE IF EXISTS profiles;',
@@ -156,4 +168,3 @@ export const DROP_TABLES = {
   snippets: 'DROP TABLE IF EXISTS snippets;',
   categories: 'DROP TABLE IF EXISTS categories;',
 };
-

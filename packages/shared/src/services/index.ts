@@ -23,3 +23,4 @@ export { createValidFlagsUpdater } from './validFlagsUpdater';
 export { AuthService } from './AuthService';
 
 export { ImportService } from './ImportService';
+export { SystemVariableFormatRegistry } from './SystemVariableFormatRegistry';

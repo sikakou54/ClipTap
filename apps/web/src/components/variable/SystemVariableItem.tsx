@@ -11,9 +11,11 @@ import type { SystemVariable } from '@hooks/screens/useVariablesScreen';
 interface SystemVariableItemProps {
   variable: SystemVariable;
   isLast: boolean;
+  preview: string;
+  onFormat: () => void;
 }
 
-export function SystemVariableItem({ variable, isLast }: SystemVariableItemProps) {
+export function SystemVariableItem({ variable, isLast, preview, onFormat }: SystemVariableItemProps) {
   const { t } = useTranslation();
 
   /* システム変数アイテム（アイコン、変数コード、説明、読み取り専用） */
@@ -38,8 +40,18 @@ export function SystemVariableItem({ variable, isLast }: SystemVariableItemProps
         <p className="font-medium text-gray-900 dark:text-white">{'{{'}{variable.name}{'}}'}</p>
         {/* 変数説明 */}
         <p className="text-sm text-gray-500 dark:text-[#707070]">{t(`variables.${variable.name}`)}</p>
+        {/* 現在の書式によるプレビュー */}
+        <p className="mt-1 text-sm font-mono text-gray-700 dark:text-[#A0A0A0]">{preview}</p>
       </div>
+
+      {/* 書式編集ボタン */}
+      <button
+        type="button"
+        onClick={onFormat}
+        className="min-h-11 min-w-11 px-3 rounded-lg border border-gray-200 dark:border-[#2A2A2A] text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+      >
+        {t('variables.format')}
+      </button>
     </div>
   );
 }
-

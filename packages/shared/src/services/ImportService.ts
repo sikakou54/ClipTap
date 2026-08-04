@@ -29,7 +29,12 @@ import { VariableService } from './VariableService';
 import { SnippetService } from './SnippetService';
 import { SubscriptionService } from './SubscriptionService';
 import { AuthService } from './AuthService';
-import { CategoryMapper, ProfileMapper, VariableMapper } from '../mappers';
+import {
+  CategoryMapper,
+  ProfileMapper,
+  SystemVariableFormatMapper,
+  VariableMapper,
+} from '../mappers';
 import { migrateImportTempDb } from '../database/migrations';
 import { SCHEMA_VERSION } from '../database/schema';
 
@@ -577,6 +582,11 @@ export class ImportService {
         allCategoryIds
       );
 
+      /* 全復元だけがグローバル書式設定を引き継ぐ */
+      SystemVariableFormatMapper.replaceAll(
+        SystemVariableFormatMapper.getAllFrom(tempDbAdapter)
+      );
+
       /* インポート後にデフォルト/アクティブプロファイルを設定（インポート元の標準プロファイルを使用） */
       this.ensureDefaultAndActiveProfile(importedDefaultProfileId);
 
@@ -605,6 +615,8 @@ export class ImportService {
     const mainDbAdapter = getMainDbAdapter();
 
     try {
+      SystemVariableFormatMapper.deleteAll();
+
       /* 外部キー制約を考慮した削除順序 */
       /* 1. 中間テーブル（外部キー参照） */
       mainDbAdapter.run('DELETE FROM snippet_profiles');

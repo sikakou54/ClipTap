@@ -72,7 +72,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 現在のバージョン情報
 - **アプリバージョン**: 1.2.1
-- **データベーススキーマ**: V6
+- **データベーススキーマ**: V7
 - **対応OS**: iOS 15.1以上、Android 7.0 (API 24) 以上
 - **新アーキテクチャ**: 対応済み（React Native）
 - **JSエンジン**: Hermes

@@ -24,6 +24,9 @@ import {
   ClipTapError,
   getMainDbAdapter,
   getFileIOAdapter,
+  migrateImportTempDb,
+  SystemVariableFormatMapper,
+  SCHEMA_VERSION,
   toOpfsPath,
 } from '@cliptap/shared';
 import { SQLiteWasm } from '@src/mappers/sqliteWasm';
@@ -119,7 +122,7 @@ export function Home() {
       const arrayBuffer = await selectedFile.arrayBuffer();
       const jsonText = new TextDecoder().decode(arrayBuffer);
 
-      const { dbBytes } = await importParserService.parseAndValidate(jsonText, password);
+      const { dbBytes, exportData } = await importParserService.parseAndValidate(jsonText, password);
 
       const mainDbPath = toOpfsPath('main.db');
       const fileIO = getFileIOAdapter() as WebFileIOAdapter;
@@ -127,6 +130,11 @@ export function Home() {
 
       const mainDbAdapter = getMainDbAdapter() as WebDatabaseAdapter;
       await mainDbAdapter.open(mainDbPath);
+
+      if (exportData.s < SCHEMA_VERSION) {
+        await migrateImportTempDb(mainDbAdapter, exportData.s);
+      }
+      SystemVariableFormatMapper.loadRegistry();
 
       /* サブスクリプション状態を確認（ログイン済みの場合のみ） */
       if (user) {

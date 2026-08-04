@@ -104,6 +104,8 @@ function AppContent({ isTabletDevice }: { isTabletDevice: boolean }) {
                 <Stack.Screen name="variable/edit" options={MODAL_SLIDE_OPTIONS} />
                 {/* 変数プロファイル値編集画面 */}
                 <Stack.Screen name="variable/profile-value-edit" options={MODAL_SLIDE_OPTIONS} />
+                {/* システム変数書式選択画面 */}
+                <Stack.Screen name="variable/format-edit" options={MODAL_SLIDE_OPTIONS} />
                 {/* プロファイル編集画面 */}
                 <Stack.Screen name="profile/edit" options={MODAL_SLIDE_OPTIONS} />
                 {/* プロファイル変数編集画面 */}

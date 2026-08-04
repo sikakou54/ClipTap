@@ -15,6 +15,7 @@
 
 import React from 'react';
 import { View, Modal, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useTranslation } from '@cliptap/shared';
 import { FlashList } from '@mobile-types/flashlist';
 import { useTheme } from '@lib/themeSystem';
@@ -41,6 +42,7 @@ interface VariablePickerModalProps {
 export function VariablePickerModal({ visible, onClose, onSelect }: VariablePickerModalProps) {
   const { t } = useTranslation();
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
+  const router = useRouter();
 
   /* フックからロジックを取得 */
   const { variables, handleSelect } = useVariablePickerModal({ onClose, onSelect });
@@ -86,7 +88,23 @@ export function VariablePickerModal({ visible, onClose, onSelect }: VariablePick
                     {`{{${item.name}}}`}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                {/* システム変数の書式設定導線 */}
+                {item.isSystem ? (
+                  <TouchableOpacity
+                    style={[styles.formatChip, { borderColor: colors.border }]}
+                    onPress={(event) => {
+                      event.stopPropagation();
+                      onClose();
+                      router.push({ pathname: '/variable/format-edit', params: { key: item.name } });
+                    }}
+                  >
+                    <Text style={{ color: colors.primary, fontSize: responsiveFontSizes.sm }}>
+                      {t('variables.format')}
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                )}
               </TouchableOpacity>
             )}
           />
@@ -145,5 +163,14 @@ const styles = StyleSheet.create({
   variableCode: {
     fontFamily: 'monospace',
     marginTop: 2,
+  },
+  formatChip: {
+    minWidth: 44,
+    minHeight: 44,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

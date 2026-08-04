@@ -35,7 +35,7 @@ const VariableQueries = {
   /* タイプ別に変数を取得（有効なもののみ） */
   SELECT_BY_TYPE: `SELECT * FROM variables WHERE type = ? AND valid = 1 ORDER BY sortOrder ASC`,
   /* 変数を新規作成 */
-  INSERT: `INSERT INTO variables (id, name, label, type, valid, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  INSERT: `INSERT INTO variables (id, name, label, icon, type, valid, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   /* 最大のsortOrderを取得（新規作成時に使用） */
   SELECT_MAX_SORT_ORDER: 'SELECT MAX(sortOrder) as maxOrder FROM variables',
   /* 変数を更新（名前、ラベル、アイコン、sortOrder） */
@@ -166,6 +166,7 @@ export class VariableMapper {
       id,
       data.name,
       data.label || null,
+      data.icon || null,
       data.type || 'custom',
       1, // valid（初期値は有効）
       sortOrder,

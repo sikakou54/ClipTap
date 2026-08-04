@@ -10,6 +10,7 @@
  * - V3 → V4: 共有コンテナへのDB移行（キーボード拡張対応）
  * - V4 → V5: variables, profilesテーブルにsortOrderカラム追加
  * - V5 → V6: snippetsテーブルにcopyCountカラム追加（使用頻度ソート用）
+ * - V6 → V7: システム変数書式設定テーブル追加
  */
 
 import type { DbAdapter } from '../adapters/DbAdapter';
@@ -549,6 +550,25 @@ export async function migrateV5ToV6(db: DbAdapter): Promise<void> {
   }
 }
 
+/* ======================================== */
+/* V6 → V7 マイグレーション */
+/* ======================================== */
+
+/**
+ * システム変数の書式設定を疎に保存するテーブルを追加します。
+ */
+export async function migrateV6ToV7(db: DbAdapter): Promise<void> {
+  Logger.info('[Migration V6→V7] Starting migration...');
+
+  try {
+    await db.exec(CREATE_TABLES.systemVariableFormats);
+    Logger.success('[Migration V6→V7] Migration completed successfully');
+  } catch (error) {
+    Logger.error('[Migration V6→V7] Failed to migrate:', error);
+    throw error;
+  }
+}
+
 /**
  * 全テーブルを作成
  *
@@ -564,6 +584,7 @@ export async function createTablesWithDb(db: DbAdapter): Promise<void> {
     await db.exec(CREATE_TABLES.profiles);
     await db.exec(CREATE_TABLES.profileVariables);
     await db.exec(CREATE_TABLES.snippetProfiles);
+    await db.exec(CREATE_TABLES.systemVariableFormats);
     Logger.info('[Migration] Tables created successfully');
   } catch (error) {
     Logger.error('[Migration] Failed to create tables:', error);
@@ -668,6 +689,9 @@ export async function runMigrations(
       case 6:
         await migrateV5ToV6(mainDB);
         break;
+      case 7:
+        await migrateV6ToV7(mainDB);
+        break;
       default:
         Logger.warn(`[Migration] No migration defined for version ${nextVersion}`);
         break;
@@ -705,6 +729,9 @@ export async function migrateImportTempDb(db: DbAdapter, fromVersion: number): P
         break;
       case 6:
         await migrateV5ToV6(db);
+        break;
+      case 7:
+        await migrateV6ToV7(db);
         break;
       default:
         Logger.warn(`[Import Migration] No migration defined for version ${nextVersion}`);

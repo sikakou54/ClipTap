@@ -344,7 +344,8 @@
     "purchase_cancelled": "購入がキャンセルされました",
     "processing": "処理中...",
     "locked_feature": "この機能はProプラン限定です",
-    "unlock_now": "今すぐアンロック"
+    "unlock_now": "今すぐアンロック",
+    "system_variable_formats": "システム変数の書式"
   },
   "export_import": {
     "title": "インポート・エクスポート",
@@ -371,7 +372,9 @@
     "export_completed": "エクスポートが完了しました",
     "password_required": "パスワードを入力してください",
     "password_title": "パスワードを設定",
-    "password_description": "エクスポートファイルを保護するためのパスワードを設定してください"
+    "password_description": "エクスポートファイルを保護するためのパスワードを設定してください",
+    "restore_includes_formats": "システム変数の書式も復元されます",
+    "partial_excludes_formats": "システム変数の書式は変更されません"
   },
   "auth": {
     "welcome_message": "ログインしてデータを同期",
@@ -414,6 +417,13 @@
     "environment_values_hint_1": "※プロファイルごとに異なる値を設定できます。",
     "environment_values_hint_2": "※値の入力がない場合は標準の値が使用されます。",
     "environment_header": "プロファイル",
-    "value_header": "値"
+    "value_header": "値",
+    "format": "書式",
+    "format_desc": "書式の変更は、その変数を含むすべての定型文に適用されます。",
+    "format_default": "既定",
+    "format_reset_all": "すべて既定に戻す",
+    "format_reset_all_confirm": "すべてのシステム変数の書式を既定に戻します。よろしいですか？",
+    "format_usage_count": "この書式を使う定型文 {{count}}件",
+    "format_changed": "書式を変更しました"
   }
 }

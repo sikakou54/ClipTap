@@ -58,6 +58,9 @@ export function ImportModeSelectModal({ isOpen, onClose, onSelectMode }: ImportM
                 <p className="text-xs text-red-600 dark:text-red-300 leading-relaxed">
                   {t('backup.restore_description')}
                 </p>
+                <p className="mt-1 text-xs text-red-600 dark:text-red-300 leading-relaxed">
+                  {t('export_import.restore_includes_formats')}
+                </p>
               </div>
             </button>
 
@@ -81,6 +84,9 @@ export function ImportModeSelectModal({ isOpen, onClose, onSelectMode }: ImportM
                 <p className="text-xs text-blue-600 dark:text-blue-300 leading-relaxed">
                   {t('backup.select_and_add_description')}
                 </p>
+                <p className="mt-1 text-xs text-blue-600 dark:text-blue-300 leading-relaxed">
+                  {t('export_import.partial_excludes_formats')}
+                </p>
               </div>
             </button>
           </div>
@@ -99,4 +105,3 @@ export function ImportModeSelectModal({ isOpen, onClose, onSelectMode }: ImportM
     </Dialog>
   );
 }
-

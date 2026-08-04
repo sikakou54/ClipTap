@@ -16,6 +16,8 @@ import {
   createIndexesWithDb,
   createDefaultProfileIfNeeded,
 } from './migrations';
+import { SystemVariableFormatMapper } from '../mappers/SystemVariableFormatMapper';
+import { SystemVariableFormatRegistry } from '../services/SystemVariableFormatRegistry';
 import { SCHEMA_VERSION, DROP_TABLES } from './schema';
 
 /**
@@ -83,6 +85,8 @@ export abstract class BaseDatabaseManager {
 
       /* 4. プラットフォーム固有の後処理 */
       await this.platformPostInit();
+
+      SystemVariableFormatRegistry.replace(SystemVariableFormatMapper.getAllFrom(mainDB));
 
       /* 5. 初期化完了 */
       this.isInitialized = true;

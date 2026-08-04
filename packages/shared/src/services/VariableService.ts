@@ -15,6 +15,7 @@ import type { Variable, CreateVariableInput, UpdateVariableInput } from '../sche
 import type { VariableResolver } from '../variables/parser';
 import { hasVariables, replaceVariables, VARIABLE_TOKEN_PATTERN } from '../variables/parser';
 import { resolveSystemVariableValue } from '../variables/systemVariables';
+import { SystemVariableFormatRegistry } from './SystemVariableFormatRegistry';
 import {
   NotFoundError,
   DuplicateNameError,
@@ -474,7 +475,12 @@ export class VariableService {
       const trimmedName = variableName.trim();
 
       /* システム変数を最優先で解決（ユーザー定義変数で上書き不可） */
-      const systemValue = resolveSystemVariableValue(trimmedName, locale);
+      const systemValue = resolveSystemVariableValue(
+        trimmedName,
+        locale,
+        new Date(),
+        SystemVariableFormatRegistry.getAll()
+      );
       if (systemValue !== null) {
         return systemValue;
       }
@@ -560,13 +566,23 @@ export class VariableService {
     const resolvedTitle = !title
       ? ''
       : titleHasVars
-        ? await replaceVariables(title, { locale, customResolver, preserveUnknown })
+        ? await replaceVariables(title, {
+            locale,
+            customResolver,
+            preserveUnknown,
+            formats: SystemVariableFormatRegistry.getAll(),
+          })
         : title;
 
     const resolvedContent = !content
       ? ''
       : contentHasVars
-        ? await replaceVariables(content, { locale, customResolver, preserveUnknown })
+        ? await replaceVariables(content, {
+            locale,
+            customResolver,
+            preserveUnknown,
+            formats: SystemVariableFormatRegistry.getAll(),
+          })
         : content;
 
     return { title: resolvedTitle, content: resolvedContent };

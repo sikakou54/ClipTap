@@ -27,7 +27,7 @@ import { useDevMenu, type UseDevMenuReturn } from './useDevMenu';
 /** メニュー項目の型定義 */
 export interface MenuItem {
   id: string;
-  icon: 'options-outline' | 'code-outline' | 'folder-outline' | 'keypad-outline' | 'sync-outline' | 'document-text-outline' | 'shield-checkmark-outline';
+  icon: 'options-outline' | 'code-outline' | 'calendar-outline' | 'folder-outline' | 'keypad-outline' | 'sync-outline' | 'document-text-outline' | 'shield-checkmark-outline';
   label: string;
   onPress: () => void;
   isPro: boolean;
@@ -230,6 +230,13 @@ export function useSettingsScreen(): UseSettingsScreenReturn {
       icon: 'code-outline',
       label: t('settings.variables'),
       onPress: () => router.push('/settings/variables'),
+      isPro: false,
+    },
+    {
+      id: 'system-variable-formats',
+      icon: 'calendar-outline',
+      label: t('settings.system_variable_formats'),
+      onPress: () => router.push('/settings/system-variable-formats'),
       isPro: false,
     },
     {

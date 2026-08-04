@@ -14,7 +14,13 @@
  * - 常に最新の日時が使用されます
  */
 
-import { formatDate } from '../utils/dateHelpers';
+import {
+  DEFAULT_SYSTEM_VARIABLE_FORMATS,
+  sanitizeSystemVariableFormat,
+  type SystemVariableFormats,
+  type SystemVariableKey,
+} from '../constants/systemVariableFormats';
+import { formatByPattern } from '../utils/dateFormatter';
 
 /**
  * サポートされているロケール
@@ -39,11 +45,6 @@ const ASCII_PATTERN = /^[\x00-\x7F]+$/;
  *
  * Date.getDay() の戻り値（0=日曜、1=月曜、...、6=土曜）に対応するインデックス
  */
-const WEEKDAYS: Record<SupportedLocale, string[]> = {
-  ja: ['日', '月', '火', '水', '木', '金', '土'],
-  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-};
-
 /**
  * システム変数の定義
  *
@@ -53,9 +54,8 @@ const WEEKDAYS: Record<SupportedLocale, string[]> = {
  * @property {Function} getValue - 変数の値を生成する関数
  */
 export interface SystemVariableDefinition {
-  key: string;
+  key: SystemVariableKey;
   aliases: string[];
-  getValue: (locale: SupportedLocale, date: Date) => string;
 }
 
 /**
@@ -77,37 +77,30 @@ export const SYSTEM_VARIABLES: SystemVariableDefinition[] = [
   {
     key: 'today',
     aliases: ['today', '今日'],
-    getValue: (_locale, date) => formatDate(date, 'yyyy/MM/dd'),
   },
   {
     key: 'now',
     aliases: ['now', '現在'],
-    getValue: (_locale, date) => formatDate(date, 'yyyy/MM/dd HH:mm:ss'),
   },
   {
     key: 'time',
     aliases: ['time', '時刻'],
-    getValue: (_locale, date) => formatDate(date, 'HH:mm'),
   },
   {
     key: 'year',
     aliases: ['year', '年'],
-    getValue: (_locale, date) => formatDate(date, 'yyyy'),
   },
   {
     key: 'month',
     aliases: ['month', '月'],
-    getValue: (_locale, date) => formatDate(date, 'MM'),
   },
   {
     key: 'day',
     aliases: ['day', '日'],
-    getValue: (_locale, date) => formatDate(date, 'dd'),
   },
   {
     key: 'weekday',
     aliases: ['weekday', '曜日'],
-    getValue: (locale, date) => WEEKDAYS[locale][date.getDay()] ?? '',
   },
 ];
 
@@ -164,7 +157,8 @@ export const normalizeVariableName = (value: string): string => {
 export const resolveSystemVariableValue = (
   rawName: string,
   locale?: string,
-  date: Date = new Date()
+  date: Date = new Date(),
+  formats?: SystemVariableFormats
 ): string | null => {
   const normalized = normalizeVariableName(rawName);
   const resolvedLocale = normalizeLocale(locale);
@@ -176,10 +170,13 @@ export const resolveSystemVariableValue = (
     });
 
     if (matches) {
-      return definition.getValue(resolvedLocale, date);
+      const pattern = sanitizeSystemVariableFormat(
+        definition.key,
+        formats?.[definition.key] ?? DEFAULT_SYSTEM_VARIABLE_FORMATS[definition.key]
+      );
+      return formatByPattern(date, pattern, resolvedLocale);
     }
   }
 
   return null;
 };
-

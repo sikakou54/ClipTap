@@ -224,7 +224,6 @@ class SnippetService {
         if let profileId = resolvedProfileId {
             variablesMap = variableService.getVariablesMap(for: profileId)
             os_log("📝 Variables map count: %d", log: snippetServiceLog, type: .info, variablesMap.count)
-            NSLog("📝 [SnippetService] Variables map: %@", variablesMap.description)
         }
 
         // テキストを準備
@@ -234,15 +233,15 @@ class SnippetService {
             text = "\(title)\n\(text)"
         }
 
-        os_log("📝 Original text: %@", log: snippetServiceLog, type: .info, text)
-        NSLog("📝 [SnippetService] Original text: %@", text)
 
         // 変数を置換
         // 例: "こんにちは{{client_name}}様" → "こんにちは田中様"
-        let resolvedText = variableReplacer.replace(in: text, variablesMap: variablesMap)
+        let resolvedText = variableReplacer.replace(
+            in: text,
+            variablesMap: variablesMap,
+            formats: SystemVariableFormatMapper.shared.getAll()
+        )
 
-        os_log("📝 Resolved text: %@", log: snippetServiceLog, type: .info, resolvedText)
-        NSLog("📝 [SnippetService] Resolved text: %@", resolvedText)
 
         /* キーボードからテキストを挿入
            この処理により、LINEやメモアプリなど、どのアプリの入力欄にもテキストが入力されます */
@@ -305,7 +304,11 @@ class SnippetService {
         }
 
         // 変数を置換して返す
-        return variableReplacer.replace(in: text, variablesMap: variablesMap)
+        return variableReplacer.replace(
+            in: text,
+            variablesMap: variablesMap,
+            formats: SystemVariableFormatMapper.shared.getAll()
+        )
     }
 
     // MARK: - Helper Methods（ヘルパーメソッド）

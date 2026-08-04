@@ -21,6 +21,7 @@ import { SubscriptionService } from '../services/SubscriptionService';
 import { FEATURE_LIMITS } from '../constants/inputLimits';
 import { hasVariables, replaceVariables } from '../variables/parser';
 import { Logger } from '../utils/logger';
+import { SystemVariableFormatRegistry } from '../services/SystemVariableFormatRegistry';
 
 /**
  * useSnippetPreview フックのオプション
@@ -73,14 +74,25 @@ async function resolveSnippetVariables(
     { isSubscribed, profileVariablesMap, defaultProfileVariablesMap },
     { freeTierLimit: FEATURE_LIMITS.FREE_TIER_VARIABLES }
   );
+  const formats = SystemVariableFormatRegistry.getAll();
 
   /* hasVariablesで変数の有無を事前チェックし、不要な処理をスキップして高速化 */
   const [resolvedTitle, resolvedContent] = await Promise.all([
     hasVariables(title)
-      ? replaceVariables(title, { locale, customResolver: syncResolver, preserveUnknown: true })
+      ? replaceVariables(title, {
+          locale,
+          customResolver: syncResolver,
+          preserveUnknown: true,
+          formats,
+        })
       : title,
     hasVariables(content)
-      ? replaceVariables(content, { locale, customResolver: syncResolver, preserveUnknown: true })
+      ? replaceVariables(content, {
+          locale,
+          customResolver: syncResolver,
+          preserveUnknown: true,
+          formats,
+        })
       : content,
   ]);
 

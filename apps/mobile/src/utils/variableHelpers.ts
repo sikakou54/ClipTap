@@ -17,6 +17,7 @@ import {
   VariableService,
   ProfileService,
   SubscriptionService,
+  SystemVariableFormatRegistry,
   FEATURE_LIMITS,
   hasVariables,
   replaceVariables,
@@ -71,7 +72,12 @@ export async function resolveSnippetVariables(
   /* 現在のロケールを取得（システム変数の日付フォーマット等に使用） */
   const locale = i18next.language || 'en';
   /* 変数展開オプション（未知の変数はそのまま保持） */
-  const options = { locale, customResolver: resolver, preserveUnknown: true };
+  const options = {
+    locale,
+    customResolver: resolver,
+    preserveUnknown: true,
+    formats: SystemVariableFormatRegistry.getAll(),
+  };
 
   /* タイトルとコンテンツを並列で変数展開（パフォーマンス最適化） */
   const [resolvedTitle, resolvedContent] = await Promise.all([
@@ -101,6 +107,7 @@ export async function resolveTextVariables(
     locale,
     customResolver: createResolver(profileId),
     preserveUnknown: true,
+    formats: SystemVariableFormatRegistry.getAll(),
   });
 }
 
