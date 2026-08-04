@@ -303,10 +303,10 @@ enum L10n {
         /// "設定" / "Settings"
         static let title = localized("settings.title")
 
-        /// "キーボード入力時の使用頻度をカウントする" / "Count Usage from Keyboard Input"
+        /// "使用頻度をカウントする" / "Count Usage from Keyboard Input"
         static let usageTrackingEnabled = localized("settings.usage_tracking_enabled")
 
-        /// "キーボード入力時の使用頻度をカウントする" / "Count Usage from Keyboard Input"
+        /// "使用頻度をカウントする" / "Count Usage from Keyboard Input"
         static let usageTrackingDisabled = localized("settings.usage_tracking_disabled")
 
         /// "この機能を使用するにはフルアクセスの許可が必要です" / "Full access is required to use this feature"
@@ -430,8 +430,8 @@ enum L10n {
 
         // Settings
         case "settings.title": return isJapanese ? "設定" : "Settings"
-        case "settings.usage_tracking_enabled": return isJapanese ? "キーボード入力時の使用頻度をカウントする" : "Count Usage from Keyboard Input"
-        case "settings.usage_tracking_disabled": return isJapanese ? "キーボード入力時の使用頻度をカウントする" : "Count Usage from Keyboard Input"
+        case "settings.usage_tracking_enabled": return isJapanese ? "使用頻度をカウントする" : "Count Usage from Keyboard Input"
+        case "settings.usage_tracking_disabled": return isJapanese ? "使用頻度をカウントする" : "Count Usage from Keyboard Input"
         case "settings.usage_tracking_requires_full_access": return isJapanese ? "この機能を使用するにはフルアクセスの許可が必要です" : "Full access is required to use this feature"
         case "settings.full_access_instructions":
             return isJapanese

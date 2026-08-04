@@ -22,6 +22,7 @@ import com.sikakou.cliptap.services.CategoryService
 import com.sikakou.cliptap.services.SnippetService
 import com.sikakou.cliptap.services.VariableService
 import com.sikakou.cliptap.database.Database
+import com.sikakou.cliptap.mappers.SystemVariableFormatMapper
 import com.sikakou.cliptap.utils.LocalizationHelper
 
 /**
@@ -226,6 +227,11 @@ class ClipTapKeyboardService : InputMethodService() {
 
         // RecyclerViewの設定
         snippetRecyclerView.layoutManager = LinearLayoutManager(this)
+
+        /* 一覧の表示枠は固定高さのため、行数が変わってもRecyclerView自体の大きさは変わらない。
+           これを伝えることでスクロール中のレイアウト再計算を省ける */
+        snippetRecyclerView.setHasFixedSize(true)
+
         snippetAdapter = SnippetAdapter { snippet ->
             onSnippetClicked(snippet)
         }
@@ -648,8 +654,10 @@ class ClipTapKeyboardService : InputMethodService() {
 
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Loaded ${allSnippets.size} snippets (sortBy: $currentSortBy)")
 
-        // アダプターに変数マップを設定（タイトルの変数置換に使用）
+        // アダプターに変数マップと書式を設定（タイトルの変数置換に使用）
+        // 行の描画ごとにDBを読まないよう、ここでまとめて渡す
         snippetAdapter.variablesMap = variablesMap
+        snippetAdapter.systemVariableFormats = SystemVariableFormatMapper.getInstance(this).getAll()
 
         // アダプターに渡す
         snippetAdapter.submitList(allSnippets)

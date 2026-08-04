@@ -87,6 +87,14 @@ class KeyboardViewController: UIInputViewController {
     /// プロファイル + カテゴリの両方でフィルタ済み
     private var filteredSnippets: [Snippet] = []
 
+    /**
+     * 一覧に描画済みの内容を表す署名
+     *
+     * 再取得した内容がこれと一致する場合は再描画しない。
+     * nilは「表示が外部要因で変わり得るため毎回描画する」ことを示す。
+     */
+    private var snippetListSignature: String?
+
     /// 全カテゴリのリスト（「すべて」ボタン + 各カテゴリボタンを作成するために使用）
     private var categories: [Category] = []
 
@@ -120,6 +128,21 @@ class KeyboardViewController: UIInputViewController {
 
     /// App Group識別子
     private let appGroupIdentifier = "group.com.sikakou.cliptap"
+
+    /**
+     * キーボード全体の高さ（pt）
+     *
+     * OS標準キーボードに近い高さにして、スニペット一覧の表示領域を確保する。
+     */
+    private static let keyboardHeight: CGFloat = 280
+
+    /**
+     * キーボードの高さ制約
+     *
+     * 表示のたびに新しい制約を追加すると矛盾した制約が増殖し、
+     * レイアウトが不定になって表示領域とタッチ領域がずれるため、1本だけ保持して使い回す。
+     */
+    private var keyboardHeightConstraint: NSLayoutConstraint?
 
     // MARK: - UI Components（画面を構成するUI部品）
 
@@ -293,15 +316,6 @@ class KeyboardViewController: UIInputViewController {
     }()
 
     // === ボタンエリア（詳細画面下部）===
-
-    /// コピーボタンと閉じるボタンを配置するコンテナビュー
-    /// 画面下部に固定表示されます
-    private let buttonContainerView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .clear  // 透明（背景を透過）
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
 
     /// コピーボタン（テキスト入力欄に挿入）
     /// 紙飛行機アイコンの青い丸ボタン
@@ -523,18 +537,8 @@ class KeyboardViewController: UIInputViewController {
         KeyboardLog.debug("👁️👁️👁️ [KeyboardViewController] viewWillAppear CALLED 👁️👁️👁️")
         KeyboardLog.debug("============================================================")
 
-        // キーボードの高さを設定（コンパクトに）
-        let heightConstraint = NSLayoutConstraint(
-            item: view!,
-            attribute: .height,
-            relatedBy: .equal,
-            toItem: nil,
-            attribute: .notAnAttribute,
-            multiplier: 0,
-            constant: 260  // 260ptに制限
-        )
-        heightConstraint.priority = .required
-        view.addConstraint(heightConstraint)
+        /* キーボードの高さを再適用する（制約は1本だけ保持するので増殖しない） */
+        applyKeyboardHeightConstraint()
 
         applyHostKeyboardAppearance()
 
@@ -597,6 +601,29 @@ class KeyboardViewController: UIInputViewController {
         }
     }
 
+    /**
+     * キーボードの高さ制約を適用する
+     *
+     * 制約は1本だけ生成して保持し、2回目以降は定数の更新だけを行う。
+     * 表示のたびに制約を追加すると矛盾した必須制約が積み上がり、
+     * UIKitがレイアウトのたびに制約を破棄して復旧するため、
+     * ビューの実フレームが不定になって「見えているのに触れない領域」が生まれる。
+     *
+     * 優先度をrequiredより1段下げているのは、システム側が入力ビューへ付ける制約と
+     * 衝突したときにこちらを譲り、制約破棄によるレイアウト崩れを避けるため。
+     */
+    private func applyKeyboardHeightConstraint() {
+        if let constraint = keyboardHeightConstraint {
+            constraint.constant = Self.keyboardHeight
+            return
+        }
+
+        let constraint = view.heightAnchor.constraint(equalToConstant: Self.keyboardHeight)
+        constraint.priority = UILayoutPriority(999)
+        constraint.isActive = true
+        keyboardHeightConstraint = constraint
+    }
+
     // MARK: - Data Loading（データ読み込み処理）
 
     /// 全データをリフレッシュ（プロファイル、カテゴリ、スニペット）
@@ -616,11 +643,9 @@ class KeyboardViewController: UIInputViewController {
             // データベースが初期化されているか確認
             try Database.shared.initialize()
 
-            // 変数値と書式設定は表示のたびに再読込する
+            /* 書式設定は表示のたびに再読込する。
+               変数値はプロファイル再読み込み後にまとめて取得するため、ここでは読まない */
             systemVariableFormats = SystemVariableFormatMapper.shared.getAll()
-            if let profileId = currentProfile?.id {
-                variablesMap = variableService.getVariablesMap(for: profileId)
-            }
 
             // プロファイルを再読み込み
             KeyboardLog.debug("🔄 [Refresh] Loading profiles...")
@@ -705,10 +730,10 @@ class KeyboardViewController: UIInputViewController {
         settingsButton.addTarget(self, action: #selector(settingsButtonTapped), for: .touchUpInside)
 
         NSLayoutConstraint.activate([
-            /* フィルターコンテナ: 画面上部に配置 */
-            filterContainerView.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
-            filterContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
-            filterContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+            /* フィルターコンテナ: 画面上部に配置（横向き時のノッチ側を避けるためセーフエリア基準） */
+            filterContainerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            filterContainerView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 8),
+            filterContainerView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
             filterContainerView.heightAnchor.constraint(equalToConstant: 36),
 
             /* 環境ドロップダウンボタン: 左端に固定、固定幅100pt */
@@ -757,13 +782,27 @@ class KeyboardViewController: UIInputViewController {
         // TableView: フィルターコンテナの下に配置（+36ptの表示エリア拡大）
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
+        tableView.register(SnippetCell.self, forCellReuseIdentifier: SnippetCell.reuseIdentifier)
+
+        /* 行の高さを固定し、自動高さ計算（セルフサイジング）を無効化する。
+           推定高さのままだと行の実フレームが見た目とずれ、余白部分でタッチが拾えないことがある */
+        tableView.rowHeight = SnippetCell.rowHeight
+        tableView.estimatedRowHeight = 0
+
+        /* 内容が画面に収まっていてもドラッグに反応させる（無反応に見える状態をなくす） */
+        tableView.alwaysBounceVertical = true
+
+        /* セルの余白を読みやすさ優先の幅に合わせず、行を画面幅いっぱいに使う */
+        tableView.cellLayoutMarginsFollowReadableWidth = false
+
         view.addSubview(tableView)
+        /* 下端をセーフエリアに合わせる: ホームインジケータ帯に入るとOSのジェスチャがスワイプを奪い、
+           その領域から始めたドラッグがスクロールにならないため */
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: filterContainerView.bottomAnchor, constant: 8),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
 
         // Detail View (全画面表示)
@@ -772,9 +811,10 @@ class KeyboardViewController: UIInputViewController {
         detailScrollView.addSubview(detailContentView)
         detailContentView.addSubview(detailTitleLabel)
         detailContentView.addSubview(detailContentLabel)
-        detailView.addSubview(buttonContainerView)
-        buttonContainerView.addSubview(copyButton)
-        buttonContainerView.addSubview(closeButton)
+        /* ボタンは透明なコンテナに包まずdetailViewへ直接追加する。
+           全幅・透明のコンテナを重ねると、その範囲のスクロール操作をコンテナが奪ってしまう */
+        detailView.addSubview(copyButton)
+        detailView.addSubview(closeButton)
 
         NSLayoutConstraint.activate([
             // DetailView: 全画面表示
@@ -783,11 +823,11 @@ class KeyboardViewController: UIInputViewController {
             detailView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             detailView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            // ScrollView: 全画面（ボタンコンテナの下にパディングを追加）
-            detailScrollView.topAnchor.constraint(equalTo: detailView.topAnchor, constant: 8),
-            detailScrollView.leadingAnchor.constraint(equalTo: detailView.leadingAnchor),
-            detailScrollView.trailingAnchor.constraint(equalTo: detailView.trailingAnchor),
-            detailScrollView.bottomAnchor.constraint(equalTo: detailView.bottomAnchor),
+            // ScrollView: 全画面（下端はセーフエリアに合わせ、ホームインジケータ帯を避ける）
+            detailScrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            detailScrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            detailScrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            detailScrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
 
             // ContentView: ScrollViewのコンテンツ（ボタン分の下パディング追加）
             detailContentView.topAnchor.constraint(equalTo: detailScrollView.topAnchor),
@@ -807,19 +847,13 @@ class KeyboardViewController: UIInputViewController {
             detailContentLabel.trailingAnchor.constraint(equalTo: detailContentView.trailingAnchor, constant: -12),
             detailContentLabel.bottomAnchor.constraint(equalTo: detailContentView.bottomAnchor, constant: -72),
 
-            // Button Container: 画面下部に固定（半透明背景）
-            buttonContainerView.leadingAnchor.constraint(equalTo: detailView.leadingAnchor),
-            buttonContainerView.trailingAnchor.constraint(equalTo: detailView.trailingAnchor),
-            buttonContainerView.bottomAnchor.constraint(equalTo: detailView.bottomAnchor),
-            buttonContainerView.heightAnchor.constraint(equalToConstant: 64),
-
-            // Buttons: buttonContainerView内に配置（丸ボタン）
-            copyButton.bottomAnchor.constraint(equalTo: buttonContainerView.bottomAnchor, constant: -12),
-            copyButton.trailingAnchor.constraint(equalTo: buttonContainerView.trailingAnchor, constant: -12),
+            // Buttons: 画面右下に固定（丸ボタン、セーフエリア内に収める）
+            copyButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -12),
+            copyButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -12),
             copyButton.widthAnchor.constraint(equalToConstant: 40),
             copyButton.heightAnchor.constraint(equalToConstant: 40),
 
-            closeButton.bottomAnchor.constraint(equalTo: buttonContainerView.bottomAnchor, constant: -12),
+            closeButton.bottomAnchor.constraint(equalTo: copyButton.bottomAnchor),
             closeButton.trailingAnchor.constraint(equalTo: copyButton.leadingAnchor, constant: -12),
             closeButton.widthAnchor.constraint(equalToConstant: 40),
             closeButton.heightAnchor.constraint(equalToConstant: 40)
@@ -858,10 +892,8 @@ class KeyboardViewController: UIInputViewController {
             loadingLabel.centerXAnchor.constraint(equalTo: loadingView.centerXAnchor)
         ])
 
-        // Keyboard height
-        NSLayoutConstraint.activate([
-            view.heightAnchor.constraint(equalToConstant: 280)
-        ])
+        /* キーボードの高さ（制約はapplyKeyboardHeightConstraintで一元管理する） */
+        applyKeyboardHeightConstraint()
 
         // Settings View (設定画面 - 全画面表示)
         view.addSubview(settingsView)
@@ -1183,6 +1215,17 @@ class KeyboardViewController: UIInputViewController {
         os_log("✅ Loaded and sorted snippets: %d (sortBy: %@)", log: keyboardLog, type: .info, filteredSnippets.count, currentSortBy)
         KeyboardLog.debug("✅ [reloadSnippets] Loaded and sorted snippets: %d (sortBy: %@)", filteredSnippets.count, currentSortBy)
 
+        /* 表示内容が前回と同じなら再描画しない。
+           キーボードは表示のたびに全件再取得するため、無条件にreloadDataすると
+           スクロール中の再描画コストとスクロール位置の巻き戻りを招く */
+        let newSignature = makeSnippetListSignature(filteredSnippets)
+        if let newSignature, newSignature == snippetListSignature {
+            KeyboardLog.debug("✓ [reloadSnippets] List unchanged - skip reloadData()")
+            updateEmptyState()
+            return
+        }
+        snippetListSignature = newSignature
+
         // テーブルビューを更新（同期的に実行）
         // 注意: UIMenuのアクションは既にメインスレッドで実行されるため、非同期にする必要はない
         tableView.reloadData()
@@ -1190,6 +1233,25 @@ class KeyboardViewController: UIInputViewController {
 
         // 空状態の表示/非表示を更新
         updateEmptyState()
+    }
+
+    /**
+     * 一覧の表示内容を表す署名を作る
+     *
+     * - Parameter snippets: 表示対象のスニペット
+     * - Returns: 署名。表示が外部要因で変わり得る場合はnil（＝必ず再描画する）
+     *
+     * セルはタイトルしか表示しないため、ID・タイトル・並び順が同じなら描画結果も同じになる。
+     * ただしタイトルに変数を含む場合は、データが同じでも時刻などで表示が変わるためnilを返す。
+     */
+    private func makeSnippetListSignature(_ snippets: [Snippet]) -> String? {
+        if snippets.contains(where: { variableReplacer.hasVariables(in: $0.title ?? "") }) {
+            return nil
+        }
+
+        return snippets
+            .map { "\($0.id)\u{1F}\($0.title ?? "")" }
+            .joined(separator: "\u{1E}")
     }
 
     private func filterSnippets() {
@@ -1559,10 +1621,14 @@ extension KeyboardViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
-        let snippet = filteredSnippets[indexPath.row]
+        guard let cell = tableView.dequeueReusableCell(
+            withIdentifier: SnippetCell.reuseIdentifier,
+            for: indexPath
+        ) as? SnippetCell else {
+            return UITableViewCell()
+        }
 
-        var config = cell.defaultContentConfiguration()
+        let snippet = filteredSnippets[indexPath.row]
 
         // タイトルを変数置換する
         let rawTitle = snippet.title ?? L10n.Snippet.noTitle
@@ -1572,17 +1638,7 @@ extension KeyboardViewController: UITableViewDataSource {
             formats: systemVariableFormats
         )
 
-        config.text = replacedTitle
-        config.textProperties.font = .systemFont(ofSize: 15)
-        cell.contentConfiguration = config
-        cell.accessoryType = .disclosureIndicator
-        cell.backgroundColor = .clear
-
-        if cell.selectedBackgroundView == nil {
-            let selectedBackground = UIView()
-            selectedBackground.backgroundColor = .secondarySystemFill
-            cell.selectedBackgroundView = selectedBackground
-        }
+        cell.configure(title: replacedTitle)
 
         return cell
     }
@@ -1621,6 +1677,83 @@ extension KeyboardViewController: UITableViewDelegate {
         activityIndicator.stopAnimating()
     }
 
+}
+
+// MARK: - SnippetCell
+
+/**
+ * スニペット一覧の行セル
+ *
+ * 【なぜ専用セルにするか】
+ * defaultContentConfigurationは内部ビューの大きさを文字量に合わせて決めるため、
+ * 行のどこを触ってもタッチが拾える保証がない。
+ * ラベルをcontentViewいっぱいに広げ、行全体を確実にタップ・ドラッグ対象にする。
+ *
+ * 【ファイル配置について】
+ * 新しいSwiftファイルを追加するとproject.pbxprojの更新が必要になるため、
+ * KeyboardViewControllerと同じファイルに定義している。
+ */
+final class SnippetCell: UITableViewCell {
+
+    /// 再利用識別子
+    static let reuseIdentifier = "SnippetCell"
+
+    /// 行の高さ（pt）。自動高さ計算を使わず固定値で確定させる
+    static let rowHeight: CGFloat = 44
+
+    /// スニペットのタイトルを表示するラベル
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 15)
+        label.textColor = .label
+        label.lineBreakMode = .byTruncatingTail
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupCell()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupCell()
+    }
+
+    /**
+     * セルの見た目とレイアウトを設定する
+     *
+     * ラベルはcontentViewの上下左右いっぱいに広げる。
+     * contentViewのタッチを無効にしているのは、行内のビューがタッチを横取りしないようにするため。
+     * 選択とスクロールはテーブルビュー側が処理するので、無効にしても行のタップは動作する。
+     */
+    private func setupCell() {
+        backgroundColor = .clear
+        accessoryType = .disclosureIndicator
+        contentView.isUserInteractionEnabled = false
+
+        contentView.addSubview(titleLabel)
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
+            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor),
+            titleLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+        ])
+
+        let selectedBackground = UIView()
+        selectedBackground.backgroundColor = .secondarySystemFill
+        selectedBackgroundView = selectedBackground
+    }
+
+    /**
+     * 表示するタイトルを設定する
+     *
+     * - Parameter title: 変数置換済みのタイトル
+     */
+    func configure(title: String) {
+        titleLabel.text = title
+    }
 }
 
 // MARK: - UIColor Extension
