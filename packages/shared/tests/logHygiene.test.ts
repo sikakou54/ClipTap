@@ -12,7 +12,6 @@ describe('native keyboard log hygiene', () => {
       'apps/mobile/ios/ClipTapKeyboard/Services/VariableService.swift',
       'apps/mobile/ios/ClipTapKeyboard/Mappers/ProfileVariableMapper.swift',
       'apps/mobile/ios/ClipTapKeyboard/Database/Database.swift',
-      'apps/mobile/ios/ClipTap/FullAccessBridge.swift',
     ];
     const source = paths.map((path) => readFileSync(resolve(root, path), 'utf8')).join('\n');
 

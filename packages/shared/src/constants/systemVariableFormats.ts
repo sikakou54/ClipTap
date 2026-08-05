@@ -135,13 +135,28 @@ export const getSystemVariableFormatPresets = (
 ): readonly string[] => SYSTEM_VARIABLE_FORMAT_PRESETS[key];
 
 /**
+ * 対象変数で保存可能なプリセット値か判定します。
+ *
+ * @remarks
+ * キーが既に{@link SystemVariableKey}と分かっている場合はこちらを使用します。
+ * キーの型を絞り込まないため、判定がfalseでもキーの型はそのまま残ります。
+ */
+export const isSupportedSystemVariablePattern = (
+  key: SystemVariableKey,
+  pattern: string
+): boolean => SYSTEM_VARIABLE_FORMAT_PRESETS[key].includes(pattern);
+
+/**
  * 対象変数で保存可能なプリセットか判定します。
+ *
+ * @remarks
+ * DBから読んだ文字列など、キーが{@link SystemVariableKey}か不明な場合に使用します。
  */
 export const isValidSystemVariableFormat = (
   key: string,
   pattern: string
 ): key is SystemVariableKey => (
-  isSystemVariableKey(key) && SYSTEM_VARIABLE_FORMAT_PRESETS[key].includes(pattern)
+  isSystemVariableKey(key) && isSupportedSystemVariablePattern(key, pattern)
 );
 
 /**
@@ -151,6 +166,6 @@ export const sanitizeSystemVariableFormat = (
   key: SystemVariableKey,
   pattern?: string
 ): string => {
-  if (pattern && isValidSystemVariableFormat(key, pattern)) return pattern;
+  if (pattern && isSupportedSystemVariablePattern(key, pattern)) return pattern;
   return DEFAULT_SYSTEM_VARIABLE_FORMATS[key];
 };

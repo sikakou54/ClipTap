@@ -5,10 +5,6 @@
  */
 
 import { z } from 'zod';
-import { SnippetSchema, SnippetProfileSchema } from './snippet';
-import { CategorySchema } from './category';
-import { ProfileSchema, ProfileVariableSchema } from './profile';
-import { VariableSchema } from './variableSchema';
 
 /* ==================== Import Candidates ==================== */
 
@@ -181,52 +177,6 @@ export const ClipTapExportDataSchema = z.object({
  */
 export type ClipTapExportData = z.infer<typeof ClipTapExportDataSchema>;
 
-/**
- * パスワード検証結果スキーマ
- *
- * @remarks
- * - 判別共用体で成功/失敗を型安全に表現
- * - エラー種別:
- *   - PASSWORD_INCORRECT: パスワード不正
- *   - CHECKSUM_MISMATCH: データ改竄検知
- *   - INVALID_FILE: ファイル形式不正
- *   - SCHEMA_VERSION_MISMATCH: スキーマバージョン不一致
- */
-export const PasswordVerifyResultSchema = z.discriminatedUnion('success', [
-  z.object({ success: z.literal(true) }),
-  z.object({
-    success: z.literal(false),
-    error: z.enum(['PASSWORD_INCORRECT', 'CHECKSUM_MISMATCH', 'INVALID_FILE', 'SCHEMA_VERSION_MISMATCH']),
-  }),
-]);
-
-/**
- * パスワード検証結果型
- */
-export type PasswordVerifyResult = z.infer<typeof PasswordVerifyResultSchema>;
-
-/**
- * アプリデータスキーマ
- *
- * @remarks
- * - データベース全体の完全バックアップ形式
- * - すべてのテーブルデータを含む
- * - profileVariables: 環境ごとのカスタム変数値
- * - snippetProfiles: スニペット-環境の紐付け（中間テーブル）
- */
-export const AppDataSchema = z.object({
-  snippets: z.array(SnippetSchema),
-  categories: z.array(CategorySchema),
-  profiles: z.array(ProfileSchema),
-  variables: z.array(VariableSchema),
-  profileVariables: z.array(ProfileVariableSchema),
-  snippetProfiles: z.array(SnippetProfileSchema),
-});
-
-/**
- * アプリデータ型
- */
-export type AppData = z.infer<typeof AppDataSchema>;
 
 /* ==================== Selection Data Types ==================== */
 
@@ -241,10 +191,6 @@ export const SelectionSnippetProfileSchema = z.object({
   profileName: z.string().nullable(),
 });
 
-/**
- * プロファイル紐付きデータ型（選択UI用）
- */
-export type SelectionSnippetProfile = z.infer<typeof SelectionSnippetProfileSchema>;
 
 /**
  * 選択スニペットデータスキーマ（選択UI用）

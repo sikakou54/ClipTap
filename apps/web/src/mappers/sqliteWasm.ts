@@ -67,13 +67,4 @@ export class SQLiteWasm {
       ? new SQLiteWasm.SQL.Database(data)
       : new SQLiteWasm.SQL.Database();
   }
-
-  /**
-   * 新しいUUID（v4）を生成
-   * @returns UUID文字列
-   */
-  static generateUUID(): string {
-    /* Web Crypto APIを使用 */
-    return crypto.randomUUID();
-  }
 }

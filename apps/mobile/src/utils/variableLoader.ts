@@ -1,8 +1,7 @@
 /**
  * 変数ロードユーティリティ
  *
- * VariablePickerModal と VariableToolbar で共通使用される
- * 変数オプションリストの生成ロジックを提供します。
+ * VariableToolbar で使用される変数オプションリストの生成ロジックを提供します。
  */
 
 import type { Profile, ProfileVariable, TranslationFunction } from '@cliptap/shared';

@@ -10,8 +10,7 @@
  * @see hooks/screens/useHomeScreen.ts - ビジネスロジック
  */
 import { useState, useCallback } from 'react';
-import { useAuth, useTranslation } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
+import { useAuth, useTranslation, useSharedSubscription } from '@cliptap/shared';
 import { useHomeScreen } from '@hooks/screens/useHomeScreen';
 import { SnippetEditModal } from '@components/snippet/SnippetEditModal';
 import { DashboardHeader } from '@components/dashboard/DashboardHeader';
@@ -28,7 +27,7 @@ const EMPTY_PROFILE_IDS: string[] = [];
 export function Dashboard() {
   const { signInWithGoogle, signInWithApple, loading: authLoading, error: authError, user } = useAuth();
   const { t } = useTranslation();
-  const { verificationFailed, refresh } = useSubscription();
+  const { verificationFailed, refresh } = useSharedSubscription();
 
   const [showAccountLinkModal, setShowAccountLinkModal] = useState(false);
 
@@ -46,6 +45,7 @@ export function Dashboard() {
     searchQuery,
     selectedCategory,
     copiedId,
+    copiedTitleId,
     showProfileDropdown,
     showSearchBar,
     gridColumns,
@@ -73,6 +73,7 @@ export function Dashboard() {
     setShowProfileDropdown,
 
     handleCopySnippet,
+    handleCopySnippetTitle,
     handleDeleteSnippet,
     handleSelectProfile,
     handleToggleMobileMenu,
@@ -142,10 +143,12 @@ export function Dashboard() {
             filteredSnippets={filteredSnippets}
             gridColumns={gridColumns}
             copiedId={copiedId}
+            copiedTitleId={copiedTitleId}
             categories={categories}
             getCategoryColor={getCategoryColor}
             getCategoryName={getCategoryName}
             onCopy={handleCopySnippet}
+            onCopyTitle={handleCopySnippetTitle}
             onEdit={snippetModal.handleEdit}
             onDelete={handleDeleteSnippet}
           />

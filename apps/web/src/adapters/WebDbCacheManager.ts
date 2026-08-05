@@ -92,29 +92,6 @@ export class WebDbCacheManager {
     }
   }
 
-  /**
-   * キャッシュ自動保存を有効化
-   * バッチ処理後に再度有効化する際に使用
-   */
-  enable(): void {
-    /* フラグをtrueに設定 */
-    this.enabled = true;
-  }
-
-  /**
-   * キャッシュ自動保存を無効化（バッチ処理用）
-   * 大量のデータを一度に書き込む際に、毎回保存しないようにするために使用
-   */
-  disable(): void {
-    /* フラグをfalseに設定 */
-    this.enabled = false;
-    /* 保留中の保存タスクがあればキャンセル */
-    if (this.saveTimer) {
-      clearTimeout(this.saveTimer);
-      /* タイマーをクリア */
-      this.saveTimer = null;
-    }
-  }
 
   /**
    * 即座にキャッシュを保存（pending分を含む）

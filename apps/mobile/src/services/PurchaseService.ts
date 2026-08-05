@@ -46,13 +46,6 @@ export const PRODUCT_IDS = Platform.select({
   default: PRODUCT_IDS_CONFIG.iOS,
 });
 
-/**
- * サブスクリプションで解放される機能
- */
-export enum SubscriptionFeature {
-  NO_ADS = 'no_ads',
-  CUSTOM_VARIABLES = 'custom_variables',
-}
 
 const DEV_SUBSCRIPTION_OVERRIDE_KEY = '@dev_subscription_override';
 
@@ -470,7 +463,6 @@ class PurchaseService {
       Logger.error('[PurchaseService] Failed to refresh customer info');
     }
   }
-
 }
 
 export const purchaseService = new PurchaseService();

@@ -106,12 +106,12 @@ export function SideMenuNavigation({
       {!isSubscribed && (
         <div className="mt-auto pt-4">
           <div className="w-full flex justify-center">
-            <a href="https://px.a8.net/svt/ejp?a8mat=45IFX2+AP7H6A+1JUK+HY7W1" rel="nofollow">
+            <a href="https://px.a8.net/svt/ejp?a8mat=45IFX2+AQZRZM+2PEO+OC77L" rel="nofollow">
               <img
-                width="300"
+                width="250"
                 height="250"
                 alt=""
-                src="https://www21.a8.net/svt/bgt?aid=251123222647&wid=001&eno=01&mid=s00000007238003015000&mc=1"
+                src="https://www25.a8.net/svt/bgt?aid=251123222650&wid=001&eno=01&mid=s00000012624004088000&mc=1"
                 className="rounded-lg"
               />
             </a>
@@ -119,7 +119,7 @@ export function SideMenuNavigation({
             <img
               width="1"
               height="1"
-              src="https://www10.a8.net/0.gif?a8mat=45IFX2+AP7H6A+1JUK+HY7W1"
+              src="https://www12.a8.net/0.gif?a8mat=45IFX2+AQZRZM+2PEO+OC77L"
               alt=""
               className="hidden"
             />

@@ -39,8 +39,6 @@
 		EBE651AA7D47E45F97D52F94 /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BA8D63360CEFD9CC816A334 /* KeyboardViewController.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 		F6A1D067C26B9C5E0854D7B2 /* CategoryMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B9C41A4D69717B71D14456A /* CategoryMapper.swift */; };
-		FA11ACCE55B71D6E0B1C7004 /* FullAccessBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = FA11ACCE55B71D6E0B1C7002 /* FullAccessBridge.m */; };
-		FA11ACCE55B71D6E5W1F7003 /* FullAccessBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA11ACCE55B71D6E5W1F7001 /* FullAccessBridge.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -109,8 +107,6 @@
 		F11748442D0722820044C1D9 /* ClipTap-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "ClipTap-Bridging-Header.h"; path = "ClipTap/ClipTap-Bridging-Header.h"; sourceTree = "<group>"; };
 		F2E86FF12EEFE9769C7153A6 /* ProfileMapper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProfileMapper.swift; path = Mappers/ProfileMapper.swift; sourceTree = "<group>"; };
 		F826AAB62ECB2F56008F4794 /* ClipTapKeyboard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClipTapKeyboard.entitlements; sourceTree = "<group>"; };
-		FA11ACCE55B71D6E0B1C7002 /* FullAccessBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FullAccessBridge.m; path = ClipTap/FullAccessBridge.m; sourceTree = "<group>"; };
-		FA11ACCE55B71D6E5W1F7001 /* FullAccessBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FullAccessBridge.swift; path = ClipTap/FullAccessBridge.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,8 +134,6 @@
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				FA11ACCE55B71D6E5W1F7001 /* FullAccessBridge.swift */,
-				FA11ACCE55B71D6E0B1C7002 /* FullAccessBridge.m */,
 				F11748442D0722820044C1D9 /* ClipTap-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
@@ -639,8 +633,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				FA11ACCE55B71D6E5W1F7003 /* FullAccessBridge.swift in Sources */,
-				FA11ACCE55B71D6E0B1C7004 /* FullAccessBridge.m in Sources */,
 				45F22E56024AF24DF098B43F /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

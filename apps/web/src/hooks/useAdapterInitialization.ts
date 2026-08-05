@@ -8,7 +8,6 @@ import { WebLocaleAdapter } from '@adapters/WebLocaleAdapter';
 import { WebI18nAdapter } from '@adapters/WebI18nAdapter';
 import { WebFileIOAdapter } from '@adapters/WebFileIOAdapter';
 import { WebFileShareAdapter } from '@adapters/WebFileShareAdapter';
-import { WebFilePickerAdapter } from '@adapters/WebFilePickerAdapter';
 import { WebAuthAdapter } from '@adapters/WebAuthAdapter';
 import { WebExportAdapter } from '@adapters/WebExportAdapter';
 import { WebImportAdapter } from '@adapters/WebImportAdapter';
@@ -36,10 +35,16 @@ export function useAdapterInitialization() {
       onWrite: () => webDbCacheManager.scheduleSave(),
     });
 
+    /* systemDBアダプターを作成（PRAGMA user_versionの更新もキャッシュへ反映させる） */
+    const systemDbAdapter = new WebDatabaseAdapter({
+      fileIO: fileIOAdapter,
+      onWrite: () => webDbCacheManager.scheduleSave(),
+    });
+
     return {
       adapters: {
         mainDB: mainDbAdapter,
-        systemDB: new WebDatabaseAdapter({ fileIO: fileIOAdapter }),
+        systemDB: systemDbAdapter,
         tempDb: new WebDatabaseAdapter({ fileIO: fileIOAdapter }),
         crypto: new WebCryptoAdapter(),
         subscription: new WebSubscriptionAdapter(),
@@ -47,8 +52,6 @@ export function useAdapterInitialization() {
         locale: new WebLocaleAdapter(),
         i18n: new WebI18nAdapter(),
         fileIO: fileIOAdapter,
-        fileShare: fileShareAdapter,
-        filePicker: new WebFilePickerAdapter(),
         auth: new WebAuthAdapter(),
         export: new WebExportAdapter(fileShareAdapter, fileIOAdapter),
         import: new WebImportAdapter(fileIOAdapter),

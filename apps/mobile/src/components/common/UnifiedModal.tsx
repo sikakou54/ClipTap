@@ -424,47 +424,5 @@ export const BottomSheetModal: React.FC<Omit<UnifiedModalProps, 'position' | 'an
   />
 );
 
-/**
- * 中央フェードモーダル
- *
- * 画面中央にフェードインするモーダル。
- * 確認ダイアログやアラートに最適。
- *
- * デフォルト設定:
- * - position: center（中央表示）
- * - animationType: fade（フェードアニメーション）
- */
-export const CenterModal: React.FC<Omit<UnifiedModalProps, 'position' | 'animationType'>> = (props) => (
-  <UnifiedModal
-    {...props}
-    position="center"
-    animationType="fade"
-  />
-);
-
-/**
- * 全画面モーダル
- *
- * 画面全体を覆うモーダル。
- * 複雑なフォームや詳細表示に最適。
- *
- * デフォルト設定:
- * - position: top（上部表示）
- * - maxHeight: 100%（全画面）
- * - showHandle: false（ハンドルバー非表示）
- * - animationType: slide（デフォルト、カスタマイズ可能）
- */
-export const FullScreenModal: React.FC<Omit<UnifiedModalProps, 'position' | 'maxHeight' | 'showHandle'>> = ({
-  animationType = 'slide',
-  ...props
-}) => (
-  <UnifiedModal
-    {...props}
-    animationType={animationType}
-    position="top"
-    maxHeight="100%"
-    showHandle={false}
-  />
-);
 
 export default UnifiedModal;

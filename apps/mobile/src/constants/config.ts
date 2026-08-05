@@ -37,20 +37,6 @@ export const AUTH_CONFIG = {
   GOOGLE_WEB_CLIENT_ID: '570104360158-jj3g9mc15782i8ia6bh92qo5mtdhtuu5.apps.googleusercontent.com',
 } as const; // as const: 定数として扱い、値の変更を防ぐ
 
-/**
- * App Group設定（iOS/Android共通識別子）
- * App Group: アプリとウィジェット間でデータを共有するための仕組み
- * 将来的なウィジェット機能追加に備えた設定
- */
-/* App Group設定オブジェクト（as constで読み取り専用） */
-export const APP_GROUP_CONFIG = {
-  /** App Group識別子 - アプリとウィジェットで共有するグループID（iOSはBundleID形式、Androidは任意） */
-  IDENTIFIER: 'group.com.sikakou.cliptap',
-  /** データベースディレクトリ名 - App Group内でデータベースファイルを格納するディレクトリ名 */
-  DATABASES_DIR: 'databases',
-  /** データベースファイル名 - SQLiteデータベースの実ファイル名 */
-  DATABASE_FILE: 'cliptap.db',
-} as const; // as const: 定数として扱い、値の変更を防ぐ
 
 /**
  * サブスクリプション商品ID（iOS/Android別に管理）

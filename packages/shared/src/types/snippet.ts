@@ -96,24 +96,6 @@ export const UpdateSnippetInputSchema = z.object({
  */
 export type UpdateSnippetInput = z.infer<typeof UpdateSnippetInputSchema>;
 
-/**
- * 検索オプションスキーマ
- *
- * @remarks
- * - query: 検索文字列（タイトル・本文から部分一致検索）
- * - categoryId: 省略可（指定時はそのカテゴリ内のみ検索）
- * - sortBy: 省略可（指定時はその基準でソート）
- */
-export const SearchOptionsSchema = z.object({
-  query: z.string(),
-  categoryId: z.string().optional(),
-  sortBy: SnippetSortBySchema.optional(),
-});
-
-/**
- * 検索オプション
- */
-export type SearchOptions = z.infer<typeof SearchOptionsSchema>;
 
 /**
  * スニペット-プロファイル関連スキーマ

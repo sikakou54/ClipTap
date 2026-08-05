@@ -132,18 +132,6 @@ class _CacheService {
     return cached !== undefined;
   }
 
-  /**
-   * キャッシュのタイムスタンプを取得
-   * @returns タイムスタンプまたはnull
-   */
-  async getTimestamp(): Promise<number | null> {
-    /* データベースインスタンスを取得 */
-    const database = await this.getDB();
-    /* 'cache'オブジェクトストアから'sqlite-data'キーのデータを取得 */
-    const cached = await database.get('cache', CACHE_KEY);
-    /* タイムスタンプを返す（存在しない場合はnull） */
-    return cached?.timestamp || null;
-  }
 
   /**
    * キャッシュをクリア
@@ -155,25 +143,6 @@ class _CacheService {
     await database.delete('cache', CACHE_KEY);
   }
 
-  /**
-   * キャッシュのcustomerIdを更新
-   * @param customerId - 新しいユーザーID（nullでゲストモードに変更）
-   */
-  async updateCustomerId(customerId: string | null): Promise<void> {
-    /* データベースインスタンスを取得 */
-    const database = await this.getDB();
-    /* 既存のキャッシュデータを取得 */
-    const existing = await database.get('cache', CACHE_KEY);
-
-    /* 既存データがある場合のみ更新 */
-    if (existing) {
-      await database.put('cache', {
-        ...existing,
-        customerId, /* 新しいcustomerIdで上書き */
-        timestamp: Date.now(),
-      }, CACHE_KEY);
-    }
-  }
 
   /**
    * キャッシュを更新（SQLiteデータのみ）
@@ -205,7 +174,6 @@ class _CacheService {
       }, CACHE_KEY);
     }
   }
-
 }
 
 /**

@@ -458,16 +458,6 @@ export class ProfileVariableMapper {
     return toPVEntities(rows);
   }
 
-  /**
-   * 変数IDで変数一覧を取得
-   * @param variableId - 変数ID
-   * @returns 該当変数の全プロファイル値
-   */
-  static getByVariableId(variableId: string): ProfileVariable[] {
-    const db = getMainDbAdapter();
-    const rows = db.all<any>(ProfileVariableQueries.SELECT_BY_VARIABLE, [variableId]);
-    return toPVEntities(rows);
-  }
 
   /**
    * プロファイルIDと変数IDで変数を取得

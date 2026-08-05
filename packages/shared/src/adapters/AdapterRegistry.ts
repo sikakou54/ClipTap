@@ -14,8 +14,6 @@ import type { CryptoAdapter } from './CryptoAdapter';
 import type { DbAdapter } from './DbAdapter';
 import type { ClipboardAdapter } from './ClipboardAdapter';
 import type { FileIOAdapter } from './FileIOAdapter';
-import type { FileShareAdapter } from './FileShareAdapter';
-import type { FilePickerAdapter } from './FilePickerAdapter';
 import type { LocaleAdapter } from './LocaleAdapter';
 import type { I18nAdapter } from './I18nAdapter';
 import type { AuthAdapter } from './AuthAdapter';
@@ -31,8 +29,6 @@ import {
 } from './DbAdapter';
 import { setClipboardAdapter } from './ClipboardAdapter';
 import { setFileIOAdapter } from './FileIOAdapter';
-import { setFileShareAdapter } from './FileShareAdapter';
-import { setFilePickerAdapter } from './FilePickerAdapter';
 import { setLocaleAdapter } from './LocaleAdapter';
 import { setI18nAdapter } from './I18nAdapter';
 import { setAuthAdapter } from './AuthAdapter';
@@ -110,10 +106,6 @@ export interface AllAdapters {
   clipboard?: ClipboardAdapter;
   /** ファイルI/Oアダプター（ファイル読み書きを抽象化） */
   fileIO?: FileIOAdapter;
-  /** ファイル共有アダプター（ファイル共有/ダウンロードを抽象化） */
-  fileShare?: FileShareAdapter;
-  /** ファイル選択アダプター（ファイル選択ダイアログを抽象化） */
-  filePicker?: FilePickerAdapter;
   /** ロケールアダプター（言語設定を抽象化） */
   locale?: LocaleAdapter;
   /** i18nアダプター（翻訳機能を抽象化） */
@@ -175,12 +167,6 @@ export function setAllAdapters(
   }
   if (adapters.fileIO) {
     setFileIOAdapter(adapters.fileIO);
-  }
-  if (adapters.fileShare) {
-    setFileShareAdapter(adapters.fileShare);
-  }
-  if (adapters.filePicker) {
-    setFilePickerAdapter(adapters.filePicker);
   }
   if (adapters.locale) {
     setLocaleAdapter(adapters.locale);

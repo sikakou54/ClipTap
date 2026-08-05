@@ -120,10 +120,3 @@ export function getFileIOAdapter(): FileIOAdapter {
   return currentFileIOAdapter;
 }
 
-/**
- * FileIOAdapterが登録済みか確認
- * @returns 登録済みの場合true
- */
-export function hasFileIOAdapter(): boolean {
-  return currentFileIOAdapter !== null;
-}

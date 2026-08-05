@@ -131,7 +131,7 @@ export function SubscriptionProvider({
     setVerificationFailed(false);
 
     if (updateValidity) SubscriptionService.updateValidFlags();
-  }, [platformAdapter]);
+  }, []);
 
   useEffect(() => {
     const initialize = async () => {

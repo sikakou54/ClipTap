@@ -36,7 +36,6 @@ import { MobileLocaleAdapter } from '@adapters/MobileLocaleAdapter';
 import { MobileI18nAdapter } from '@adapters/MobileI18nAdapter';
 import { MobileFileIOAdapter } from '@adapters/MobileFileIOAdapter';
 import { MobileFileShareAdapter } from '@adapters/MobileFileShareAdapter';
-import { MobileFilePickerAdapter } from '@adapters/MobileFilePickerAdapter';
 import { MobileAuthAdapter } from '@adapters/MobileAuthAdapter';
 import { MobileExportAdapter } from '@adapters/MobileExportAdapter';
 import { MobileImportAdapter } from '@adapters/MobileImportAdapter';
@@ -95,8 +94,6 @@ export function useAdapterInitialization(): UseAdapterInitializationReturn {
         locale: new MobileLocaleAdapter(),
         i18n: new MobileI18nAdapter(),
         fileIO: fileIOAdapter,
-        fileShare: fileShareAdapter,
-        filePicker: new MobileFilePickerAdapter(),
         auth: new MobileAuthAdapter(),
         export: new MobileExportAdapter(fileIOAdapter, fileShareAdapter),
         import: new MobileImportAdapter(fileIOAdapter),

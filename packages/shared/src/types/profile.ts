@@ -121,18 +121,4 @@ export const UpdateProfileVariableInputSchema = z.object({
  */
 export type UpdateProfileVariableInput = z.infer<typeof UpdateProfileVariableInputSchema>;
 
-/**
- * 変数値を含むプロファイルスキーマ
- *
- * @remarks
- * - プロファイルに紐付くすべての変数値を含む拡張スキーマ
- * - 環境切り替え時の変数値一括取得に使用
- */
-export const ProfileWithVariablesSchema = ProfileSchema.extend({
-  variables: z.array(ProfileVariableSchema),
-});
 
-/**
- * 変数値を含むプロファイル型
- */
-export type ProfileWithVariables = z.infer<typeof ProfileWithVariablesSchema>;

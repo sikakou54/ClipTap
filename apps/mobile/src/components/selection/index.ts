@@ -5,7 +5,7 @@
  * 共通のdataItemStylesも併せてエクスポート。
  */
 
-export { SelectionSnippetItem, type SelectionSnippetData, type SnippetProfileData } from './SelectionSnippetItem';
+export { SelectionSnippetItem, type SelectionSnippetData } from './SelectionSnippetItem';
 export { SelectionProfileItem, type SelectionProfileData } from './SelectionProfileItem';
 export { SelectionVariableItem, type SelectionVariableData, type SelectionVariableProfileValue } from './SelectionVariableItem';
 export { SelectionCategoryItem, type SelectionCategoryData } from './SelectionCategoryItem';

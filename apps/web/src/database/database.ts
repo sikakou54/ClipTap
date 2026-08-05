@@ -28,6 +28,7 @@ import {
 } from '@cliptap/shared';
 import { SQLiteWasm } from '@src/mappers/sqliteWasm';
 import { CacheService } from '@services/CacheService';
+import { webDbCacheManager } from '@adapters/WebDbCacheManager';
 import type { WebDatabaseAdapter } from '@adapters/WebDatabaseAdapter';
 import type { WebFileIOAdapter } from '@adapters/WebFileIOAdapter';
 import { runMigrations, getSchemaVersionFromDb } from './DatabaseMigrations';
@@ -64,7 +65,8 @@ class Database {
    * - この関数を呼び出す前に、shared.init()でアダプターを登録しておく必要があります。
    * - キャッシュがない場合は空のDBファイルを削除し、.cliptapファイルのインポートを待ちます。
    * - ログイン/ログアウト時は再初期化されません（既存のキャッシュを継続使用）。
-   * - バージョンが取得できない（破損した）キャッシュは自動でクリアされます。
+   * - マイグレーションに失敗した場合は例外を送出します（中途半端なスキーマのまま起動させないため）。
+   *   呼び出し元は初期化未完了として扱い、ホーム画面で.cliptapファイルの読み込みを促します。
    * - キャッシュから復元されたかどうかは hasCache() メソッドで取得できます。
    */
   async init(): Promise<void> {
@@ -122,29 +124,32 @@ class Database {
 
       /* 6. キャッシュがある場合: バージョン確認・マイグレーション実行 */
       if (this.restoredFromCache) {
-        try {
-          /*
-           * バージョン取得の優先順位:
-           * 1. systemDBの PRAGMA user_version（新方式）
-           * 2. IndexedDBキャッシュの schemaVersion（旧方式、移行用）
-           * 3. デフォルト: V4（Web版の最小サポートバージョン）
-           */
-          let schemaVersion = getSchemaVersionFromDb(systemDbAdapter);
-          if (schemaVersion === 0 && legacySchemaVersion && legacySchemaVersion > 0) {
-            /* 旧方式からの移行: IndexedDBのバージョンを使用 */
-            Logger.info(`[Database] Migrating from legacy schemaVersion (${legacySchemaVersion}) to systemDB`);
-            schemaVersion = legacySchemaVersion;
-          } else if (schemaVersion === 0) {
-            /* Web版はV4以降をサポート */
-            schemaVersion = 4;
-          }
-
-          /* バージョン確認・マイグレーション実行 */
-          await runMigrations(mainDbAdapter, systemDbAdapter, schemaVersion);
-          Logger.info('[Database] Database restored from cache and migrations applied');
-        } catch (error) {
-          Logger.error('[Database] Migration failed :', error);
+        /*
+         * バージョン取得の優先順位:
+         * 1. systemDBの PRAGMA user_version（新方式）
+         * 2. IndexedDBキャッシュの schemaVersion（旧方式、移行用）
+         * 3. デフォルト: V4（Web版の最小サポートバージョン）
+         */
+        let schemaVersion = getSchemaVersionFromDb(systemDbAdapter);
+        if (schemaVersion === 0 && legacySchemaVersion && legacySchemaVersion > 0) {
+          /* 旧方式からの移行: IndexedDBのバージョンを使用 */
+          Logger.info(`[Database] Migrating from legacy schemaVersion (${legacySchemaVersion}) to systemDB`);
+          schemaVersion = legacySchemaVersion;
+        } else if (schemaVersion === 0) {
+          /* Web版はV4以降をサポート */
+          schemaVersion = 4;
         }
+
+        /*
+         * バージョン確認・マイグレーション実行
+         * 失敗した場合は中途半端なスキーマのまま起動させず、Mobile版と同様に呼び出し元へ送出する
+         */
+        await runMigrations(mainDbAdapter, systemDbAdapter, schemaVersion);
+
+        /* マイグレーション結果はsql.jsのメモリ上にしか無いため、確実にIndexedDBへ書き戻す */
+        await webDbCacheManager.flush();
+
+        Logger.info('[Database] Database restored from cache and migrations applied');
       } else {
         Logger.info('[Database] Database opened (waiting for .cliptap file import)');
       }

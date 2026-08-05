@@ -90,17 +90,6 @@ export class NewerVersionError extends ImportExportError {
   }
 }
 
-/**
- * ファイル読み込みエラー
- *
- * インポートファイルの読み込みに失敗した場合にスローされます。
- */
-export class FileReadError extends ImportExportError {
-  constructor(message: string = 'Failed to read file', cause?: unknown) {
-    super(message, 'error.file_read', 'error', cause);
-    this.name = 'FileReadError';
-  }
-}
 
 /**
  * 無効なファイル形式エラー
@@ -150,17 +139,6 @@ export class ExportFailedError extends ImportExportError {
   }
 }
 
-/**
- * ファイル書き込みエラー
- *
- * エクスポートファイルの書き込みに失敗した場合にスローされます。
- */
-export class FileWriteError extends ImportExportError {
-  constructor(message: string = 'Failed to write file', cause?: unknown) {
-    super(message, 'error.file_write', 'error', cause);
-    this.name = 'FileWriteError';
-  }
-}
 
 /**
  * 一時DBパス未設定エラー
@@ -174,17 +152,6 @@ export class TempDbPathRequiredError extends ImportExportError {
   }
 }
 
-/**
- * 選択なしエラー
- *
- * 部分インポート時に何もアイテムが選択されていない場合にスローされます。
- */
-export class NoSelectionError extends ImportExportError {
-  constructor(message: string = 'No items selected') {
-    super(message, 'backup.no_selection', 'warning');
-    this.name = 'NoSelectionError';
-  }
-}
 
 /**
  * 部分インポートエラー

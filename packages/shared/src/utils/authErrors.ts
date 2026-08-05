@@ -52,7 +52,10 @@ export function isAuthCancelledError(error: unknown): boolean {
   if (!error) return false;
 
   const errorObj = error as { message?: string; code?: string } | null;
-  const errorMessage = errorObj?.message || String(error);
+
+  /* オブジェクトの文字列化は "[object Object]" になり判定に使えないため、
+     messageを持たない場合は文字列としてthrowされたときのみ本文を見る */
+  const errorMessage = errorObj?.message || (typeof error === 'string' ? error : '');
   const errorCode = errorObj?.code || '';
 
   if (CANCEL_CODES.includes(errorCode)) {
@@ -62,18 +65,3 @@ export function isAuthCancelledError(error: unknown): boolean {
   return CANCEL_KEYWORDS.some((keyword) => errorMessage.includes(keyword));
 }
 
-/**
- * 認証エラーのi18nメッセージキーを取得
- *
- * @param error - 判定対象のエラー
- * @returns i18nキー、キャンセルの場合はnull（メッセージ不要）
- * @remarks
- * キャンセルの場合はユーザーが意図的にキャンセルしたため、
- * エラーメッセージは不要。nullを返してメッセージ表示をスキップ。
- */
-export function getAuthErrorMessageKey(error: unknown): string | null {
-  if (isAuthCancelledError(error)) {
-    return null;
-  }
-  return 'error.account_auth_failed_message';
-}

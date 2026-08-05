@@ -11,11 +11,6 @@
 export { CommonButton, type CommonButtonProps, type ButtonType, type ButtonSize } from './CommonButton';
 
 /* ======================================== */
-/* 入力フィールド */
-/* ======================================== */
-export { default as CommonInput, type InputType } from './CommonInput';
-
-/* ======================================== */
 /* モーダル */
 /* ======================================== */
 export { UnifiedModal, type UnifiedModalProps } from './UnifiedModal';
@@ -23,7 +18,6 @@ export { UnifiedModal, type UnifiedModalProps } from './UnifiedModal';
 /* ======================================== */
 /* その他の共通コンポーネント */
 /* ======================================== */
-export { Drawer } from './Drawer';
 export { default as EmptyState } from './EmptyState';
 export { Header } from './Header';
 export { default as LoadingSpinner } from './LoadingSpinner';

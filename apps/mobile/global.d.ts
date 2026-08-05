@@ -14,7 +14,6 @@
  * 4. 親画面のコールバックが実行される
  *
  * @see text-editor.tsx - テキストエディターモーダル
- * @see CategoryPicker - カテゴリ選択ピッカー
  */
 
 declare global {

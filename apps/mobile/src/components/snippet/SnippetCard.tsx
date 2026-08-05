@@ -16,7 +16,6 @@
  * - カスタム比較関数で不要な再レンダリングを防止
  *
  * @see SnippetList - 親コンポーネント
- * @see useSnippetPreview - 変数解決フック
  */
 
 import React from 'react';

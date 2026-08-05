@@ -16,12 +16,10 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   type ImportTabType,
   type SelectionSnippetData,
-  type SelectionSnippetProfile,
 } from '@cliptap/shared';
 import { dataItemStyles as styles } from '@components/common/dataItemStyles';
 
 export type { SelectionSnippetData } from '@cliptap/shared';
-export type SnippetProfileData = SelectionSnippetProfile;
 
 interface SelectionSnippetItemProps {
   item: SelectionSnippetData;

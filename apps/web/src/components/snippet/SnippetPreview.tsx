@@ -10,7 +10,7 @@
  * - 変数のリアルタイム展開
  * - プレビューコピーボタン
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation, VariableService, type Profile, type ProfileVariable, type Variable } from '@cliptap/shared';
 import { PreviewHeader } from './PreviewHeader';
 import { ProfileTabs } from './ProfileTabs';
@@ -55,7 +55,7 @@ export function SnippetPreview({
   /**
    * プロファイル別の変数マップを構築
    */
-  const buildProfileVariablesMap = (profileId: string | null): Record<string, string> => {
+  const buildProfileVariablesMap = useCallback((profileId: string | null): Record<string, string> => {
     if (!profileId) return {};
     const map: Record<string, string> = {};
     for (const pv of profileVariables) {
@@ -67,12 +67,12 @@ export function SnippetPreview({
       }
     }
     return map;
-  };
+  }, [profileVariables, variables]);
 
   /**
    * 変数リゾルバーを作成（変数展開処理で使用）
    */
-  const createResolver = (profileId: string | null) => {
+  const createResolver = useCallback((profileId: string | null) => {
     const profileVariablesMap = buildProfileVariablesMap(profileId);
     const defaultProfileVariablesMap = buildProfileVariablesMap(defaultProfileId);
     return VariableService.createCustomVariableResolver({
@@ -80,7 +80,7 @@ export function SnippetPreview({
       profileVariablesMap,
       defaultProfileVariablesMap,
     });
-  };
+  }, [buildProfileVariablesMap, defaultProfileId]);
 
   useEffect(() => {
     if (filteredProfiles.length === 0) {
@@ -134,7 +134,7 @@ export function SnippetPreview({
     generatePreview();
 
     return () => { cancelled = true; };
-  }, [title, content, variables, profileVariables, focusedProfileId, defaultProfileId]);
+  }, [title, content, focusedProfileId, createResolver, language]);
 
   const [copied, setCopied] = useState(false);
 

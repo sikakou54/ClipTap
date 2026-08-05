@@ -17,10 +17,6 @@ import { z } from 'zod';
  */
 export const VariableTypeSchema = z.enum(['system', 'custom']);
 
-/**
- * 変数の種類
- */
-export type VariableType = z.infer<typeof VariableTypeSchema>;
 
 /* ==================== Variable ==================== */
 

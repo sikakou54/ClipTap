@@ -23,7 +23,6 @@ export const SPACING = {
   sectionGap: 48,
 } as const;
 
-export type Spacing = typeof SPACING;
 
 /**
  * フォントサイズシステム（スマートフォン向け基本値）
@@ -39,7 +38,6 @@ export const FONT_SIZES = {
   hero: 48,
 } as const;
 
-export type FontSizes = typeof FONT_SIZES;
 
 /**
  * タイポグラフィシステム
@@ -108,7 +106,6 @@ export const TYPOGRAPHY = {
   },
 } as const;
 
-export type Typography = typeof TYPOGRAPHY;
 
 /**
  * ボーダーラディウス（角丸）
@@ -122,7 +119,6 @@ export const RADIUS = {
   round: 50,
 } as const;
 
-export type Radius = typeof RADIUS;
 
 /**
  * 寸法システム（固定寸法）
@@ -167,4 +163,3 @@ export const SHADOWS = {
   large: {},
 } as const;
 
-export type Shadows = typeof SHADOWS;

@@ -14,13 +14,11 @@ export {
   SnippetSchema,
   CreateSnippetInputSchema,
   UpdateSnippetInputSchema,
-  SearchOptionsSchema,
   SnippetProfileSchema,
   type SnippetSortBy,
   type Snippet,
   type CreateSnippetInput,
   type UpdateSnippetInput,
-  type SearchOptions,
   type SnippetProfile,
 } from './snippet';
 
@@ -42,14 +40,12 @@ export {
   ProfileVariableSchema,
   CreateProfileVariableInputSchema,
   UpdateProfileVariableInputSchema,
-  ProfileWithVariablesSchema,
   type Profile,
   type CreateProfileInput,
   type UpdateProfileInput,
   type ProfileVariable,
   type CreateProfileVariableInput,
   type UpdateProfileVariableInput,
-  type ProfileWithVariables,
 } from './profile';
 
 /* ==================== Variable ==================== */
@@ -58,7 +54,6 @@ export {
   VariableSchema,
   CreateVariableInputSchema,
   UpdateVariableInputSchema,
-  type VariableType,
   type Variable,
   type CreateVariableInput,
   type UpdateVariableInput,
@@ -81,8 +76,6 @@ export {
   ImportCandidateCategorySchema,
   ImportCandidatesSchema,
   ClipTapExportDataSchema,
-  PasswordVerifyResultSchema,
-  AppDataSchema,
   SelectionSnippetProfileSchema,
   SelectionSnippetDataSchema,
   SelectionProfileDataSchema,
@@ -98,9 +91,6 @@ export {
   type ImportCandidateCategory,
   type ImportCandidates,
   type ClipTapExportData,
-  type PasswordVerifyResult,
-  type AppData,
-  type SelectionSnippetProfile,
   type SelectionSnippetData,
   type SelectionProfileData,
   type SelectionVariableProfileValue,
@@ -120,8 +110,6 @@ export type {
 /* ==================== Auth ==================== */
 export type {
   SharedUser,
-  AuthProviderType,
-  AuthError,
 } from './Auth';
 
 /* ==================== Alert ==================== */

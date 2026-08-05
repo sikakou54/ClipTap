@@ -193,54 +193,6 @@ export class SubscriptionService {
     return this.isSubscribed() || currentCount < this.freeProfilesLimit;
   }
 
-  /**
-   * 無効（使用不可）なアイテム数を計算
-   *
-   * @param totalCount - 総アイテム数
-   * @param limit - 上限数
-   * @returns 上限を超えたアイテム数
-   */
-  private static getInvalidCount(totalCount: number, limit: number): number {
-    return this.isSubscribed() ? 0 : Math.max(0, totalCount - limit);
-  }
-
-  /**
-   * 無効な変数数を取得
-   *
-   * @param totalCount - 総変数数
-   * @returns 無効な変数数（無料版で上限超過分）
-   */
-  static getInvalidVariablesCount(totalCount: number): number {
-    return this.getInvalidCount(totalCount, this.freeVariablesLimit);
-  }
-
-  /**
-   * 無効なプロファイル数を取得
-   *
-   * @param totalCount - 総プロファイル数
-   * @returns 無効なプロファイル数（無料版で上限超過分）
-   */
-  static getInvalidProfilesCount(totalCount: number): number {
-    return this.getInvalidCount(totalCount, this.freeProfilesLimit);
-  }
-
-  /**
-   * 無料プランのプロファイル上限を取得
-   *
-   * @returns プロファイル上限数
-   */
-  static getFreeProfilesLimit(): number {
-    return this.freeProfilesLimit;
-  }
-
-  /**
-   * 無料プランの変数上限を取得
-   *
-   * @returns 変数上限数
-   */
-  static getFreeVariablesLimit(): number {
-    return this.freeVariablesLimit;
-  }
 
   /**
    * validフラグを更新

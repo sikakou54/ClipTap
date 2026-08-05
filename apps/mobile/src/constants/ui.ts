@@ -272,7 +272,6 @@ export const UI_CONSTANTS = {
 
 /* 型エクスポート（型安全性のため） */
 /* UI_CONSTANTSの型を抽出してエクスポート（他のモジュールで型参照可能にする） */
-export type UIConstants = typeof UI_CONSTANTS;
 
 /**
  * 変数アイコン関連の再エクスポート

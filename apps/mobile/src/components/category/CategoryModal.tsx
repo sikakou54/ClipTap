@@ -10,7 +10,6 @@
  * - 新規作成/編集モードの自動切り替え
  * - バリデーション（名前必須）
  *
- * @see CategoryPicker - カテゴリ選択画面からの呼び出し
  * @see app/category/manage.tsx - カテゴリ管理画面での使用
  */
 

@@ -1,5 +1,6 @@
 import { getMainDbAdapter, type DbAdapter } from '../adapters/DbAdapter';
 import {
+  isSupportedSystemVariablePattern,
   isValidSystemVariableFormat,
   type SystemVariableFormats,
   type SystemVariableKey,
@@ -60,7 +61,7 @@ export class SystemVariableFormatMapper {
   }
 
   static upsert(variableKey: SystemVariableKey, pattern: string): void {
-    if (!isValidSystemVariableFormat(variableKey, pattern)) {
+    if (!isSupportedSystemVariablePattern(variableKey, pattern)) {
       throw new Error(`Invalid system variable format for ${variableKey}`);
     }
 
@@ -82,21 +83,6 @@ export class SystemVariableFormatMapper {
     SystemVariableFormatRegistry.clear();
   }
 
-  static replaceAll(nextFormats: SystemVariableFormats): void {
-    const db = getMainDbAdapter();
-    db.transaction(() => {
-      db.run(SystemVariableFormatQueries.DELETE_ALL);
-      for (const [variableKey, pattern] of Object.entries(nextFormats)) {
-        if (!isValidSystemVariableFormat(variableKey as SystemVariableKey, pattern)) continue;
-        db.run(SystemVariableFormatQueries.UPSERT, [
-          variableKey,
-          pattern,
-          getCurrentTimestamp(),
-        ]);
-      }
-    });
-    this.loadRegistry();
-  }
 
   /** 呼び出し側のトランザクション内で、日時を含めて逐語復元する。 */
   static restoreAllWithinTransaction(rows: SystemVariableFormatRow[]): void {

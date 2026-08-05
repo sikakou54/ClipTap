@@ -248,12 +248,6 @@ class KeyboardViewController: UIInputViewController {
         return button
     }()
 
-    /// 使用頻度追跡を有効にするかどうかのUserDefaultsキー
-    private let usageTrackingKey = "usageTrackingEnabled"
-
-    /// 使用頻度追跡が有効かどうかを設定したことがあるかのUserDefaultsキー
-    private let usageTrackingEnabledSetKey = "usageTrackingEnabledSet"
-
     // === スニペット一覧エリア ===
 
     /// スニペット一覧を表示するテーブルビュー（リスト形式）
@@ -484,7 +478,7 @@ class KeyboardViewController: UIInputViewController {
         return view
     }()
 
-    /// 使用頻度ラベル
+    /// 使用頻度の記録状態の見出しラベル
     private let usageTrackingLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 15)
@@ -492,11 +486,13 @@ class KeyboardViewController: UIInputViewController {
         return label
     }()
 
-    /// 使用頻度スイッチ
-    private let usageTrackingSwitch: UISwitch = {
-        let switchControl = UISwitch()
-        switchControl.translatesAutoresizingMaskIntoConstraints = false
-        return switchControl
+    /// 使用頻度の記録が有効かどうかを示すラベル
+    /// フルアクセスの許可状態に応じて「有効」「フルアクセスが必要」を出し分ける
+    private let usageTrackingStatusLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 15, weight: .medium)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
 
     /// フルアクセス必要ヒントラベル
@@ -540,18 +536,12 @@ class KeyboardViewController: UIInputViewController {
 
         applySystemKeyboardBackground()
 
-        /* フルアクセス状態をApp Group UserDefaultsに保存（メインアプリと共有） */
+        /* フルアクセス状態をApp Group UserDefaultsに保存（SnippetServiceと共有） */
         saveFullAccessState()
 
         /* ソート設定を初期読み込み（setupUIより前に実行する必要あり） */
+        /* 使用頻度順は読み取りだけで成立するため、フルアクセスの有無で制限しない */
         currentSortBy = loadSortPreference()
-
-        /* フルアクセスOFFで使用頻度ソートが選択されている場合はデフォルトにリセット */
-        if !self.hasFullAccess && currentSortBy == "usage" {
-            currentSortBy = "created"
-            saveSortPreference(currentSortBy)
-            KeyboardLog.debug("🔄 [Sort] Reset sort preference to 'created' because full access is OFF")
-        }
 
         KeyboardLog.debug("🔄 [Sort] Initial sort preference loaded: %@", currentSortBy)
 
@@ -993,13 +983,12 @@ class KeyboardViewController: UIInputViewController {
         settingsHeaderView.addSubview(settingsCloseButton)
         settingsView.addSubview(usageTrackingRowView)
         usageTrackingRowView.addSubview(usageTrackingLabel)
-        usageTrackingRowView.addSubview(usageTrackingSwitch)
+        usageTrackingRowView.addSubview(usageTrackingStatusLabel)
         settingsView.addSubview(fullAccessHintLabel)
         settingsView.addSubview(fullAccessInstructionsLabel)
 
         // 設定画面のアクションを設定
         settingsCloseButton.addTarget(self, action: #selector(closeSettingsView), for: .touchUpInside)
-        usageTrackingSwitch.addTarget(self, action: #selector(usageTrackingSwitchChanged(_:)), for: .valueChanged)
 
         NSLayoutConstraint.activate([
             // Settings View: 全画面表示
@@ -1034,9 +1023,9 @@ class KeyboardViewController: UIInputViewController {
             usageTrackingLabel.leadingAnchor.constraint(equalTo: usageTrackingRowView.leadingAnchor, constant: 16),
             usageTrackingLabel.centerYAnchor.constraint(equalTo: usageTrackingRowView.centerYAnchor),
 
-            // Usage Tracking Switch: 行の右側
-            usageTrackingSwitch.trailingAnchor.constraint(equalTo: usageTrackingRowView.trailingAnchor, constant: -16),
-            usageTrackingSwitch.centerYAnchor.constraint(equalTo: usageTrackingRowView.centerYAnchor),
+            // Usage Tracking Status: 行の右側
+            usageTrackingStatusLabel.trailingAnchor.constraint(equalTo: usageTrackingRowView.trailingAnchor, constant: -16),
+            usageTrackingStatusLabel.centerYAnchor.constraint(equalTo: usageTrackingRowView.centerYAnchor),
 
             // Full Access Hint: 行の下
             fullAccessHintLabel.topAnchor.constraint(equalTo: usageTrackingRowView.bottomAnchor, constant: 8),
@@ -1571,12 +1560,11 @@ class KeyboardViewController: UIInputViewController {
 
     /// ソートボタンのメニューを設定
     /// iOS 14以降のUIMenuを使用して、タップ時にメニューを表示
-    /// フルアクセス許可かつ使用頻度追跡が有効な場合のみ「使用頻度」オプションを表示
+    /// 4種類の並び順はいずれもDBの読み取りだけで成立するため、常に全項目を表示する
     private func setupSortButtonMenu() {
         /* 注意: currentSortByは呼び出し元で設定済みのため、ここでは再読み込みしない
            viewDidLoad時にloadSortPreference()で初期化される */
-        KeyboardLog.debug("🔄 [Sort] Building menu with sort preference: %@, hasFullAccess: %@, isUsageTrackingEnabled: %@",
-              currentSortBy, self.hasFullAccess ? "true" : "false", isUsageTrackingEnabled ? "true" : "false")
+        KeyboardLog.debug("🔄 [Sort] Building menu with sort preference: %@", currentSortBy)
 
         // メニュー項目を作成
         let createdAction = UIAction(
@@ -1600,18 +1588,16 @@ class KeyboardViewController: UIInputViewController {
             self?.updateSortPreference("title")
         }
 
-        /* メニュー項目の配列を構築（フルアクセス許可かつ使用頻度追跡有効時のみ使用頻度を追加） */
-        var menuChildren: [UIAction] = [createdAction, updatedAction, titleAction]
-
-        if isUsageTrackingEnabled {
-            let usageAction = UIAction(
-                title: L10n.Sort.usage,
-                image: currentSortBy == "usage" ? UIImage(systemName: "checkmark") : nil
-            ) { [weak self] _ in
-                self?.updateSortPreference("usage")
-            }
-            menuChildren.append(usageAction)
+        /* 使用頻度順はDBの読み取りだけで成立するため、フルアクセスの有無に関わらず提供する
+           （フルアクセスなしでもアプリ本体が記録した使用回数で並べ替えできる） */
+        let usageAction = UIAction(
+            title: L10n.Sort.usage,
+            image: currentSortBy == "usage" ? UIImage(systemName: "checkmark") : nil
+        ) { [weak self] _ in
+            self?.updateSortPreference("usage")
         }
+
+        let menuChildren: [UIAction] = [createdAction, updatedAction, titleAction, usageAction]
 
         // メニューを作成してボタンに設定
         let menu = UIMenu(title: L10n.Sort.label, children: menuChildren)
@@ -1652,7 +1638,7 @@ class KeyboardViewController: UIInputViewController {
     }
 
     /// フルアクセス状態をApp Group UserDefaultsに保存
-    /// メインアプリからフルアクセス状態を参照できるようにする
+    /// UIInputViewControllerを継承しないSnippetServiceから参照できるようにする
     private func saveFullAccessState() {
         guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
             KeyboardLog.debug("⚠️ [FullAccess] Failed to get App Group UserDefaults")
@@ -1671,34 +1657,6 @@ class KeyboardViewController: UIInputViewController {
 
     // MARK: - Settings（設定関連）
 
-    /// 使用頻度追跡が有効かどうか
-    /// フルアクセスが許可されていて、かつ使用頻度追跡がONの場合にtrue
-    private var isUsageTrackingEnabled: Bool {
-        get {
-            guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
-                return false
-            }
-            /* フルアクセスがない場合はfalse */
-            if !self.hasFullAccess {
-                return false
-            }
-            /* 設定されていない場合はデフォルトtrue */
-            let usageEnabledSet = userDefaults.bool(forKey: usageTrackingEnabledSetKey)
-            if !usageEnabledSet {
-                return true
-            }
-            return userDefaults.bool(forKey: usageTrackingKey)
-        }
-        set {
-            guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
-                return
-            }
-            userDefaults.set(newValue, forKey: usageTrackingKey)
-            userDefaults.set(true, forKey: usageTrackingEnabledSetKey)
-            KeyboardLog.debug("💾 [Settings] Saved usage tracking enabled: %@", newValue ? "true" : "false")
-        }
-    }
-
     /// 設定ボタンがタップされた時のアクション
     @objc private func settingsButtonTapped() {
         KeyboardLog.debug("⚙️ [Settings] Settings button tapped")
@@ -1710,18 +1668,14 @@ class KeyboardViewController: UIInputViewController {
         // タイトルを設定
         settingsTitleLabel.text = L10n.Settings.title
 
-        // ラベルを設定
-        usageTrackingLabel.text = L10n.Settings.usageTrackingEnabled
+        // 見出しラベルを設定
+        usageTrackingLabel.text = L10n.Settings.usageTracking
 
-        // スイッチの状態を更新
-        // フルアクセスがない場合はfalseを表示するが、
-        // フルアクセスがある場合は設定値を表示
-        if self.hasFullAccess {
-            usageTrackingSwitch.isOn = isUsageTrackingEnabled
-        } else {
-            usageTrackingSwitch.isOn = false
-        }
-        usageTrackingSwitch.isEnabled = self.hasFullAccess
+        /* 記録状態を表示（フルアクセスなしでは共有DBへ書き込めないため記録できない） */
+        usageTrackingStatusLabel.text = self.hasFullAccess
+            ? L10n.Settings.usageTrackingActive
+            : L10n.Settings.usageTrackingInactive
+        usageTrackingStatusLabel.textColor = self.hasFullAccess ? .systemGreen : .secondaryLabel
 
         // フルアクセスヒントの表示/非表示
         fullAccessHintLabel.text = L10n.Settings.usageTrackingRequiresFullAccess
@@ -1731,7 +1685,7 @@ class KeyboardViewController: UIInputViewController {
         fullAccessInstructionsLabel.text = L10n.Settings.fullAccessInstructions
         fullAccessInstructionsLabel.isHidden = self.hasFullAccess
 
-        // ラベルとスイッチの色を更新
+        // 見出しの色を更新
         usageTrackingLabel.textColor = self.hasFullAccess ? .label : .secondaryLabel
 
         // 設定画面を表示
@@ -1746,21 +1700,6 @@ class KeyboardViewController: UIInputViewController {
         applyScreenState()
     }
 
-    /// 使用頻度スイッチが変更された時のアクション
-    @objc private func usageTrackingSwitchChanged(_ sender: UISwitch) {
-        KeyboardLog.debug("⚙️ [Settings] Usage tracking switch changed: %@", sender.isOn ? "ON" : "OFF")
-
-        // 設定を保存
-        isUsageTrackingEnabled = sender.isOn
-
-        // 使用頻度がOFFになった場合、ソートをリセット
-        if !sender.isOn && currentSortBy == "usage" {
-            updateSortPreference("created")
-        }
-
-        // ソートメニューを再構築
-        setupSortButtonMenu()
-    }
 }
 
 extension KeyboardViewController: UITableViewDataSource {

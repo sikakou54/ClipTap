@@ -144,23 +144,4 @@ export class ImportParserService {
       exportData: data,
     };
   }
-
-  /**
-   * SHA-256ハッシュを計算（エクスポート用に公開）
-   *
-   * @param input - ハッシュ対象の文字列
-   * @returns ハッシュ値
-   */
-  async calculateSHA256(input: string): Promise<string> {
-    return this.crypto.sha256(input);
-  }
-
-  /**
-   * 現在のスキーマバージョンを取得
-   *
-   * @returns スキーマバージョン
-   */
-  getSchemaVersion(): number {
-    return SCHEMA_VERSION;
-  }
 }

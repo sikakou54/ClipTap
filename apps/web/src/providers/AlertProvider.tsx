@@ -6,12 +6,11 @@
  * sharedのAlertProviderを再エクスポートし、Web版では
  * ブラウザのalert/confirmをデフォルトで使用します。
  *
- * useAlert()フックでアラート機能にアクセスできます。
+ * アラート機能を呼び出す側は `@cliptap/shared` の `useAlert()` を直接使用します。
  */
 
 export {
   AlertProvider,
-  useAlert,
   type AlertContextType,
   type AlertOptions,
   type AlertType,

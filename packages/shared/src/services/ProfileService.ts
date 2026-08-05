@@ -246,22 +246,6 @@ export class ProfileService {
   /* ProfileVariable操作 */
   /* ======================================== */
 
-  /**
-   * プロファイル変数の値を設定
-   */
-  static setProfileVariable(profileId: string, variableId: string, value: string): ProfileVariable {
-    return ProfileVariableMapper.upsert({ profileId, variableId, value });
-  }
-
-  /**
-   * プロファイル変数の値を削除
-   */
-  static deleteProfileVariable(profileId: string, variableId: string): void {
-    const existing = ProfileVariableMapper.get(profileId, variableId);
-    if (existing) {
-      ProfileVariableMapper.delete(existing.id);
-    }
-  }
 
   /**
    * 全プロファイル変数を取得
@@ -329,26 +313,6 @@ export class ProfileService {
     return ProfileVariableMapper.getByProfileId(profileId);
   }
 
-  /**
-   * プロファイルを作成（最初のプロファイルは自動的にアクティブ化）
-   * @param input - 作成するプロファイルの情報
-   * @returns 作成されたプロファイル
-   *
-   * @remarks
-   * - 1つ目のプロファイルを作成した場合は自動的にアクティブ化する
-   */
-  static createWithAutoActivate(input: CreateProfileInput): Profile {
-    const profile = this.create(input);
-
-    const allProfiles = this.getAll();
-    if (allProfiles.length === 1) {
-      ProfileMapper.setActive(profile.id);
-      const updatedProfile = this.getById(profile.id);
-      return updatedProfile || profile;
-    }
-
-    return profile;
-  }
 
   /**
    * プロファイルを削除（アクティブなプロファイルの自動切り替え付き）

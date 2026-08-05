@@ -360,6 +360,8 @@ export class ImportService {
       await tempDbAdapter.open?.(tempDbPath);
       try {
         await migrateImportTempDb(tempDbAdapter, exportData.s);
+        /* メモリ上で動作する実装（Web）では書き戻さないとマイグレーション結果が失われる */
+        await tempDbAdapter.persist?.();
         Logger.info('[ImportService] Temp DB migration completed');
       } finally {
         tempDbAdapter.close?.();
@@ -483,54 +485,6 @@ export class ImportService {
     return defaultProfileId;
   }
 
-  /**
-   * データベース全体をインポート（既存データ削除→挿入方式）
-   *
-   * @param password - インポートファイルのパスワード
-   * @param fileUri - インポートファイルのURI
-   */
-  static async importDatabase(password: string, fileUri: string): Promise<void> {
-    /* 一時DBを作成してからインポートを実行 */
-    if (!hasImportAdapter()) {
-      throw new Error('ImportAdapter is required for importDatabase. Call setImportAdapter() first.');
-    }
-
-    if (!hasTempDbAdapter()) {
-      throw new Error('TempDbAdapter is required for importDatabase. Call setTempDbAdapter() first.');
-    }
-
-    const adapter = getImportAdapter();
-    const importParserService = new ImportParserService();
-
-    const jsonContent = await adapter.readImportFile(fileUri);
-    const { dbBytes, exportData } = await importParserService.parseAndValidate(jsonContent, password);
-
-    /* 一時データベースを作成 */
-    const dbBase64 = uint8ArrayToBase64(dbBytes);
-    const tempNewDbName = `import_new_${new Date().getTime()}.db`;
-    const tempNewDbUri = await adapter.writeTempDatabase(tempNewDbName, dbBase64);
-
-    /* 旧バージョンファイルの場合、一時DBに対してマイグレーションを実行 */
-    if (exportData.s < SCHEMA_VERSION) {
-      Logger.info(`[ImportService] Migrating temp DB from V${exportData.s} to V${SCHEMA_VERSION}...`);
-      const tempDbAdapter = getTempDbAdapter();
-      await tempDbAdapter.open?.(tempNewDbUri);
-      try {
-        await migrateImportTempDb(tempDbAdapter, exportData.s);
-        Logger.info('[ImportService] Temp DB migration completed');
-      } finally {
-        tempDbAdapter.close?.();
-      }
-    }
-
-    try {
-      /* 既存の一時DBを使用してインポートを実行 */
-      await this.importDatabaseFromTempDb(tempNewDbUri);
-    } finally {
-      /* 一時DBファイルを削除 */
-      await adapter.deleteFile(tempNewDbUri).catch(() => { });
-    }
-  }
 
   /**
    * 既存の一時データベースからデータベース全体をインポート（既存データ削除→挿入方式）
@@ -673,6 +627,11 @@ export class ImportService {
     }
 
     const adapter = getImportAdapter();
-    adapter.deleteImportSourceFile?.(fileUri);
+
+    /* キャッシュの後始末はベストエフォート。
+       完了を待たず、失敗してもインポート結果には影響させない */
+    adapter.deleteImportSourceFile?.(fileUri).catch((err) => {
+      Logger.warn('[ImportService] Failed to delete import source file:', err);
+    });
   }
 }

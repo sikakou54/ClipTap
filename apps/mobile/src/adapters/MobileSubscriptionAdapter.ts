@@ -128,9 +128,6 @@ class MobileSubscriptionAdapterImpl implements SubscriptionAdapter {
     this.listeners.forEach((listener) => listener(isSubscribed));
   }
 
-  cleanup(): void {
-    this.listeners.clear();
-  }
 
   /**
    * ユーザーアカウントと課金アカウントを紐付け

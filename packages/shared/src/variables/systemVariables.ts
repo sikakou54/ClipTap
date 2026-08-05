@@ -33,10 +33,11 @@ export type SupportedLocale = 'ja' | 'en';
  * @constant
  * @private
  *
- * \x00-\x7F は ASCII 文字範囲（0x00～0x7F）を表す
+ * 非ASCII（U+0080以降）を1文字も含まないことを判定する。
+ * ASCII範囲（0x00～0x7F）の否定形で表現しており、判定結果は同一。
  * 英数字の場合は大文字小文字を正規化するために使用
  */
-const ASCII_PATTERN = /^[\x00-\x7F]+$/;
+const ASCII_PATTERN = /^[^\u0080-\uFFFF]+$/;
 
 /**
  * 曜日のロケール別表示名

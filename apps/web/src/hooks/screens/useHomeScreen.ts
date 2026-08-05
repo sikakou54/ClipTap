@@ -31,7 +31,7 @@ import {
   type SnippetSortBy,
 } from '@cliptap/shared';
 import { useDatabase } from '@cliptap/shared';
-import { useTheme } from '@providers/WebThemeProvider';
+import { useTheme } from '@hooks/useTheme';
 import { useBodyScrollLock } from '@hooks/useBodyScrollLock';
 import { useMobileMenu } from '@hooks/useMobileMenu';
 import { useSnippetModal } from '@hooks/screens/useSnippetModal';
@@ -52,6 +52,7 @@ export interface UseHomeScreenReturn {
   searchQuery: string;
   selectedCategory: string | null;
   copiedId: string | null;
+  copiedTitleId: string | null;
   expandedSnippetId: string | null;
   showProfileDropdown: boolean;
   showSearchBar: boolean;
@@ -96,6 +97,7 @@ export interface UseHomeScreenReturn {
 
   /* ハンドラ */
   handleCopySnippet: (snippet: Snippet) => Promise<void>;
+  handleCopySnippetTitle: (snippet: Snippet) => Promise<void>;
   handleDeleteSnippet: (id: string) => Promise<void>;
   handleSelectProfile: (profileId: string) => Promise<void>;
   handleToggleSnippet: (snippetId: string) => void;
@@ -113,7 +115,7 @@ export interface UseHomeScreenReturn {
 export function useHomeScreen(): UseHomeScreenReturn {
   const { t, language } = useTranslation();
   const { isLoaded, setLoaded } = useDatabase();
-  const { allSnippets, snippetProfiles, copySnippet, deleteSnippet, refresh: refreshSnippets, sortBy, setSortBy } = useSnippets();
+  const { allSnippets, snippetProfiles, copySnippet, copySnippetTitle, deleteSnippet, refresh: refreshSnippets, sortBy, setSortBy } = useSnippets();
   const { categories, getById: getCategoryById } = useCategories();
   const { profiles, profileVariables, activeProfile, defaultProfile, setActiveProfile } = useProfiles();
   const { variables } = useVariables();
@@ -143,6 +145,7 @@ export function useHomeScreen(): UseHomeScreenReturn {
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedTitleId, setCopiedTitleId] = useState<string | null>(null);
   const [expandedSnippetId, setExpandedSnippetId] = useState<string | null>(null);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
@@ -199,6 +202,23 @@ export function useHomeScreen(): UseHomeScreenReturn {
     }
   }, [copySnippet, activeProfile?.id]);
 
+  /**
+   * スニペットのタイトルだけをクリップボードにコピー
+   *
+   * 【使用回数を加算しない理由】
+   * タイトルをコピーしたあと本文もコピーすると、1回の利用が2回分として数えられてしまいます。
+   * 加算はcopySnippet側に集約しており、こちらでは行いません。
+   */
+  const handleCopySnippetTitle = useCallback(async (snippet: Snippet) => {
+    try {
+      await copySnippetTitle(snippet.id, activeProfile?.id);
+      setCopiedTitleId(snippet.id);
+      setTimeout(() => setCopiedTitleId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy title:', err);
+    }
+  }, [copySnippetTitle, activeProfile?.id]);
+
   /** スニペットを削除（確認ダイアログ付き） */
   const handleDeleteSnippet = useCallback(async (id: string) => {
     const { showConfirm } = await import('@utils/alerts');
@@ -249,6 +269,7 @@ export function useHomeScreen(): UseHomeScreenReturn {
     searchQuery,
     selectedCategory,
     copiedId,
+    copiedTitleId,
     expandedSnippetId,
     showProfileDropdown,
     showSearchBar,
@@ -289,6 +310,7 @@ export function useHomeScreen(): UseHomeScreenReturn {
 
     /* ハンドラ */
     handleCopySnippet,
+    handleCopySnippetTitle,
     handleDeleteSnippet,
     handleSelectProfile,
     handleToggleSnippet,

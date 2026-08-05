@@ -13,7 +13,7 @@
  */
 import { useTranslation, SubscriptionService, useAuth, translateError } from '@cliptap/shared';
 import { useSubscription } from '@services/SubscriptionService';
-import { useTheme } from '@providers/WebThemeProvider';
+import { useTheme } from '@hooks/useTheme';
 import { showConfirm, showErrorAlert } from '@utils/alerts';
 import { SideMenuHeader } from './SideMenuHeader';
 import { SideMenuNavigation } from './SideMenuNavigation';

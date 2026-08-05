@@ -40,22 +40,6 @@ export const formatDate = (
   return formatByPattern(d, format, 'en');
 };
 
-/**
- * 時刻のみをフォーマット（HH:mm形式）
- *
- * @param date - 時刻を取得する日付
- *
- * @returns HH:mm形式の時刻文字列（例: "15:30"）
- *
- * @remarks
- * 24時間形式で表示されます。
- * システム変数{{現在時刻}}の展開で使用されます。
- */
-export const formatTime = (date: Date): string => {
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${hours}:${minutes}`;
-};
 
 /**
  * 現在のタイムスタンプをISO形式で取得

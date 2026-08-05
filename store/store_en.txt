@@ -10,18 +10,11 @@ Insert saved text into any app with the ClipTap keyboard – emails, hashtags, A
 [What's New]
 Title and body into separate fields – free for everyone
 
-• The keyboard extension now has a dedicated insert button for the title, so you can fill a subject field and a body field one after another
-• Inserting the title keeps the detail view open, ready for the body
+• The keyboard extension now has a dedicated insert button for the title, so you can insert the title and body one after another
 • In the app, tapping a title in the list copies just that title
+• The keyboard's bottom insert button now inserts the body only (use the button above for the title)
 
-Behavior change
-• The bottom insert button in the keyboard now inserts the body only (it used to insert title + line break + body). Use the title button above it for the title
-• Snippets with "Copy with title" off are unchanged – body only, as before
-
-Also improved
-• Fixed a mismatch between the list preview and the copied text when a variable was saved with an empty value
-• Fixed the category filter being cleared on a screen refresh
-• More reliable modals and pickers
+Also fixed a list/copy mismatch and a category filter reset, plus more reliable modals and pickers
 
 [Description]
 

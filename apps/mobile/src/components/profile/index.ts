@@ -7,4 +7,3 @@
 
 export { ProfileChipSelector } from './ProfileChipSelector';
 export { ProfileSelector } from './ProfileSelector';
-export { ProfileSwitcher } from './ProfileSwitcher';

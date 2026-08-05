@@ -60,12 +60,6 @@ class SnippetService {
     /// フルアクセス状態を共有するUserDefaultsキー
     private let fullAccessStateKey = "keyboardHasFullAccess"
 
-    /// 使用頻度追跡設定のUserDefaultsキー
-    private let usageTrackingKey = "usageTrackingEnabled"
-
-    /// 使用頻度追跡設定が設定されたかどうかのUserDefaultsキー
-    private let usageTrackingEnabledSetKey = "usageTrackingEnabledSet"
-
     // MARK: - Initialization（初期化）
 
     /// プライベートイニシャライザ（外部からのインスタンス生成を禁止）
@@ -74,23 +68,17 @@ class SnippetService {
 
     // MARK: - Computed Properties（計算プロパティ）
 
-    /// 使用頻度追跡が有効かどうか
-    /// フルアクセス許可かつ使用頻度追跡設定がONの場合にtrue
+    /// 使用頻度の記録が有効かどうか
+    ///
+    /// iOSのサンドボックス制約により、フルアクセスが許可されていない拡張は
+    /// 共有コンテナへ書き込めないため、記録可否はフルアクセスの許可状態と一致する。
+    /// KeyboardViewControllerがviewDidLoadで保存した値を参照する
+    /// （UIInputViewControllerを継承しないため hasFullAccess を直接読めない）。
     private var isUsageTrackingEnabled: Bool {
         guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
             return false
         }
-        /* フルアクセスがない場合はfalse */
-        let hasFullAccess = userDefaults.bool(forKey: fullAccessStateKey)
-        if !hasFullAccess {
-            return false
-        }
-        /* 設定されていない場合はデフォルトtrue */
-        let usageEnabledSet = userDefaults.bool(forKey: usageTrackingEnabledSetKey)
-        if !usageEnabledSet {
-            return true
-        }
-        return userDefaults.bool(forKey: usageTrackingKey)
+        return userDefaults.bool(forKey: fullAccessStateKey)
     }
 
     // MARK: - Read Operations（読み取り操作）

@@ -16,12 +16,6 @@
 /* ======================================== */
 
 /**
- * 購入復元フック
- * App Store/Google Playの過去の購入を復元
- */
-export { useRestorePurchases } from './useRestorePurchases';
-
-/**
  * トラッキングフック
  * アナリティクス・イベントトラッキング
  */

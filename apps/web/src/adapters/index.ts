@@ -34,7 +34,6 @@ export { WebFileIOAdapter } from './WebFileIOAdapter';
 /* ファイル共有（ダウンロード）アダプターをエクスポート */
 export { WebFileShareAdapter } from './WebFileShareAdapter';
 /* ファイル選択アダプターをエクスポート */
-export { WebFilePickerAdapter } from './WebFilePickerAdapter';
 
 /* === Auth（認証） === */
 /* Firebase認証アダプターをエクスポート */

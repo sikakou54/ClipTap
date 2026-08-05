@@ -88,17 +88,6 @@ export const BORDER_WIDTH = {
   THICK: 3,
 } as const;
 
-/**
- * モーダル寸法定数
- */
-export const MODAL_SIZE = {
-  WIDTH_SMALL: 320,
-  WIDTH_MEDIUM: 480,
-  WIDTH_LARGE: 640,
-  WIDTH_XLARGE: 800,
-  DRAWER_WIDTH_PERCENT: 80,
-  MAX_WIDTH_PERCENT: 90,
-} as const;
 
 /**
  * レスポンシブブレークポイント定数（ピクセル単位）
@@ -110,15 +99,6 @@ export const BREAKPOINTS = {
   WIDE: 1280,
 } as const;
 
-/**
- * グリッド設定定数
- */
-export const GRID = {
-  MIN_COLUMNS: 1,
-  MAX_COLUMNS: 4,
-  DEFAULT_COLUMNS: 2,
-  GAP: 16,
-} as const;
 
 /**
  * タッチ領域拡張定数（Mobile用）
@@ -151,24 +131,3 @@ export const SHADOW = {
   },
 } as const;
 
-/**
- * 全コンポーネントトークンの集約オブジェクト
- */
-export const COMPONENT_TOKENS = {
-  MIN_HEIGHT,
-  MAX_HEIGHT,
-  ANIMATION_DURATION,
-  Z_INDEX,
-  OPACITY,
-  BORDER_WIDTH,
-  MODAL_SIZE,
-  BREAKPOINTS,
-  GRID,
-  HIT_SLOP,
-  SHADOW,
-} as const;
-export type MinHeight = typeof MIN_HEIGHT;
-export type MaxHeight = typeof MAX_HEIGHT;
-export type AnimationDuration = typeof ANIMATION_DURATION;
-export type ZIndex = typeof Z_INDEX;
-export type ComponentTokens = typeof COMPONENT_TOKENS;

@@ -84,7 +84,8 @@
 
 /* 設定関連 */
 "settings.title" = "設定";
-"settings.usage_tracking_enabled" = "使用頻度をカウントする";
-"settings.usage_tracking_disabled" = "使用頻度をカウントする";
-"settings.usage_tracking_requires_full_access" = "この機能を使用するにはフルアクセスの許可が必要です";
-"settings.full_access_instructions" = "1. 設定アプリを開く\n2. 「ClipTap」→「キーボード」を選択\n3. 「フルアクセスを許可」をON";
+"settings.usage_tracking" = "使用頻度の記録";
+"settings.usage_tracking_active" = "有効";
+"settings.usage_tracking_inactive" = "無効";
+"settings.usage_tracking_requires_full_access" = "キーボードからの挿入回数を記録するには、フルアクセスの許可が必要です。許可すると使用頻度順の並べ替えが使えます。";
+"settings.full_access_instructions" = "1. 設定アプリを開く\n2. 「一般」→「キーボード」→「キーボード」を選択\n3. 「ClipTap」をタップ\n4. 「フルアクセスを許可」をON";

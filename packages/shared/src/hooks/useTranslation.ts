@@ -60,6 +60,36 @@ function getInitialLanguage(hasI18n: boolean, hasLocale: boolean): string {
 }
 
 /**
+ * 翻訳関数を生成する
+ *
+ * @param hasI18n - i18nアダプターが登録済みか
+ * @param _language - 現在の言語コード
+ *
+ * @remarks
+ * 翻訳自体はアダプターがその時点の言語で行うため`_language`は参照しない。
+ * 言語ごとに別の関数インスタンスを返すことが目的で、これにより
+ * `t`を依存配列に持つメモ化が言語切替時に再計算される。
+ */
+function createTranslator(hasI18n: boolean, _language: string): TranslationFunction {
+  if (!hasI18n) {
+    return ((key: string, options?: string | { defaultValue?: string; [key: string]: unknown }) => {
+      const defaultValue = typeof options === 'string' ? options : options?.defaultValue;
+      return defaultValue || key;
+    }) as TranslationFunction;
+  }
+
+  return ((key: string, options?: string | { defaultValue?: string; [key: string]: unknown }) => {
+    try {
+      const adapter = getI18nAdapter();
+      return adapter.translate(key, options);
+    } catch {
+      const defaultValue = typeof options === 'string' ? options : options?.defaultValue;
+      return defaultValue || key;
+    }
+  }) as TranslationFunction;
+}
+
+/**
  * 共通翻訳フック
  *
  * @description
@@ -94,25 +124,10 @@ export function useTranslation(): UseTranslationReturn {
     return undefined;
   }, [hasI18n]);
 
-  const t: TranslationFunction = useMemo(() => {
-    if (!hasI18n) {
-      return ((key: string, options?: string | { defaultValue?: string; [key: string]: unknown }) => {
-        const defaultValue = typeof options === 'string' ? options : options?.defaultValue;
-        return defaultValue || key;
-      }) as TranslationFunction;
-    }
-
-    /* languageを依存配列に含めることで、言語変更時にt関数が再生成される */
-    return ((key: string, options?: string | { defaultValue?: string; [key: string]: unknown }) => {
-      try {
-        const adapter = getI18nAdapter();
-        return adapter.translate(key, options);
-      } catch {
-        const defaultValue = typeof options === 'string' ? options : options?.defaultValue;
-        return defaultValue || key;
-      }
-    }) as TranslationFunction;
-  }, [hasI18n, language]);
+  const t: TranslationFunction = useMemo(
+    () => createTranslator(hasI18n, language),
+    [hasI18n, language]
+  );
 
   return {
     t,

@@ -73,6 +73,18 @@ export function KeyboardGuideModal({ visible, onClose }: KeyboardGuideModalProps
             ))}
           </View>
 
+          {/* フルアクセスの補足（iOSのみ） */}
+          {/* キーボードからの挿入回数を記録するにはフルアクセスが必要だが、
+              未許可でもキーボード自体は使えることを明示する */}
+          {Platform.OS === 'ios' && (
+            <View style={[styles.noteBox, { backgroundColor: colors.background }]}>
+              <Ionicons name="information-circle-outline" size={18} color={colors.textSecondary} />
+              <Text style={[styles.noteText, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm }]}>
+                {t('subscription.keyboard_guide_full_access_note')}
+              </Text>
+            </View>
+          )}
+
           {/* ボタンエリア */}
           <View style={styles.modalButtons}>
             {/* OKボタン（閉じる） */}
@@ -150,6 +162,20 @@ const styles = StyleSheet.create({
   stepText: {
     flex: 1, // 残りスペースを使用
     lineHeight: 24,
+  },
+  /** フルアクセス補足ボックス（iOSのみ表示） */
+  noteBox: {
+    flexDirection: 'row', // アイコンとテキストを横並び
+    gap: 8,
+    alignItems: 'flex-start', // 上揃え
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 24,
+  },
+  /** フルアクセス補足テキスト */
+  noteText: {
+    flex: 1, // 残りスペースを使用
+    lineHeight: 20,
   },
   /** ボタンエリア */
   modalButtons: {

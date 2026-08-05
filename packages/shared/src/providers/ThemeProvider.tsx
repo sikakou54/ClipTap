@@ -97,10 +97,11 @@ export function ThemeProvider({
 
   const [themeMode, setThemeModeState] = useState<ThemeMode>(() => defaultThemeMode);
 
-  const [isDark, setIsDark] = useState<boolean>(() => {
-    const systemDark = platformAdapter.getSystemDarkMode();
-    return defaultThemeMode === 'auto' ? systemDark : defaultThemeMode === 'dark';
-  });
+  /* OSのダークモード設定。themeModeが'auto'のときだけisDarkに反映される */
+  const [systemDark, setSystemDark] = useState<boolean>(() => platformAdapter.getSystemDarkMode());
+
+  /* isDarkはthemeModeとsystemDarkから一意に決まるため、状態を持たず派生値として求める */
+  const isDark = themeMode === 'auto' ? systemDark : themeMode === 'dark';
 
   useEffect(() => {
     if (!storageAdapter) return;
@@ -108,23 +109,14 @@ export function ThemeProvider({
     storageAdapter.getThemeMode()
       .then((mode) => {
         setThemeModeState(mode);
-        const systemDark = platformAdapter.getSystemDarkMode();
-        const shouldBeDark = mode === 'auto' ? systemDark : mode === 'dark';
-        setIsDark(shouldBeDark);
-        platformAdapter.applyDarkClass?.(shouldBeDark);
       })
       .catch((err) => {
         Logger.error('Failed to load theme mode:', err);
       });
-  }, [storageAdapter, platformAdapter]);
+  }, [storageAdapter]);
 
   const setThemeMode = useCallback(async (mode: ThemeMode) => {
-    const systemDark = platformAdapter.getSystemDarkMode();
-    const shouldBeDark = mode === 'auto' ? systemDark : mode === 'dark';
-
     setThemeModeState(mode);
-    setIsDark(shouldBeDark);
-    platformAdapter.applyDarkClass?.(shouldBeDark);
 
     if (storageAdapter) {
       try {
@@ -133,25 +125,22 @@ export function ThemeProvider({
         Logger.error('Failed to save theme mode:', err);
       }
     }
-  }, [storageAdapter, platformAdapter]);
+  }, [storageAdapter]);
 
+  /* OSのダークモード変更を常時監視する。
+     'auto'のときだけ監視すると、'auto'へ戻したときにsystemDarkが古いままになる */
   useEffect(() => {
-    const systemDark = platformAdapter.getSystemDarkMode();
-    const shouldBeDark = themeMode === 'auto' ? systemDark : themeMode === 'dark';
-    setIsDark(shouldBeDark);
-    platformAdapter.applyDarkClass?.(shouldBeDark);
-  }, [themeMode, platformAdapter]);
+    if (!platformAdapter.watchSystemDarkMode) return;
 
-  useEffect(() => {
-    if (themeMode !== 'auto' || !platformAdapter.watchSystemDarkMode) return;
-
-    const unwatch = platformAdapter.watchSystemDarkMode((systemDark) => {
-      setIsDark(systemDark);
-      platformAdapter.applyDarkClass?.(systemDark);
+    return platformAdapter.watchSystemDarkMode((nextSystemDark) => {
+      setSystemDark(nextSystemDark);
     });
+  }, [platformAdapter]);
 
-    return unwatch;
-  }, [themeMode, platformAdapter]);
+  /* 確定したisDarkをDOM側（Web版のdarkクラス）へ反映する */
+  useEffect(() => {
+    platformAdapter.applyDarkClass?.(isDark);
+  }, [isDark, platformAdapter]);
 
   const colors = useMemo(() => getColors(isDark), [isDark, getColors]);
 

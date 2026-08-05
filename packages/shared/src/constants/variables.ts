@@ -15,10 +15,6 @@
 
 import { SYSTEM_VARIABLES } from '../variables/systemVariables';
 
-/**
- * システム変数の予約語リスト（キー名のみ）
- */
-export const RESERVED_VARIABLE_NAMES = SYSTEM_VARIABLES.map(v => v.key) as readonly string[];
 
 /**
  * すべてのシステム変数エイリアス（日本語・英語含む）
@@ -39,9 +35,3 @@ export function isReservedVariableName(name: string): boolean {
   );
 }
 
-/**
- * isReservedVariableNameのエイリアス関数
- */
-export function isSystemVariable(name: string): boolean {
-  return isReservedVariableName(name);
-}

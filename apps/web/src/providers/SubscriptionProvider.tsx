@@ -11,10 +11,8 @@
 import { useMemo, type ReactNode } from 'react';
 import {
   SubscriptionProvider as SharedSubscriptionProvider,
-  useSharedSubscription,
   useAuth,
   type SubscriptionPlatformAdapter,
-  type SubscriptionContextValue,
 } from '@cliptap/shared';
 import { subscriptionService } from '@services/SubscriptionService';
 
@@ -124,12 +122,4 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       {children}
     </SharedSubscriptionProvider>
   );
-}
-
-/**
- * サブスクリプションコンテキストを取得するカスタムフック
- * sharedのuseSubscriptionをそのままエクスポート
- */
-export function useSubscription(): SubscriptionContextValue {
-  return useSharedSubscription();
 }

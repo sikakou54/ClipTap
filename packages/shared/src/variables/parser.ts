@@ -52,15 +52,6 @@ const VARIABLE_PATTERN = /\{\{([^}]+)\}\}/g;
  */
 export const VARIABLE_TOKEN_PATTERN = VARIABLE_PATTERN;
 
-/**
- * 変数名を変数トークン形式にフォーマット
- *
- * @param {string} name - 変数名
- * @returns {string} フォーマットされた変数トークン
- */
-export const formatVariable = (name: string): string => {
-  return `{{${name}}}`;
-};
 
 /**
  * テキストに変数が含まれているかをチェック

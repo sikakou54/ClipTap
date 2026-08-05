@@ -11,6 +11,5 @@ export { SnippetFormScreen } from './SnippetFormScreen';
 export { SnippetList } from './SnippetList';
 export { SortMenu } from './SortMenu';
 export { TextInputScreen } from './TextInputScreen';
-export { VariablePickerModal } from './VariablePickerModal';
 export { VariablePreview } from './VariablePreview';
 export { VariableToolbar } from './VariableToolbar';

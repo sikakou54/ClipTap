@@ -360,7 +360,7 @@ npm run android
 - [ ] OTA無効化後も開発メニューの再読込がiOS/Androidで動く
 - [ ] 30文字を超える既存タイトルを編集画面で開いても、保存前に値が欠落しない
 - [ ] キーボードをFree状態で起動し、件数制限なく入力できる
-- [ ] iOSはフルアクセス・使用頻度追跡の各組合せ、Androidは通常入力で使用回数が仕様どおり更新される
+- [ ] iOSはフルアクセスのON/OFF両方、Androidは通常入力で使用回数が仕様どおり更新される（iOSはフルアクセスOFFでは加算されないこと、並べ替えは4種とも選択できることを確認）
 - [ ] チェックサムなし旧 `.cliptap` の非対応をリリースノートへ記載した
 
 #### ホットリロード
@@ -742,12 +742,13 @@ npm run type-check:shared
 #### 2. Linter実行
 
 ```bash
-# ESLint実行（mobile → web の順にワークスペースへ委譲）
+# ESLint実行（mobile → web → shared の順にワークスペースへ委譲）
 npm run lint
 
 # ワークスペース単位で実行する場合
 npm run lint --workspace=@cliptap/mobile
 npm run lint --workspace=@cliptap/web
+npm run lint --workspace=@cliptap/shared
 ```
 
 自動修正可能なエラーがある場合:
@@ -756,8 +757,10 @@ npm run lint --workspace=@cliptap/web
 npm run lint:fix
 ```
 
-ルートには flat config を置かず、ワークスペースへ委譲しています（mobile は型情報付き lint で web と設定が大きく異なるため）。
-`packages/shared` には lint 設定がありません。CI で強制しているのは `apps/mobile` のみです（方針は機能仕様書 §15 X-08）。
+ルートには flat config を置かず、ワークスペースへ委譲しています（web は型情報を使わない設定で、mobile と shared は型情報付き lint のため設定が大きく異なる）。
+3ワークスペースすべてを CI の `npm run lint` で強制しています。
+
+`packages/shared` の lint は `tsconfig.lint.json` を型情報のプロジェクトに使います。ビルド用の `tsconfig.json` が `src` のみを対象とするのに対し、こちらは `tests` も含めるためです。**`src` や `tests` の外に新しいディレクトリを追加する場合は `tsconfig.lint.json` の `include` も更新してください**（対象外のファイルは lint 時にパースエラーになります）。
 
 #### 3. フォーマット確認
 

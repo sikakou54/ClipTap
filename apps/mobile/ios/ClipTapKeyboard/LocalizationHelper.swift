@@ -306,11 +306,14 @@ enum L10n {
         /// "設定" / "Settings"
         static let title = localized("settings.title")
 
-        /// "使用頻度をカウントする" / "Count Usage from Keyboard Input"
-        static let usageTrackingEnabled = localized("settings.usage_tracking_enabled")
+        /// "使用頻度の記録" / "Usage Tracking"
+        static let usageTracking = localized("settings.usage_tracking")
 
-        /// "使用頻度をカウントする" / "Count Usage from Keyboard Input"
-        static let usageTrackingDisabled = localized("settings.usage_tracking_disabled")
+        /// "有効" / "On"
+        static let usageTrackingActive = localized("settings.usage_tracking_active")
+
+        /// "無効" / "Off"
+        static let usageTrackingInactive = localized("settings.usage_tracking_inactive")
 
         /// "この機能を使用するにはフルアクセスの許可が必要です" / "Full access is required to use this feature"
         static let usageTrackingRequiresFullAccess = localized("settings.usage_tracking_requires_full_access")
@@ -434,13 +437,17 @@ enum L10n {
 
         // Settings
         case "settings.title": return isJapanese ? "設定" : "Settings"
-        case "settings.usage_tracking_enabled": return isJapanese ? "使用頻度をカウントする" : "Count Usage from Keyboard Input"
-        case "settings.usage_tracking_disabled": return isJapanese ? "使用頻度をカウントする" : "Count Usage from Keyboard Input"
-        case "settings.usage_tracking_requires_full_access": return isJapanese ? "この機能を使用するにはフルアクセスの許可が必要です" : "Full access is required to use this feature"
+        case "settings.usage_tracking": return isJapanese ? "使用頻度の記録" : "Usage Tracking"
+        case "settings.usage_tracking_active": return isJapanese ? "有効" : "On"
+        case "settings.usage_tracking_inactive": return isJapanese ? "無効" : "Off"
+        case "settings.usage_tracking_requires_full_access":
+            return isJapanese
+                ? "キーボードからの挿入回数を記録するには、フルアクセスの許可が必要です。許可すると使用頻度順の並べ替えが使えます。"
+                : "Full Access is required to record how often each snippet is inserted from the keyboard. Allowing it enables sorting by usage."
         case "settings.full_access_instructions":
             return isJapanese
-                ? "1. 設定アプリを開く\n2. 「ClipTap」→「キーボード」を選択\n3. 「フルアクセスを許可」をON"
-                : "1. Open Settings app\n2. Go to \"ClipTap\" → \"Keyboards\"\n3. Turn on \"Allow Full Access\""
+                ? "1. 設定アプリを開く\n2. 「一般」→「キーボード」→「キーボード」を選択\n3. 「ClipTap」をタップ\n4. 「フルアクセスを許可」をON"
+                : "1. Open the Settings app\n2. Go to \"General\" → \"Keyboard\" → \"Keyboards\"\n3. Tap \"ClipTap\"\n4. Turn on \"Allow Full Access\""
 
         default: return key
         }

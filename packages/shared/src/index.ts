@@ -8,7 +8,6 @@ export {
 /* データベース */
 export * from './database/schema';
 export * from './database/migrations';
-export { BaseDatabaseManager, type DatabaseInitOptions } from './database/BaseDatabaseManager';
 
 /* 型定義 */
 export * from './schema';
@@ -39,7 +38,6 @@ export {
   type CryptoAdapter,
   setCryptoAdapter,
   getCryptoAdapter,
-  hasCryptoAdapter,
 
   /* DbAdapter関連（データベースアクセス） */
   type DbAdapter,
@@ -51,7 +49,6 @@ export {
   /* システムDB用（user_version管理・マイグレーション用） */
   setSystemDbAdapter,
   getSystemDbAdapter,
-  hasSystemDbAdapter,
   /* 一時DB用（エクスポート・インポート処理用） */
   setTempDbAdapter,
   getTempDbAdapter,
@@ -68,21 +65,9 @@ export {
   type FileInfo,
   setFileIOAdapter,
   getFileIOAdapter,
-  hasFileIOAdapter,
 
   /* FileShareAdapter関連（ファイル共有/ダウンロード） */
   type FileShareAdapter,
-  setFileShareAdapter,
-  getFileShareAdapter,
-  hasFileShareAdapter,
-
-  /* FilePickerAdapter関連（ファイル選択） */
-  type FilePickerAdapter,
-  type FilePickOptions,
-  type FilePickResult,
-  setFilePickerAdapter,
-  getFilePickerAdapter,
-  hasFilePickerAdapter,
 
   /* LocaleAdapter関連（ロケール取得） */
   type LocaleAdapter,
@@ -117,7 +102,6 @@ export {
   setSortPreferenceAdapter,
   getSortPreferenceAdapter,
   hasSortPreferenceAdapter,
-
 } from './adapters';
 
 /* ======================================== */
@@ -173,7 +157,6 @@ export * from './constants/inputLimits';      // 入力値の制限（最大文�
 export * from './constants/variables';        // 変数関連の定数
 export * from './constants/designTokens';     // デザイントークン（色、サイズ等）
 export * from './constants/componentTokens';  // コンポーネント用トークン（高さ、z-index、アニメーション等）
-export * from './constants/iconMapping';      // アイコンマッピング（Ionicons ↔ Heroicons）
 export * from './constants/themeTokens';      // テーマトークン（スペーシング、フォント、タイポグラフィ）
 export * from './constants/subscription';     // サブスクリプション定数（PRO_ENTITLEMENT_ID）
 export * from './constants/variableIcons';    // 変数アイコン定数
@@ -196,7 +179,6 @@ export * from './utils/errorUtils';      // エラーメッセージ翻訳ユー
 export {
   AUTH_ERROR_CODES,          // 認証エラーコード定数
   isAuthCancelledError,      // キャンセルエラー判定関数
-  getAuthErrorMessageKey,    // エラーメッセージキー取得関数
 } from './utils/authErrors';
 
 /* ======================================== */
@@ -213,16 +195,9 @@ export {
   useDebounce,
   DEFAULT_DEBOUNCE_DELAY,
 
-  /* Export/Import State（状態管理） */
-  useExportImportState,
-  type ExportImportStep,
-
   /* Selection (汎用版選択フック) */
   useSelection,
   type SelectionTabType,
-
-  /* Snippet Preview（スニペットプレビューフック） */
-  useSnippetPreview,
 
   /* Search（検索フック） */
   useSearch,
@@ -243,17 +218,11 @@ export {
   type UseAdapterInitializationReturn,
 
   /* App Initialization（アプリ初期化） */
-  useBaseAppInitialization,
   type UseAppInitializationReturn,
-  type AppInitializationOptions,
 
   /* Translation（翻訳） */
   useTranslation,
   type TranslationFunction,
-
-  /* Sort Preference（ソート設定） */
-  useSortPreference,
-  type UseSortPreferenceReturn,
 } from './hooks';
 
 /* ======================================== */

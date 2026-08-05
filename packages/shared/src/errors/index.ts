@@ -59,22 +59,14 @@ export {
   ChecksumMismatchError,
   VersionMismatchError,
   NewerVersionError,
-  FileReadError,
   InvalidFileTypeError,
   InvalidFileFormatError,
   PasswordRequiredError,
   ExportFailedError,
-  FileWriteError,
   TempDbPathRequiredError,
-  NoSelectionError,
   PartialImportError,
   DatabasePathNotFoundError,
 } from './importExport';
-
-/* ======================================== */
-/* 認証・課金関連 */
-/* ======================================== */
-export { AuthenticationError, PurchaseError } from './auth';
 
 /* ======================================== */
 /* その他 */

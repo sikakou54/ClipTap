@@ -3,28 +3,14 @@
  *
  * @description
  * shared版のThemeProviderをラップし、Web版固有の機能（gridColumns）を追加。
+ * コンテキスト定義は{@link WebThemeContext}、参照用フックは`@hooks/useTheme`にある。
  *
  * @module WebThemeProvider
  */
 
-import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
-import { ThemeProvider as SharedThemeProvider, useTheme as useSharedTheme, type ThemeProviderProps, type ThemeContextValue } from '@cliptap/shared';
-
-/* ======================================== */
-/* 型定義 */
-/* ======================================== */
-
-/**
- * Web版テーマコンテキストの型定義
- */
-export interface WebThemeContextValue extends ThemeContextValue {
-  /** グリッドの列数（Web版固有） */
-  gridColumns: 1 | 2 | 3;
-  /** グリッドの列数を変更 */
-  setGridColumns: (columns: 1 | 2 | 3) => void;
-}
-
-const WebThemeContext = createContext<WebThemeContextValue | null>(null);
+import { useState, useCallback, useMemo, type ReactNode } from 'react';
+import { ThemeProvider as SharedThemeProvider, useTheme as useSharedTheme, type ThemeProviderProps } from '@cliptap/shared';
+import { WebThemeContext, type WebThemeContextValue } from '@providers/WebThemeContext';
 
 /* ======================================== */
 /* ストレージ管理 */
@@ -116,19 +102,3 @@ export function WebThemeProvider(props: ThemeProviderProps) {
     </SharedThemeProvider>
   );
 }
-
-/* ======================================== */
-/* Hook */
-/* ======================================== */
-
-/**
- * Web版テーマフック
- */
-export function useTheme(): WebThemeContextValue {
-  const context = useContext(WebThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a WebThemeProvider');
-  }
-  return context;
-}
-
