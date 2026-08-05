@@ -1,8 +1,6 @@
 <resources>
   <string name="app_name">"ClipTap"</string>
   <string name="accessibility_sort_button">"Sort button"</string>
-  <string name="accessibility_insert_title_button">"Insert title button"</string>
-  <string name="keyboard_insert_failed">"Failed to insert text"</string>
   <string name="keyboard_sort_label">"Sort"</string>
   <string name="keyboard_sort_created">"Created"</string>
   <string name="keyboard_sort_updated">"Updated"</string>
@@ -10,5 +8,4 @@
   <string name="keyboard_sort_usage">"Usage"</string>
   <string name="category_all">"All"</string>
   <string name="snippet_empty">"No snippets"</string>
-  <string name="snippet_no_title">"(No Title)"</string>
 </resources>

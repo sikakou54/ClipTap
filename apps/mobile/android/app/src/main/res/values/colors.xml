@@ -3,12 +3,10 @@
   <color name="iconBackground">#ffffff</color>
   <color name="colorPrimary">#023c69</color>
   <color name="colorPrimaryDark">#1F2937</color>
-  <!-- 拡張キーボードのウィンドウ背景（Theme.MaterialComponents.DayNightのcolorBackgroundと同値） -->
   <color name="keyboardWindowBackground">#FFFFFFFF</color>
   <color name="keyboardSecondaryButtonBackground">#E0E0E0</color>
   <color name="keyboardSecondaryButtonIcon">#000000</color>
   <color name="keyboardAccent">#2196F3</color>
   <color name="keyboardOnAccent">#FFFFFF</color>
-  <!-- 詳細画面でタイトルと本文を区切る線 -->
   <color name="keyboardSeparator">#1F000000</color>
 </resources>

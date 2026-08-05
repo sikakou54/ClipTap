@@ -11,7 +11,6 @@
     <item name="colorAccent">@color/colorPrimary</item>
     <item name="popupMenuStyle">@style/NoElevationPopupMenu</item>
   </style>
-  <!-- 拡張キーボードのIMEウィンドウテーマ: レイアウトではなくウィンドウ層が背景を供給する -->
   <style name="ClipTapKeyboardWindowTheme" parent="@android:style/Theme.DeviceDefault.InputMethod">
     <item name="android:windowBackground">@color/keyboardWindowBackground</item>
   </style>
