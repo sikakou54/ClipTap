@@ -1,1534 +1,487 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClipTap - 定型文をワンタップでコピー | 無料の定型文管理アプリ</title>
-    <meta name="description" content="ClipTapは定型文をワンタップでコピーできる無料アプリ。メール、SNS、業務連絡など、よく使う文章を一括管理。iOS・Android対応。シンプルで使いやすい定型文アプリの決定版。">
-    <meta name="keywords" content="定型文 アプリ,定型文アプリ,定型文,コピー,クリップボード,テンプレート,定型文管理,メール定型文,SNS,業務効率化,無料アプリ,iOS,Android,カスタム変数,プロファイル,文章管理">
-    <meta name="author" content="ClipTap">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://cliptap.net/">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClipTap - どのアプリにも定型文をワンタップ入力 | 無料の定型文アプリ</title>
+    <meta name="description" content="ClipTapは、拡張キーボードからGmail・Slack・LINE・ChatGPTなど、どのアプリの入力欄にも定型文をそのまま入力できる無料アプリ。日付や会社名は変数で自動挿入。データは端末内に保存し、オフラインで動作。iOS・Android・Web対応。" />
+    <meta name="keywords" content="定型文アプリ,拡張キーボード,定型文入力,テキスト展開,メール定型文,ChatGPTプロンプト,クリップボード,業務効率化,iOS,Android" />
+    <meta name="author" content="ClipTap" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#0A0F1C" />
+    <meta name="color-scheme" content="dark" />
 
-    <!-- OGP (Open Graph Protocol) -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="ClipTap - 定型文をワンタップでコピー">
-    <meta property="og:description" content="メール、SNS、コードスニペットなど、よく使う定型文をワンタップでコピー。シンプルで使いやすい無料の定型文管理アプリ。">
-    <meta property="og:url" content="https://cliptap.net/">
-    <meta property="og:site_name" content="ClipTap">
-    <meta property="og:image" content="https://cliptap.net/image/top.png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:locale" content="ja_JP">
+    <link rel="canonical" href="https://cliptap.net/" />
+    <link rel="alternate" hreflang="ja" href="https://cliptap.net/" />
+    <link rel="alternate" hreflang="en" href="https://cliptap.net/en/" />
+    <link rel="alternate" hreflang="x-default" href="https://cliptap.net/" />
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="ClipTap - 定型文をワンタップでコピー">
-    <meta name="twitter:description" content="メール、SNS、コードスニペットなど、よく使う定型文をワンタップでコピー。シンプルで使いやすい無料の定型文管理アプリ。">
-    <meta name="twitter:image" content="https://cliptap.net/image/top.png">
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ClipTap - どのアプリにも定型文をワンタップ入力" />
+    <meta property="og:description" content="拡張キーボードから、いつもの文章をどのアプリにも直接入力。変数対応、ローカル保存、オフライン動作。" />
+    <meta property="og:url" content="https://cliptap.net/" />
+    <meta property="og:site_name" content="ClipTap" />
+    <meta property="og:image" content="https://cliptap.net/ogp/og-ja.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="ClipTap — どのアプリにも定型文をワンタップ" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:locale:alternate" content="en_US" />
 
-    <!-- iOS App -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="ClipTap">
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ClipTap - どのアプリにも定型文をワンタップ入力" />
+    <meta name="twitter:description" content="拡張キーボードから、いつもの文章をどのアプリにも直接入力。" />
+    <meta name="twitter:image" content="https://cliptap.net/ogp/og-ja.png" />
+    <meta name="twitter:image:alt" content="ClipTap — どのアプリにも定型文をワンタップ" />
 
-    <!-- Android App -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="ClipTap">
-    <meta name="theme-color" content="#2C3E50">
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" href="/image/icon.png" />
+    <link rel="apple-touch-icon" href="/image/icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./lp/lp.css" />
 
-    <!-- Favicon -->
-    <link rel="shortcut icon" href="favicon.ico">
-    <link rel="icon" type="image/png" href="image/icon.png">
-    <link rel="apple-touch-icon" href="image/icon.png">
-
-    <!-- 構造化データ (JSON-LD) -->
     <script type="application/ld+json">
-    {
+      {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "ClipTap",
-        "applicationCategory": "ProductivityApplication",
-        "operatingSystem": "iOS, Android",
-        "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "JPY"
-        },
-        "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.8",
-            "ratingCount": "1200"
-        },
-        "description": "定型文をワンタップでコピーできる無料アプリ。メール、SNS、業務連絡など、よく使う文章を一括管理。シンプルで使いやすい定型文管理アプリ。",
-        "screenshot": "https://cliptap.net/image/top.png",
-        "softwareVersion": "1.0.6",
-        "author": {
-            "@type": "Organization",
-            "name": "ClipTap"
-        },
-        "keywords": "定型文アプリ, 定型文, コピー, クリップボード, テンプレート, 定型文管理, メール, SNS"
-    }
-    </script>
-
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        "name": "ClipTap - 定型文をワンタップでコピー",
-        "description": "定型文をワンタップでコピーできるシンプルなアプリ。メール、SNS、業務連絡など、よく使う文章を効率的に管理。",
         "url": "https://cliptap.net/",
-        "publisher": {
-            "@type": "Organization",
-            "name": "ClipTap",
-            "logo": {
-                "@type": "ImageObject",
-                "url": "https://cliptap.net/image/icon.png"
-            }
-        }
-    }
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "iOS 15.1 or later, Android 7.0 or later, Web",
+        "softwareVersion": "1.3.0",
+        "inLanguage": ["ja", "en"],
+        "description": "拡張キーボードから、どのアプリの入力欄にも定型文を直接入力できるローカルファーストの定型文アプリ。",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "JPY"
+        },
+        "author": {
+          "@type": "Organization",
+          "name": "ClipTap"
+        },
+        "sameAs": [
+          "https://apps.apple.com/app/id6754281185",
+          "https://play.google.com/store/apps/details?id=com.sikakou.cliptap"
+        ],
+        "featureList": [
+          "拡張キーボードからの定型文入力",
+          "7種類のシステム変数と94種類の書式プリセット",
+          "プロファイル別のカスタム変数",
+          "ローカル保存とオフライン動作",
+          ".cliptapファイルによる入出力"
+        ],
+        "screenshot": [
+          "https://cliptap.net/image/keyborad.png",
+          "https://cliptap.net/image/top.png",
+          "https://cliptap.net/image/variables-setting.png"
+        ]
+      }
     </script>
-
     <script type="application/ld+json">
-    {
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "ClipTap",
+        "url": "https://cliptap.net/",
+        "inLanguage": ["ja", "en"],
+        "publisher": {
+          "@type": "Organization",
+          "name": "ClipTap",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://cliptap.net/image/icon.png"
+          }
+        }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
         "@context": "https://schema.org",
         "@type": "FAQPage",
         "mainEntity": [
-            {
-                "@type": "Question",
-                "name": "ClipTapは完全無料ですか？",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "はい、ClipTapの基本機能は完全無料でご利用いただけます。定型文の登録・コピー、拡張キーボード、カテゴリ管理、検索機能、システム変数などが無料で使えます。さらに快適に使いたい方向けに、広告なし・環境管理無制限・カスタム変数無制限のProプラン（月額250円/年間3,000円）もご用意しています。"
-                }
-            },
-            {
-                "@type": "Question",
-                "name": "どのような機能がありますか？",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "ClipTapには以下の機能があります：1タップコピー、拡張キーボード、システム変数（日付・時刻の自動挿入）、環境管理、カスタム変数、カテゴリ管理、高速検索、完全オフライン動作、ダークモード対応など。全ての基本機能が無料でご利用いただけます。"
-                }
-            },
-            {
-                "@type": "Question",
-                "name": "iOS・Android両方で使えますか？",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "はい、ClipTapはiOSとAndroidの両方でご利用いただけます。App StoreとGoogle Play Storeからダウンロード可能です。"
-                }
+          {
+            "@type": "Question",
+            "name": "無料でどこまで使えますか？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "定型文とカテゴリは無制限、拡張キーボードは件数上限なし、システム変数7種と94書式もすべて無料です。プロファイルは3件、カスタム変数は5件まで無料で使えます。"
             }
+          },
+          {
+            "@type": "Question",
+            "name": "データはどこに保存されますか？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "定型文・カテゴリ・プロファイル・変数はすべて端末内に保存されます。クラウドには保存されず、定型文の中身が外部へ送られることもありません。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "オフラインでも使えますか？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "定型文の作成・検索・変数展開・コピー・キーボード入力はオフラインで完結します。アカウント連携・Pro権利の確認・広告・ストア遷移だけネットワークが必要です。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "iPhoneで使うには設定が必要ですか？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "「設定」からClipTapキーボードの追加が必要です。使用回数の記録にはフルアクセスの許可が必要ですが、定型文の入力そのものはフルアクセスなしでも行えます。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "機種変更のときデータを移せますか？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": ".cliptapファイルで書き出して、新しい端末で読み込めます。パスワードの一致確認とチェックサム検証を行いますが、ファイルの内容は暗号化されません。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Proを解約するとどうなりますか？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "契約期間の終わりまでProを使えます。上限を超えたプロファイル・カスタム変数は削除されず無効になるだけで、Proに戻せば再び使えます。"
+            }
+          }
         ]
-    }
+      }
     </script>
-
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary-color: #2C3E50;
-            --primary-dark: #1a252f;
-            --primary-light: #34495e;
-            --accent-color: #3498db;
-            --text-primary: #2C3E50;
-            --text-secondary: #5a6c7d;
-            --text-light: #7f8c8d;
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8f9fa;
-            --bg-accent: #eceff1;
-            --border-color: #e0e4e8;
-            --shadow-sm: 0 1px 3px 0 rgba(44, 62, 80, 0.1), 0 1px 2px 0 rgba(44, 62, 80, 0.06);
-            --shadow-md: 0 4px 6px -1px rgba(44, 62, 80, 0.1), 0 2px 4px -1px rgba(44, 62, 80, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(44, 62, 80, 0.1), 0 4px 6px -2px rgba(44, 62, 80, 0.05);
-            --shadow-xl: 0 20px 25px -5px rgba(44, 62, 80, 0.15), 0 10px 10px -5px rgba(44, 62, 80, 0.08);
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-            line-height: 1.7;
-            color: var(--text-primary);
-            background: var(--bg-primary);
-            overflow-x: hidden;
-        }
-
-        /* ヘッダー */
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border-color);
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-
-        .header.scrolled {
-            box-shadow: var(--shadow-md);
-        }
-
-        .header-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
-
-        .logo img {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-
-        .nav-link {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        .nav-link:hover {
-            color: var(--primary-color);
-        }
-
-        /* ヒーローセクション */
-        .hero {
-            padding: 8rem 2rem 4rem;
-            background: linear-gradient(135deg, #2C3E50 0%, #34495e 100%);
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            opacity: 0.3;
-        }
-
-        .hero-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            align-items: center;
-            position: relative;
-            z-index: 1;
-        }
-
-        .hero-content {
-            text-align: left;
-        }
-
-        .hero-image {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .hero-image img {
-            width: 300px;
-            height: 650px;
-            object-fit: cover;
-            object-position: top;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .hero-title {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-            line-height: 1.2;
-            letter-spacing: -0.02em;
-        }
-
-        .hero-subtitle {
-            font-size: 1.4rem;
-            margin-bottom: 3rem;
-            opacity: 0.95;
-            font-weight: 400;
-            line-height: 1.6;
-        }
-
-        .cta-buttons {
-            display: flex;
-            gap: 1.5rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 1rem 2.5rem;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
-
-        .btn-primary {
-            color: white;
-            box-shadow: var(--shadow-lg);
-            padding: 0;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .btn-primary img {
-            display: block;
-            height: 50px;
-            width: auto;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-xl);
-            opacity: 0.9;
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: white;
-            border-color: white;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
-        }
-
-        /* 特徴セクション */
-        .section {
-            padding: 6rem 2rem;
-        }
-
-        .section-alt {
-            background: var(--bg-secondary);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-
-        .section-badge {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background: linear-gradient(135deg, rgba(44, 62, 80, 0.1), rgba(52, 73, 94, 0.1));
-            color: var(--primary-color);
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-            border: 1px solid var(--primary-color);
-        }
-
-        .section-title {
-            font-size: 2.8rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 1rem;
-        }
-
-        .section-description {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            max-width: 700px;
-            margin: 0 auto;
-        }
-
-        /* 特徴カードグリッド */
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .feature-card {
-            background: white;
-            padding: 2.5rem;
-            border-radius: 20px;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.3s ease;
-            border: 1px solid var(--border-color);
-        }
-
-        .feature-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--shadow-xl);
-            border-color: var(--primary-color);
-        }
-
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
-            display: block;
-            text-align: center;
-        }
-
-        .feature-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-            text-align: center;
-            color: var(--text-primary);
-            margin-bottom: 1rem;
-        }
-
-        .feature-description {
-            color: var(--text-secondary);
-            line-height: 1.8;
-        }
-
-        .feature-image {
-            width: 100%;
-            height: auto;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            box-shadow: var(--shadow-md);
-        }
-
-        .pro-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            margin-left: 0.5rem;
-            vertical-align: middle;
-        }
-
-        /* スクリーンショットセクション */
-        .screenshots-section {
-            background: var(--bg-secondary);
-            padding: 6rem 2rem;
-        }
-
-        .screenshots-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 3rem;
-            margin-top: 3rem;
-        }
-
-        .screenshot-item {
-            text-align: center;
-        }
-
-        .screenshot-item img {
-            width: 300px;
-            height: 650px;
-            object-fit: cover;
-            object-position: top;
-            border-radius: 20px;
-            box-shadow: var(--shadow-xl);
-            transition: transform 0.3s ease;
-        }
-
-        .screenshot-item img:hover {
-            transform: scale(1.05);
-        }
-
-        .screenshot-caption {
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .screenshot-description {
-            margin-bottom: 1rem;
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-        }
-
-        /* 使い方セクション */
-        .steps-container {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .step {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-            background: white;
-            padding: 2.5rem;
-            border-radius: 20px;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.3s ease;
-            border: 1px solid var(--border-color);
-        }
-
-        .step:hover {
-            box-shadow: var(--shadow-lg);
-            border-color: var(--primary-color);
-        }
-
-        .step-number {
-            font-size: 3.5rem;
-            font-weight: 800;
-            color: var(--primary-color);
-            min-width: 100px;
-            text-align: center;
-            line-height: 1;
-        }
-
-        .step-content h3 {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 0.75rem;
-        }
-
-        .step-content p {
-            color: var(--text-secondary);
-            line-height: 1.8;
-            font-size: 1.05rem;
-        }
-
-        /* プラン比較セクション */
-        .pricing-section {
-            background: var(--bg-secondary);
-            padding: 6rem 2rem;
-        }
-
-        .pricing-header {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-
-        .pricing-header h2 {
-            font-size: 2.8rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            color: var(--text-primary);
-        }
-
-        .pricing-header p {
-            font-size: 1.3rem;
-            color: var(--text-secondary);
-        }
-
-        .pricing-table-wrapper {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            padding: 0;
-            box-shadow: var(--shadow-md);
-            overflow: hidden;
-        }
-
-        .pricing-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .pricing-table thead th {
-            padding: 1.5rem 1rem;
-            font-size: 1.2rem;
-            font-weight: 700;
-            background: var(--bg-accent);
-            color: var(--text-primary);
-            border-bottom: 2px solid var(--border-color);
-            text-align: center;
-        }
-
-        .pricing-table thead th:first-child {
-            text-align: left;
-        }
-
-        .pricing-table thead th:nth-child(2),
-        .pricing-table thead th:nth-child(3) {
-            text-align: center;
-        }
-
-        .pricing-table thead th:nth-child(3) {
-            color: var(--primary-color);
-        }
-
-        .pricing-table tbody tr {
-            transition: background 0.2s ease;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .pricing-table tbody tr:hover {
-            background: var(--bg-secondary);
-        }
-
-        .pricing-table tbody tr:last-child {
-            border-bottom: none;
-        }
-
-        .pricing-table tbody td {
-            padding: 1.25rem 1rem;
-            color: var(--text-primary);
-            text-align: center;
-        }
-
-        .pricing-table tbody td:first-child {
-            text-align: left;
-            font-weight: 500;
-        }
-
-        .pricing-table .check-icon {
-            font-size: 1.5rem;
-            color: var(--primary-color);
-        }
-
-        .pricing-table .limited {
-            color: #e67e22;
-            font-weight: 600;
-        }
-
-        .pricing-table .unlimited {
-            color: var(--accent-color);
-            font-weight: 700;
-        }
-
-        .pricing-table .negative {
-            color: #e74c3c;
-            font-weight: 600;
-        }
-
-        .pricing-table .positive {
-            color: #27ae60;
-            font-weight: 700;
-        }
-
-        .pricing-table .price-row {
-            background: var(--bg-accent);
-            border-top: 2px solid var(--border-color);
-        }
-
-        .pricing-table .price-label {
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-
-        .pricing-table .price-cell {
-            font-size: 1.7rem;
-            font-weight: 700;
-        }
-
-        .pricing-table .free-price {
-            color: var(--primary-color);
-        }
-
-        .pricing-table .pro-price {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .pricing-table .price-note {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            font-weight: 400;
-            margin-top: 0.5rem;
-        }
-
-        .pricing-note {
-            text-align: center;
-            margin-top: 2rem;
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-        }
-
-        /* フッター */
-        .footer {
-            background: var(--text-primary);
-            color: white;
-            padding: 4rem 2rem 2rem;
-        }
-
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 3rem;
-            margin-bottom: 3rem;
-        }
-
-        .footer-section h3 {
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-            color: white;
-        }
-
-        .footer-links {
-            list-style: none;
-        }
-
-        .footer-links li {
-            margin-bottom: 0.75rem;
-        }
-
-        .footer-links a {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .footer-links a:hover {
-            color: white;
-        }
-
-        .footer-bottom {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding-top: 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        /* レスポンシブ */
-        @media (max-width: 768px) {
-            .hero {
-                padding: 6rem 1.5rem 4rem;
-            }
-
-            .hero-container {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-
-            .hero-content {
-                text-align: center;
-            }
-
-            .hero-image {
-                order: -1;
-            }
-
-            .hero-title {
-                font-size: 2.2rem;
-            }
-
-            .hero-subtitle {
-                font-size: 1.1rem;
-            }
-
-            .screenshots-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .screenshot-item img,
-            .hero-image img {
-                width: 100%;
-                max-width: 300px;
-                height: auto;
-            }
-
-            .section {
-                padding: 4rem 1.5rem;
-            }
-
-            .section-title {
-                font-size: 2rem;
-            }
-
-            .section-description {
-                font-size: 1rem;
-            }
-
-            .cta-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .btn {
-                width: 100%;
-                max-width: 300px;
-                justify-content: center;
-            }
-
-            .feature-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .step {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .step-number {
-                min-width: auto;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .pricing-table-wrapper {
-                padding: 2rem 1rem;
-            }
-
-            .pricing-table thead th,
-            .pricing-table tbody td {
-                padding: 1rem 0.5rem;
-                font-size: 0.9rem;
-            }
-
-            .footer-content {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-        }
-
-        /* アニメーション */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .fade-in-up {
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        /* スクロールアニメーション */
-        .scroll-reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.6s ease;
-        }
-
-        .scroll-reveal.revealed {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    </style>
-</head>
-<body>
-    <!-- ヘッダー -->
-    <header class="header">
-        <div class="header-container">
-            <a href="#" class="logo">
-                <img src="image/icon.png" alt="ClipTapアプリアイコン" width="40" height="40">
-                ClipTap
-            </a>
-            <nav class="nav-links">
-                <a href="app.html" class="nav-link" style="color: var(--accent-color); font-weight: 700;">Web版</a>
-                <a href="#features" class="nav-link">機能</a>
-                <a href="#how-to-use" class="nav-link">使い方</a>
-                <a href="#pricing" class="nav-link">料金</a>
-            </nav>
+  </head>
+  <body>
+    <!-- LPは検索エンジンが初期HTMLから全文を読めるよう、言語別の静的HTML自体をi18n機構とする。 -->
+    <a class="skip-link" href="#main">本文へ移動</a>
+    <div class="header-sentinel" data-header-sentinel aria-hidden="true"></div>
+
+    <header class="site-header glass" data-header>
+      <div class="header-inner container">
+        <a class="brand" href="#top" aria-label="ClipTap ホーム">
+          <img src="/image/icon.png" width="40" height="40" alt="" />
+          <span>ClipTap</span>
+        </a>
+        <nav class="nav" aria-label="メインナビゲーション">
+          <a href="#keyboard">キーボード</a>
+          <a href="#variables">変数</a>
+          <a href="#pricing">料金</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <div class="header-actions">
+          <div class="lang-switch" role="group" aria-label="言語を選択">
+            <a href="./" lang="ja" aria-current="page">JA</a>
+            <a href="en/" lang="en">EN</a>
+          </div>
+          <a class="button button--compact header-cta" href="app.html">Web版</a>
+          <button class="nav-toggle" type="button" data-nav-open aria-haspopup="dialog" aria-controls="mobile-nav" aria-label="メニューを開く">
+            <span></span><span></span><span></span>
+          </button>
         </div>
+      </div>
     </header>
 
-    <!-- ヒーローセクション -->
-    <section class="hero">
-        <div class="hero-container fade-in-up">
-            <div class="hero-content">
-                <h1 class="hero-title">ClipTap<br>定型文をワンタップでコピー</h1>
-                <p class="hero-subtitle">
-                    よく使うメール、SNSの返信、コードスニペット。<br>
-                    何度も同じ文章を入力する時間を、ClipTapが劇的に短縮します。
-                </p>
-                <div class="cta-buttons">
-                    <a href="https://apps.apple.com/jp/app/cliptap-%E5%AE%9A%E5%9E%8B%E6%96%87-%E3%83%86%E3%83%B3%E3%83%97%E3%83%AC%E3%82%92%EF%BC%91%E3%82%BF%E3%83%83%E3%83%97/id6754281185" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-                        <img src="image/ios-badge.svg" alt="App Storeからダウンロード">
-                    </a>
-                    <a href="https://play.google.com/store/apps/details?id=com.sikakou.cliptap&hl=ja" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-                        <img src="image/android-badge.svg" alt="Google Playで手に入れよう">
-                    </a>
-                    <a href="app" class="btn" style="background: #3498db; color: white; border: none; display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="font-size: 1.2rem;">💻</span> Web版を使う
-                    </a>
-                    <a href="#features" class="btn btn-secondary">
-                        もっと詳しく
-                    </a>
-                </div>
-            </div>
-            <div class="hero-image">
-                <img src="image/top.png" alt="ClipTapアプリのメイン画面 - 定型文一覧とカテゴリ管理" width="300" height="650">
-            </div>
-        </div>
-    </section>
+    <dialog class="mobile-nav glass" id="mobile-nav" data-mobile-nav aria-label="モバイルナビゲーション">
+      <div class="mobile-nav__head">
+        <span class="brand"><img src="/image/icon.png" width="36" height="36" alt="" /><span>ClipTap</span></span>
+        <button type="button" data-nav-close aria-label="メニューを閉じる">×</button>
+      </div>
+      <nav aria-label="モバイルメニュー">
+        <a href="#keyboard">キーボード</a>
+        <a href="#variables">変数</a>
+        <a href="#pricing">料金</a>
+        <a href="#faq">FAQ</a>
+        <a href="app.html">Web版を開く</a>
+      </nav>
+      <div class="lang-switch" role="group" aria-label="言語を選択">
+        <a href="./" lang="ja" aria-current="page">日本語</a>
+        <a href="en/" lang="en">English</a>
+      </div>
+    </dialog>
 
-    <!-- こんな方におすすめセクション -->
-    <section class="section section-alt">
+    <main id="main">
+      <!-- ヒーロー: 「何ができるか」を1画面で伝える。 -->
+      <section class="hero section" id="top">
+        <div class="hero-grid container">
+          <div class="hero-copy reveal">
+            <p class="tag"><span class="tag-dot"></span> KEYBOARD</p>
+            <h1>アプリを切り替えずに、<br /><strong>定型文をワンタップ。</strong></h1>
+            <p class="hero-lead">Gmail、Slack、LINE、ChatGPT。文字を打てるアプリなら、ClipTapのキーボードからいつもの文章をそのまま入力できます。</p>
+            <div class="hero-actions" id="download">
+              <a class="store-badge" href="https://apps.apple.com/app/id6754281185" target="_blank" rel="noopener noreferrer"><img src="/image/ios-badge.svg" width="109" height="40" alt="App Storeからダウンロード" /></a>
+              <a class="store-badge" href="https://play.google.com/store/apps/details?id=com.sikakou.cliptap&amp;hl=ja" target="_blank" rel="noopener noreferrer"><img src="/image/android-badge.svg" width="135" height="40" alt="Google Playで手に入れよう" /></a>
+              <a class="button button--secondary" href="app.html">Web版を開く <span aria-hidden="true">↗</span></a>
+            </div>
+            <p class="hero-note">無料・登録不要。定型文とカテゴリは無制限。</p>
+            <ul class="trust-chips" aria-label="ClipTapの特長">
+              <li><span aria-hidden="true">●</span> オフラインで動作</li>
+              <li><span aria-hidden="true">●</span> データは端末内に保存</li>
+              <li><span aria-hidden="true">●</span> iOS 15.1+ · Android 7.0+ · Web</li>
+            </ul>
+          </div>
+
+          <!-- 左が定型文の一覧、右がその定型文を他アプリへ入力した実機画面。 -->
+          <div class="hero-visual reveal" style="--i: 2">
+            <div class="phone-pair">
+              <div class="phone phone--shot">
+                <div class="phone-inner">
+                  <div class="dynamic-island" aria-hidden="true"></div>
+                  <img src="/image/hero-cliptap.png" width="1170" height="2532" alt="ClipTapのホーム画面。「今日の積み上げ」「調査プロンプト」「業務開始報告」の定型文が一覧表示されている" />
+                </div>
+              </div>
+              <div class="phone phone--shot">
+                <div class="phone-inner">
+                  <div class="dynamic-island" aria-hidden="true"></div>
+                  <img src="/image/hero-insert.png" width="1170" height="2532" alt="ChatGPTの入力欄に、ClipTapの「調査プロンプト」がそのまま入力された画面" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="supported-apps reveal">
+          <p>iOS・Android・Web に対応。キーボードからの入力は、文字を打てるアプリならどこでも</p>
+          <ul class="app-list" aria-label="対応アプリの例">
+            <li>Gmail</li><li>Slack</li><li>LINE</li><li>X</li><li>Instagram</li><li>ChatGPT</li><li>Claude</li><li>ブラウザ</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 01 キーボード: AIチャット・SNS・メールの3つの利用シーンを画面付きで示す。 -->
+      <section class="section section--keyboard" id="keyboard">
         <div class="container">
-            <div class="section-header scroll-reveal">
-                <span class="section-badge">TARGET</span>
-                <h2 class="section-title">こんな方におすすめ</h2>
-                <p class="section-description">
-                    幅広い職種・用途で活躍する定型文アプリです
-                </p>
-            </div>
+          <header class="section-head reveal">
+            <p class="eyebrow">KEYBOARD</p>
+            <h2>何度も打つ文章は、<br />もう打たない。</h2>
+            <p class="lead">入力欄でClipTapキーボードに切り替えて、タップするだけ。AIチャットも、SNSも、メールも、文字が打てるアプリならどこでも直接入力できます。</p>
+          </header>
 
-            <div class="feature-grid">
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">💼</span>
-                    <h3 class="feature-title">ビジネスパーソン</h3>
-                    <p class="feature-description">
-                        メールの署名や挨拶文、提案書のテンプレートなど、一度登録すればワンタップで呼び出し。
-                    </p>
+          <ul class="usecase-grid">
+            <li class="usecase-item reveal" style="--i: 0">
+              <div class="phone phone--shot">
+                <div class="phone-inner">
+                  <div class="dynamic-island" aria-hidden="true"></div>
+                  <img src="/image/usecase-ai.png" width="1170" height="2532" loading="lazy" decoding="async" alt="AIチャットの入力欄に、ClipTapの定型文プロンプトを入力した画面" />
                 </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">💻</span>
-                    <h3 class="feature-title">エンジニア・プログラマー</h3>
-                    <p class="feature-description">
-                        よく使うコードスニペット、コマンド、API呼び出しを素早く呼び出せます。開発効率が劇的に向上。
-                    </p>
+              </div>
+              <h3>AIチャット</h3>
+              <p>使い回すプロンプトを登録しておけば、ChatGPTやClaudeにワンタップで入力できます。</p>
+            </li>
+            <li class="usecase-item reveal" style="--i: 1">
+              <div class="phone phone--shot">
+                <div class="phone-inner">
+                  <div class="dynamic-island" aria-hidden="true"></div>
+                  <img src="/image/usecase-sns.png" width="1170" height="2532" loading="lazy" decoding="async" alt="SNSの投稿欄に「今日の積み上げ」の定型文を入力した画面" />
                 </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">🎧</span>
-                    <h3 class="feature-title">カスタマーサポート</h3>
-                    <p class="feature-description">
-                        FAQ回答、お詫び文、手続き案内などのテンプレート返信で、対応スピードが大幅アップ。
-                    </p>
+              </div>
+              <h3>SNS</h3>
+              <p>毎日の「#今日の積み上げ」も、定型文をタップするだけ。ハッシュタグごと、そのまま投稿欄に入ります。</p>
+            </li>
+            <li class="usecase-item reveal" style="--i: 2">
+              <div class="phone phone--shot">
+                <div class="phone-inner">
+                  <div class="dynamic-island" aria-hidden="true"></div>
+                  <img src="/image/usecase-mail.png" width="1170" height="2532" loading="lazy" decoding="async" alt="メールの本文に、ClipTapの定型文を挿入した画面" />
                 </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">📝</span>
-                    <h3 class="feature-title">ライター・ブロガー</h3>
-                    <p class="feature-description">
-                        よく使うフレーズや定型文を保存して、執筆作業をスムーズに。文章作成の時間を短縮できます。
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">📱</span>
-                    <h3 class="feature-title">SNSヘビーユーザー</h3>
-                    <p class="feature-description">
-                        住所、電話番号、メールアドレス、プロフィール文など、個人情報を頻繁に入力する方に最適。
-                    </p>
-                </div>
-            </div>
+              </div>
+              <h3>メール</h3>
+              <p>あいさつ文・署名・よく送る返信を、Gmailなどの本文にそのまま挿入できます。</p>
+            </li>
+          </ul>
         </div>
-    </section>
+      </section>
 
-    <!-- 主な機能セクション -->
-    <section id="features" class="section">
+      <!-- 02 システム変数: 日付・時刻・曜日が入力の瞬間に自動で入ることを、動く例と画面で示す。 -->
+      <section class="section section--variables" id="variables">
         <div class="container">
-            <div class="section-header scroll-reveal">
-                <span class="section-badge">FEATURES</span>
-                <h2 class="section-title">シンプルで強力な機能</h2>
-                <p class="section-description">
-                    定型文管理に必要な機能を、使いやすくまとめました
-                </p>
+          <div class="media-split reveal">
+            <div class="media-split__copy">
+              <header class="section-head">
+                <p class="eyebrow">SYSTEM VARIABLES</p>
+                <h2>日付や時刻は、<br />自動で入ります。</h2>
+                <p class="lead">毎回変わるところはシステム変数にしておくだけ。入力したその瞬間の日付・時刻・曜日に置き換わります。</p>
+              </header>
+
+              <div class="stats">
+                <article class="stat"><strong>7</strong><span>システム変数</span><small>日付・時刻・曜日など</small></article>
+                <article class="stat"><strong>94</strong><span>書式プリセット</span><small>選ぶだけで表記が変わる</small></article>
+              </div>
             </div>
 
-            <div class="feature-grid">
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">⚡</span>
-                    <h3 class="feature-title">1タップでコピー</h3>
-                    <p class="feature-description">
-                        登録した定型文をタップするだけで、即座にクリップボードへコピー。面倒な手順は一切不要です。
-                    </p>
+            <figure class="media-shot">
+              <div class="phone-pair">
+                <div class="phone phone--shot">
+                  <div class="phone-inner">
+                    <div class="dynamic-island" aria-hidden="true"></div>
+                    <img src="/image/system-variables-list.png" width="1170" height="2532" loading="lazy" decoding="async" alt="システム変数の一覧画面" />
+                  </div>
                 </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">⌨️</span>
-                    <h3 class="feature-title">拡張キーボード</h3>
-                    <p class="feature-description">
-                        どのアプリからでも定型文を直接入力できる専用キーボード。メール、メッセージ、SNS、どこでも使えます。
-                    </p>
+                <div class="phone phone--shot">
+                  <div class="phone-inner">
+                    <div class="dynamic-island" aria-hidden="true"></div>
+                    <img src="/image/system-variables-format.png" width="1170" height="2532" loading="lazy" decoding="async" alt="日付や時刻の書式を一覧から選択する画面" />
+                  </div>
                 </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">📅</span>
-                    <h3 class="feature-title">システム変数</h3>
-                    <p class="feature-description">
-                        {{今日}}、{{現在時刻}}など、日付・時刻の変数が標準で使えます。定型文に自動で最新の日時を挿入できます。
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">⚙️</span>
-                    <h3 class="feature-title">プロファイル<span class="pro-badge">PRO</span></h3>
-                    <p class="feature-description">
-                        複数の環境を作成して、シーンに応じた変数値を切り替え。無料版は3つまで、Proは無制限。
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">🔤</span>
-                    <h3 class="feature-title">カスタム変数<span class="pro-badge">PRO</span></h3>
-                    <p class="feature-description">
-                        {{名前}}、{{メール}}など、独自の変数を作成可能。無料版は5個まで、Proは無制限に作成できます。
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">💎</span>
-                    <h3 class="feature-title">広告なし<span class="pro-badge">PRO</span></h3>
-                    <p class="feature-description">
-                        Proプランなら広告が一切表示されません。集中して作業したい方に最適です。
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">📁</span>
-                    <h3 class="feature-title">カテゴリ管理</h3>
-                    <p class="feature-description">
-                        仕事、プライベート、コードなど、用途に応じてカテゴリを作成。色とアイコンで視覚的に整理できます。
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">🔍</span>
-                    <h3 class="feature-title">高速検索</h3>
-                    <p class="feature-description">
-                        膨大な定型文の中から、キーワードで素早く検索。タイトルや本文から瞬時に見つけ出せます。
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">🔒</span>
-                    <h3 class="feature-title">完全オフライン</h3>
-                    <p class="feature-description">
-                        ネット接続不要で全機能が利用可能。大切なデータはすべて端末内に安全に保存されます。
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">📦</span>
-                    <h3 class="feature-title">エクスポート・インポート</h3>
-                    <p class="feature-description">
-                        定型文や設定を端末間で交換できる形式でエクスポート。パスワード一致とチェックサムを確認して、安全な保存先を利用者が選べます（内容は暗号化されません）。
-                    </p>
-                </div>
-            </div>
+              </div>
+              <figcaption>変数は一覧から選んで、書式もその場で変更</figcaption>
+            </figure>
+          </div>
         </div>
-    </section>
+      </section>
 
-    <!-- Web版 & アカウント連携セクション -->
-    <section class="section section-alt">
+      <!-- 03 カスタム変数: 会社名・担当者をプロファイル単位で切り替えられることを示す。 -->
+      <section class="section section--profiles" id="profiles">
         <div class="container">
-            <div class="section-header scroll-reveal">
-                <span class="section-badge">NEW FEATURE</span>
-                <h2 class="section-title">Web版でさらに快適に</h2>
-                <p class="section-description">
-                    PCの大画面とキーボードで、定型文の管理がもっと効率的に
-                </p>
+          <div class="media-split media-split--reverse reveal">
+            <div class="media-split__copy">
+              <header class="section-head">
+                <p class="eyebrow">CUSTOM VARIABLES</p>
+                <h2>会社名や宛名も、<br />自動で入ります。</h2>
+                <p class="lead">会社名・担当者名・署名などは、一度登録しておくだけ。相手や仕事ごとに「プロファイル」を切り替えれば、同じ定型文がそのまま別の相手向けになります。</p>
+              </header>
             </div>
 
-            <div class="feature-grid">
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">🖥️</span>
-                    <h3 class="feature-title">PCで編集・管理</h3>
-                    <p class="feature-description">
-                        スマホでは大変な大量の定型文登録も、PCならサクサク。作成したデータはファイル経由でスマホに簡単に送れます。
-                    </p>
+            <figure class="media-shot">
+              <div class="phone-pair">
+                <div class="phone phone--shot">
+                  <div class="phone-inner">
+                    <div class="dynamic-island" aria-hidden="true"></div>
+                    <img src="/image/custom-variable-edit.png" width="1170" height="2532" loading="lazy" decoding="async" alt="カスタム変数の編集画面" />
+                  </div>
                 </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">🔄</span>
-                    <h3 class="feature-title">アカウント連携</h3>
-                    <p class="feature-description">
-                        Google / Appleアカウントで連携すれば、スマホで購入したProプランの権利をWeb版や他の端末でもそのまま利用できます。
-                    </p>
+                <div class="phone phone--shot">
+                  <div class="phone-inner">
+                    <div class="dynamic-island" aria-hidden="true"></div>
+                    <img src="/image/custom-variable-snippet.png" width="1170" height="2532" loading="lazy" decoding="async" alt="カスタム変数を使った定型文の画面" />
+                  </div>
                 </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">📱</span>
-                    <h3 class="feature-title">スマホとシームレスに</h3>
-                    <p class="feature-description">
-                        スマホのデータをエクスポートしてWeb版で読み込むだけ。複雑な同期設定なしで、大切なデータを安全に活用できます。
-                    </p>
-                </div>
-            </div>
-            
-            <div style="text-align: center; margin-top: 3rem;" class="scroll-reveal">
-                 <a href="app" class="btn" style="background: #3498db; color: white; border: none; display: inline-flex; align-items: center; gap: 0.5rem;">
-                    <span style="font-size: 1.2rem;">💻</span> 今すぐWeb版を使う
-                </a>
-            </div>
+              </div>
+              <figcaption>登録した会社名や宛名が、定型文にそのまま入ります</figcaption>
+            </figure>
+          </div>
         </div>
-    </section>
+      </section>
 
-    <!-- 使い方セクション -->
-    <section id="how-to-use" class="section">
+      <!-- 04 使い方: 登録 → キーボードで挿入、の2ステップを画面付きで示す。 -->
+      <section class="section section--flow" id="flow">
         <div class="container">
-            <div class="section-header scroll-reveal">
-                <span class="section-badge">HOW TO USE</span>
-                <h2 class="section-title">3ステップで始められる</h2>
-                <p class="section-description">
-                    シンプルで直感的な操作で、すぐに使い始められます
-                </p>
-            </div>
+          <header class="section-head reveal">
+            <p class="eyebrow">HOW IT WORKS</p>
+            <h2>登録して、<br />使うだけ。</h2>
+            <p class="lead">定型文を一度登録すれば、あとはどのアプリからでも呼び出すだけです。</p>
+          </header>
 
-            <div class="steps-container">
-                <div class="step scroll-reveal">
-                    <div class="step-number">01</div>
-                    <div class="step-content">
-                        <h3>定型文を登録</h3>
-                        <p>
-                            よく使うメール定型文、住所、コードテンプレートなど、何でも登録できます。変数を使えば、日付や時刻、独自の情報を自動挿入できます。
-                        </p>
-                    </div>
+          <ol class="flow-grid">
+            <li class="flow-item reveal" style="--i: 0">
+              <span class="flow-item__num" aria-hidden="true">1</span>
+              <div class="phone phone--shot">
+                <div class="phone-inner">
+                  <div class="dynamic-island" aria-hidden="true"></div>
+                  <img src="/image/flow-register.png" width="1170" height="2532" loading="lazy" decoding="async" alt="定型文の登録画面" />
                 </div>
-
-                <div class="step scroll-reveal">
-                    <div class="step-number">02</div>
-                    <div class="step-content">
-                        <h3>カテゴリで整理</h3>
-                        <p>
-                            定型文をカテゴリに分類して、見つけやすく管理。アイコンと色を設定して、視覚的にわかりやすく整理できます。
-                        </p>
-                    </div>
+              </div>
+              <h3>定型文を登録</h3>
+              <p>タイトルと本文を入力して保存。日付や会社名は、変数としてワンタップで挿入できます。</p>
+            </li>
+            <li class="flow-item reveal" style="--i: 1">
+              <span class="flow-item__num" aria-hidden="true">2</span>
+              <div class="phone phone--shot">
+                <div class="phone-inner">
+                  <div class="dynamic-island" aria-hidden="true"></div>
+                  <img src="/image/flow-keyboard.png" width="1170" height="2532" loading="lazy" decoding="async" alt="拡張キーボードで定型文を挿入する画面" />
                 </div>
-
-                <div class="step scroll-reveal">
-                    <div class="step-number">03</div>
-                    <div class="step-content">
-                        <h3>タップしてコピー</h3>
-                        <p>
-                            使いたい定型文をタップするだけで、自動的にクリップボードへコピー。変数は実際の値に変換されます。
-                        </p>
-                    </div>
-                </div>
-            </div>
+              </div>
+              <h3>キーボードで挿入</h3>
+              <p>他のアプリでClipTapキーボードに切り替えて、定型文をタップするだけです。</p>
+            </li>
+          </ol>
         </div>
-    </section>
+      </section>
 
-    <!-- スクリーンショットセクション -->
-    <section class="screenshots-section">
+      <!-- 05 料金: 機能比較表を主役にし、価格は表の下で文章として控えめに示す。 -->
+      <section class="section section--pricing" id="pricing">
         <div class="container">
-            <div class="section-header scroll-reveal">
-                <span class="section-badge">SCREENSHOTS</span>
-                <h2 class="section-title">アプリの画面</h2>
-                <p class="section-description">
-                    シンプルで使いやすいデザイン
-                </p>
-            </div>
+          <header class="section-head reveal">
+            <p class="eyebrow">PRICING</p>
+            <h2>ほとんどの機能は、<br />無料のままで。</h2>
+            <p class="lead">定型文・カテゴリ・拡張キーボード・7変数と94書式は、すべて無料プランに含まれます。</p>
+          </header>
 
-            <div class="screenshots-grid">
-                <div class="screenshot-item scroll-reveal">
-                    <div class="screenshot-caption">メイン画面</div>
-                    <div class="screenshot-description">登録した定型文を一覧表示</div>
-                    <img src="image/top.png" alt="ClipTapメイン画面 - 定型文の一覧表示とカテゴリフィルター" width="300" height="650" loading="lazy">
-                </div>
-
-                <div class="screenshot-item scroll-reveal">
-                    <div class="screenshot-caption">定型文入力</div>
-                    <div class="screenshot-description">シンプルな入力フォームで簡単登録</div>
-                    <img src="image/input.png" alt="定型文入力画面 - タイトル、本文、カテゴリの登録フォーム" width="300" height="650" loading="lazy">
-                </div>
-
-                <div class="screenshot-item scroll-reveal">
-                    <div class="screenshot-caption">拡張キーボード</div>
-                    <div class="screenshot-description">どのアプリからでも定型文を直接入力</div>
-                    <img src="image/keyborad.png" alt="拡張キーボード画面 - 他のアプリから定型文を呼び出し" width="300" height="650" loading="lazy">
-                </div>
-
-                <div class="screenshot-item scroll-reveal">
-                    <div class="screenshot-caption">カテゴリ管理</div>
-                    <div class="screenshot-description">色とアイコンで視覚的に整理</div>
-                    <img src="image/category.png" alt="カテゴリ管理画面 - カテゴリの作成・編集・カラー設定" width="300" height="650" loading="lazy">
-                </div>
-
-                <div class="screenshot-item scroll-reveal">
-                    <div class="screenshot-caption">環境選択</div>
-                    <div class="screenshot-description">複数の環境を作成して管理</div>
-                    <img src="image/env-select.png" alt="環境選択画面 - 複数の環境を切り替えて管理" width="300" height="650" loading="lazy">
-                </div>
-
-                <div class="screenshot-item scroll-reveal">
-                    <div class="screenshot-caption">環境切り替え</div>
-                    <div class="screenshot-description">シーンに応じて変数値を瞬時に切り替え</div>
-                    <img src="image/env-switch.png" alt="環境切り替え画面 - シーンに応じた変数値の一括変更" width="300" height="650" loading="lazy">
-                </div>
-
-                <div class="screenshot-item scroll-reveal">
-                    <div class="screenshot-caption">変数設定</div>
-                    <div class="screenshot-description">カスタム変数で入力を自動化</div>
-                    <img src="image/variables-setting.png" alt="変数設定画面 - カスタム変数の作成と値の設定" width="300" height="650" loading="lazy">
-                </div>
-
-                <div class="screenshot-item scroll-reveal">
-                    <div class="screenshot-caption">変数リスト</div>
-                    <div class="screenshot-description">登録した変数を一覧で管理</div>
-                    <img src="image/variables-list.png" alt="変数リスト画面 - システム変数とカスタム変数の一覧" width="300" height="650" loading="lazy">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 活用シーンセクション -->
-    <section class="section">
-        <div class="container">
-            <div class="section-header scroll-reveal">
-                <span class="section-badge">USE CASES</span>
-                <h2 class="section-title">活用シーン</h2>
-                <p class="section-description">
-                    様々な場面でClipTapが活躍します
-                </p>
-            </div>
-
-            <div class="feature-grid">
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">💼</span>
-                    <h3 class="feature-title">ビジネス</h3>
-                    <p class="feature-description">
-                        <strong>メールの挨拶文・署名</strong><br>
-                        会議招集文、商品説明文、返信テンプレートなど、ビジネスメールを効率化
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">💻</span>
-                    <h3 class="feature-title">プログラミング</h3>
-                    <p class="feature-description">
-                        <strong>コードスニペット管理</strong><br>
-                        よく使うコマンド、正規表現、API呼び出しをすぐに呼び出せる
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">🏠</span>
-                    <h3 class="feature-title">日常生活</h3>
-                    <p class="feature-description">
-                        <strong>個人情報の入力</strong><br>
-                        住所・電話番号、メールアドレス、SNSプロフィール文を素早く入力
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">🎧</span>
-                    <h3 class="feature-title">カスタマーサポート</h3>
-                    <p class="feature-description">
-                        <strong>テンプレート返信</strong><br>
-                        FAQ回答、お詫び・お礼の文章、手続き案内で対応時間を短縮
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- プラン比較セクション -->
-    <section id="pricing" class="pricing-section">
-        <div class="pricing-header">
-            <h2>無料でも十分使える<br>Proならさらに快適に</h2>
-            <p>まずは無料プランでお試しください</p>
-        </div>
-
-        <div class="pricing-table-wrapper">
-            <table class="pricing-table">
-                <thead>
-                    <tr>
-                        <th>機能</th>
-                        <th>無料プラン</th>
-                        <th>Proプラン 💎</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>定型文の登録・コピー</td>
-                        <td><span class="check-icon">✓</span></td>
-                        <td><span class="check-icon">✓</span></td>
-                    </tr>
-                    <tr>
-                        <td>拡張キーボード</td>
-                        <td><span class="check-icon">✓</span></td>
-                        <td><span class="check-icon">✓</span></td>
-                    </tr>
-                    <tr>
-                        <td>カテゴリ管理</td>
-                        <td><span class="check-icon">✓</span></td>
-                        <td><span class="check-icon">✓</span></td>
-                    </tr>
-                    <tr>
-                        <td>検索機能</td>
-                        <td><span class="check-icon">✓</span></td>
-                        <td><span class="check-icon">✓</span></td>
-                    </tr>
-                    <tr>
-                        <td>システム変数</td>
-                        <td><span class="check-icon">✓</span></td>
-                        <td><span class="check-icon">✓</span></td>
-                    </tr>
-                    <tr>
-                        <td>プロファイル</td>
-                        <td class="limited">3つまで</td>
-                        <td class="unlimited">無制限</td>
-                    </tr>
-                    <tr>
-                        <td>カスタム変数</td>
-                        <td class="limited">5個まで</td>
-                        <td class="unlimited">無制限</td>
-                    </tr>
-                    <tr>
-                        <td>広告表示</td>
-                        <td class="negative">あり</td>
-                        <td class="positive">なし</td>
-                    </tr>
-                    <tr class="price-row">
-                        <td class="price-label">料金</td>
-                        <td class="price-cell free-price">¥0</td>
-                        <td class="price-cell pro-price">
-                            月額 ¥250 / 年間 ¥3,000
-                            <div class="price-note">※国によって異なる場合があります</div>
-                        </td>
-                    </tr>
-                </tbody>
+          <div class="plan-table-wrap reveal">
+            <table class="plan-table">
+              <caption class="sr-only">FreeプランとProプランの機能比較</caption>
+              <thead>
+                <tr>
+                  <th scope="col">機能</th>
+                  <th scope="col">Free</th>
+                  <th scope="col" class="plan-table__pro">Pro</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">定型文・カテゴリ</th><td>無制限</td><td class="plan-table__pro">無制限</td></tr>
+                <tr><th scope="row">プロファイル</th><td>3件まで</td><td class="plan-table__pro">無制限</td></tr>
+                <tr><th scope="row">カスタム変数</th><td>5件まで</td><td class="plan-table__pro">無制限</td></tr>
+                <tr><th scope="row">広告</th><td>あり</td><td class="plan-table__pro">なし</td></tr>
+              </tbody>
             </table>
-        </div>
+          </div>
 
-        <div class="pricing-note">
-            ※ Proプランの料金は各国のApp Store/Google Playでの表示価格が適用されます
-        </div>
-    </section>
+          <p class="plan-price reveal">Freeはずっと0円。Proは日本円で月額250円（年額3,000円）です。</p>
 
-    <!-- FAQセクション -->
-    <section class="section section-alt">
+          <ul class="pricing-notes reveal">
+            <li>表示価格は基準価格です。実際の価格・通貨は、各国のApp Store / Google Playの表示が優先されます。</li>
+            <li>購入・購入復元・解約はモバイルアプリから行います。Web版では購入できません。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 06 FAQ: 購入前に必ず聞かれる6問だけを残す（JSON-LDと同一）。 -->
+      <section class="section section--faq" id="faq">
         <div class="container">
-            <div class="section-header scroll-reveal">
-                <span class="section-badge">FAQ</span>
-                <h2 class="section-title">よくある質問</h2>
-                <p class="section-description">
-                    ClipTapについてのよくある質問にお答えします
-                </p>
-            </div>
-
-            <div class="steps-container">
-                <div class="step scroll-reveal">
-                    <div class="step-content">
-                        <h3>Q. データはどこに保存されますか？</h3>
-                        <p>
-                            すべて端末内にローカル保存されます。iCloudやクラウドには保存されません。あなたのデータは完全にプライベートに保たれます。
-                        </p>
-                    </div>
-                </div>
-
-                <div class="step scroll-reveal">
-                    <div class="step-content">
-                        <h3>Q. オフラインでも使えますか？</h3>
-                        <p>
-                            はい、全機能がオフラインで利用可能です。インターネット接続は不要です。
-                        </p>
-                    </div>
-                </div>
-
-                <div class="step scroll-reveal">
-                    <div class="step-content">
-                        <h3>Q. 変数の使い方は？</h3>
-                        <p>
-                            定型文に{{today}}や{{name}}などを入力するだけ。コピー時に自動的に実際の値に変換されます。例えば{{today}}は「2025年11月22日」のように変換されます。
-                        </p>
-                    </div>
-                </div>
-
-                <div class="step scroll-reveal">
-                    <div class="step-content">
-                        <h3>Q. Proプランの解約方法は？</h3>
-                        <p>
-                            いつでもApp Store/Google Playから解約できます。契約期間終了まで機能は利用可能です。
-                        </p>
-                    </div>
-                </div>
-
-                <div class="step scroll-reveal">
-                    <div class="step-content">
-                        <h3>Q. 無料プランでも十分使えますか？</h3>
-                        <p>
-                            はい、基本機能はすべて無料でご利用いただけます。拡張キーボード、システム変数、カテゴリ管理、検索機能など、日常的な使用には十分な機能を備えています。
-                        </p>
-                    </div>
-                </div>
-
-                <div class="step scroll-reveal">
-                    <div class="step-content">
-                        <h3>Q. 他の端末にデータを移行できますか？</h3>
-                        <p>
-                            はい、エクスポート・インポート機能で簡単に移行できます。設定画面からデータをエクスポートし、パスワードを設定。他の端末でインポートすれば完了です。機種変更時のデータ引き継ぎにも最適です。
-                        </p>
-                    </div>
-                </div>
-            </div>
+          <header class="section-head reveal">
+            <p class="eyebrow">FAQ</p>
+            <h2>よくある質問。</h2>
+          </header>
+          <div class="faq-list reveal">
+            <details><summary>無料でどこまで使えますか？</summary><div><p>定型文とカテゴリは無制限、拡張キーボードは件数上限なし、システム変数7種と94書式もすべて無料です。プロファイルは3件、カスタム変数は5件まで無料で使えます。</p></div></details>
+            <details><summary>データはどこに保存されますか？</summary><div><p>定型文・カテゴリ・プロファイル・変数はすべて端末内に保存されます。クラウドには保存されず、定型文の中身が外部へ送られることもありません。</p></div></details>
+            <details><summary>オフラインでも使えますか？</summary><div><p>定型文の作成・検索・変数展開・コピー・キーボード入力はオフラインで完結します。アカウント連携・Pro権利の確認・広告・ストア遷移だけネットワークが必要です。</p></div></details>
+            <details><summary>iPhoneで使うには設定が必要ですか？</summary><div><p>「設定」からClipTapキーボードの追加が必要です。使用回数の記録にはフルアクセスの許可が必要ですが、定型文の入力そのものはフルアクセスなしでも行えます。</p></div></details>
+            <details><summary>機種変更のときデータを移せますか？</summary><div><p>.cliptapファイルで書き出して、新しい端末で読み込めます。パスワードの一致確認とチェックサム検証を行いますが、ファイルの内容は暗号化されません。</p></div></details>
+            <details><summary>Proを解約するとどうなりますか？</summary><div><p>契約期間の終わりまでProを使えます。上限を超えたプロファイル・カスタム変数は削除されず無効になるだけで、Proに戻せば再び使えます。</p></div></details>
+          </div>
         </div>
-    </section>
+      </section>
 
-    <!-- セキュリティ・プライバシーセクション -->
-    <section class="section">
+      <section class="section final-cta" id="cta">
         <div class="container">
-            <div class="section-header scroll-reveal">
-                <span class="section-badge">SECURITY</span>
-                <h2 class="section-title">セキュリティとプライバシー</h2>
-                <p class="section-description">
-                    あなたのプライバシーを最優先に考えています
-                </p>
+          <div class="final-cta__panel glass reveal">
+            <p class="tag"><span class="tag-dot"></span> START FREE</p>
+            <h2>今日から、同じ文章を<br />打つのをやめる。</h2>
+            <p>無料・登録不要。まずは、いちばんよく使う一文から。</p>
+            <div class="hero-actions">
+              <a class="store-badge" href="https://apps.apple.com/app/id6754281185" target="_blank" rel="noopener noreferrer"><img src="/image/ios-badge.svg" width="109" height="40" loading="lazy" alt="App Storeからダウンロード" /></a>
+              <a class="store-badge" href="https://play.google.com/store/apps/details?id=com.sikakou.cliptap&amp;hl=ja" target="_blank" rel="noopener noreferrer"><img src="/image/android-badge.svg" width="135" height="40" loading="lazy" alt="Google Playで手に入れよう" /></a>
+              <a class="button button--secondary" href="app.html">Web版を開く</a>
             </div>
-
-            <div class="feature-grid">
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">🔒</span>
-                    <h3 class="feature-title">ローカルストレージ</h3>
-                    <p class="feature-description">
-                        すべてのデータは端末内にローカル保存。外部サーバーへの送信は一切ありません。
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">🚫</span>
-                    <h3 class="feature-title">クラウド同期なし</h3>
-                    <p class="feature-description">
-                        クラウド同期やデータ送信は行いません。データはあなたの端末の中だけに存在します。
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">🛡️</span>
-                    <h3 class="feature-title">外部アクセスなし</h3>
-                    <p class="feature-description">
-                        外部サーバーへのアクセスなし（サブスクリプション管理を除く）。個人情報も安心して保存できます。
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">✅</span>
-                    <h3 class="feature-title">完全プライベート</h3>
-                    <p class="feature-description">
-                        あなたが登録した定型文や変数は、あなたの端末の中だけに存在。開発者もアクセスできません。
-                    </p>
-                </div>
-
-                <div class="feature-card scroll-reveal">
-                    <span class="feature-icon">🔐</span>
-                    <h3 class="feature-title">安全なデータ移行</h3>
-                    <p class="feature-description">
-                        エクスポートデータはパスワード一致とチェックサムを確認できます。内容は暗号化されないため、安全な保存先で管理してください。
-                    </p>
-                </div>
-            </div>
+          </div>
         </div>
-    </section>
+      </section>
+    </main>
 
-    <!-- フッター -->
     <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3>ClipTap</h3>
-                <p style="color: rgba(255, 255, 255, 0.7); line-height: 1.8;">
-                    定型文をワンタップでコピーできる<br>
-                    超シンプルなモバイルアプリ
-                </p>
-            </div>
-            <div class="footer-section">
-                <h3>リンク</h3>
-                <ul class="footer-links">
-                    <li><a href="terms.html">利用規約</a></li>
-                    <li><a href="privacy.html">プライバシーポリシー</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h3>サポート</h3>
-                <ul class="footer-links">
-                    <li><a href="mailto:cliptap.developer@gmail.com">お問い合わせ</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2025 ClipTap. All rights reserved.</p>
-        </div>
+      <div class="container footer-grid">
+        <div class="footer-brand"><a class="brand" href="#top"><img src="/image/icon.png" width="40" height="40" loading="lazy" alt="" /><span>ClipTap</span></a><p>いつもの文章を、必要な場所へ。<br />ローカルファーストの定型文アプリ。</p></div>
+        <div><h2>プロダクト</h2><ul><li><a href="#keyboard">拡張キーボード</a></li><li><a href="#variables">システム変数</a></li><li><a href="#profiles">カスタム変数とプロファイル</a></li><li><a href="#flow">使い方</a></li><li><a href="#pricing">料金</a></li><li><a href="app.html">Web版</a></li></ul></div>
+        <div><h2>サポート</h2><ul><li><a href="#faq">よくある質問</a></li><li><a href="terms.html">利用規約</a></li><li><a href="privacy.html">プライバシーポリシー</a></li><li><a href="mailto:cliptap.developer@gmail.com">お問い合わせ</a></li></ul></div>
+        <div><h2>ダウンロード</h2><ul><li><a href="https://apps.apple.com/app/id6754281185" target="_blank" rel="noopener noreferrer">App Store <span aria-hidden="true">↗</span></a></li><li><a href="https://play.google.com/store/apps/details?id=com.sikakou.cliptap&amp;hl=ja" target="_blank" rel="noopener noreferrer">Google Play <span aria-hidden="true">↗</span></a></li><li><a href="en/" lang="en">English</a></li></ul></div>
+      </div>
+      <div class="container footer-bottom"><p>© 2026 ClipTap</p><p>記載の製品名は各社の商標です。ClipTapは各社と提携していません。</p></div>
     </footer>
 
-    <script>
-        // ヘッダースクロール効果
-        window.addEventListener('scroll', () => {
-            const header = document.querySelector('.header');
-            if (window.scrollY > 50) {
-                header.classList.add('scrolled');
-            } else {
-                header.classList.remove('scrolled');
-            }
-        });
-
-        // スクロールアニメーション
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry, index) => {
-                if (entry.isIntersecting) {
-                    setTimeout(() => {
-                        entry.target.classList.add('revealed');
-                    }, index * 100);
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.scroll-reveal').forEach((element) => {
-            observer.observe(element);
-        });
-
-        // スムーススクロール
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    const headerOffset = 80;
-                    const elementPosition = target.offsetTop;
-                    const offsetPosition = elementPosition - headerOffset;
-
-                    window.scrollTo({
-                        top: offsetPosition,
-                        behavior: 'smooth'
-                    });
-                }
-            });
-        });
-    </script>
-</body>
+    <script type="module" src="./lp/lp.js"></script>
+  </body>
 </html>

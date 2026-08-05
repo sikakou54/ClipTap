@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClipTap — One-tap text snippets in any app | Free snippet keyboard</title>
+    <meta name="description" content="ClipTap is a free text snippet app with a keyboard that inserts saved replies straight into Gmail, Slack, LINE, ChatGPT and any other text field. Automate dates and names with 7 variables and 94 formats. Stored locally, works offline, available on iOS, Android and Web." />
+    <meta name="keywords" content="text expander,snippet keyboard,canned response,text shortcut,text template,keyboard extension,offline snippets,productivity app,iOS,Android" />
+    <meta name="author" content="ClipTap" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#0A0F1C" />
+    <meta name="color-scheme" content="dark" />
+
+    <link rel="canonical" href="https://cliptap.net/en/" />
+    <link rel="alternate" hreflang="ja" href="https://cliptap.net/" />
+    <link rel="alternate" hreflang="en" href="https://cliptap.net/en/" />
+    <link rel="alternate" hreflang="x-default" href="https://cliptap.net/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ClipTap — One-tap text snippets in any app" />
+    <meta property="og:description" content="Insert your saved text straight into any app from the ClipTap keyboard. Variables, local storage and offline support included." />
+    <meta property="og:url" content="https://cliptap.net/en/" />
+    <meta property="og:site_name" content="ClipTap" />
+    <meta property="og:image" content="https://cliptap.net/ogp/og-en.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="ClipTap — Your saved text, one tap inside any app" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="ja_JP" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ClipTap — One-tap text snippets in any app" />
+    <meta name="twitter:description" content="Insert your saved text straight into any app from the ClipTap keyboard." />
+    <meta name="twitter:image" content="https://cliptap.net/ogp/og-en.png" />
+    <meta name="twitter:image:alt" content="ClipTap — Your saved text, one tap inside any app" />
+
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" href="/image/icon.png" />
+    <link rel="apple-touch-icon" href="/image/icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../lp/lp.css" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "ClipTap",
+        "url": "https://cliptap.net/en/",
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "iOS 15.1 or later, Android 7.0 or later, Web",
+        "softwareVersion": "1.3.0",
+        "inLanguage": ["ja", "en"],
+        "description": "A local-first text snippet app whose keyboard inserts saved text straight into any app.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Organization",
+          "name": "ClipTap"
+        },
+        "sameAs": [
+          "https://apps.apple.com/app/id6754281185",
+          "https://play.google.com/store/apps/details?id=com.sikakou.cliptap"
+        ],
+        "featureList": [
+          "Insert snippets from a keyboard extension",
+          "Seven system variables and 94 format presets",
+          "Custom variables by profile",
+          "Local storage and offline operation",
+          "Import and export with .cliptap files"
+        ],
+        "screenshot": [
+          "https://cliptap.net/image/keyborad.png",
+          "https://cliptap.net/image/top.png",
+          "https://cliptap.net/image/variables-setting.png"
+        ]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "ClipTap",
+        "url": "https://cliptap.net/",
+        "inLanguage": ["ja", "en"],
+        "publisher": {
+          "@type": "Organization",
+          "name": "ClipTap",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://cliptap.net/image/icon.png"
+          }
+        }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How much can I do for free?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Free includes unlimited templates and categories, unlimited keyboard items, and all 7 system variables with all 94 formats. You can also use up to 3 profiles and 5 custom variables for free."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Where is my data stored?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Templates, categories, profiles and variables are all stored on your device. They are not stored in the cloud, and the contents of your templates are not sent outside your device."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does ClipTap work offline?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Creating, searching, expanding variables, copying and keyboard input all work offline. Only account linking, Pro entitlement checks, ads and store navigation need a network connection."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does the iPhone need any setup?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "You need to add the ClipTap keyboard in Settings first. Full Access is needed to record usage counts, but inserting templates works without Full Access."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I move my data to a new phone?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Export a .cliptap file and import it on the new device. ClipTap performs a password-match check and checksum verification, but the file contents are not encrypted."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What happens when I cancel Pro?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Pro remains available until the end of the paid period. Profiles and custom variables above the Free limits are not deleted; they are only disabled and become available again if you return to Pro."
+            }
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <!-- Each language URL ships complete static HTML so search engines and no-script users can read the whole page. -->
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="header-sentinel" data-header-sentinel aria-hidden="true"></div>
+
+    <header class="site-header glass" data-header>
+      <div class="header-inner container">
+        <a class="brand" href="#top" aria-label="ClipTap home">
+          <img src="/image/icon.png" width="40" height="40" alt="" />
+          <span>ClipTap</span>
+        </a>
+        <nav class="nav" aria-label="Main navigation">
+          <a href="#keyboard">Keyboard</a>
+          <a href="#variables">Variables</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <div class="header-actions">
+          <div class="lang-switch" role="group" aria-label="Choose language">
+            <a href="../" lang="ja">JA</a>
+            <a href="./" lang="en" aria-current="page">EN</a>
+          </div>
+          <a class="button button--compact header-cta" href="../app.html">Web app</a>
+          <button class="nav-toggle" type="button" data-nav-open aria-haspopup="dialog" aria-controls="mobile-nav" aria-label="Open menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <dialog class="mobile-nav glass" id="mobile-nav" data-mobile-nav aria-label="Mobile navigation">
+      <div class="mobile-nav__head">
+        <span class="brand"><img src="/image/icon.png" width="36" height="36" alt="" /><span>ClipTap</span></span>
+        <button type="button" data-nav-close aria-label="Close menu">×</button>
+      </div>
+      <nav aria-label="Mobile menu">
+        <a href="#keyboard">Keyboard</a>
+        <a href="#variables">Variables</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+        <a href="../app.html">Open Web app</a>
+      </nav>
+      <div class="lang-switch" role="group" aria-label="Choose language">
+        <a href="../" lang="ja">日本語</a>
+        <a href="./" lang="en" aria-current="page">English</a>
+      </div>
+    </dialog>
+
+    <main id="main">
+      <!-- Hero: one screen that answers "what does this do". -->
+      <section class="hero section" id="top">
+        <div class="hero-grid container">
+          <div class="hero-copy reveal">
+            <p class="tag"><span class="tag-dot"></span> KEYBOARD</p>
+            <h1>Your saved text,<br /><strong>one tap inside<br />any app.</strong></h1>
+            <p class="hero-lead">Gmail, Slack, LINE, ChatGPT. If you can type in it, the ClipTap keyboard can drop your usual text straight into it.</p>
+            <div class="hero-actions" id="download">
+              <a class="store-badge" href="https://apps.apple.com/app/id6754281185" target="_blank" rel="noopener noreferrer"><img src="/image/ios-badge.svg" width="109" height="40" alt="Download on the App Store" /></a>
+              <a class="store-badge" href="https://play.google.com/store/apps/details?id=com.sikakou.cliptap&amp;hl=en" target="_blank" rel="noopener noreferrer"><img src="/image/android-badge.svg" width="135" height="40" alt="Get it on Google Play" /></a>
+              <a class="button button--secondary" href="../app.html">Open Web app <span aria-hidden="true">↗</span></a>
+            </div>
+            <p class="hero-note">Free, no sign-up. Unlimited templates and categories.</p>
+            <ul class="trust-chips" aria-label="ClipTap highlights">
+              <li><span aria-hidden="true">●</span> Works offline</li>
+              <li><span aria-hidden="true">●</span> Stored on your device</li>
+              <li><span aria-hidden="true">●</span> iOS 15.1+ · Android 7.0+ · Web</li>
+            </ul>
+          </div>
+
+          <!-- Left: the saved templates. Right: one of them typed into another app. -->
+          <div class="hero-visual reveal" style="--i: 2">
+            <div class="phone-pair">
+              <div class="phone phone--shot">
+                <div class="phone-inner">
+                  <div class="dynamic-island" aria-hidden="true"></div>
+                  <img src="/image/hero-cliptap.png" width="1170" height="2532" alt="The ClipTap home screen listing saved templates" />
+                </div>
+              </div>
+              <div class="phone phone--shot">
+                <div class="phone-inner">
+                  <div class="dynamic-island" aria-hidden="true"></div>
+                  <img src="/image/hero-insert.png" width="1170" height="2532" alt="A saved ClipTap prompt inserted straight into the ChatGPT input field" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="supported-apps reveal">
+          <p>On iOS, Android and the web. The keyboard types into any app with a text field</p>
+          <ul class="app-list" aria-label="Examples of supported apps">
+            <li>Gmail</li><li>Slack</li><li>LINE</li><li>X</li><li>Instagram</li><li>ChatGPT</li><li>Claude</li><li>Browser</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 01 Keyboard: three use cases — AI chat, social media and email — each with a screen. -->
+      <section class="section section--keyboard" id="keyboard">
+        <div class="container">
+          <header class="section-head reveal">
+            <p class="eyebrow">KEYBOARD</p>
+            <h2>Never type the same<br />text twice.</h2>
+            <p class="lead">Switch to the ClipTap keyboard and tap — that's it. AI chat, social media, email: if you can type there, ClipTap can insert there.</p>
+          </header>
+
+          <ul class="usecase-grid">
+            <li class="usecase-item reveal" style="--i: 0">
+              <div class="phone phone--shot">
+                <div class="phone-inner">
+                  <div class="dynamic-island" aria-hidden="true"></div>
+                  <img src="/image/usecase-ai.png" width="1170" height="2532" loading="lazy" decoding="async" alt="A ClipTap prompt template typed into an AI chat input field" />
+                </div>
+              </div>
+              <h3>AI chat</h3>
+              <p>Save your go-to prompts and drop them into ChatGPT or Claude with one tap.</p>
+            </li>
+            <li class="usecase-item reveal" style="--i: 1">
+              <div class="phone phone--shot">
+                <div class="phone-inner">
+                  <div class="dynamic-island" aria-hidden="true"></div>
+                  <img src="/image/usecase-sns.png" width="1170" height="2532" loading="lazy" decoding="async" alt="A daily update template typed into a social media post box" />
+                </div>
+              </div>
+              <h3>Social media</h3>
+              <p>Daily update posts like #100DaysOfCode take one tap — hashtags included, straight into the post box.</p>
+            </li>
+            <li class="usecase-item reveal" style="--i: 2">
+              <div class="phone phone--shot">
+                <div class="phone-inner">
+                  <div class="dynamic-island" aria-hidden="true"></div>
+                  <img src="/image/usecase-mail.png" width="1170" height="2532" loading="lazy" decoding="async" alt="A ClipTap template inserted into an email body" />
+                </div>
+              </div>
+              <h3>Email</h3>
+              <p>Insert greetings, signatures and frequent replies right into Gmail and other mail apps.</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 02 System variables: dates and times fill themselves in at the moment of typing. -->
+      <section class="section section--variables" id="variables">
+        <div class="container">
+          <div class="media-split reveal">
+            <div class="media-split__copy">
+              <header class="section-head">
+                <p class="eyebrow">SYSTEM VARIABLES</p>
+                <h2>Dates and times<br />fill themselves in.</h2>
+                <p class="lead">Turn the parts that change every time into system variables. They are replaced with the date, time and weekday of the moment you type.</p>
+              </header>
+
+              <div class="stats">
+                <article class="stat"><strong>7</strong><span>system variables</span><small>dates, times, weekdays</small></article>
+                <article class="stat"><strong>94</strong><span>format presets</span><small>pick one and it applies</small></article>
+              </div>
+            </div>
+
+            <figure class="media-shot">
+              <div class="phone-pair">
+                <div class="phone phone--shot">
+                  <div class="phone-inner">
+                    <div class="dynamic-island" aria-hidden="true"></div>
+                    <img src="/image/system-variables-list.png" width="1170" height="2532" loading="lazy" decoding="async" alt="The system variables list screen" />
+                  </div>
+                </div>
+                <div class="phone phone--shot">
+                  <div class="phone-inner">
+                    <div class="dynamic-island" aria-hidden="true"></div>
+                    <img src="/image/system-variables-format.png" width="1170" height="2532" loading="lazy" decoding="async" alt="Choosing a date and time format from the preset list" />
+                  </div>
+                </div>
+              </div>
+              <figcaption>Pick a variable from the list, change its format on the spot</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <!-- 03 Custom variables: company and contact names switch together per profile. -->
+      <section class="section section--profiles" id="profiles">
+        <div class="container">
+          <div class="media-split media-split--reverse reveal">
+            <div class="media-split__copy">
+              <header class="section-head">
+                <p class="eyebrow">CUSTOM VARIABLES</p>
+                <h2>Names and companies<br />fill themselves in too.</h2>
+                <p class="lead">Register company names, contacts and signatures once. Switch the per-client "profile" and the same template instantly fits the next client.</p>
+              </header>
+            </div>
+
+            <figure class="media-shot">
+              <div class="phone-pair">
+                <div class="phone phone--shot">
+                  <div class="phone-inner">
+                    <div class="dynamic-island" aria-hidden="true"></div>
+                    <img src="/image/custom-variable-edit.png" width="1170" height="2532" loading="lazy" decoding="async" alt="The custom variable editor screen" />
+                  </div>
+                </div>
+                <div class="phone phone--shot">
+                  <div class="phone-inner">
+                    <div class="dynamic-island" aria-hidden="true"></div>
+                    <img src="/image/custom-variable-snippet.png" width="1170" height="2532" loading="lazy" decoding="async" alt="A template that uses custom variables" />
+                  </div>
+                </div>
+              </div>
+              <figcaption>Set a name once, and it appears in every template</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <!-- 04 How it works: save → insert from the keyboard, with screens. -->
+      <section class="section section--flow" id="flow">
+        <div class="container">
+          <header class="section-head reveal">
+            <p class="eyebrow">HOW IT WORKS</p>
+            <h2>Save once,<br />then just use it.</h2>
+            <p class="lead">Save a template once, then call it up from any app.</p>
+          </header>
+
+          <ol class="flow-grid">
+            <li class="flow-item reveal" style="--i: 0">
+              <span class="flow-item__num" aria-hidden="true">1</span>
+              <div class="phone phone--shot">
+                <div class="phone-inner">
+                  <div class="dynamic-island" aria-hidden="true"></div>
+                  <img src="/image/flow-register.png" width="1170" height="2532" loading="lazy" decoding="async" alt="The template editor screen" />
+                </div>
+              </div>
+              <h3>Save a template</h3>
+              <p>Enter a title and body, then save. Insert dates and company names as variables with one tap.</p>
+            </li>
+            <li class="flow-item reveal" style="--i: 1">
+              <span class="flow-item__num" aria-hidden="true">2</span>
+              <div class="phone phone--shot">
+                <div class="phone-inner">
+                  <div class="dynamic-island" aria-hidden="true"></div>
+                  <img src="/image/flow-keyboard.png" width="1170" height="2532" loading="lazy" decoding="async" alt="Inserting a template from the keyboard extension" />
+                </div>
+              </div>
+              <h3>Insert from the keyboard</h3>
+              <p>Switch to the ClipTap keyboard in any app and tap the template.</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- 05 Pricing: the feature comparison table is the hero; the price itself stays modest. -->
+      <section class="section section--pricing" id="pricing">
+        <div class="container">
+          <header class="section-head reveal">
+            <p class="eyebrow">PRICING</p>
+            <h2>Almost everything<br />stays free.</h2>
+            <p class="lead">Templates, categories, the keyboard extension and all 7 variables with 94 formats are included on Free.</p>
+          </header>
+
+          <div class="plan-table-wrap reveal">
+            <table class="plan-table">
+              <caption class="sr-only">Feature comparison between the Free and Pro plans</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Features</th>
+                  <th scope="col">Free</th>
+                  <th scope="col" class="plan-table__pro">Pro</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Templates and categories</th><td>Unlimited</td><td class="plan-table__pro">Unlimited</td></tr>
+                <tr><th scope="row">Profiles</th><td>Up to 3</td><td class="plan-table__pro">Unlimited</td></tr>
+                <tr><th scope="row">Custom variables</th><td>Up to 5</td><td class="plan-table__pro">Unlimited</td></tr>
+                <tr><th scope="row">Ads</th><td>Shown</td><td class="plan-table__pro">None</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="plan-price reveal">Free stays ¥0 forever. Pro is ¥250 per month (¥3,000 per year) in Japanese yen.</p>
+
+          <ul class="pricing-notes reveal">
+            <li>These are reference prices. Your country's App Store or Google Play listing takes priority for the actual price and currency.</li>
+            <li>Purchase, restore and cancellation are handled in the mobile app. You cannot purchase Pro on the Web app.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 06 FAQ: the six questions people ask before installing (mirrors the JSON-LD). -->
+      <section class="section section--faq" id="faq">
+        <div class="container">
+          <header class="section-head reveal">
+            <p class="eyebrow">FAQ</p>
+            <h2>Frequently asked questions.</h2>
+          </header>
+          <div class="faq-list reveal">
+            <details><summary>How much can I do for free?</summary><div><p>Free includes unlimited templates and categories, unlimited keyboard items, and all 7 system variables with all 94 formats. You can also use up to 3 profiles and 5 custom variables for free.</p></div></details>
+            <details><summary>Where is my data stored?</summary><div><p>Templates, categories, profiles and variables are all stored on your device. They are not stored in the cloud, and the contents of your templates are not sent outside your device.</p></div></details>
+            <details><summary>Does ClipTap work offline?</summary><div><p>Creating, searching, expanding variables, copying and keyboard input all work offline. Only account linking, Pro entitlement checks, ads and store navigation need a network connection.</p></div></details>
+            <details><summary>Does the iPhone need any setup?</summary><div><p>You need to add the ClipTap keyboard in Settings first. Full Access is needed to record usage counts, but inserting templates works without Full Access.</p></div></details>
+            <details><summary>Can I move my data to a new phone?</summary><div><p>Export a .cliptap file and import it on the new device. ClipTap performs a password-match check and checksum verification, but the file contents are not encrypted.</p></div></details>
+            <details><summary>What happens when I cancel Pro?</summary><div><p>Pro remains available until the end of the paid period. Profiles and custom variables above the Free limits are not deleted; they are only disabled and become available again if you return to Pro.</p></div></details>
+          </div>
+        </div>
+      </section>
+
+      <section class="section final-cta" id="cta">
+        <div class="container">
+          <div class="final-cta__panel glass reveal">
+            <p class="tag"><span class="tag-dot"></span> START FREE</p>
+            <h2>Stop retyping<br />the same sentence.</h2>
+            <p>Free, no sign-up. Start with the one sentence you use most.</p>
+            <div class="hero-actions">
+              <a class="store-badge" href="https://apps.apple.com/app/id6754281185" target="_blank" rel="noopener noreferrer"><img src="/image/ios-badge.svg" width="109" height="40" loading="lazy" alt="Download on the App Store" /></a>
+              <a class="store-badge" href="https://play.google.com/store/apps/details?id=com.sikakou.cliptap&amp;hl=en" target="_blank" rel="noopener noreferrer"><img src="/image/android-badge.svg" width="135" height="40" loading="lazy" alt="Get it on Google Play" /></a>
+              <a class="button button--secondary" href="../app.html">Open Web app</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-grid">
+        <div class="footer-brand"><a class="brand" href="#top"><img src="/image/icon.png" width="40" height="40" loading="lazy" alt="" /><span>ClipTap</span></a><p>Your saved text, ready where you need it.<br />A local-first text snippet app.</p></div>
+        <div><h2>Product</h2><ul><li><a href="#keyboard">Keyboard extension</a></li><li><a href="#variables">System variables</a></li><li><a href="#profiles">Custom variables and Profiles</a></li><li><a href="#flow">How it works</a></li><li><a href="#pricing">Pricing</a></li><li><a href="../app.html">Web app</a></li></ul></div>
+        <div><h2>Support</h2><ul><li><a href="#faq">FAQ</a></li><li><a href="../terms.html">Terms of Service</a></li><li><a href="../privacy.html">Privacy Policy</a></li><li><a href="mailto:cliptap.developer@gmail.com">Contact</a></li></ul></div>
+        <div><h2>Download</h2><ul><li><a href="https://apps.apple.com/app/id6754281185" target="_blank" rel="noopener noreferrer">App Store <span aria-hidden="true">↗</span></a></li><li><a href="https://play.google.com/store/apps/details?id=com.sikakou.cliptap&amp;hl=en" target="_blank" rel="noopener noreferrer">Google Play <span aria-hidden="true">↗</span></a></li><li><a href="../" lang="ja">日本語</a></li></ul></div>
+      </div>
+      <div class="container footer-bottom"><p>© 2026 ClipTap</p><p>Product names are trademarks of their respective owners. ClipTap is not affiliated with them.</p></div>
+    </footer>
+
+    <script type="module" src="../lp/lp.js"></script>
+  </body>
+</html>
