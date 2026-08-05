@@ -101,29 +101,33 @@ export function TextInputScreen({ type, initialValue, hasOnSave }: TextInputScre
           },
         ]}
       >
-        {/* テキスト入力フィールド */}
-        <TextInput
-          ref={textInputRef}
-          value={text}
-          onChangeText={handleTextChange}
-          onSelectionChange={(e) => {
-            handleSelectionChange(e.nativeEvent.selection.start);
-          }}
-          placeholder={t(`snippet.${type}_input_placeholder`)}
-          placeholderTextColor={colors.textSecondary}
-          style={[
-            styles.input,
-            {
-              color: colors.text,
-              fontSize: responsiveFontSizes.base,
-              lineHeight: responsiveFontSizes.base * 1.5,
-            },
-          ]}
-          multiline={type === 'content'}
-          maxLength={type === 'title' ? INPUT_LIMITS.SNIPPET_TITLE_MAX : undefined}
-          textAlignVertical="top"
-          scrollEnabled={true}
-        />
+        {/* テキスト入力エリア（余白を吸収し、入力欄を上端へ寄せる） */}
+        <View style={styles.inputArea}>
+          {/* テキスト入力フィールド */}
+          <TextInput
+            ref={textInputRef}
+            value={text}
+            onChangeText={handleTextChange}
+            onSelectionChange={(e) => {
+              handleSelectionChange(e.nativeEvent.selection.start);
+            }}
+            placeholder={t(`snippet.${type}_input_placeholder`)}
+            placeholderTextColor={colors.textSecondary}
+            style={[
+              /* 単一行のタイトルは伸縮させない（伸ばすと垂直中央に描画されるため） */
+              type === 'content' ? styles.input : styles.inputSingleLine,
+              {
+                color: colors.text,
+                fontSize: responsiveFontSizes.base,
+                lineHeight: responsiveFontSizes.base * 1.5,
+              },
+            ]}
+            multiline={type === 'content'}
+            maxLength={type === 'title' ? INPUT_LIMITS.SNIPPET_TITLE_MAX : undefined}
+            textAlignVertical="top"
+            scrollEnabled={true}
+          />
+        </View>
 
         {/* 変数挿入ツールバー（キーボードの上に表示） */}
         <View
@@ -152,8 +156,14 @@ const styles = StyleSheet.create({
   contentWrapper: {
     flex: 1,
   },
+  inputArea: {
+    flex: 1,
+  },
   input: {
     flex: 1,
+    padding: 16,
+  },
+  inputSingleLine: {
     padding: 16,
   },
   toolbarContainer: {
