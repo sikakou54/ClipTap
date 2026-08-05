@@ -48,16 +48,12 @@ export function ProfileSelector({ onProfileChange }: ProfileSelectorProps) {
     keyExtractor,
   } = useProfileSelector({ onProfileChange });
 
-  /* ========================================
-     早期リターン
-     ======================================== */
-
-  if (!loading && profiles.length === 0) {
-    return null;
-  }
-
   /**
    * FlashListのrenderItem
+   *
+   * 早期リターンより前に定義する。
+   * 早期リターンの後に置くとロード完了後に0件になった際にフックの呼び出し数が
+   * 変化してReactがクラッシュするため。
    */
   const renderProfileItem = useCallback(({ item }: { item: Profile }) => {
     const isActive = activeProfile?.id === item.id;
@@ -88,6 +84,14 @@ export function ProfileSelector({ onProfileChange }: ProfileSelectorProps) {
       </TouchableOpacity>
     );
   }, [activeProfile?.id, colors.primary, colors.text, colors.textSecondary, handleSelectProfile, responsiveFontSizes.base]);
+
+  /* ========================================
+     早期リターン
+     ======================================== */
+
+  if (!loading && profiles.length === 0) {
+    return null;
+  }
 
   /* ========================================
      レンダリング

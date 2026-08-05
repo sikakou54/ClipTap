@@ -41,7 +41,6 @@ export default function HomeScreen() {
 
   const {
     selectedCategoryId,
-    refreshing,
     activeProfileId,
     snippets,
     categories,
@@ -49,6 +48,7 @@ export default function HomeScreen() {
     handleCategorySelect,
     handleRefresh,
     handleCopySnippet,
+    handleCopySnippetTitle,
     handleEditSnippet,
     handleDeleteSnippet,
     handleNavigateToSettings,
@@ -145,7 +145,7 @@ export default function HomeScreen() {
             onPress={handleCopySnippet}
             onEdit={handleEditSnippet}
             onDelete={handleDeleteSnippet}
-            refreshing={refreshing}
+            onPressTitle={handleCopySnippetTitle}
             onRefresh={handleRefresh}
             categories={categories}
             overrideProfileId={activeProfileId}

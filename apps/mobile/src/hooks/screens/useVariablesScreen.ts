@@ -14,13 +14,14 @@
  * @see lib/hooks/useVariables.tsx - 変数CRUD操作
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import {
   useTranslation,
   VariableService,
   useVariables,
   useProfiles,
+  Logger,
   type Variable,
   type Profile,
 } from '@cliptap/shared';
@@ -34,6 +35,7 @@ export interface UseVariablesScreenReturn {
   /* 状態 */
   variables: Variable[];
   selectedProfileId: string | null;
+  /** 環境を明示選択する（nullを渡すと先頭の環境に戻る） */
   setSelectedProfileId: (id: string | null) => void;
   profiles: Profile[];
 
@@ -64,8 +66,8 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
   /* 状態管理 */
   /* ======================================== */
   const [variables, setVariables] = useState<Variable[]>([]);
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
-  const [profileValuesMap, setProfileValuesMap] = useState<Record<string, string>>({});
+  /* ユーザーがチップで明示選択した環境ID（null = 先頭の環境） */
+  const [profileOverride, setProfileOverride] = useState<string | null>(null);
 
   /**
    * カスタム変数一覧を読み込む（無効なものも含む）
@@ -83,36 +85,31 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
   );
 
   /* ======================================== */
-  /* 副作用: プロファイル選択の初期化 */
+  /* 派生状態: プロファイル選択と値マップ */
   /* ======================================== */
 
   /**
-   * プロファイル一覧の更新に合わせて初期選択を設定
+   * 実際に選択されている環境ID
+   *
+   * 明示選択が現存する環境を指していればそれを、無ければ先頭の環境を使う。
    */
-  useEffect(() => {
-    /* プロファイルがない場合 */
+  const selectedProfileId = useMemo(() => {
     if (profiles.length === 0) {
-      setSelectedProfileId(null);
-      return;
+      return null;
     }
-
-    setSelectedProfileId((prev) => {
-      /* 前回選択が有効な場合 */
-      if (prev && profiles.some((profile) => profile.id === prev)) {
-        return prev;
-      }
-      return profiles[0].id;
-    });
-  }, [profiles]);
+    if (profileOverride && profiles.some((profile) => profile.id === profileOverride)) {
+      return profileOverride;
+    }
+    return profiles[0].id;
+  }, [profileOverride, profiles]);
 
   /**
-   * 選択中プロファイルの変数値マップをキャッシュ
+   * 選択中プロファイルの変数値マップ
    */
-  useEffect(() => {
+  const profileValuesMap = useMemo<Record<string, string>>(() => {
     /* プロファイルが選択されていない場合 */
     if (!selectedProfileId) {
-      setProfileValuesMap({});
-      return;
+      return {};
     }
     /* profileVariablesからマップを構築 */
     const variableIdToName: Record<string, string> = {};
@@ -128,7 +125,7 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
           map[varName] = pv.value;
         }
       });
-    setProfileValuesMap(map);
+    return map;
   }, [selectedProfileId, profileVariables]);
 
   /* ======================================== */
@@ -193,10 +190,14 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
       /* 「この変数を削除しますか？」確認 */
       showConfirm(
         t('settings.delete_variable_confirm', { name: variable.name }),
-        async () => {
-          await deleteVar(variable.id);
-          /* Service層から再取得して同期 */
-          setVariables(VariableService.getAllCustomVariablesIncludingInvalidSorted());
+        () => {
+          try {
+            deleteVar(variable.id);
+            /* Service層から再取得して同期 */
+            setVariables(VariableService.getAllCustomVariablesIncludingInvalidSorted());
+          } catch (error) {
+            Logger.error('[VariablesScreen] Failed to delete variable:', error);
+          }
         },
         undefined,
         'danger'
@@ -256,7 +257,7 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
     /* 状態 */
     variables,
     selectedProfileId,
-    setSelectedProfileId,
+    setSelectedProfileId: setProfileOverride,
     profiles,
 
     /* ハンドラ */

@@ -171,7 +171,7 @@ const CommonInput: React.FC<CommonInputProps> = ({
     onBlur?.(e);
 
     if (validator && textInputProps.value) {
-      runValidation(textInputProps.value as string);
+      runValidation(textInputProps.value);
     }
   }, [onBlur, validator, runValidation, textInputProps.value]);
 

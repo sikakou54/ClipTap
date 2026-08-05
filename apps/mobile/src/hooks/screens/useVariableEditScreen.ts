@@ -257,7 +257,7 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
         showErrorAlert(translateError(error));
       }
     },
-    [name, value, profileValues, router, t]
+    [name, value, profileValues, router]
   );
 
   /**
@@ -336,7 +336,6 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
     setVariableValuesForVariable,
     refreshProfiles,
     router,
-    t,
   ]);
 
   /**

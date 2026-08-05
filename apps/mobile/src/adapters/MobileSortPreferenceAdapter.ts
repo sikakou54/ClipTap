@@ -24,7 +24,7 @@ export class MobileSortPreferenceAdapter implements SortPreferenceAdapter {
     try {
       const value = await AsyncStorage.getItem(SORT_PREFERENCE_KEY);
       if (value && (value === 'created' || value === 'updated' || value === 'title' || value === 'usage')) {
-        return value as SnippetSortBy;
+        return value;
       }
       return null;
     } catch (error) {

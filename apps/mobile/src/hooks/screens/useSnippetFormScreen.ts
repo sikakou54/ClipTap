@@ -120,7 +120,7 @@ export function useSnippetFormScreen({
       }
 
       try {
-        const snippet = await getById(snippetId);
+        const snippet = getById(snippetId);
         if (snippet) {
           setTitle(snippet.title || '');
           setContent(snippet.content);
@@ -224,7 +224,7 @@ export function useSnippetFormScreen({
     setSaving(true);
     try {
       if (isEditMode && snippetId) {
-        await updateSnippet({
+        updateSnippet({
           id: snippetId,
           title: title.trim(),
           content: content.trim(),
@@ -233,7 +233,7 @@ export function useSnippetFormScreen({
           copyWithTitle,
         });
       } else {
-        await createSnippet({
+        createSnippet({
           title: title.trim(),
           content: content.trim(),
           categoryId: selectedCategoryId,
@@ -242,7 +242,7 @@ export function useSnippetFormScreen({
         });
       }
       router.back();
-    } catch (error) {
+    } catch {
       showErrorAlert(t('error.generic'));
     } finally {
       setSaving(false);

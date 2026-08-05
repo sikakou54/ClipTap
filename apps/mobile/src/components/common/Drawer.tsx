@@ -62,12 +62,12 @@ export function Drawer({ visible, onClose }: DrawerProps) {
    * すでにアクティブな環境を選択した場合は何もしない
    * 選択した環境をアクティブに設定し、変数の参照先を切り替える
    */
-  const handleSelectProfile = async (profile: Profile) => {
+  const handleSelectProfile = (profile: Profile) => {
     if (profile.isActive) return;
 
     try {
-      await setActiveProfile(profile.id);
-    } catch (error) {
+      setActiveProfile(profile.id);
+    } catch {
       /* エラーは無視（UIの状態は変更されない） */
     }
   };

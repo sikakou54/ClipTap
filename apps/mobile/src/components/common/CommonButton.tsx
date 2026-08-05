@@ -137,7 +137,7 @@ export function CommonButton({
       opacity: (disabled || loading) ? 0.6 : 1,
     };
 
-    let typeStyle: ViewStyle = {};
+    const typeStyle: ViewStyle = {};
 
     if (disabled || loading) {
       typeStyle.backgroundColor = colors.textTertiary;

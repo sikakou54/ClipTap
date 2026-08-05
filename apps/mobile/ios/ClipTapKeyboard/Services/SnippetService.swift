@@ -161,7 +161,7 @@ class SnippetService {
     /// 【処理の流れ】
     /// 1. プロファイルIDを決定（引数で指定 > アクティブプロファイル）
     /// 2. プロファイルに紐づく変数マップを取得（例: client_name → 田中）
-    /// 3. copyWithTitleフラグをチェック → タイトルも含めるか判定
+    /// 3. 本文のみを挿入対象にする（タイトルは insertTitle で個別に挿入する）
     /// 4. 変数を実際の値に置換（{{today}} → 2025/11/17 など）
     /// 5. textDocumentProxyでテキストを挿入（LINEやメモアプリなどの入力欄に入力）
     /// 6. 振動フィードバック（Haptic Feedback）を実行
@@ -197,13 +197,9 @@ class SnippetService {
             os_log("📝 Variables map count: %d", log: snippetServiceLog, type: .info, variablesMap.count)
         }
 
-        // テキストを準備
-        // copyWithTitleフラグがtrueなら、タイトル + 改行 + 内容
-        var text = snippet.content
-        if snippet.copyWithTitle, let title = snippet.title, !title.isEmpty {
-            text = "\(title)\n\(text)"
-        }
-
+        /* テキストを準備（本文のみ）
+           タイトルはメール件名などの別フィールドへ入れられるよう insertTitle で個別に挿入する */
+        let text = snippet.content
 
         // 変数を置換
         // 例: "こんにちは{{client_name}}様" → "こんにちは田中様"
@@ -232,6 +228,72 @@ class SnippetService {
         }
     }
 
+    /// スニペットのタイトルだけをキーボードに挿入（変数置換＋振動フィードバック）
+    ///
+    /// - Parameters:
+    ///   - snippet: 挿入するスニペット
+    ///   - textDocumentProxy: iOSのテキスト入力API（カスタムキーボードが提供）
+    ///   - profileId: プロファイルID（省略時はアクティブなプロファイルを使用）
+    ///
+    /// 【用途】
+    /// メールの件名と本文のように、タイトルと本文を別々の入力欄へ入れたい場合に使用します。
+    /// 詳細画面のタイトル行にあるボタンから呼び出されます。
+    ///
+    /// 【処理の流れ】
+    /// 1. copyWithTitleがONかつタイトルが空でないことを確認（それ以外は何もしない）
+    /// 2. プロファイルIDを決定し、変数マップを取得
+    /// 3. タイトルの変数を実際の値に置換
+    /// 4. textDocumentProxyでタイトルを挿入
+    /// 5. 振動フィードバック（Haptic Feedback）を実行
+    ///
+    /// 【改行を付けない理由】
+    /// 別の入力欄へ入れることが主な用途のため、タイトル末尾に改行は付加しません。
+    ///
+    /// 【copyCountを加算しない理由】
+    /// タイトルと本文を続けて挿入すると1回の利用が2回分として数えられてしまいます。
+    /// 使用回数は本文挿入（insertSnippet）でのみ加算します。
+    func insertTitle(
+        _ snippet: Snippet,
+        into textDocumentProxy: UITextDocumentProxy,
+        profileId: String? = nil
+    ) {
+        /* タイトルを持たない、またはタイトルをコピーしない設定のスニペットは何もしない */
+        guard snippet.copyWithTitle, let title = snippet.title, !title.isEmpty else {
+            KeyboardLog.debug("📝 [SnippetService] Skipped title insert (no title or copyWithTitle is off)")
+            return
+        }
+
+        // プロファイルIDを決定（引数で指定されていれば優先、なければアクティブプロファイル）
+        let resolvedProfileId: String?
+        if let profileId = profileId {
+            resolvedProfileId = profileId
+        } else {
+            resolvedProfileId = profileService.getActiveProfile()?.id
+        }
+
+        // 変数マップを取得（プロファイルに紐づくカスタム変数）
+        var variablesMap: [String: String] = [:]
+        if let profileId = resolvedProfileId {
+            variablesMap = variableService.getVariablesMap(for: profileId)
+        }
+
+        // 変数を置換（本文と同じルールでタイトルも展開する）
+        let resolvedTitle = variableReplacer.replace(
+            in: title,
+            variablesMap: variablesMap,
+            formats: SystemVariableFormatMapper.shared.getAll()
+        )
+
+        /* キーボードからタイトルを挿入（改行は付けない） */
+        textDocumentProxy.insertText(resolvedTitle)
+
+        /* 振動フィードバック（本文挿入と同じ軽い振動） */
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+
+        KeyboardLog.debug("✅ [SnippetService] Inserted title for snippet: %@", snippet.id)
+    }
+
     /// プレビュー生成（変数置換後のテキスト）
     ///
     /// - Parameters:
@@ -250,9 +312,12 @@ class SnippetService {
     /// 【処理の流れ】
     /// 1. プロファイルIDを決定
     /// 2. 変数マップを取得
-    /// 3. copyWithTitleフラグをチェック
-    /// 4. 変数を置換
-    /// 5. 置換後のテキストを返す
+    /// 3. 変数を置換
+    /// 4. 置換後のテキストを返す
+    ///
+    /// 【タイトルを含めない理由】
+    /// insertSnippetが本文のみを挿入するため、プレビューも同じ契約に揃えています。
+    /// タイトルは詳細画面のタイトル行で別途表示されます。
     func getPreview(for snippet: Snippet, profileId: String? = nil) -> String {
         // プロファイルIDを決定
         let resolvedProfileId: String?
@@ -268,11 +333,8 @@ class SnippetService {
             variablesMap = variableService.getVariablesMap(for: profileId)
         }
 
-        // テキストを準備
-        var text = snippet.content
-        if snippet.copyWithTitle, let title = snippet.title, !title.isEmpty {
-            text = "\(title)\n\(text)"
-        }
+        /* テキストを準備（本文のみ。insertSnippetと同じ契約） */
+        let text = snippet.content
 
         // 変数を置換して返す
         return variableReplacer.replace(

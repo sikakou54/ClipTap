@@ -480,14 +480,15 @@ export class VariableService {
         return match; // 未知の変数はそのまま保持
       }
 
-      /* 値の解決優先順位: プロファイル固有 → デフォルト → 未設定（トークン保持） */
+      /* 値の解決優先順位: プロファイル固有の非空値 → デフォルトの非空値 → 未設定（トークン保持） */
+      /* 空文字は「未設定」として扱い、コピー経路（createCustomVariableResolver）と規則を揃える */
       const profileValue = profileVariablesMap[variable.name];
-      if (profileValue !== undefined) {
+      if (profileValue) {
         return profileValue;
       }
 
       const defaultValue = defaultProfileVariablesMap[variable.name];
-      if (defaultValue !== undefined) {
+      if (defaultValue) {
         return defaultValue;
       }
 

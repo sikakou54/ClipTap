@@ -4,4 +4,5 @@
   <color name="keyboardSecondaryButtonIcon">#FFFFFF</color>
   <color name="keyboardAccent">#0A84FF</color>
   <color name="keyboardOnAccent">#FFFFFF</color>
+  <color name="keyboardSeparator">#33FFFFFF</color>
 </resources>

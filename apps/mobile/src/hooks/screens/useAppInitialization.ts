@@ -42,7 +42,7 @@ import { runSeed } from '@database/seed';
 export function useAppInitialization(): UseAppInitializationReturn {
   const { loading: authLoading } = useAuth();
   const { isLoading: subscriptionLoading, verificationFailed } = useSubscription();
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [hasBeenReady, setHasBeenReady] = useState(false);
   const [isLoaded, setLoaded] = useState(false);
   const [isDbInitialized, setIsDbInitialized] = useState(false);
 
@@ -73,22 +73,31 @@ export function useAppInitialization(): UseAppInitializationReturn {
     void initializeDatabase();
   }, [isDbInitialized]);
 
-  /* ======================================== */
-  /* 初期化完了判定 */
-  /* ======================================== */
-  useEffect(() => {
-    if (authLoading || !isDbInitialized) return;
-    setIsInitializing(false);
-  }, [authLoading, isDbInitialized]);
-
   /* Providerの初回更新よりDB初期化が遅かった場合も、確定した権利で再計算する。 */
   useEffect(() => {
     if (!isDbInitialized || subscriptionLoading || verificationFailed) return;
     SubscriptionService.updateValidFlags();
   }, [isDbInitialized, subscriptionLoading, verificationFailed]);
 
+  /* ======================================== */
+  /* 初期化完了判定 */
+  /* ======================================== */
+
+  const isReadyNow = isDbInitialized && !authLoading;
+
+  /**
+   * 初期化完了はラッチする（一度trueになったらfalseへ戻さない）
+   *
+   * authLoadingは設定画面のサインイン・ログアウトでも再びtrueになる。
+   * 素の派生値にすると、そのたびに_layout.tsxのStackと全Providerが
+   * アンマウントされて初期ルートへ戻ってしまうため、ラッチを維持する。
+   */
+  if (isReadyNow && !hasBeenReady) {
+    setHasBeenReady(true);
+  }
+
   return {
-    isAppReady: !isInitializing,
+    isAppReady: hasBeenReady || isReadyNow,
     isLoaded,
     setLoaded,
   };

@@ -29,9 +29,11 @@ import { UI_CONSTANTS } from '@constants/ui';
  */
 export interface UseSnippetCardProps {
   snippet: SnippetWithDisplay;
-  onPress: (snippet: SnippetWithDisplay) => void;
+  /* コピー処理は非同期のため、完了を待てるようPromiseも受け取れる型にする */
+  onPress: (snippet: SnippetWithDisplay) => void | Promise<void>;
   onEdit: (snippet: SnippetWithDisplay) => void;
   onDelete: (snippet: SnippetWithDisplay) => void;
+  onPressTitle?: (snippet: SnippetWithDisplay) => void | Promise<void>;
   categoryProp?: Category | null;
 }
 
@@ -42,6 +44,9 @@ export interface UseSnippetCardReturn {
   /* 状態 */
   isCopying: boolean;
   isCopied: boolean;
+  isCopyingTitle: boolean;
+  isTitleCopied: boolean;
+  canCopyTitle: boolean;
   isExpanded: boolean;
   category: Category | null;
   displayTitle: string | null;
@@ -49,6 +54,7 @@ export interface UseSnippetCardReturn {
 
   /* ハンドラ */
   handleCopy: () => Promise<void>;
+  handleCopyTitle: () => Promise<void>;
   handleDelete: () => void;
   handleEdit: () => void;
   toggleExpanded: () => void;
@@ -65,6 +71,7 @@ export function useSnippetCard({
   onPress,
   onEdit,
   onDelete,
+  onPressTitle,
   categoryProp,
 }: UseSnippetCardProps): UseSnippetCardReturn {
   const { t } = useTranslation();
@@ -72,11 +79,16 @@ export function useSnippetCard({
 
   const [isCopying, setIsCopying] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [isCopyingTitle, setIsCopyingTitle] = useState(false);
+  const [isTitleCopied, setIsTitleCopied] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [category, setCategory] = useState<Category | null>(null);
 
   const displayTitle = snippet.displayTitle || t('snippet.no_title');
   const displayContent = snippet.displayContent;
+
+  /* タイトル未設定の定型文は（タイトルなし）を表示するだけでコピー対象がない */
+  const canCopyTitle = Boolean(onPressTitle) && Boolean(snippet.title);
 
   /**
    * カテゴリ情報の取得
@@ -115,12 +127,42 @@ export function useSnippetCard({
     try {
       await onPress(snippet);
       setIsCopied(true);
-    } catch (error) {
+    } catch {
       setIsCopied(false);
     } finally {
       setIsCopying(false);
     }
   }, [isCopying, onPress, snippet]);
+
+  /**
+   * タイトルのコピー完了アイコンの自動リセット
+   */
+  useEffect(() => {
+    if (!isTitleCopied) return;
+
+    const timeoutId = setTimeout(() => {
+      setIsTitleCopied(false);
+    }, UI_CONSTANTS.COPY_SUCCESS_DURATION_MS);
+
+    return () => clearTimeout(timeoutId);
+  }, [isTitleCopied]);
+
+  /**
+   * タイトル押下時の処理（タイトルのみをコピー）
+   */
+  const handleCopyTitle = useCallback(async () => {
+    if (!onPressTitle || !canCopyTitle || isCopyingTitle) return;
+    setIsCopyingTitle(true);
+
+    try {
+      await onPressTitle(snippet);
+      setIsTitleCopied(true);
+    } catch {
+      setIsTitleCopied(false);
+    } finally {
+      setIsCopyingTitle(false);
+    }
+  }, [onPressTitle, canCopyTitle, isCopyingTitle, snippet]);
 
   /**
    * 削除ボタン押下時の処理
@@ -151,11 +193,15 @@ export function useSnippetCard({
   return {
     isCopying,
     isCopied,
+    isCopyingTitle,
+    isTitleCopied,
+    canCopyTitle,
     isExpanded,
     category,
     displayTitle,
     displayContent,
     handleCopy,
+    handleCopyTitle,
     handleDelete,
     handleEdit,
     toggleExpanded,

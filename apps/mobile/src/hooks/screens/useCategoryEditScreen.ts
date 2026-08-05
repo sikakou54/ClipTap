@@ -16,7 +16,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'expo-router';
-import { useTranslation } from '@cliptap/shared';
 import { useCategories, EmptyContentError, InvalidRgbValueError, CATEGORY_COLORS } from '@cliptap/shared';
 import { showErrorAlert } from '@utils/alerts';
 import { translateError } from '@cliptap/shared';
@@ -75,7 +74,6 @@ export interface UseCategoryEditScreenReturn {
 export function useCategoryEditScreen(params: UseCategoryEditScreenParams): UseCategoryEditScreenReturn {
   const { categoryId } = params;
 
-  const { t } = useTranslation();
   const router = useRouter();
   const { categories, createCategory, updateCategory } = useCategories();
 
@@ -209,7 +207,7 @@ export function useCategoryEditScreen(params: UseCategoryEditScreenParams): UseC
           color: colorToSave,
         });
       } else {
-        await createCategory({
+        createCategory({
           name: categoryName.trim(),
           color: colorToSave,
         });
@@ -231,7 +229,6 @@ export function useCategoryEditScreen(params: UseCategoryEditScreenParams): UseC
     updateCategory,
     createCategory,
     router,
-    t,
   ]);
 
   const handleColorSelect = useCallback((color: string) => {

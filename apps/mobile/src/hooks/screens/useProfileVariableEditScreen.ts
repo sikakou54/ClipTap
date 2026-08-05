@@ -16,7 +16,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'expo-router';
-import { useTranslation } from '@cliptap/shared';
 import {
   useProfiles,
   useVariables,
@@ -65,7 +64,6 @@ export interface UseProfileVariableEditScreenReturn {
 export function useProfileVariableEditScreen(params: UseProfileVariableEditScreenParams): UseProfileVariableEditScreenReturn {
   const { profileId, variableId: profileVariableId } = params;
 
-  const { t } = useTranslation();
   const router = useRouter();
 
   const { profileVariables, refresh: refreshProfiles } = useProfiles();
@@ -175,7 +173,6 @@ export function useProfileVariableEditScreen(params: UseProfileVariableEditScree
     setVariableValuesForVariable,
     refreshProfiles,
     router,
-    t,
   ]);
 
   /* ======================================== */

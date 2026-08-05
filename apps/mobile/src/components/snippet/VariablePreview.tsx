@@ -186,7 +186,8 @@ export function VariablePreview({ title, content, selectedProfileIds = [], copyW
     return () => {
       isMounted = false;
     };
-  }, [title, content, selectedProfileId]);
+    /* createProfileResolverは変数定義・変数値が変わったときだけ再生成されるため、依存に含めてよい */
+  }, [title, content, selectedProfileId, createProfileResolver]);
 
   /* 変数プレビューボックス */
   return (

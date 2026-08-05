@@ -78,7 +78,9 @@ export class MobileAuthAdapter implements AuthAdapter {
       /* 既存セッションをクリア（多重ログイン防止） */
       try {
         await GoogleSignin.signOut();
-      } catch {}
+      } catch {
+        /* 未サインイン時はエラーになるが、クリアが目的なので無視してよい */
+      }
 
       const response = await GoogleSignin.signIn();
       if (response.type !== 'success') {
@@ -152,7 +154,9 @@ export class MobileAuthAdapter implements AuthAdapter {
       try {
         ensureGoogleConfigured();
         await GoogleSignin.signOut();
-      } catch {}
+      } catch {
+        /* Firebaseのサインアウトは完了済み。Google側の失敗で全体を失敗にしない */
+      }
     } catch (error) {
       Logger.error('[MobileAuthAdapter] Sign-out failed:', error);
       throw error;

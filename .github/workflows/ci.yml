@@ -17,6 +17,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run type-check
+      # apps/web と packages/shared の lint 方針が決まるまでは mobile のみ CI で強制する（機能仕様書 §15 X-08）
+      - run: npm run lint --workspace=@cliptap/mobile
       - run: npm test
 
   android:

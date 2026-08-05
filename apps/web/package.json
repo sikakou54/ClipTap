@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "generate:starter": "node scripts/generateStarterFile.mjs",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "preview": "vite preview",
     "claude": "claude --dangerously-skip-permissions"
   },

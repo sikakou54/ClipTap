@@ -68,3 +68,44 @@ export const prepareSnippetForClipboard = async ({
   /* それ以外の場合は本文のみを返す */
   return content;
 };
+
+/**
+ * スニペットのタイトルだけをクリップボードにコピーする前のテキストを準備
+ *
+ * @param options - コピーオプション
+ *
+ * @returns クリップボードにコピーされるタイトル（タイトルがない場合は空文字）
+ *
+ * @remarks
+ * この関数は以下の処理を行います:
+ * 1. タイトルがない場合は空文字を返す
+ * 2. 変数展開が有効な場合、タイトル内の変数を展開
+ * 3. 展開済みタイトルを返す（本文は結合しない）
+ *
+ * メールの件名と本文のように、タイトルと本文を別々の欄へ貼り付けたい場合に使用します。
+ * `copyWithTitle` は判定に使いません。一覧ではタイトルが常に表示されており、
+ * 利用者が明示的にタイトルを指定してコピーするためです。
+ */
+export const prepareSnippetTitleForClipboard = async ({
+  snippet,
+  customResolver,
+  shouldReplaceVariables = true,
+  locale = 'en',
+}: CopySnippetOptions): Promise<string> => {
+  let title = snippet.title;
+
+  /* タイトルを持たないスニペットはコピーするものがない */
+  if (!title) {
+    return '';
+  }
+
+  /* 変数展開が有効な場合、タイトル内の変数を展開 */
+  if (shouldReplaceVariables) {
+    const formats = SystemVariableFormatRegistry.getAll();
+    if (VariableParser.hasVariables(title)) {
+      title = await VariableParser.replaceVariables(title, { customResolver, locale, formats });
+    }
+  }
+
+  return title;
+};

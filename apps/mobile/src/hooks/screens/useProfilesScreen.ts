@@ -32,11 +32,10 @@ import { showConfirm, showErrorAlert } from '@utils/alerts';
  */
 export interface UseProfilesScreenReturn {
   /* 状態 */
-  refreshing: boolean;
   allProfiles: Profile[];
 
   /* ハンドラ */
-  handleRefresh: () => Promise<void>;
+  handleRefresh: () => void;
   handleCreateProfile: () => void;
   handleEditProfile: (profile: Profile, enabled: boolean) => void;
   handleDeleteProfile: (profile: Profile) => void;
@@ -60,7 +59,6 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
   /* ======================================== */
   /* 状態管理 */
   /* ======================================== */
-  const [refreshing, setRefreshing] = useState(false);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
 
   /**
@@ -101,11 +99,9 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
    * Pull-to-refresh時のデータ更新
    * ユーザーの明示的な操作なのでrefresh()を呼んでContextを更新する
    */
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await refresh();
+  const handleRefresh = useCallback(() => {
+    refresh();
     setAllProfiles(ProfileService.getAllIncludingInvalid());
-    setRefreshing(false);
   }, [refresh]);
 
   /**
@@ -186,7 +182,6 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
   /* ======================================== */
   return {
     /* 状態 */
-    refreshing,
     allProfiles,
 
     /* ハンドラ */

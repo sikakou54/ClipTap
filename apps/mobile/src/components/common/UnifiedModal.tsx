@@ -23,7 +23,7 @@
  * @see CenterModal - 中央モーダルのプリセット
  */
 
-import React, { useRef, useEffect, ReactNode, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, ReactNode, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -73,10 +73,25 @@ function useModalAnimation({
   position,
   onClose,
 }: UseModalAnimationParams): UseModalAnimationReturn {
-  const slideAnim = useRef(new Animated.Value(screenHeight)).current;
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  /* useStateの初期化子は初回マウント時のみ評価されるため、useRefと同じ単一インスタンスを保持する */
+  const [slideAnim] = useState(() => new Animated.Value(screenHeight));
+  const [backdropOpacity] = useState(() => new Animated.Value(0));
+  const [scaleAnim] = useState(() => new Animated.Value(0.8));
   const [isClosing, setIsClosing] = useState(false);
+  const [prevVisible, setPrevVisible] = useState(visible);
+
+  /**
+   * 表示状態の変化に合わせて閉じ中フラグをリセットする
+   *
+   * 閉じるアニメーションが中断されたまま再表示された場合に、
+   * isClosingがtrueのままだと二度と閉じられなくなるための防御。
+   */
+  if (visible !== prevVisible) {
+    setPrevVisible(visible);
+    if (visible) {
+      setIsClosing(false);
+    }
+  }
 
   const animatedClose = useCallback(() => {
     if (isClosing) return;
@@ -102,7 +117,8 @@ function useModalAnimation({
     });
   }, [onClose, isClosing, animationType, slideAnim, backdropOpacity, scaleAnim]);
 
-  const panResponder = useRef(
+  /* 初回レンダーのクロージャを保持する既存挙動を維持する（useRefと等価） */
+  const [panResponder] = useState(() =>
     PanResponder.create({
       onStartShouldSetPanResponder: () => position === 'bottom',
       onMoveShouldSetPanResponder: (_, gestureState) => position === 'bottom' && gestureState.dy > 5,
@@ -117,12 +133,12 @@ function useModalAnimation({
         }
       },
     })
-  ).current;
+  );
 
   useEffect(() => {
     if (!visible) return;
 
-    setIsClosing(false);
+    /* isClosingのリセットはレンダー中の調整で行うため、ここではアニメーション値だけ初期化する */
     if (animationType === 'slide') slideAnim.setValue(screenHeight);
     else if (animationType === 'fade') scaleAnim.setValue(0.8);
     backdropOpacity.setValue(0);

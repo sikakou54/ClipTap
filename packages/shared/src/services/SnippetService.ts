@@ -18,7 +18,7 @@ import type {
 } from '../schema';
 import { NotFoundError, EmptyContentError } from '../errors';
 import { hasVariables, replaceVariables, type VariableResolver } from '../variables/parser';
-import { prepareSnippetForClipboard } from '../utils/snippetUtils';
+import { prepareSnippetForClipboard, prepareSnippetTitleForClipboard } from '../utils/snippetUtils';
 import { SystemVariableFormatRegistry } from './SystemVariableFormatRegistry';
 
 /**
@@ -285,6 +285,45 @@ export class SnippetService {
 
     /* クリップボード用テキストを準備（変数展開、タイトル結合等を処理） */
     return prepareSnippetForClipboard({
+      snippet,
+      customResolver: options?.customResolver,
+      shouldReplaceVariables: options?.shouldReplaceVariables ?? true,
+      locale: options?.locale,
+    });
+  }
+
+  /**
+   * スニペットのタイトルだけをクリップボードにコピーするためのテキストを準備
+   *
+   * @param id - スニペットのID
+   * @param options - オプション
+   * @param options.locale - ロケール（システム変数の日付フォーマット等に使用）
+   * @param options.customResolver - カスタム変数リゾルバー
+   * @param options.shouldReplaceVariables - 変数を置換するか（デフォルト: true）
+   * @returns クリップボードにコピーするタイトル（タイトルがない場合は空文字）
+   * @throws {NotFoundError} スニペットが見つからない場合
+   *
+   * @remarks
+   * - 本文は結合せず、タイトルのみを返す
+   * - copyWithTitleの値にかかわらずタイトルを返す
+   * - shouldReplaceVariablesがtrueの場合、変数を実際の値に置換する
+   */
+  static async prepareTitleForClipboard(
+    id: string,
+    options?: {
+      locale?: string;
+      customResolver?: VariableResolver;
+      shouldReplaceVariables?: boolean;
+    }
+  ): Promise<string> {
+    /* スニペットを取得（存在しない場合はエラー） */
+    const snippet = SnippetMapper.getById(id);
+    if (!snippet) {
+      throw new NotFoundError('snippet', id);
+    }
+
+    /* クリップボード用タイトルを準備（変数展開を処理） */
+    return prepareSnippetTitleForClipboard({
       snippet,
       customResolver: options?.customResolver,
       shouldReplaceVariables: options?.shouldReplaceVariables ?? true,

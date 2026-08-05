@@ -50,6 +50,7 @@
     "edit": "Edit Template",
     "delete_confirm": "Delete this template?",
     "copied": "Copied!",
+    "copy_title": "Copy title",
     "no_snippets": "No templates",
     "title_placeholder": "Title",
     "title_required": "Title",

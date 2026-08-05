@@ -274,6 +274,9 @@ enum L10n {
 
         /// "並び替えボタン" / "Sort button"
         static let sortButton = localized("accessibility.sort_button")
+
+        /// "タイトル挿入ボタン" / "Insert title button"
+        static let insertTitleButton = localized("accessibility.insert_title_button")
     }
 
     // MARK: - Sort (ソート関連)
@@ -420,6 +423,7 @@ enum L10n {
         case "accessibility.close_button": return isJapanese ? "閉じるボタン" : "Close button"
         case "accessibility.copy_button": return isJapanese ? "コピーボタン" : "Copy button"
         case "accessibility.sort_button": return isJapanese ? "並び替えボタン" : "Sort button"
+        case "accessibility.insert_title_button": return isJapanese ? "タイトル挿入ボタン" : "Insert title button"
 
         // Sort
         case "sort.label": return isJapanese ? "並順" : "Sort"

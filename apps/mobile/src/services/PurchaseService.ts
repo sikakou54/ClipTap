@@ -44,7 +44,7 @@ export const PRODUCT_IDS = Platform.select({
   ios: PRODUCT_IDS_CONFIG.iOS,
   android: PRODUCT_IDS_CONFIG.android,
   default: PRODUCT_IDS_CONFIG.iOS,
-})!;
+});
 
 /**
  * サブスクリプションで解放される機能

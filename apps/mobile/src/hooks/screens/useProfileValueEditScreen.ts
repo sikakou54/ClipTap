@@ -16,7 +16,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useTranslation } from '@cliptap/shared';
 import { useProfiles, useVariables } from '@cliptap/shared';
 import { showErrorAlert } from '@utils/alerts';
 import { Logger } from '@cliptap/shared';
@@ -65,7 +64,6 @@ export interface UseProfileValueEditScreenReturn {
 export function useProfileValueEditScreen(params: UseProfileValueEditScreenParams): UseProfileValueEditScreenReturn {
   const { profileId, variableName, profileName, isStandard, currentValue } = params;
 
-  const { t } = useTranslation();
   const router = useRouter();
 
   const { defaultProfile, refresh: refreshProfiles } = useProfiles();
@@ -167,7 +165,6 @@ export function useProfileValueEditScreen(params: UseProfileValueEditScreenParam
     setVariableValuesForVariable,
     refreshProfiles,
     router,
-    t,
   ]);
 
   /* ======================================== */

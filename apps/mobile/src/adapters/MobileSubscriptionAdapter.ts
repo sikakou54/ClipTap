@@ -41,6 +41,32 @@ export interface PurchaseServiceCallbacks {
 }
 
 /**
+ * getOfferingsが返すパッケージの最小構造
+ *
+ * @description
+ * RevenueCatのSDK型をsharedパッケージへ持ち込まないため、
+ * Adapter内で必要なフィールドだけを構造的に定義する。
+ */
+interface OfferingPackageLike {
+  identifier: string;
+  packageType: string;
+  product: {
+    identifier: string;
+    priceString: string;
+    currencyCode: string;
+    price: number;
+    description?: string;
+  };
+}
+
+/**
+ * getOfferingsが返すオファリングの最小構造
+ */
+interface OfferingLike {
+  availablePackages?: OfferingPackageLike[];
+}
+
+/**
  * Mobile用サブスクリプションアダプター
  *
  * @remarks
@@ -163,13 +189,13 @@ class MobileSubscriptionAdapterImpl implements SubscriptionAdapter {
 
     try {
       /* PurchaseService.getOfferings()は既にofferings.currentを返している */
-      const offering = await this.callbacks.getOfferings() as any;
+      const offering = (await this.callbacks.getOfferings()) as OfferingLike | null;
       if (!offering || !offering.availablePackages) {
         return [];
       }
 
       /* RevenueCat Package型 → SubscriptionPlan型変換 */
-      return offering.availablePackages.map((pkg: any) => ({
+      return offering.availablePackages.map((pkg): SubscriptionPlan => ({
         id: pkg.identifier,
         productId: pkg.product.identifier,
         priceString: pkg.product.priceString,
@@ -192,8 +218,8 @@ class MobileSubscriptionAdapterImpl implements SubscriptionAdapter {
 
     try {
       /* PurchaseService.getOfferings()は既にofferings.currentを返している */
-      const offering = await this.callbacks.getOfferings() as any;
-      const pkg = offering?.availablePackages?.find((p: any) => p.identifier === planId);
+      const offering = (await this.callbacks.getOfferings()) as OfferingLike | null;
+      const pkg = offering?.availablePackages?.find((p) => p.identifier === planId);
 
       if (!pkg) {
         return { success: false, isCancelled: false, error: 'Plan not found' };

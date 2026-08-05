@@ -742,15 +742,22 @@ npm run type-check:shared
 #### 2. Linter実行
 
 ```bash
-# ESLint実行
+# ESLint実行（mobile → web の順にワークスペースへ委譲）
 npm run lint
+
+# ワークスペース単位で実行する場合
+npm run lint --workspace=@cliptap/mobile
+npm run lint --workspace=@cliptap/web
 ```
 
 自動修正可能なエラーがある場合:
 
 ```bash
-npm run lint -- --fix
+npm run lint:fix
 ```
+
+ルートには flat config を置かず、ワークスペースへ委譲しています（mobile は型情報付き lint で web と設定が大きく異なるため）。
+`packages/shared` には lint 設定がありません。CI で強制しているのは `apps/mobile` のみです（方針は機能仕様書 §15 X-08）。
 
 #### 3. フォーマット確認
 

@@ -23,16 +23,53 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- タイトル（copyWithTitleがtrueの場合のみ表示） -->
-            <TextView
-                android:id="@+id/detailTitleLabel"
+            <!-- タイトル行（copyWithTitleがtrueの場合のみ表示） -->
+            <LinearLayout
+                android:id="@+id/titleRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="?android:attr/textColorPrimary"
-                android:visibility="gone"
-                android:paddingBottom="8dp" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="8dp"
+                android:visibility="gone">
+
+                <!-- タイトル -->
+                <TextView
+                    android:id="@+id/detailTitleLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary" />
+
+                <!-- タイトル挿入ボタン（タイトルのみを挿入し、詳細画面は開いたまま） -->
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/insertTitleButton"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="8dp"
+                    android:src="@android:drawable/ic_menu_send"
+                    android:backgroundTint="@color/keyboardAccent"
+                    android:tint="@color/keyboardOnAccent"
+                    android:contentDescription="@string/accessibility_insert_title_button"
+                    app:fabCustomSize="44dp"
+                    app:fabSize="mini"
+                    app:maxImageSize="20dp"
+                    app:elevation="0dp"
+                    app:pressedTranslationZ="0dp"
+                    app:borderWidth="0dp" />
+
+            </LinearLayout>
+
+            <!-- タイトルと本文の区切り線（copyWithTitleがtrueの場合のみ表示） -->
+            <View
+                android:id="@+id/titleSeparator"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="8dp"
+                android:background="@color/keyboardSeparator"
+                android:visibility="gone" />
 
             <!-- 内容 -->
             <TextView

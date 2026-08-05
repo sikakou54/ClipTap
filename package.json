@@ -27,7 +27,8 @@
     "type-check:mobile": "tsc --project apps/mobile/tsconfig.json --noEmit",
     "type-check:web": "tsc --project apps/web/tsconfig.app.json --noEmit",
     "type-check:shared": "tsc --project packages/shared/tsconfig.json --noEmit",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint": "npm run lint --workspace=@cliptap/mobile && npm run lint --workspace=@cliptap/web",
+    "lint:fix": "npm run lint:fix --workspace=@cliptap/mobile && npm run lint:fix --workspace=@cliptap/web",
     "test": "npm test --workspace=@cliptap/shared"
   },
   "devDependencies": {

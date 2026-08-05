@@ -40,7 +40,6 @@ export default function SearchScreen() {
     setQuery,
     selectedProfileId,
     setSelectedProfileId,
-    refreshing,
     displaySnippets,
     profiles,
     filteredProfiles,
@@ -49,6 +48,7 @@ export default function SearchScreen() {
     hasSearchQuery,
     handleRefresh,
     handleCopySnippet,
+    handleCopySnippetTitle,
     handleEditSnippet,
     handleDeleteSnippet,
     handleClose,
@@ -107,7 +107,7 @@ export default function SearchScreen() {
             onPress={handleCopySnippet}
             onEdit={handleEditSnippet}
             onDelete={handleDeleteSnippet}
-            refreshing={refreshing}
+            onPressTitle={handleCopySnippetTitle}
             onRefresh={handleRefresh}
             disableCopy={false}
             overrideProfileId={selectedProfileId}

@@ -50,6 +50,7 @@
     "edit": "定型文編集",
     "delete_confirm": "この定型文を削除しますか?",
     "copied": "コピーしました",
+    "copy_title": "タイトルをコピー",
     "no_snippets": "定型文がありません",
     "title_placeholder": "タイトル",
     "title_required": "タイトル",

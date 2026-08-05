@@ -14,7 +14,7 @@
  * @see lib/hooks/useSearch.ts - 検索デバウンス処理
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { useTranslation } from '@cliptap/shared';
 import {
@@ -42,10 +42,8 @@ export interface UseSearchScreenReturn {
 
   /* フィルター状態 */
   selectedProfileId: string | null;
+  /** 環境を明示選択する（nullを渡すとアクティブ環境への追従に戻る） */
   setSelectedProfileId: (id: string | null) => void;
-
-  /* UI状態 */
-  refreshing: boolean;
 
   /* データ */
   displaySnippets: SnippetWithDisplay[];
@@ -60,6 +58,7 @@ export interface UseSearchScreenReturn {
   /* ハンドラ */
   handleRefresh: () => void;
   handleCopySnippet: (snippet: SnippetWithDisplay) => Promise<void>;
+  handleCopySnippetTitle: (snippet: SnippetWithDisplay) => Promise<void>;
   handleEditSnippet: (snippet: SnippetWithDisplay) => void;
   handleDeleteSnippet: (snippet: SnippetWithDisplay) => void;
   handleClose: () => void;
@@ -82,7 +81,7 @@ export function useSearchScreen(): UseSearchScreenReturn {
   const defaultProfileId = defaultProfile?.id;
   const { categories } = useCategories();
   const { variables } = useVariables();
-  const { allSnippets, snippetProfiles, deleteSnippet, copySnippet, refresh: refreshSnippets } = useSnippets();
+  const { allSnippets, snippetProfiles, deleteSnippet, copySnippet, copySnippetTitle, refresh: refreshSnippets } = useSnippets();
 
   /* onErrorコールバックをメモ化（無限ループ防止） */
   const handleSearchError = useCallback((msg: string, err: unknown) => {
@@ -96,23 +95,25 @@ export function useSearchScreen(): UseSearchScreenReturn {
   /* ======================================== */
   /* 状態管理 */
   /* ======================================== */
-  const [refreshing, setRefreshing] = useState(false);
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
-    activeProfile?.id || null
-  );
-
-  /* ======================================== */
-  /* アクティブプロファイル変更時の同期 */
-  /* ======================================== */
-  useEffect(() => {
-    if (activeProfile?.id) {
-      setSelectedProfileId(activeProfile.id);
-    }
-  }, [activeProfile?.id]);
+  /* ユーザーがチップで明示選択した環境ID（null = アクティブ環境に追従） */
+  const [profileOverride, setProfileOverride] = useState<string | null>(null);
 
   /* ======================================== */
   /* 派生状態 */
   /* ======================================== */
+
+  /**
+   * フィルタに適用する環境ID
+   *
+   * 明示選択が現存する環境を指していればそれを使い、そうでなければアクティブ環境に追従する。
+   * effectで書き潰さないため、Provider読込前に画面へ入っても1レンダ分の空表示が発生しない。
+   */
+  const selectedProfileId = useMemo(() => {
+    if (profileOverride && profiles.some((p: Profile) => p.id === profileOverride)) {
+      return profileOverride;
+    }
+    return activeProfile?.id ?? null;
+  }, [profileOverride, profiles, activeProfile?.id]);
 
   /**
    * 検索ベースの定型文リスト（検索クエリがある場合は検索結果、ない場合は全スニペット）
@@ -168,9 +169,7 @@ export function useSearchScreen(): UseSearchScreenReturn {
    * Pull-to-refresh処理
    */
   const handleRefresh = useCallback(() => {
-    setRefreshing(true);
     refreshSnippets();
-    setRefreshing(false);
   }, [refreshSnippets]);
 
   /**
@@ -181,11 +180,28 @@ export function useSearchScreen(): UseSearchScreenReturn {
     async (snippet: SnippetWithDisplay) => {
       try {
         await copySnippet(snippet.id, selectedProfileId || undefined);
-      } catch (error) {
+      } catch {
         showErrorAlert(t('error.generic'));
       }
     },
     [copySnippet, selectedProfileId, t]
+  );
+
+  /**
+   * タイトルのみコピー
+   * 一覧のタイトルタップ時に、件名と本文を別々に貼り付けられるようにする
+   */
+  const handleCopySnippetTitle = useCallback(
+    async (snippet: SnippetWithDisplay) => {
+      try {
+        await copySnippetTitle(snippet.id, selectedProfileId || undefined);
+      } catch (error) {
+        showErrorAlert(t('error.generic'));
+        /* カード側でコピー成功表示を出さないよう再スローする */
+        throw error;
+      }
+    },
+    [copySnippetTitle, selectedProfileId, t]
   );
 
   /**
@@ -208,7 +224,7 @@ export function useSearchScreen(): UseSearchScreenReturn {
     (snippet: SnippetWithDisplay) => {
       try {
         deleteSnippet(snippet.id);
-      } catch (error) {
+      } catch {
         showErrorAlert(t('error.generic'));
       }
     },
@@ -232,10 +248,7 @@ export function useSearchScreen(): UseSearchScreenReturn {
 
     /* フィルター状態 */
     selectedProfileId,
-    setSelectedProfileId,
-
-    /* UI状態 */
-    refreshing,
+    setSelectedProfileId: setProfileOverride,
 
     /* データ */
     displaySnippets,
@@ -250,6 +263,7 @@ export function useSearchScreen(): UseSearchScreenReturn {
     /* ハンドラ */
     handleRefresh,
     handleCopySnippet,
+    handleCopySnippetTitle,
     handleEditSnippet,
     handleDeleteSnippet,
     handleClose,

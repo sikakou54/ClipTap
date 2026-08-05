@@ -123,11 +123,11 @@ export function useProfileEditScreen(params: UseProfileEditScreenParams): UsePro
       }
 
       if (isEdit && profileId) {
-        await updateProfile(profileId, {
+        updateProfile(profileId, {
           name: profileName.trim(),
         });
       } else {
-        await createProfile({
+        createProfile({
           name: profileName.trim(),
         });
       }

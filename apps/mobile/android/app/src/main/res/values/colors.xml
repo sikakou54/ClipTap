@@ -9,4 +9,6 @@
   <color name="keyboardSecondaryButtonIcon">#000000</color>
   <color name="keyboardAccent">#2196F3</color>
   <color name="keyboardOnAccent">#FFFFFF</color>
+  <!-- 詳細画面でタイトルと本文を区切る線 -->
+  <color name="keyboardSeparator">#1F000000</color>
 </resources>

@@ -34,7 +34,6 @@ export default function ProfileManagementScreen() {
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
 
   const {
-    refreshing,
     allProfiles,
     handleRefresh,
     handleCreateProfile,
@@ -145,7 +144,6 @@ export default function ProfileManagementScreen() {
       <FlashList
         data={allProfiles}
         keyExtractor={(item) => item.id}
-        refreshing={refreshing}
         onRefresh={handleRefresh}
         contentContainerStyle={styles.list}
         estimatedItemSize={70}

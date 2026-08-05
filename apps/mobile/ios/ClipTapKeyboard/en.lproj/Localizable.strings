@@ -73,6 +73,7 @@
 "accessibility.close_button" = "Close button";
 "accessibility.copy_button" = "Copy button";
 "accessibility.sort_button" = "Sort button";
+"accessibility.insert_title_button" = "Insert title button";
 
 /* Sort related */
 "sort.label" = "Sort";

@@ -65,7 +65,11 @@ class ClipTapKeyboardService : InputMethodService() {
 
     // 詳細画面のビュー
     private lateinit var detailView: View
+    private lateinit var detailScrollView: android.widget.ScrollView
+    private lateinit var titleRow: View
     private lateinit var detailTitleLabel: android.widget.TextView
+    private lateinit var insertTitleButton: View
+    private lateinit var titleSeparator: View
     private lateinit var detailContentLabel: android.widget.TextView
     private lateinit var copyButton: View
     private lateinit var closeButton: View
@@ -214,7 +218,11 @@ class ClipTapKeyboardService : InputMethodService() {
 
         // 詳細画面のビューを初期化
         detailView = keyboardView.findViewById(R.id.detailView)
+        detailScrollView = keyboardView.findViewById(R.id.detailScrollView)
+        titleRow = keyboardView.findViewById(R.id.titleRow)
         detailTitleLabel = keyboardView.findViewById(R.id.detailTitleLabel)
+        insertTitleButton = keyboardView.findViewById(R.id.insertTitleButton)
+        titleSeparator = keyboardView.findViewById(R.id.titleSeparator)
         detailContentLabel = keyboardView.findViewById(R.id.detailContentLabel)
         copyButton = keyboardView.findViewById(R.id.copyButton)
         closeButton = keyboardView.findViewById(R.id.closeButton)
@@ -243,6 +251,9 @@ class ClipTapKeyboardService : InputMethodService() {
         }
         closeButton.setOnClickListener {
             closeDetailView()
+        }
+        insertTitleButton.setOnClickListener {
+            onInsertTitleButtonClicked()
         }
 
         // ソートボタンの設定
@@ -724,20 +735,29 @@ class ClipTapKeyboardService : InputMethodService() {
     private fun showSnippetDetail(snippet: Snippet) {
         selectedSnippet = snippet
 
-        // タイトルの表示/非表示を制御
+        // タイトル行と区切り線の表示/非表示を制御
         if (snippet.copyWithTitle) {
             // タイトルも変数置換する（iOSと同じ動作）
-            val rawTitle = snippet.title ?: getString(R.string.snippet_no_title)
+            /* タイトルがNULLでも空文字でもプレースホルダーを表示する */
+            val rawTitle = snippet.title?.takeIf { it.isNotEmpty() } ?: getString(R.string.snippet_no_title)
             val replacedTitle = snippetService.replaceVariables(rawTitle, variablesMap)
             detailTitleLabel.text = replacedTitle
-            detailTitleLabel.visibility = View.VISIBLE
+            titleRow.visibility = View.VISIBLE
+            titleSeparator.visibility = View.VISIBLE
+            /* タイトルが未設定のスニペットはプレースホルダー表示のみで、挿入するものがないためボタンは隠す */
+            insertTitleButton.visibility = if (snippet.title.isNullOrEmpty()) View.GONE else View.VISIBLE
         } else {
-            detailTitleLabel.visibility = View.GONE
+            titleRow.visibility = View.GONE
+            titleSeparator.visibility = View.GONE
         }
 
         // 内容を変数置換して表示
         val replacedContent = snippetService.replaceVariables(snippet.content, variablesMap)
         detailContentLabel.text = replacedContent
+
+        /* ScrollViewはonLayoutで前回のスクロール位置を復元するため、
+           別の定型文を開いたときに最上部のタイトル行と挿入ボタンが画面外に残る。毎回先頭へ戻す */
+        detailScrollView.scrollTo(0, 0)
 
         // 詳細画面を表示（フェードインアニメーション）
         mainView.visibility = View.GONE
@@ -785,12 +805,12 @@ class ClipTapKeyboardService : InputMethodService() {
      * コピーボタンクリック時の処理
      *
      * 【目的】
-     * スニペットをテキストフィールドに挿入します。
+     * スニペットの本文をテキストフィールドに挿入します。
      *
      * 【何をするか】
      * 1. selectedSnippetを取得
      * 2. currentInputConnectionを取得（テキストフィールドへの接続）
-     * 3. SnippetService.insertSnippet()を呼んでテキスト挿入
+     * 3. SnippetService.insertSnippet()を呼んで本文を挿入
      * 4. 挿入成功時は詳細画面を閉じる
      * 5. 挿入失敗時はトーストでエラーを表示
      *
@@ -812,7 +832,39 @@ class ClipTapKeyboardService : InputMethodService() {
             closeDetailView()
         } else {
             Log.e(TAG, "❌ InputConnection is null")
-            Toast.makeText(this, "テキストの挿入に失敗しました", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.keyboard_insert_failed, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * タイトル挿入ボタンクリック時の処理
+     *
+     * 【目的】
+     * スニペットのタイトルだけをテキストフィールドに挿入します。
+     *
+     * 【何をするか】
+     * 1. selectedSnippetを取得
+     * 2. currentInputConnectionを取得（テキストフィールドへの接続）
+     * 3. SnippetService.insertTitle()を呼んでタイトルを挿入
+     * 4. 挿入失敗時はトーストでエラーを表示
+     *
+     * 【詳細画面を閉じない理由】
+     * メールの件名を入れたあと、続けて本文を別の欄へ入れられるようにするため、
+     * タイトル挿入後も詳細画面は開いたままにします。
+     */
+    private fun onInsertTitleButtonClicked() {
+        val snippet = selectedSnippet ?: return
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Title insert requested")
+
+        // タイトルを挿入（Serviceに委譲）
+        val ic = currentInputConnection
+        if (ic != null) {
+            snippetService.insertTitle(snippet, ic, variablesMap)
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Title inserted successfully")
+        } else {
+            Log.e(TAG, "❌ InputConnection is null")
+            Toast.makeText(this, R.string.keyboard_insert_failed, Toast.LENGTH_SHORT).show()
         }
     }
 

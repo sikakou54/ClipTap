@@ -304,6 +304,33 @@ class KeyboardViewController: UIInputViewController {
         return label
     }()
 
+    /// タイトルだけを入力欄へ挿入するボタン（タイトル行の右端）
+    /// メールの件名と本文のように、タイトルと本文を別々の欄へ入れるために使用します
+    /// copyWithTitleがOFFのスニペット、またはタイトルが空のスニペットでは非表示になります
+    private let titleInsertButton: ExpandedHitAreaButton = {
+        let button = ExpandedHitAreaButton()
+        // アイコン設定（紙飛行機マーク。下部の挿入ボタンより一回り小さい）
+        let config = UIImage.SymbolConfiguration(pointSize: 13, weight: .medium)
+        let image = UIImage(systemName: "paperplane.fill", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.backgroundColor = .systemBlue  // 青い背景
+        button.tintColor = .white  // 白いアイコン
+        button.layer.cornerRadius = 16  // 丸ボタン（半径16で32x32の円形になる）
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.isHidden = true  // 初期状態は非表示（copyWithTitleがONのときだけ表示）
+        return button
+    }()
+
+    /// タイトルと本文の区切り線
+    /// タイトルと本文が別々に挿入できることを視覚的に伝えます
+    private let titleSeparatorView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .separator  // ライト/ダークに自動追従するシステム色
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isHidden = true  // 初期状態は非表示（copyWithTitleがONのときだけ表示）
+        return view
+    }()
+
     /// スニペットの内容（本文）を表示するラベル
     /// 変数（{{today}}など）は実際の値に置き換えられた状態で表示されます
     private let detailContentLabel: UILabel = {
@@ -314,6 +341,20 @@ class KeyboardViewController: UIInputViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
+
+    // === 詳細画面の切り替え用制約 ===
+
+    /// copyWithTitleがOFFのときに使う本文の上端制約（本文の上はタイトルラベル）
+    /// タイトルラベルは非表示かつ高さ0になるため、従来と同じ表示位置になります
+    private var contentTopToTitleConstraint: NSLayoutConstraint?
+
+    /// copyWithTitleがONのときに使う本文の上端制約（本文の上は区切り線）
+    private var contentTopToSeparatorConstraint: NSLayoutConstraint?
+
+    /// タイトル挿入ボタンを表示するときだけ有効にする区切り線の下限制約
+    /// 非表示のボタンもAuto Layout上は32ptを占めるため、常時有効にすると
+    /// タイトルラベルが引き伸ばされてOFF時の本文位置が下がってしまう
+    private var separatorTopToButtonConstraint: NSLayoutConstraint?
 
     // === ボタンエリア（詳細画面下部）===
 
@@ -810,6 +851,10 @@ class KeyboardViewController: UIInputViewController {
         detailView.addSubview(detailScrollView)
         detailScrollView.addSubview(detailContentView)
         detailContentView.addSubview(detailTitleLabel)
+        /* タイトル挿入ボタンと区切り線はスクロールされる中身なのでcontentViewへ追加する。
+           下部の挿入・閉じるボタンと違いdetailViewへ重ねないため、スクロール操作は奪わない */
+        detailContentView.addSubview(titleInsertButton)
+        detailContentView.addSubview(titleSeparatorView)
         detailContentView.addSubview(detailContentLabel)
         /* ボタンは透明なコンテナに包まずdetailViewへ直接追加する。
            全幅・透明のコンテナを重ねると、その範囲のスクロール操作をコンテナが奪ってしまう */
@@ -839,10 +884,20 @@ class KeyboardViewController: UIInputViewController {
             // Title Label
             detailTitleLabel.topAnchor.constraint(equalTo: detailContentView.topAnchor, constant: 12),
             detailTitleLabel.leadingAnchor.constraint(equalTo: detailContentView.leadingAnchor, constant: 12),
-            detailTitleLabel.trailingAnchor.constraint(equalTo: detailContentView.trailingAnchor, constant: -12),
+            detailTitleLabel.trailingAnchor.constraint(equalTo: titleInsertButton.leadingAnchor, constant: -8),
+
+            // Title Insert Button（タイトル行の右端に置く32x32の丸ボタン）
+            titleInsertButton.topAnchor.constraint(equalTo: detailContentView.topAnchor, constant: 8),
+            titleInsertButton.trailingAnchor.constraint(equalTo: detailContentView.trailingAnchor, constant: -12),
+            titleInsertButton.widthAnchor.constraint(equalToConstant: 32),
+            titleInsertButton.heightAnchor.constraint(equalToConstant: 32),
+
+            // Title Separator（タイトル行と本文の区切り線）
+            titleSeparatorView.leadingAnchor.constraint(equalTo: detailContentView.leadingAnchor, constant: 12),
+            titleSeparatorView.trailingAnchor.constraint(equalTo: detailContentView.trailingAnchor, constant: -12),
+            titleSeparatorView.heightAnchor.constraint(equalToConstant: 0.5),
 
             // Content Label（ボタンエリア分の下マージン追加：60pt）
-            detailContentLabel.topAnchor.constraint(equalTo: detailTitleLabel.bottomAnchor, constant: 8),
             detailContentLabel.leadingAnchor.constraint(equalTo: detailContentView.leadingAnchor, constant: 12),
             detailContentLabel.trailingAnchor.constraint(equalTo: detailContentView.trailingAnchor, constant: -12),
             detailContentLabel.bottomAnchor.constraint(equalTo: detailContentView.bottomAnchor, constant: -72),
@@ -859,8 +914,44 @@ class KeyboardViewController: UIInputViewController {
             closeButton.heightAnchor.constraint(equalToConstant: 40)
         ])
 
+        /* 区切り線はタイトルの直下に置きたいが、1行タイトルではタイトルより背の高い挿入ボタンがはみ出す。
+           優先度を下げた等式にすることで、複数行タイトルではタイトル基準、
+           1行タイトルでは下のseparatorTopToButtonConstraint（ボタン基準）が採用される */
+        let separatorTopToTitleConstraint = titleSeparatorView.topAnchor.constraint(
+            equalTo: detailTitleLabel.bottomAnchor,
+            constant: 8
+        )
+        separatorTopToTitleConstraint.priority = .defaultHigh
+        separatorTopToTitleConstraint.isActive = true
+
+        /* ボタンを表示するときだけ、その高さ分を区切り線の下限として効かせる。
+           常時有効にすると、非表示のボタン（Auto Layout上は32ptを占める）を避けるために
+           ソルバが優先度750の上記等式を満たそうとタイトルラベルを28ptへ引き伸ばし、
+           タイトル非表示時でも本文が押し下がってしまう */
+        let separatorTopToButton = titleSeparatorView.topAnchor.constraint(
+            greaterThanOrEqualTo: titleInsertButton.bottomAnchor,
+            constant: 8
+        )
+        separatorTopToButtonConstraint = separatorTopToButton  // 初期状態はボタン非表示のためactivateしない
+
+        /* 本文の上端はcopyWithTitleの状態で付け替える。
+           どちらも同じアンカーへの等式なので、必ず片方だけをactiveにする */
+        let contentTopToTitle = detailContentLabel.topAnchor.constraint(
+            equalTo: detailTitleLabel.bottomAnchor,
+            constant: 8
+        )
+        let contentTopToSeparator = detailContentLabel.topAnchor.constraint(
+            equalTo: titleSeparatorView.bottomAnchor,
+            constant: 12
+        )
+        contentTopToTitleConstraint = contentTopToTitle
+        contentTopToSeparatorConstraint = contentTopToSeparator
+        contentTopToTitle.isActive = true  // 初期状態はタイトル非表示（従来の表示位置）
+
         copyButton.addTarget(self, action: #selector(copyButtonTapped), for: .touchUpInside)
         closeButton.addTarget(self, action: #selector(closeDetailView), for: .touchUpInside)
+        titleInsertButton.addTarget(self, action: #selector(titleInsertButtonTapped), for: .touchUpInside)
+        titleInsertButton.accessibilityLabel = L10n.Accessibility.insertTitleButton
 
         // Empty Label
         view.addSubview(emptyLabel)
@@ -1313,8 +1404,9 @@ class KeyboardViewController: UIInputViewController {
         // copyWithTitleフラグに応じてタイトル表示を制御
         // タイトルもコピーする設定の場合のみ、プレビューでもタイトルを表示
         if snippet.copyWithTitle {
-            // タイトルを変数置換して表示
-            let rawTitle = snippet.title ?? L10n.Snippet.noTitle
+            /* タイトルがNULLでも空文字でもプレースホルダーを表示する */
+            let title = snippet.title ?? ""
+            let rawTitle = title.isEmpty ? L10n.Snippet.noTitle : title
             let replacedTitle = variableReplacer.replace(
                 in: rawTitle,
                 variablesMap: variablesMap,
@@ -1322,9 +1414,34 @@ class KeyboardViewController: UIInputViewController {
             )
             detailTitleLabel.text = replacedTitle
             detailTitleLabel.isHidden = false
+            /* タイトルが未設定のスニペットはプレースホルダー表示のみで、挿入するものがないためボタンは隠す */
+            titleInsertButton.isHidden = title.isEmpty
+            titleSeparatorView.isHidden = false
+            /* 同一アンカーへの等式のため、必ずdeactivateしてからactivateする */
+            if let contentTopToTitle = contentTopToTitleConstraint {
+                NSLayoutConstraint.deactivate([contentTopToTitle])
+            }
+            if let contentTopToSeparator = contentTopToSeparatorConstraint {
+                NSLayoutConstraint.activate([contentTopToSeparator])
+            }
+            /* ボタンを表示するときだけ、区切り線をボタンの下へ押し下げる制約を有効にする */
+            separatorTopToButtonConstraint?.isActive = !titleInsertButton.isHidden
         } else {
-            // タイトルを非表示（コピーしない設定の場合）
+            // タイトル行と区切り線を非表示（コピーしない設定の場合）
+            /* 非表示のラベルもテキストが残っていると高さを持つため、本文の位置がずれないようクリアする */
+            detailTitleLabel.text = nil
             detailTitleLabel.isHidden = true
+            titleInsertButton.isHidden = true
+            titleSeparatorView.isHidden = true
+            /* 非表示ボタン基準の制約が残るとタイトルラベルが引き伸ばされ本文が押し下がるため必ず外す */
+            separatorTopToButtonConstraint?.isActive = false
+            /* 同一アンカーへの等式のため、必ずdeactivateしてからactivateする */
+            if let contentTopToSeparator = contentTopToSeparatorConstraint {
+                NSLayoutConstraint.deactivate([contentTopToSeparator])
+            }
+            if let contentTopToTitle = contentTopToTitleConstraint {
+                NSLayoutConstraint.activate([contentTopToTitle])
+            }
         }
 
         // 内容を変数置換（{{today}} → 2025/11/17など）
@@ -1334,6 +1451,10 @@ class KeyboardViewController: UIInputViewController {
             formats: systemVariableFormats
         )
         detailContentLabel.text = preview
+
+        /* 前に開いたスニペットのスクロール位置が残ると、最上部のタイトル行と
+           タイトル挿入ボタンが画面外になって見えないため先頭へ戻す */
+        detailScrollView.setContentOffset(.zero, animated: false)
 
         // アニメーションで詳細画面を表示
         screenState = .detail
@@ -1382,8 +1503,35 @@ class KeyboardViewController: UIInputViewController {
 
         KeyboardLog.debug("[KeyboardViewController] Copy button tapped")
 
-        insertSnippet(snippet)  // スニペットを挿入
+        insertSnippet(snippet)  // スニペットの本文を挿入
         closeDetailView()  // 詳細画面を閉じる
+    }
+
+    /// タイトル挿入ボタンがタップされたときの処理
+    ///
+    /// 【処理の流れ】
+    /// 1. 選択中のスニペットを確認
+    /// 2. タイトルだけをテキスト入力欄に挿入
+    ///
+    /// 【詳細画面を閉じない理由】
+    /// メールの件名を入れたあと、続けて本文を別の欄へ入れられるようにするため、
+    /// タイトル挿入後も詳細画面は開いたままにします。
+    @objc private func titleInsertButtonTapped() {
+        guard let snippet = selectedSnippet else {
+            // 選択中のスニペットがない場合（通常は発生しない）
+            os_log("⚠️ Title insert button tapped but no snippet selected", log: keyboardLog, type: .error)
+            KeyboardLog.debug("⚠️ [KeyboardViewController] Title insert button tapped but no snippet selected")
+            return
+        }
+
+        KeyboardLog.debug("[KeyboardViewController] Title insert button tapped")
+
+        // タイトルのみを挿入（変数置換＋振動フィードバックはService側で実行）
+        snippetService.insertTitle(
+            snippet,
+            into: textDocumentProxy,  // iOSのテキスト入力API
+            profileId: currentProfile?.id  // 環境IDを渡して、環境専用の変数を使用
+        )
     }
 
     /// スニペットをテキスト入力欄に挿入（キーボードのメイン処理）
@@ -1393,7 +1541,7 @@ class KeyboardViewController: UIInputViewController {
     /// 【処理の流れ】
     /// 1. SnippetServiceに処理を委譲
     /// 2. Service内で以下の処理が実行されます：
-    ///    - copyWithTitleフラグに応じてタイトルも含めるか判定
+    ///    - 本文のみを挿入対象にする（タイトルはタイトル挿入ボタンから個別に挿入）
     ///    - 変数（{{today}}など）を実際の値に置き換え
     ///    - textDocumentProxy（iOSのテキスト入力API）を使ってテキストを挿入
     ///    - 振動フィードバック（Haptic Feedback）を実行
@@ -1677,6 +1825,38 @@ extension KeyboardViewController: UITableViewDelegate {
         activityIndicator.stopAnimating()
     }
 
+}
+
+// MARK: - ExpandedHitAreaButton
+
+/**
+ * 見た目より広い当たり判定を持つ丸ボタン
+ *
+ * 【なぜ必要か】
+ * タイトル行に置く挿入ボタンは、タイトル文字と釣り合う32ptの見た目にしたい。
+ * 一方でタップ領域は最低44x44ptを確保する必要があるため、
+ * 描画サイズはそのままに、当たり判定だけを44x44ptへ広げる。
+ *
+ * 【ファイル配置について】
+ * 新しいSwiftファイルを追加するとproject.pbxprojの更新が必要になるため、
+ * KeyboardViewControllerと同じファイルに定義している。
+ */
+final class ExpandedHitAreaButton: UIButton {
+
+    /// 確保する最小タップ領域（pt）
+    private static let minimumHitSize: CGFloat = 44
+
+    /// タップ判定の範囲を最小タップ領域まで広げる
+    /// - Parameters:
+    ///   - point: 自身の座標系でのタッチ位置
+    ///   - event: 対象のイベント
+    /// - Returns: タップ領域に含まれる場合はtrue
+    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        /* 32ptなら上下左右に6ptずつ広げて44ptにする。既に44pt以上なら広げない */
+        let horizontalInset = min(0, (bounds.width - Self.minimumHitSize) / 2)
+        let verticalInset = min(0, (bounds.height - Self.minimumHitSize) / 2)
+        return bounds.insetBy(dx: horizontalInset, dy: verticalInset).contains(point)
+    }
 }
 
 // MARK: - SnippetCell

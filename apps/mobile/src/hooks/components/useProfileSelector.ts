@@ -35,7 +35,7 @@ export interface UseProfileSelectorReturn {
   showModal: boolean;
 
   /* ハンドラ */
-  handleSelectProfile: (profile: Profile) => Promise<void>;
+  handleSelectProfile: (profile: Profile) => void;
   openModal: () => void;
   closeModal: () => void;
   keyExtractor: (item: Profile) => string;
@@ -66,17 +66,17 @@ export function useProfileSelector({
   /**
    * プロファイル選択時の処理
    */
-  const handleSelectProfile = useCallback(async (profile: Profile) => {
+  const handleSelectProfile = useCallback((profile: Profile) => {
     if (activeProfile?.id === profile.id) {
       setShowModal(false);
       return;
     }
 
     try {
-      await setActiveProfile(profile.id);
+      setActiveProfile(profile.id);
       setShowModal(false);
       onProfileChange?.();
-    } catch (error) {
+    } catch {
       /* エラーは無視 */
     }
   }, [activeProfile?.id, setActiveProfile, onProfileChange]);

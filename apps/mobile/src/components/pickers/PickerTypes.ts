@@ -3,17 +3,12 @@
  * @description
  * ピッカーコンポーネント共通の型定義
  *
- * 各種ピッカー（カテゴリ選択、日付選択、数値選択など）で
- * 使用される共通の型定義を提供。
+ * ピッカーコンポーネントで使用される共通の型定義を提供。
  *
  * 使用箇所:
- * - CategoryPicker
  * - DatePicker
- * - NumberPicker
- * - OptionPicker
- * - PickerModal（共通ラッパー）
  *
- * @see PickerModal - 共通モーダルコンポーネント
+ * @see UnifiedModal - ピッカーが利用するモーダルコンポーネント
  */
 
 import { DimensionValue } from 'react-native';

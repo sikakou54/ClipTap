@@ -178,6 +178,7 @@ export function usePaywallScreen(): UsePaywallScreenReturn {
         throw new Error(result.error);
       }
     } catch (error) {
+      Logger.error('[usePaywallScreen] Purchase failed:', error);
       showErrorAlert(t('subscription.purchase_failed'));
     } finally {
       setPurchasing(false);

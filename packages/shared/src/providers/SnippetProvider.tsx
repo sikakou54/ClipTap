@@ -52,6 +52,8 @@ export interface SnippetContextValue {
   deleteSnippet: (id: string) => void;
   /** クリップボードにコピー */
   copySnippet: (id: string, profileId?: string) => Promise<void>;
+  /** タイトルだけをクリップボードにコピー */
+  copySnippetTitle: (id: string, profileId?: string) => Promise<void>;
   /** テキストプレビュー生成 */
   getTextPreview: (content: string) => Promise<string>;
   /** ID指定で取得 */
@@ -288,6 +290,41 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
     }
   }, []);
 
+  /**
+   * タイトルだけをクリップボードにコピー（変数展開込み）
+   *
+   * 【使用回数を加算しない理由】
+   * タイトルをコピーしたあと本文もコピーすると、1回の利用が2回分として数えられてしまいます。
+   * 使用回数は本文を含むコピー（copySnippet）でのみ加算します。
+   */
+  const copySnippetTitle = useCallback(async (id: string, profileId?: string): Promise<void> => {
+    let titleToCopy: string;
+
+    try {
+      const customResolver = createCustomResolver(profileId);
+      titleToCopy = await SnippetService.prepareTitleForClipboard(id, {
+        locale: getCurrentLocale(),
+        customResolver,
+        shouldReplaceVariables: true,
+      });
+    } catch (err) {
+      /* 変数展開に失敗した場合は元のタイトルをフォールバック */
+      Logger.warn('[SnippetProvider] Variable replacement failed, copying original title:', err);
+      titleToCopy = await SnippetService.prepareTitleForClipboard(id, {
+        shouldReplaceVariables: false,
+      });
+    }
+
+    /* タイトルがない場合はクリップボードを書き換えない */
+    if (!titleToCopy) {
+      return;
+    }
+
+    if (hasClipboardAdapter()) {
+      await getClipboardAdapter().copy(titleToCopy);
+    }
+  }, []);
+
   const getTextPreview = useCallback(async (content: string): Promise<string> => {
     const customResolver = createCustomResolver();
     return SnippetService.getTextPreview(content, {
@@ -335,6 +372,7 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
       updateSnippet,
       deleteSnippet,
       copySnippet,
+      copySnippetTitle,
       getTextPreview,
       getById,
       getProfileIds,
@@ -353,6 +391,7 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
       updateSnippet,
       deleteSnippet,
       copySnippet,
+      copySnippetTitle,
       getTextPreview,
       getById,
       getProfileIds,

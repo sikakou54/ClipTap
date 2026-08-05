@@ -324,8 +324,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
  */
 export const useTheme = () => {
   const context = useContext(ThemeContext);
+
+  /* フックは条件分岐の外で無条件に呼ぶ（値はフォールバック時のみ使用する） */
+  const colorScheme = useColorScheme();
+
   if (!context) {
-    const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark' || (Platform.OS === 'web' && getWebDarkMode());
 
     Logger.debug('🎨 [THEME] useTheme fallback:', {

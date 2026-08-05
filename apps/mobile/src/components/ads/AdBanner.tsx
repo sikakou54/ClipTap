@@ -59,26 +59,30 @@ export function AdBanner({ style }: AdBannerProps) {
   const { shouldShowAds } = useSubscription();
   const { getTrackingStatus } = useTracking();
 
-  const [trackingStatus, setTrackingStatus] = useState<string | null>(null);
+  /**
+   * ATT権限ステータス
+   * iOSのみ非同期取得が必要なため初期値をnullにする。
+   * AndroidにはATTが無いため初期化時点で'unknown'で確定する。
+   */
+  const [trackingStatus, setTrackingStatus] = useState<string | null>(() =>
+    Platform.OS === 'ios' ? null : 'unknown'
+  );
 
   /**
-   * ATT権限ステータスの取得
-   * iOS: ATTダイアログの結果を取得（パーソナライズ広告の可否を決定）
-   * Android: 'unknown'を設定（ATTなし、SDK側で自動制御）
+   * ATT権限ステータスの取得（iOSのみ）
+   * ATTダイアログの結果を取得し、パーソナライズ広告の可否を決定する
    */
   useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+
     async function checkTrackingStatus() {
       const status = await getTrackingStatus();
       setTrackingStatus(status);
     }
 
-    if (Platform.OS === 'ios') {
-      checkTrackingStatus().catch((error) =>
-        Logger.error('Check tracking status failed:', error)
-      );
-    } else {
-      setTrackingStatus('unknown');
-    }
+    checkTrackingStatus().catch((error) =>
+      Logger.error('Check tracking status failed:', error)
+    );
   }, [getTrackingStatus]);
 
   /**

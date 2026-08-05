@@ -16,6 +16,8 @@ import { useState, useEffect } from 'react';
 import { File } from 'expo-file-system';
 import { Asset } from 'expo-asset';
 import { Logger } from '@cliptap/shared';
+import termsHtml from '../../../assets/web/terms.html';
+import privacyHtml from '../../../assets/web/privacy.html';
 
 /* ======================================== */
 /* 型定義 */
@@ -63,15 +65,15 @@ export function useWebViewScreen(params: UseWebViewScreenParams): UseWebViewScre
     const loadHtmlFile = async () => {
       try {
         /* ファイル名に応じてアセットモジュールを選択 */
-        let assetModule;
+        let assetModule: number | undefined;
 
         if (file === 'terms') {
-          assetModule = require('../../../assets/web/terms.html');
+          assetModule = termsHtml;
         } else if (file === 'privacy') {
-          assetModule = require('../../../assets/web/privacy.html');
+          assetModule = privacyHtml;
         }
 
-        if (!assetModule) {
+        if (assetModule === undefined) {
           setLoading(false);
           return;
         }

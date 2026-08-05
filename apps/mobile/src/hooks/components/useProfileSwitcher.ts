@@ -33,8 +33,8 @@ export interface UseProfileSwitcherReturn {
   shouldShow: boolean;
 
   /* ハンドラ */
-  handleNext: () => Promise<void>;
-  handlePrevious: () => Promise<void>;
+  handleNext: () => void;
+  handlePrevious: () => void;
 }
 
 /**
@@ -65,15 +65,15 @@ export function useProfileSwitcher({
   /**
    * 次のプロファイルに切り替え（循環）
    */
-  const handleNext = useCallback(async () => {
+  const handleNext = useCallback(() => {
     const currentIndex = profiles.findIndex(p => p.isActive);
     const nextIndex = (currentIndex + 1) % profiles.length;
     const nextProfile = profiles[nextIndex];
 
     try {
-      await setActiveProfile(nextProfile.id);
+      setActiveProfile(nextProfile.id);
       onProfileChange?.();
-    } catch (error) {
+    } catch {
       /* エラーは無視 */
     }
   }, [profiles, setActiveProfile, onProfileChange]);
@@ -81,15 +81,15 @@ export function useProfileSwitcher({
   /**
    * 前のプロファイルに切り替え（循環）
    */
-  const handlePrevious = useCallback(async () => {
+  const handlePrevious = useCallback(() => {
     const currentIndex = profiles.findIndex(p => p.isActive);
     const previousIndex = currentIndex === 0 ? profiles.length - 1 : currentIndex - 1;
     const previousProfile = profiles[previousIndex];
 
     try {
-      await setActiveProfile(previousProfile.id);
+      setActiveProfile(previousProfile.id);
       onProfileChange?.();
-    } catch (error) {
+    } catch {
       /* エラーは無視 */
     }
   }, [profiles, setActiveProfile, onProfileChange]);

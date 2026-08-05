@@ -20,8 +20,9 @@
  * @see app/_layout.tsx - 使用例
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Image, Animated, StyleSheet } from 'react-native';
+import appIcon from '@assets/icon.png';
 
 /*
  * ========================================
@@ -44,11 +45,12 @@ interface SplashScreenProps {
 export function SplashScreen({ onFinish, isLoading, onReady }: SplashScreenProps) {
   /*
    * ========================================
-   * Refs
+   * Refs / State
    * ========================================
    */
   /** フェードアニメーション値（1=完全表示, 0=完全透明） */
-  const fadeAnim = useRef(new Animated.Value(1)).current;
+  /* useStateの初期化子は初回マウント時のみ評価されるため、useRefと同じ単一インスタンスを保持する */
+  const [fadeAnim] = useState(() => new Animated.Value(1));
   const hasCalledReady = useRef(false);
 
   /*
@@ -117,7 +119,7 @@ export function SplashScreen({ onFinish, isLoading, onReady }: SplashScreenProps
       >
         {/* アプリアイコン */}
         <Image
-          source={require('@assets/icon.png')}
+          source={appIcon}
           style={styles.logo}
           resizeMode="contain"
         />
