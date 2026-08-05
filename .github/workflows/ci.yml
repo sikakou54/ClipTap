@@ -27,6 +27,13 @@ jobs:
         working-directory: apps/mobile/android
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # settings.gradle が node で react-native / expo のパスを解決するため、依存関係が必須
+      - run: npm ci
+        working-directory: .
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -41,5 +48,12 @@ jobs:
         working-directory: apps/mobile/ios
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # Podfile が node で react-native / expo のパスを解決するため、依存関係が必須
+      - run: npm ci
+        working-directory: .
       - run: pod install
       - run: xcodebuild build -workspace ClipTap.xcworkspace -scheme ClipTap -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO
