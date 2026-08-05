@@ -25,9 +25,7 @@ import { useTranslation } from '@cliptap/shared';
 import { useTheme } from '@lib/themeSystem';
 import { useTextInputScreen } from '@hooks/screens/useTextInputScreen';
 import { VariableToolbar } from './VariableToolbar';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { INPUT_LIMITS } from '@cliptap/shared';
 
 /* ========================================
@@ -61,31 +59,26 @@ export function TextInputScreen({ type, initialValue, hasOnSave }: TextInputScre
   } = useTextInputScreen({ type, initialValue, hasOnSave });
   /* テキスト入力画面 */
   return (
-    <SafeAreaView
-      style={[commonStyles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}
+    <ScreenContainer
+      title={t(`snippet.${type}_input`)}
+      isModal={!isTablet}
+      rightAction={
+        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+          <Text
+            style={[
+              styles.saveText,
+              {
+                color: colors.primary,
+                fontSize: responsiveFontSizes.base,
+                lineHeight: responsiveLineHeights.base,
+              },
+            ]}
+          >
+            {t('common.done')}
+          </Text>
+        </TouchableOpacity>
+      }
     >
-      {/* ヘッダー（タイトルと完了ボタン） */}
-      <Header
-        title={t(`snippet.${type}_input`)}
-        isModal={!isTablet}
-        rightAction={
-          <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-            <Text
-              style={[
-                styles.saveText,
-                {
-                  color: colors.primary,
-                  fontSize: responsiveFontSizes.base,
-                  lineHeight: responsiveLineHeights.base,
-                },
-              ]}
-            >
-              {t('common.done')}
-            </Text>
-          </TouchableOpacity>
-        }
-      />
 
       {/* キーボード表示に応じてレイアウト調整 */}
       <View
@@ -142,7 +135,7 @@ export function TextInputScreen({ type, initialValue, hasOnSave }: TextInputScre
           <VariableToolbar onInsert={handleInsertVariable} />
         </View>
       </View>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 

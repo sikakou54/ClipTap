@@ -30,7 +30,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { type ImportTabType } from '@cliptap/shared';
 import { useTheme } from '@lib/themeSystem';
 import { commonStyles } from '@lib/styles/commonStyles';
-import { Header } from '@components/common/Header';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { UI_CONSTANTS } from '@constants/ui';
 import {
   SelectionSnippetItem,
@@ -38,7 +38,6 @@ import {
   SelectionVariableItem,
   SelectionCategoryItem,
 } from '@components/selection';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelectExportDataScreen } from '@hooks/screens/useSelectExportDataScreen';
 
 const TAB_OPTIONS: ImportTabType[] = ['snippets', 'profiles', 'variables', 'categories'];
@@ -82,26 +81,20 @@ export default function SelectExportDataScreen() {
   }
 
   return (
-    <SafeAreaView
-      style={[commonStyles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}
+    <ScreenContainer
+      title={t('export_import.select_export_data')}
+      rightAction={
+        <TouchableOpacity onPress={() => toggleSelectAll(activeTab)}>
+          <Ionicons
+            name={isAllSelected(activeTab) ? 'checkbox' : 'square-outline'}
+            size={24}
+            color={colors.primary}
+          />
+        </TouchableOpacity>
+      }
+      backIcon="close"
+      isModal={true}
     >
-      {/* ヘッダー */}
-      <Header
-        title={t('export_import.select_export_data')}
-        rightAction={
-          <TouchableOpacity onPress={() => toggleSelectAll(activeTab)}>
-            <Ionicons
-              name={isAllSelected(activeTab) ? 'checkbox' : 'square-outline'}
-              size={24}
-              color={colors.primary}
-            />
-          </TouchableOpacity>
-        }
-        backIcon="close"
-        isModal={true}
-      />
-
       {/* タブコンテナ */}
       <View style={[styles.tabContainer, { borderBottomColor: colors.border, backgroundColor: colors.surface }]}>
         {TAB_OPTIONS.map((tab) => (
@@ -297,7 +290,7 @@ export default function SelectExportDataScreen() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 

@@ -14,8 +14,7 @@ import {
   useTranslation,
 } from '@cliptap/shared';
 import { FlashList } from '@mobile-types/flashlist';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { useTheme } from '@lib/themeSystem';
 import { showConfirm } from '@utils/alerts';
 import i18next from '@i18n/config';
@@ -48,20 +47,17 @@ export default function SystemVariableFormatsScreen() {
   const locale = normalizeLocale(i18next.language);
 
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      {/* 画面ヘッダー */}
-      <Header
-        title={t('settings.system_variable_formats')}
-        backIcon="arrow-back"
-        rightAction={
-          <TouchableOpacity style={styles.resetButton} onPress={handleResetAll}>
-            <Text style={{ color: colors.primary, fontSize: responsiveFontSizes.sm }}>
-              {t('variables.format_reset_all')}
-            </Text>
-          </TouchableOpacity>
-        }
-      />
-
+    <ScreenContainer
+      title={t('settings.system_variable_formats')}
+      backIcon="arrow-back"
+      rightAction={
+        <TouchableOpacity style={styles.resetButton} onPress={handleResetAll}>
+          <Text style={{ color: colors.primary, fontSize: responsiveFontSizes.sm }}>
+            {t('variables.format_reset_all')}
+          </Text>
+        </TouchableOpacity>
+      }
+    >
       {/* システム変数一覧 */}
       <FlashList
         data={FORMAT_LIST_ITEMS}
@@ -99,7 +95,7 @@ export default function SystemVariableFormatsScreen() {
           );
         }}
       />
-    </View>
+    </ScreenContainer>
   );
 }
 

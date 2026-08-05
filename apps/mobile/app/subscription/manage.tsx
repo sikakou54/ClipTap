@@ -27,8 +27,7 @@ import {
 import { useTranslation } from '@cliptap/shared'
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { useManageSubscriptionScreen } from '@hooks/screens/useManageSubscriptionScreen';
 
 export default function ManageSubscriptionScreen() {
@@ -49,9 +48,7 @@ export default function ManageSubscriptionScreen() {
   } = useManageSubscriptionScreen();
 
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      <Header title={t('subscription.manage')} backIcon="arrow-back" />
-
+    <ScreenContainer title={t('subscription.manage')} backIcon="arrow-back">
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.statusCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.statusHeader}>
@@ -269,7 +266,7 @@ export default function ManageSubscriptionScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScreenContainer>
   );
 }
 

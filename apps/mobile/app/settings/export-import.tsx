@@ -32,8 +32,7 @@ import { useTranslation } from '@cliptap/shared';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
 import { SCHEMA_VERSION } from '@database/schema';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { UI_CONSTANTS } from '@constants/ui';
 import { useExportImportScreen } from '@hooks/screens/useExportImportScreen';
 
@@ -75,10 +74,7 @@ export default function ExportImportScreen() {
   ];
 
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      {/* ヘッダー */}
-      <Header title={t('export_import.title')} backIcon="arrow-back" />
-
+    <ScreenContainer title={t('export_import.title')} backIcon="arrow-back">
       <ScrollView style={styles.content}>
         {/* バージョン情報セクション */}
         <View style={styles.infoSection}>
@@ -319,7 +315,7 @@ export default function ExportImportScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScreenContainer>
   );
 }
 

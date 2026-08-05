@@ -19,16 +19,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Text,
-  KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from '@cliptap/shared'
 import { useTheme } from '@lib/themeSystem';
 import { useProfileValueEditScreen } from '@hooks/screens/useProfileValueEditScreen';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 
 export default function ProfileValueEditModal() {
   const { t } = useTranslation();
@@ -55,61 +52,52 @@ export default function ProfileValueEditModal() {
   });
 
   return (
-    <SafeAreaView
-      style={[commonStyles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}
-    >
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
-        <Header
-          title={isStandard ? t('variables.standard_value') : profileName || t('variables.value')}
-          isModal={true}
-          rightAction={
-            <TouchableOpacity
-              onPress={handleSave}
-              style={styles.saveButton}
-            >
-              <Text
-                style={[
-                  styles.saveText,
-                  {
-                    color: colors.primary,
-                    fontSize: responsiveFontSizes.base,
-                    lineHeight: responsiveLineHeights.base,
-                  }
-                ]}
-              >
-                {t('common.done')}
-              </Text>
-            </TouchableOpacity>
-          }
-        />
-
-        <View style={styles.contentWrapper}>
-          <TextInput
-            ref={textInputRef}
-            value={value}
-            onChangeText={setValue}
-            placeholder={t('variables.enter_value_placeholder')}
-            placeholderTextColor={colors.textSecondary}
+    <ScreenContainer
+      title={isStandard ? t('variables.standard_value') : profileName || t('variables.value')}
+      isModal={true}
+      keyboardAvoiding
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      rightAction={
+        <TouchableOpacity
+          onPress={handleSave}
+          style={styles.saveButton}
+        >
+          <Text
             style={[
-              styles.input,
+              styles.saveText,
               {
-                color: colors.text,
+                color: colors.primary,
                 fontSize: responsiveFontSizes.base,
-                lineHeight: responsiveFontSizes.base * 1.5,
+                lineHeight: responsiveLineHeights.base,
               }
             ]}
-            multiline
-            textAlignVertical="top"
-            scrollEnabled={true}
-          />
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          >
+            {t('common.done')}
+          </Text>
+        </TouchableOpacity>
+      }
+    >
+      <View style={styles.contentWrapper}>
+        <TextInput
+          ref={textInputRef}
+          value={value}
+          onChangeText={setValue}
+          placeholder={t('variables.enter_value_placeholder')}
+          placeholderTextColor={colors.textSecondary}
+          style={[
+            styles.input,
+            {
+              color: colors.text,
+              fontSize: responsiveFontSizes.base,
+              lineHeight: responsiveFontSizes.base * 1.5,
+            }
+          ]}
+          multiline
+          textAlignVertical="top"
+          scrollEnabled={true}
+        />
+      </View>
+    </ScreenContainer>
   );
 }
 

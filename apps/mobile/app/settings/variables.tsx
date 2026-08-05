@@ -21,7 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
 import { useVariablesScreen } from '@hooks/screens/useVariablesScreen';
 import { Profile } from '@cliptap/shared';
-import { Header } from '@components/common/Header';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { commonStyles, listStyles } from '@lib/styles/commonStyles';
 import { UI_CONSTANTS } from '@constants/ui';
 
@@ -43,18 +43,15 @@ export default function VariablesScreen() {
 
   /* カスタム変数管理画面 */
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      {/* ヘッダー（タイトルと追加ボタン） */}
-      <Header
-        title={t('settings.variables')}
-        backIcon="arrow-back"
-        rightAction={
-          <TouchableOpacity onPress={handleAdd} style={commonStyles.addButton}>
-            <Ionicons name="add" size={28} color={colors.primary} />
-          </TouchableOpacity>
-        }
-      />
-
+    <ScreenContainer
+      title={t('settings.variables')}
+      backIcon="arrow-back"
+      rightAction={
+        <TouchableOpacity onPress={handleAdd} style={commonStyles.addButton}>
+          <Ionicons name="add" size={28} color={colors.primary} />
+        </TouchableOpacity>
+      }
+    >
       {/* 空状態または変数一覧 */}
       {variables.length === 0 ? (
         /* 空状態（変数がない場合） */
@@ -190,7 +187,7 @@ export default function VariablesScreen() {
           </ScrollView>
         </View>
       )}
-    </View>
+    </ScreenContainer>
   );
 }
 

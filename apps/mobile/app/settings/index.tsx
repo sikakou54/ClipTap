@@ -29,8 +29,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { useTranslation } from '@cliptap/shared'
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { UI_CONSTANTS } from '@constants/ui';
 import { useSettingsScreen } from '@hooks/screens/useSettingsScreen';
 import {
@@ -65,10 +64,7 @@ export default function SettingsScreen() {
 
   /* 設定画面 */
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      {/* ヘッダー */}
-      <Header title={t('settings.title')} backIcon="arrow-back" />
-
+    <ScreenContainer title={t('settings.title')} backIcon="arrow-back">
       {/* スクロール可能なコンテンツエリア */}
       <ScrollView style={styles.content}>
         {/* メニューセクション */}
@@ -139,7 +135,7 @@ export default function SettingsScreen() {
         visible={showKeyboardGuide}
         onClose={closeKeyboardGuide}
       />
-    </View>
+    </ScreenContainer>
   );
 }
 

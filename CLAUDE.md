@@ -177,6 +177,14 @@ clipTap/
 - ハードコードされた色コードは禁止
 - ダークモード対応を常に意識
 
+#### 7. **画面ルートとセーフエリア**
+- 画面のルート要素は `ScreenContainer`（`src/components/common/ScreenContainer.tsx`）を使用
+- `SafeAreaView` を画面に直接書くこと、`Header` を直接置くことは禁止
+- 画面で `useSafeAreaInsets()` を使ってヘッダーの上部余白を計算しないこと
+- 理由: `useSafeAreaInsets()` はナビゲータ全体で1つの `SafeAreaProvider` の値（＝ウィンドウのインセット）を返すため、iOSのモーダル内では誤った値になる。画面ごとの実インセットを参照できるのはネイティブの `SafeAreaView` のみで、その責務者は `ScreenContainer` に一元化している
+- **例外**: `presentation: 'fullScreenModal'` の画面は `SafeAreaView` のインセットが0になるため、`ScreenContainer` に `fullScreenModal` を渡すこと（内部でウィンドウのインセットへ切り替える）。渡し忘れるとヘッダーがステータスバーに重なる
+- 画面ルート以外（RNの `Modal` 内など）で `useSafeAreaInsets()` を使うのは可
+
 ---
 
 ### 📋 コーディング規約
@@ -390,6 +398,7 @@ npm test              # 回帰テストがすべて成功することを確認
 4. **FlatListの使用** - FlashList使用必須
 5. **回帰テストなしの既存マイグレーション編集** - 原則は新しいマイグレーションを追加
 6. **eslint-disableコメント** - ESLintエラーは根本的に解決すること
+7. **画面での `SafeAreaView` / `Header` の直接使用** - `ScreenContainer` 経由必須
 
 ---
 

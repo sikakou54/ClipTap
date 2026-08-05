@@ -23,7 +23,7 @@ import { useTheme } from '@lib/themeSystem';
 import { useCategoriesScreen } from '@hooks/screens/useCategoriesScreen';
 import { Category } from '@cliptap/shared';
 import EmptyState from '@components/common/EmptyState';
-import { Header } from '@components/common/Header';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { commonStyles, listStyles } from '@lib/styles/commonStyles';
 import { UI_CONSTANTS } from '@constants/ui';
 
@@ -99,17 +99,15 @@ export default function CategoryManagementScreen() {
   if (categories.length === 0 && !loading) {
     /* 空状態（カテゴリがない場合） */
     return (
-      <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-        <Header title={t('category.title')} backIcon="arrow-back" rightAction={headerRightAction} />
+      <ScreenContainer title={t('category.title')} backIcon="arrow-back" rightAction={headerRightAction}>
         <EmptyState icon="folder-outline" message={t('category.no_categories')} />
-      </View>
+      </ScreenContainer>
     );
   }
 
   /* カテゴリ管理画面 */
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      <Header title={t('category.title')} backIcon="arrow-back" rightAction={headerRightAction} />
+    <ScreenContainer title={t('category.title')} backIcon="arrow-back" rightAction={headerRightAction}>
       {/* カテゴリ一覧（FlashList） */}
       <FlashList
         data={categories}
@@ -120,7 +118,7 @@ export default function CategoryManagementScreen() {
         estimatedItemSize={60}
         renderItem={renderItem}
       />
-    </View>
+    </ScreenContainer>
   );
 }
 

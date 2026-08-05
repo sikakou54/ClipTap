@@ -27,7 +27,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { type ImportTabType } from '@cliptap/shared';
 import { useTheme } from '@lib/themeSystem';
 import { commonStyles } from '@lib/styles/commonStyles';
-import { Header } from '@components/common/Header';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { UI_CONSTANTS } from '@constants/ui';
 import {
   SelectionSnippetItem,
@@ -35,7 +35,6 @@ import {
   SelectionVariableItem,
   SelectionCategoryItem,
 } from '@components/selection';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelectImportDataScreen } from '@hooks/screens/useSelectImportDataScreen';
 
 const TAB_OPTIONS: ImportTabType[] = ['snippets', 'profiles', 'variables', 'categories'];
@@ -78,25 +77,20 @@ export default function SelectImportDataScreen() {
   }
 
   return (
-    <SafeAreaView
-      style={[commonStyles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}
+    <ScreenContainer
+      title={t('export_import.select_import_data')}
+      rightAction={
+        <TouchableOpacity onPress={() => toggleSelectAll(activeTab)}>
+          <Ionicons
+            name={isAllSelected(activeTab) ? 'checkbox' : 'square-outline'}
+            size={24}
+            color={colors.primary}
+          />
+        </TouchableOpacity>
+      }
+      backIcon="close"
+      isModal={true}
     >
-      <Header
-        title={t('export_import.select_import_data')}
-        rightAction={
-          <TouchableOpacity onPress={() => toggleSelectAll(activeTab)}>
-            <Ionicons
-              name={isAllSelected(activeTab) ? 'checkbox' : 'square-outline'}
-              size={24}
-              color={colors.primary}
-            />
-          </TouchableOpacity>
-        }
-        backIcon="close"
-        isModal={true}
-      />
-
       <View style={[styles.tabContainer, { borderBottomColor: colors.border, backgroundColor: colors.surface }]}>
         {TAB_OPTIONS.map((tab) => (
           <Pressable
@@ -243,7 +237,7 @@ export default function SelectImportDataScreen() {
           )}
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 

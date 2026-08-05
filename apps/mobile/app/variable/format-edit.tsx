@@ -15,8 +15,7 @@ import {
   useTranslation,
 } from '@cliptap/shared';
 import { FlashList } from '@mobile-types/flashlist';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { useTheme } from '@lib/themeSystem';
 import i18next from '@i18n/config';
 
@@ -49,13 +48,10 @@ export default function SystemVariableFormatEditScreen() {
   };
 
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      {/* モーダルヘッダー */}
-      <Header
-        title={definition ? t(definition.labelKey) : key}
-        isModal
-      />
-
+    <ScreenContainer
+      title={definition ? t(definition.labelKey) : key}
+      isModal
+    >
       {/* プリセット一覧 */}
       <FlashList
         data={presets}
@@ -90,7 +86,7 @@ export default function SystemVariableFormatEditScreen() {
           );
         }}
       />
-    </View>
+    </ScreenContainer>
   );
 }
 

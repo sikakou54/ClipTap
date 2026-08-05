@@ -27,8 +27,7 @@ import {
 import { useTranslation } from '@cliptap/shared'
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { usePaywallScreen } from '@hooks/screens/usePaywallScreen';
 
 export default function PaywallScreen() {
@@ -51,19 +50,16 @@ export default function PaywallScreen() {
 
   if (loading) {
     return (
-      <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-        <Header title="" backgroundColor={colors.background} />
+      <ScreenContainer title="" backgroundColor={colors.background} fullScreenModal>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
-      </View>
+      </ScreenContainer>
     );
   }
 
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      <Header title="" backgroundColor={colors.background} />
-
+    <ScreenContainer title="" backgroundColor={colors.background} fullScreenModal>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.titleSection}>
           <Ionicons name="diamond" size={48} color={colors.primary} />
@@ -260,7 +256,7 @@ export default function PaywallScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </Modal>
-    </View>
+    </ScreenContainer>
   );
 }
 

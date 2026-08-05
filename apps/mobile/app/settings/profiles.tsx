@@ -25,7 +25,7 @@ import { useTheme } from '@lib/themeSystem';
 import { useProfilesScreen } from '@hooks/screens/useProfilesScreen';
 import { Profile } from '@cliptap/shared';
 import EmptyState from '@components/common/EmptyState';
-import { Header } from '@components/common/Header';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { commonStyles, listStyles } from '@lib/styles/commonStyles';
 import { UI_CONSTANTS } from '@constants/ui';
 
@@ -129,17 +129,15 @@ export default function ProfileManagementScreen() {
   if (allProfiles.length === 0) {
     /* 空状態（プロファイルがない場合） */
     return (
-      <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-        <Header title={t('profile.title')} backIcon="arrow-back" rightAction={headerRightAction} />
+      <ScreenContainer title={t('profile.title')} backIcon="arrow-back" rightAction={headerRightAction}>
         <EmptyState icon="people-outline" message={t('profile.no_profiles')} description={t('profile.add_hint')} />
-      </View>
+      </ScreenContainer>
     );
   }
 
   /* プロファイル管理画面 */
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      <Header title={t('profile.title')} backIcon="arrow-back" rightAction={headerRightAction} />
+    <ScreenContainer title={t('profile.title')} backIcon="arrow-back" rightAction={headerRightAction}>
       {/* プロファイル一覧（FlashList） */}
       <FlashList
         data={allProfiles}
@@ -149,7 +147,7 @@ export default function ProfileManagementScreen() {
         estimatedItemSize={70}
         renderItem={renderItem}
       />
-    </View>
+    </ScreenContainer>
   );
 }
 

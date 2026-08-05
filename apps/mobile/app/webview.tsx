@@ -17,8 +17,7 @@ import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { WebView } from 'react-native-webview';
 import { useTheme } from '@lib/themeSystem';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { useWebViewScreen } from '@hooks/screens/useWebViewScreen';
 
 export default function WebViewScreen() {
@@ -33,9 +32,7 @@ export default function WebViewScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-        <Header title={title} backIcon="arrow-back" />
-
+      <ScreenContainer title={title} backIcon="arrow-back">
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
@@ -50,7 +47,7 @@ export default function WebViewScreen() {
             startInLoadingState={true}
           />
         )}
-      </View>
+      </ScreenContainer>
     </>
   );
 }

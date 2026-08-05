@@ -22,13 +22,11 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from '@cliptap/shared'
 import { useTheme } from '@lib/themeSystem';
 import { useProfileEditScreen } from '@hooks/screens/useProfileEditScreen';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { UI_CONSTANTS } from '@constants/ui';
 
 export default function ProfileEditModal() {
@@ -49,35 +47,29 @@ export default function ProfileEditModal() {
 
   /* プロファイル編集モーダル */
   return (
-    <SafeAreaView
-      style={[commonStyles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}
-    >
-      {/* ヘッダー（タイトルと保存ボタン） */}
-      <Header
-        title={isEdit ? t('profile.edit') : t('profile.create')}
-        isModal={true}
-        rightAction={
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={saving || !canSave}
-            style={styles.saveButton}
+    <ScreenContainer
+      title={isEdit ? t('profile.edit') : t('profile.create')}
+      isModal={true}
+      rightAction={
+        <TouchableOpacity
+          onPress={handleSave}
+          disabled={saving || !canSave}
+          style={styles.saveButton}
+        >
+          <Text
+            style={[
+              styles.saveText,
+              {
+                color: saving || !canSave ? colors.textSecondary : colors.primary,
+                fontSize: responsiveFontSizes.base,
+              },
+            ]}
           >
-            <Text
-              style={[
-                styles.saveText,
-                {
-                  color: saving || !canSave ? colors.textSecondary : colors.primary,
-                  fontSize: responsiveFontSizes.base,
-                },
-              ]}
-            >
-              {t('common.save')}
-            </Text>
-          </TouchableOpacity>
-        }
-      />
-
+            {t('common.save')}
+          </Text>
+        </TouchableOpacity>
+      }
+    >
       {/* スクロール可能なコンテンツエリア */}
       <ScrollView style={styles.content}>
         {/* プロファイル名入力セクション */}
@@ -120,7 +112,7 @@ export default function ProfileEditModal() {
           />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 

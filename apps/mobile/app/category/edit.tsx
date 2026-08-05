@@ -22,7 +22,6 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from '@cliptap/shared'
 import { Ionicons } from '@expo/vector-icons';
@@ -30,8 +29,7 @@ import { CATEGORY_COLORS } from '@cliptap/shared';
 import { useTheme } from '@lib/themeSystem';
 import { useCategoryEditScreen } from '@hooks/screens/useCategoryEditScreen';
 import { UI_CONSTANTS } from '@constants/ui';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 
 export default function CategoryEditModal() {
   const { t } = useTranslation();
@@ -62,35 +60,29 @@ export default function CategoryEditModal() {
 
   /* カテゴリ編集モーダル */
   return (
-    <SafeAreaView
-      style={[commonStyles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}
-    >
-      {/* ヘッダー（タイトルと保存ボタン） */}
-      <Header
-        title={isEdit ? t('category.edit') : t('category.create')}
-        isModal={true}
-        rightAction={
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={saving || !canSave}
-            style={styles.saveButton}
+    <ScreenContainer
+      title={isEdit ? t('category.edit') : t('category.create')}
+      isModal={true}
+      rightAction={
+        <TouchableOpacity
+          onPress={handleSave}
+          disabled={saving || !canSave}
+          style={styles.saveButton}
+        >
+          <Text
+            style={[
+              styles.saveText,
+              {
+                color: saving || !canSave ? colors.textSecondary : colors.primary,
+                fontSize: responsiveFontSizes.base,
+              },
+            ]}
           >
-            <Text
-              style={[
-                styles.saveText,
-                {
-                  color: saving || !canSave ? colors.textSecondary : colors.primary,
-                  fontSize: responsiveFontSizes.base,
-                },
-              ]}
-            >
-              {t('common.save')}
-            </Text>
-          </TouchableOpacity>
-        }
-      />
-
+            {t('common.save')}
+          </Text>
+        </TouchableOpacity>
+      }
+    >
       {/* スクロール可能なコンテンツエリア */}
       <ScrollView contentContainerStyle={styles.content}>
         {/* カテゴリ名入力セクション */}
@@ -325,7 +317,7 @@ export default function CategoryEditModal() {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 

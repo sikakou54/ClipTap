@@ -8,9 +8,14 @@
  * - バックボタン（アイコンカスタマイズ可能）
  * - タイトル表示（中央揃え）
  * - 右側アクションボタン（カスタムコンポーネント）
- * - SafeAreaInsets対応
  * - タブレット/モーダル対応
  *
+ * セーフエリアはこのコンポーネントでは扱わない。
+ * useSafeAreaInsets()はナビゲータ全体で1つのSafeAreaProviderの値
+ * （＝ウィンドウのインセット）を返すため、モーダル内では誤った値になる。
+ * インセットの確保は画面ルートのScreenContainer（SafeAreaView）が唯一担う。
+ *
+ * @see ScreenContainer - 画面ルートコンテナ（セーフエリアの責務者）
  * @see commonStyles - 共通スタイル定義
  * @see headerStyles - ヘッダー専用スタイル
  */
@@ -19,7 +24,6 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@lib/themeSystem';
 import { commonStyles, headerStyles } from '@lib/styles/commonStyles';
 import { UI_CONSTANTS } from '@constants/ui';
@@ -38,9 +42,9 @@ import { UI_CONSTANTS } from '@constants/ui';
  * @property onBack - バックボタン押下時のカスタムハンドラー
  * @property rightAction - 右側のアクションボタン（React要素）
  * @property backgroundColor - ヘッダーの背景色を上書き
- * @property isModal - モーダル画面かどうか（trueの場合paddingTopを0にする）
+ * @property isModal - モーダル画面かどうか（closeアイコン表示と上部余白の付与に使う）
  */
-interface HeaderProps {
+export interface HeaderProps {
   title: string;
   showBackButton?: boolean;
   backIcon?: keyof typeof Ionicons.glyphMap;
@@ -66,7 +70,6 @@ export function Header({
    */
   const { colors, isTablet, responsiveFontSizes } = useTheme();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   /*
    * ========================================
@@ -113,8 +116,9 @@ export function Header({
         {
           backgroundColor: backgroundColor || colors.background,
           borderBottomColor: colors.border,
-          paddingTop: isModal ? UI_CONSTANTS.GAP.BASE : isTablet ? insets.top + UI_CONSTANTS.GAP.BASE : insets.top,
-          paddingBottom: isModal ? UI_CONSTANTS.GAP.MD : UI_CONSTANTS.GAP.MD,
+          /* セーフエリアはScreenContainerが確保するため、ここは内部余白のみ */
+          paddingTop: isModal || isTablet ? UI_CONSTANTS.GAP.BASE : 0,
+          paddingBottom: UI_CONSTANTS.GAP.MD,
         },
       ]}
     >
