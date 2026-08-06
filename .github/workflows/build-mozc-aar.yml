@@ -6,9 +6,19 @@ name: Build Mozc AAR
 # 開発機ではなくCIで実行する。生成物は成果物としてダウンロードし、
 # apps/mobile/android/libs/ へコミットして使う。
 #
-# 手動実行のみ。Mozcを更新したいときだけ回す。
+# 常時は回さない。Mozcを更新したいときだけ、起動用ブランチへのpushまたは手動実行で回す。
 
 on:
+  # 起動用ブランチへの push で実行する。
+  #
+  # workflow_dispatch はワークフローがデフォルトブランチ（main）に存在しないと
+  # 起動できない。このリポジトリの main は開発トランクではなく更新が止まっている
+  # ため、ワークフローのためだけに main を進めるのは避け、専用ブランチへの push を
+  # 起動手段にしている。ワークフローがデフォルトブランチへ載った時点で、
+  # この trigger は削除して workflow_dispatch へ一本化してよい。
+  push:
+    branches:
+      - 'ci/build-mozc-aar'
   workflow_dispatch:
     inputs:
       mozc_ref:
@@ -29,6 +39,11 @@ concurrency:
 permissions:
   contents: read
 
+# push で起動した場合は inputs が空になるため、既定値へ落とす
+env:
+  MOZC_REF: ${{ inputs.mozc_ref || '3f235b4eb6fcff7d14ef5f0fb8ee56de7ee4c732' }}
+  NDK_VERSION: ${{ inputs.ndk_version || '29.0.13113456' }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -42,7 +57,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: google/mozc
-          ref: ${{ inputs.mozc_ref }}
+          ref: ${{ env.MOZC_REF }}
           path: mozc
           submodules: recursive
 
@@ -71,7 +86,7 @@ jobs:
         uses: android-actions/setup-android@v4
 
       - name: NDK を導入
-        run: sdkmanager --install "ndk;${{ inputs.ndk_version }}"
+        run: sdkmanager --install "ndk;${{ env.NDK_VERSION }}"
 
       - name: bazelisk を導入
         run: |
@@ -88,7 +103,7 @@ jobs:
       - name: ネイティブライブラリと辞書データをビルド
         working-directory: mozc/src
         env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ inputs.ndk_version }}
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VERSION }}
         run: |
           set -eux
           test -d "$ANDROID_NDK_HOME" || { echo "NDKが見つかりません: $ANDROID_NDK_HOME"; exit 1; }
@@ -151,7 +166,7 @@ jobs:
           OUT="$GITHUB_WORKSPACE/dist"
           mkdir -p "$OUT"
           {
-            echo "Mozc (https://github.com/google/mozc) rev ${{ inputs.mozc_ref }}"
+            echo "Mozc (https://github.com/google/mozc) rev ${{ env.MOZC_REF }}"
             echo
             cat mozc/LICENSE
             echo
