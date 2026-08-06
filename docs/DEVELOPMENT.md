@@ -819,6 +819,25 @@ swift test --package-path apps/mobile/ios/ClipTapKeyboardCore
 - ニューラル変換「Zenzai」はC++相互運用とllama.cppを必要とし、キーボード拡張のメモリ上限に収まらないため有効化しないでください（既定で無効です）。
 - `KanaKanjiConverter.withDefaultDictionary()` の `preloadDictionary` を有効にすると辞書を全読み込みします。読みの先頭文字ごとの遅延読み込みが上限内に収まる前提なので、有効化しないでください。
 
+#### 4-2. Android IME のかな漢字変換（Mozc）
+
+Android IME の変換エンジンは [Mozc](https://github.com/google/mozc) を使い、Expoのローカルモジュール [apps/mobile/modules/mozc](../apps/mobile/modules/mozc) として取り込んでいます。
+
+**なぜモジュールにしているか**: `expo prebuild` は `android/` を作り直すため、そこへ直接置いたネイティブライブラリやGradleの設定は失われます。`modules/` 配下は `android/` の外にあるため影響を受けず、GradleへはExpoのオートリンクが自動で取り込みます。この方式なら config plugin での依存注入も、AAR化も、`app/build.gradle` の編集も不要です。
+
+**ローカルではビルドしません。** Bazel・Android NDK r29・Python 3.12 が必要で、ビルド領域も20GB以上使います。Mozcを更新したいときだけ GitHub Actions の **Build Mozc** ワークフローを手動実行し、成果物を `modules/mozc/android/src/main/` へ展開してコミットします。
+
+```bash
+gh workflow run build-mozc.yml --ref <ブランチ>
+```
+
+**注意**:
+
+- ワークフローはデフォルトブランチにも置いてあります。`workflow_dispatch` はデフォルトブランチにファイルが無いと起動できないためです。実際にビルドされる内容は実行時に選んだブランチのものが使われます。
+- `MozcJNI` の完全修飾名（`com.google.android.apps.inputmethod.libs.mozc.session.MozcJNI`）は変更できません。ネイティブ側が `RegisterNatives` でこの名前へメソッドを登録しているため、変えると実行時に `UnsatisfiedLinkError` になります。
+- 辞書データはホスト用のコード生成ツールで作るため、Android構成ではビルドできません（`incompatible` として弾かれます）。ワークフローは辞書をホスト構成、ネイティブライブラリをAndroid構成と分けてビルドしています。
+- ワークフローを編集したら、push前にYAMLとして解釈できることを確認してください。GitHubはパースできないワークフローを0秒で失敗させるだけで理由を返さず、`workflow_dispatch` も認識されなくなります。
+
 #### 5. 動作確認
 
 チェックからシミュレータへのインストールまでを1コマンドで通す場合は `npm run verify:ios` / `npm run verify:android` を使います。
