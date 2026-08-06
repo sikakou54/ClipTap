@@ -1,0 +1,55 @@
+/*
+ * Mozc を Android ライブラリ（AAR）として固める
+ *
+ * ネイティブライブラリと辞書データはワークフローが jniLibs/ へ配置し、
+ * protoから生成したJavaソースは generated/java/ へ配置する。
+ * このプロジェクトはそれらをAARへまとめるだけで、Mozc自体はビルドしない。
+ */
+plugins {
+    id 'com.android.library' version '8.13.0'
+}
+
+android {
+    namespace 'org.mozc.android.inputmethod.japanese'
+    compileSdk 36
+
+    defaultConfig {
+        /* アプリ本体と同じ最低APIレベルに合わせる */
+        minSdk 24
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    sourceSets {
+        main {
+            /* protoc が生成したJavaソース。ワークフローが配置する */
+            java.srcDirs += ['generated/java']
+            /* libmozc.so と libmozc_data.so。ワークフローが配置する */
+            jniLibs.srcDirs = ['jniLibs']
+        }
+    }
+
+    /*
+     * 辞書データは既に圧縮された独自形式で、再圧縮しても縮まらない。
+     * また実行時にメモリマップで読むため、圧縮すると展開コストが発生する。
+     */
+    packaging {
+        jniLibs {
+            useLegacyPackaging false
+        }
+    }
+}
+
+dependencies {
+    /*
+     * MozcのJNIはprotobufでコマンドをやり取りする。
+     *
+     * 注意: このAARは flatDir で参照されPOMを持たないため、この依存は
+     * 利用側へ伝播しない。アプリ側の build.gradle にも同じ依存を宣言すること
+     * （Expoのconfig pluginが注入する）。
+     */
+    implementation 'com.google.protobuf:protobuf-javalite:4.32.1'
+}

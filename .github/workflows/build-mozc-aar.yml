@@ -1,0 +1,175 @@
+name: Build Mozc AAR
+
+# Android IME のかな漢字変換に使う Mozc を、Androidライブラリ（AAR）として生成する。
+#
+# Bazel・Android NDK・Python 3.12 が必要でビルド領域も20GB以上使うため、
+# 開発機ではなくCIで実行する。生成物は成果物としてダウンロードし、
+# apps/mobile/android/libs/ へコミットして使う。
+#
+# 手動実行のみ。Mozcを更新したいときだけ回す。
+
+on:
+  workflow_dispatch:
+    inputs:
+      mozc_ref:
+        description: 'ビルドする google/mozc のコミットSHAまたはタグ'
+        required: true
+        default: '3f235b4eb6fcff7d14ef5f0fb8ee56de7ee4c732'
+      ndk_version:
+        description: 'Android NDK のバージョン（Mozcはr29系を要求する）'
+        required: true
+        default: '29.0.13113456'
+
+# 同時に走らせても得がなく、片方が中途半端な成果物を上げるだけなので直列化する
+concurrency:
+  group: build-mozc-aar
+  cancel-in-progress: false
+
+# 成果物のアップロード以外に書き込みは不要
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
+
+      - name: Mozc を取得
+        uses: actions/checkout@v4
+        with:
+          repository: google/mozc
+          ref: ${{ inputs.mozc_ref }}
+          path: mozc
+          submodules: recursive
+
+      # Mozc のビルドツールは Python 3.12 以上を要求する
+      - name: Python を用意
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Java を用意
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # Bazelの出力だけで10GB超になるため、NDKを入れる前に空けておく。
+      # ubuntu-latest の初期空き容量は約25GB。
+      # 削除対象は r29 に一致しないため、この後に入れるNDKには影響しない。
+      - name: 不要なプリインストールを削除して容量を確保
+        run: |
+          set -eux
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/ndk/2[0-8].* /opt/ghc /usr/local/.ghcup
+          df -h /
+
+      - name: Android SDK を用意
+        uses: android-actions/setup-android@v4
+
+      - name: NDK を導入
+        run: sdkmanager --install "ndk;${{ inputs.ndk_version }}"
+
+      - name: bazelisk を導入
+        run: |
+          set -eux
+          sudo curl -fsSL -o /usr/local/bin/bazelisk \
+            https://github.com/bazelbuild/bazelisk/releases/download/v1.29.0/bazelisk-linux-amd64
+          sudo chmod +x /usr/local/bin/bazelisk
+          bazelisk version
+
+      - name: Mozc の依存を取得
+        working-directory: mozc/src
+        run: python3 build_tools/update_deps.py
+
+      - name: ネイティブライブラリと辞書データをビルド
+        working-directory: mozc/src
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ inputs.ndk_version }}
+        run: |
+          set -eux
+          test -d "$ANDROID_NDK_HOME" || { echo "NDKが見つかりません: $ANDROID_NDK_HOME"; exit 1; }
+          bazelisk build package //data_manager/oss:mozc.data \
+            --config oss_android --config release_build
+
+      - name: 生成物を AAR プロジェクトへ配置
+        working-directory: mozc/src
+        run: |
+          set -eux
+          AAR_DIR="$GITHUB_WORKSPACE/tools/mozc-aar/mozc"
+
+          # native_libs.zip は abi ごとの libmozc.so を含む
+          unzip -o bazel-bin/android/jni/native_libs.zip -d "$AAR_DIR/jniLibs"
+          find "$AAR_DIR/jniLibs" -name '*.so' | sort
+
+          # 辞書データは lib*.so の名前で jniLibs へ入れる。
+          # こうするとインストール時に実ファイルとして展開され、
+          # DataManager::CreateFromFile() へ渡せる実パスが得られる。
+          for abi in "$AAR_DIR"/jniLibs/*/; do
+            cp bazel-bin/data_manager/oss/mozc.data "$abi/libmozc_data.so"
+          done
+
+      # 生成の再現性を優先し、mozcのbazel出力ではなくバージョン固定の公式配布を使う。
+      # protocの版は tools/mozc-aar/mozc/build.gradle の protobuf-javalite と揃えること。
+      # protoc 32.x に対応するJavaランタイムは 4.32.x（Javaだけ版数体系が異なる）。
+      - name: protoc を導入
+        run: |
+          set -eux
+          curl -fsSL -o /tmp/protoc.zip \
+            https://github.com/protocolbuffers/protobuf/releases/download/v32.1/protoc-32.1-linux-x86_64.zip
+          sudo unzip -o /tmp/protoc.zip -d /usr/local bin/protoc 'include/*'
+          sudo chmod +x /usr/local/bin/protoc
+          protoc --version
+
+      - name: protobuf の Java ソースを生成
+        working-directory: mozc/src
+        run: |
+          set -eux
+          OUT="$GITHUB_WORKSPACE/tools/mozc-aar/mozc/generated/java"
+          mkdir -p "$OUT"
+          # IMEクライアントが使うのは commands / config / candidate_window の3つ。
+          # 依存する proto は protoc が自動で辿るため個別指定は不要。
+          protoc --proto_path=. --java_out=lite:"$OUT" \
+            protocol/commands.proto \
+            protocol/config.proto \
+            protocol/candidate_window.proto
+          find "$OUT" -name '*.java' | sort
+
+      - name: AAR をビルド
+        working-directory: tools/mozc-aar
+        run: |
+          set -eux
+          gradle --no-daemon :mozc:assembleRelease
+          test -f mozc/build/outputs/aar/mozc-release.aar
+
+      - name: ライセンス表記を収集
+        run: |
+          set -eux
+          OUT="$GITHUB_WORKSPACE/dist"
+          mkdir -p "$OUT"
+          {
+            echo "Mozc (https://github.com/google/mozc) rev ${{ inputs.mozc_ref }}"
+            echo
+            cat mozc/LICENSE
+            echo
+            echo "----- OSS dictionary (IPAdic / Okinawa dictionary) -----"
+            echo
+            cat mozc/src/data/dictionary_oss/README.txt
+          } > "$OUT/NOTICE-mozc.txt"
+
+      - name: 成果物をまとめる
+        run: |
+          set -eux
+          SHORT_SHA=$(git -C mozc rev-parse --short HEAD)
+          cp tools/mozc-aar/mozc/build/outputs/aar/mozc-release.aar "dist/mozc-${SHORT_SHA}.aar"
+          ls -lh dist/
+
+      - name: 成果物をアップロード
+        uses: actions/upload-artifact@v4
+        with:
+          name: mozc-aar
+          path: dist/
+          retention-days: 30

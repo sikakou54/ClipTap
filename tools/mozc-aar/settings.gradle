@@ -1,0 +1,25 @@
+/*
+ * Mozc AAR を単体でビルドするためのGradle設定
+ *
+ * アプリ本体のGradleビルドとは独立している。アプリ側は生成済みのAARを
+ * apps/mobile/android/libs/ から flatDir で参照するだけで、このプロジェクトを
+ * ビルドすることはない。
+ */
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'mozc-aar'
+include ':mozc'
