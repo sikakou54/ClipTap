@@ -100,15 +100,30 @@ jobs:
         working-directory: mozc/src
         run: python3 build_tools/update_deps.py
 
-      - name: ネイティブライブラリと辞書データをビルド
+      # 辞書データはホスト用のコード生成ツールで作るため、Android構成では
+      # 「incompatible」として弾かれる（codegen_bytearray_stream 等がAndroid向けに
+      # 作れないため）。データはホスト構成で作り、ネイティブライブラリだけを
+      # Android構成で作る。
+      #
+      # bazel-bin は最後のビルドの構成を指すシンボリックリンクなので、
+      # 辞書データはこの場で退避しておく。
+      - name: 辞書データをビルド（ホスト構成）
+        working-directory: mozc/src
+        run: |
+          set -eux
+          bazelisk build //data_manager/oss:mozc.data \
+            --config oss_linux --config release_build
+          cp bazel-bin/data_manager/oss/mozc.data "$RUNNER_TEMP/mozc.data"
+          ls -lh "$RUNNER_TEMP/mozc.data"
+
+      - name: ネイティブライブラリをビルド（Android構成）
         working-directory: mozc/src
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VERSION }}
         run: |
           set -eux
           test -d "$ANDROID_NDK_HOME" || { echo "NDKが見つかりません: $ANDROID_NDK_HOME"; exit 1; }
-          bazelisk build package //data_manager/oss:mozc.data \
-            --config oss_android --config release_build
+          bazelisk build package --config oss_android --config release_build
 
       - name: 生成物を AAR プロジェクトへ配置
         working-directory: mozc/src
@@ -124,8 +139,9 @@ jobs:
           # こうするとインストール時に実ファイルとして展開され、
           # DataManager::CreateFromFile() へ渡せる実パスが得られる。
           for abi in "$AAR_DIR"/jniLibs/*/; do
-            cp bazel-bin/data_manager/oss/mozc.data "$abi/libmozc_data.so"
+            cp "$RUNNER_TEMP/mozc.data" "$abi/libmozc_data.so"
           done
+          du -sh "$AAR_DIR/jniLibs"
 
       # 生成の再現性を優先し、mozcのbazel出力ではなくバージョン固定の公式配布を使う。
       # protocの版は tools/mozc-aar/mozc/build.gradle の protobuf-javalite と揃えること。
