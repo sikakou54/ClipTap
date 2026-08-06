@@ -1,0 +1,172 @@
+name: Build Mozc
+
+# Android IME のかな漢字変換に使う Mozc のネイティブライブラリと辞書データを生成する。
+#
+# Bazel・Android NDK r29・Python 3.12 が必要でビルド領域も20GB以上使うため、
+# 開発機ではビルドしない。成果物はこのワークフローからダウンロードし、
+# apps/mobile/modules/mozc/android/src/main/ 以下へ展開してコミットする。
+#
+# 常時は回さない。Mozcを更新したいときだけ手動で実行する。
+
+on:
+  workflow_dispatch:
+    inputs:
+      mozc_ref:
+        description: 'ビルドする google/mozc のコミットSHAまたはタグ'
+        required: true
+        default: '3f235b4eb6fcff7d14ef5f0fb8ee56de7ee4c732'
+      ndk_version:
+        description: 'Android NDK のバージョン（Mozcはr29系を要求する）'
+        required: true
+        default: '29.0.13113456'
+
+# 同時に走らせても得がなく、片方が中途半端な成果物を上げるだけなので直列化する
+concurrency:
+  group: build-mozc
+  cancel-in-progress: false
+
+# 成果物のアップロード以外に書き込みは不要
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Mozc を取得
+        uses: actions/checkout@v4
+        with:
+          repository: google/mozc
+          ref: ${{ inputs.mozc_ref }}
+          path: mozc
+          submodules: recursive
+
+      # Mozc のビルドツールは Python 3.12 以上を要求する
+      - name: Python を用意
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Bazelの出力だけで10GB超になるため、NDKを入れる前に空けておく。
+      # ubuntu-latest の初期空き容量は約25GB。
+      # 削除対象は r29 に一致しないため、この後に入れるNDKには影響しない。
+      - name: 不要なプリインストールを削除して容量を確保
+        run: |
+          set -eux
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/ndk/2[0-8].* /opt/ghc /usr/local/.ghcup
+          df -h /
+
+      - name: Android SDK を用意
+        uses: android-actions/setup-android@v4
+
+      - name: NDK を導入
+        run: sdkmanager --install "ndk;${{ inputs.ndk_version }}"
+
+      - name: bazelisk を導入
+        run: |
+          set -eux
+          sudo curl -fsSL -o /usr/local/bin/bazelisk \
+            https://github.com/bazelbuild/bazelisk/releases/download/v1.29.0/bazelisk-linux-amd64
+          sudo chmod +x /usr/local/bin/bazelisk
+          bazelisk version
+
+      - name: Mozc の依存を取得
+        working-directory: mozc/src
+        run: python3 build_tools/update_deps.py
+
+      # 辞書データはホスト上のコード生成ツールで作るため、Android構成では
+      # 「incompatible」として弾かれる。データはホスト構成で作り、
+      # ネイティブライブラリだけを Android構成で作る。
+      #
+      # bazel-bin は最後のビルドの構成を指すシンボリックリンクなので、
+      # 辞書データはこの場で退避しておく。
+      - name: 辞書データをビルド（ホスト構成）
+        working-directory: mozc/src
+        run: |
+          set -eux
+          bazelisk build //data_manager/oss:mozc.data \
+            --config oss_linux --config release_build
+          mkdir -p "$RUNNER_TEMP/dist/assets"
+          cp bazel-bin/data_manager/oss/mozc.data "$RUNNER_TEMP/dist/assets/mozc.data"
+          ls -lh "$RUNNER_TEMP/dist/assets/mozc.data"
+
+      - name: ネイティブライブラリをビルド（Android構成）
+        working-directory: mozc/src
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ inputs.ndk_version }}
+        run: |
+          set -eux
+          test -d "$ANDROID_NDK_HOME" || { echo "NDKが見つかりません: $ANDROID_NDK_HOME"; exit 1; }
+          bazelisk build package --config oss_android --config release_build
+          unzip -o bazel-bin/android/jni/native_libs.zip -d "$RUNNER_TEMP/dist/jniLibs"
+          find "$RUNNER_TEMP/dist/jniLibs" -name '*.so' -exec ls -lh {} \;
+
+      # 生成の再現性を優先し、mozcのbazel出力ではなくバージョン固定の公式配布を使う。
+      # protocの版は app/build.gradle の protobuf-javalite と揃えること。
+      # protoc 32.x に対応するJavaランタイムは 4.32.x（Javaだけ版数体系が異なる）。
+      - name: protoc を導入
+        run: |
+          set -eux
+          curl -fsSL -o /tmp/protoc.zip \
+            https://github.com/protocolbuffers/protobuf/releases/download/v32.1/protoc-32.1-linux-x86_64.zip
+          sudo unzip -o /tmp/protoc.zip -d /usr/local bin/protoc 'include/*'
+          sudo chmod +x /usr/local/bin/protoc
+          protoc --version
+
+      - name: protobuf の Java ソースを生成
+        working-directory: mozc/src
+        run: |
+          set -eux
+          OUT="$RUNNER_TEMP/dist/java"
+          mkdir -p "$OUT"
+          # IMEクライアントが使うのは commands / config / candidate_window の3つ。
+          # 依存する proto は protoc が自動で辿るため個別指定は不要。
+          protoc --proto_path=. --java_out=lite:"$OUT" \
+            protocol/commands.proto \
+            protocol/config.proto \
+            protocol/candidate_window.proto
+          find "$OUT" -name '*.java' | sort
+
+      # Mozcのコードは BSD-3-Clause、OSS版辞書は IPAdic（NAIST）と沖縄辞書
+      # （Public Domain）に由来する。IPAdicは著作権表示と無保証条項の同梱が
+      # 必須のため、アプリ内のライセンス画面へ載せる元にする。
+      - name: ライセンス表記を収集
+        run: |
+          set -eux
+          {
+            echo "Mozc (https://github.com/google/mozc) rev ${{ inputs.mozc_ref }}"
+            echo
+            cat mozc/LICENSE
+            echo
+            echo "----- OSS dictionary (IPAdic / Okinawa dictionary) -----"
+            echo
+            cat mozc/src/data/dictionary_oss/README.txt
+          } > "$RUNNER_TEMP/dist/NOTICE-mozc.txt"
+
+      - name: 配置先を示す手順を同梱
+        run: |
+          set -eux
+          cat > "$RUNNER_TEMP/dist/README.txt" <<'TXT'
+このアーカイブの中身を apps/mobile/modules/mozc/android/src/main/ 以下へ
+展開してコミットする（NOTICE-mozc.txt を除く）。
+
+  assets/mozc.data            辞書データ。初回起動時に filesDir へ複製して使う
+  jniLibs/<abi>/libmozc.so    変換エンジン本体
+  java/org/mozc/.../*.java    protobufの生成コード
+
+  NOTICE-mozc.txt             ライセンス表記。アプリ内のライセンス表示へ反映する
+
+同梱するABIは modules/mozc/android/build.gradle の abiFilters で決まる。
+そこに無いABIのディレクトリは展開しなくてよい。
+TXT
+          find "$RUNNER_TEMP/dist" -maxdepth 2 | sort
+          du -sh "$RUNNER_TEMP/dist"
+
+      - name: 成果物をアップロード
+        uses: actions/upload-artifact@v4
+        with:
+          name: mozc-android
+          path: ${{ runner.temp }}/dist/
+          retention-days: 30
