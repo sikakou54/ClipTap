@@ -1,0 +1,132 @@
+import { describe, expect, it } from 'vitest';
+import {
+  ALL_LAYOUTS,
+  QWERTY_LAYOUT,
+  type Key,
+  type KeyLayout,
+} from '../src/keyboard/layout';
+
+/**
+ * キー配列の正本に対する検証
+ *
+ * 拡張キーボードのネイティブ実装（Swift/Kotlin）はここから生成するため、
+ * 配列の不正はネイティブをビルドする前にここで落とす。
+ * ネイティブ側には自動テストの基盤が無く、壊れても実行するまで気付けないため、
+ * 検証できるものはすべてこの層へ寄せる。
+ */
+
+/** レイアウト内の全キーを平坦化する */
+const allKeys = (layout: KeyLayout): Key[] => layout.rows.flatMap((row) => row.keys);
+
+describe('キー配列の正本', () => {
+  it('レイアウトの識別子が重複しない', () => {
+    const ids = ALL_LAYOUTS.map((layout) => layout.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it.each(ALL_LAYOUTS.map((layout) => [layout.id, layout] as const))(
+    '%s: キーの識別子が行をまたいで重複しない',
+    (_id, layout) => {
+      /* 識別子はテストとアクセシビリティの参照に使うため、一意でなければならない */
+      const ids = allKeys(layout).map((key) => key.id);
+      const duplicated = ids.filter((id, index) => ids.indexOf(id) !== index);
+      expect(duplicated).toEqual([]);
+    }
+  );
+
+  it.each(ALL_LAYOUTS.map((layout) => [layout.id, layout] as const))(
+    '%s: 文字キーは空文字を入力しない',
+    (_id, layout) => {
+      for (const key of allKeys(layout)) {
+        if (key.action.type === 'input') {
+          expect(key.action.text.length).toBeGreaterThan(0);
+        }
+      }
+    }
+  );
+
+  it.each(ALL_LAYOUTS.map((layout) => [layout.id, layout] as const))(
+    '%s: 幅は正の値である',
+    (_id, layout) => {
+      for (const key of allKeys(layout)) {
+        expect(key.width?.unit ?? 1).toBeGreaterThan(0);
+      }
+    }
+  );
+
+  it.each(ALL_LAYOUTS.map((layout) => [layout.id, layout] as const))(
+    '%s: 他のキーボードへ切り替えるキーを持つ',
+    (_id, layout) => {
+      /*
+       * Appleは全カスタムキーボードに、他のキーボードへ切り替える手段を求めている。
+       * 実装漏れは審査で落ちるため、配列の時点で担保する。
+       */
+      const hasNextKeyboard = allKeys(layout).some((key) => key.action.type === 'nextKeyboard');
+      expect(hasNextKeyboard).toBe(true);
+    }
+  );
+
+  it.each(ALL_LAYOUTS.map((layout) => [layout.id, layout] as const))(
+    '%s: 削除・空白・改行のキーを持つ',
+    (_id, layout) => {
+      const types = new Set(allKeys(layout).map((key) => key.action.type));
+      expect(types).toContain('backspace');
+      expect(types).toContain('space');
+      expect(types).toContain('enter');
+    }
+  );
+
+  it.each(ALL_LAYOUTS.map((layout) => [layout.id, layout] as const))(
+    '%s: 切替先のレイアウトが実在する',
+    (_id, layout) => {
+      const known = new Set(ALL_LAYOUTS.map((item) => item.id));
+      for (const key of allKeys(layout)) {
+        if (key.action.type === 'switchLayout') {
+          expect(known).toContain(key.action.layoutId);
+        }
+      }
+    }
+  );
+
+  it('どのレイアウトからも他のすべてのレイアウトへ到達できる', () => {
+    /* 切替キーの張り忘れで、戻れないレイアウトが生まれるのを防ぐ */
+    const reachable = new Map<string, Set<string>>();
+    for (const layout of ALL_LAYOUTS) {
+      const targets = allKeys(layout)
+        .filter((key) => key.action.type === 'switchLayout')
+        .map((key) => (key.action as { layoutId: string }).layoutId);
+      reachable.set(layout.id, new Set(targets));
+    }
+
+    for (const layout of ALL_LAYOUTS) {
+      const visited = new Set<string>([layout.id]);
+      const queue = [layout.id];
+      while (queue.length > 0) {
+        for (const next of reachable.get(queue.shift()!) ?? []) {
+          if (!visited.has(next)) {
+            visited.add(next);
+            queue.push(next);
+          }
+        }
+      }
+      expect(visited.size).toBe(ALL_LAYOUTS.length);
+    }
+  });
+
+  it('QWERTYは打ちやすさのため標準的な配置を保つ', () => {
+    const rows = QWERTY_LAYOUT.rows;
+    expect(rows[0].keys.map((key) => key.label).join('')).toBe('qwertyuiop');
+    expect(rows[1].keys.map((key) => key.label).join('')).toBe('asdfghjkl');
+    expect(rows[2].keys.slice(1, 8).map((key) => key.label).join('')).toBe('zxcvbnm');
+  });
+
+  it('QWERTYの文字キーはシフトで大文字になる', () => {
+    for (const key of allKeys(QWERTY_LAYOUT)) {
+      if (key.action.type !== 'input' || key.isFunction) {
+        continue;
+      }
+      expect(key.shiftAction).toBeDefined();
+      expect(key.shiftAction).toEqual({ type: 'input', text: key.action.text.toUpperCase() });
+    }
+  });
+});
