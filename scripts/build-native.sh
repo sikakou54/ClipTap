@@ -44,6 +44,31 @@ print_header() {
   printf '\n\033[1m==> %s\033[0m\n' "$1"
 }
 
+# 空き容量を確かめる
+#
+# ネイティブビルドは iOS の DerivedData だけで10GB近くまで育ち、
+# Androidのビルド生成物とMozcの辞書も加わる。
+# 途中で空き容量が尽きるとビルドの失敗としてではなく、
+# ログの書き込み失敗など分かりにくい形で現れるため、始める前に見る。
+readonly REQUIRED_FREE_GB=10
+
+check_free_space() {
+  local free_gb
+  free_gb="$(df -g "${REPO_ROOT}" | awk 'NR==2 {print $4}')"
+
+  if [ "${free_gb}" -ge "${REQUIRED_FREE_GB}" ]; then
+    return 0
+  fi
+
+  printf '\033[31m空き容量が %sGB しかありません（%sGB以上を推奨）\033[0m\n' \
+    "${free_gb}" "${REQUIRED_FREE_GB}" >&2
+  printf '次はいずれも再生成できます:\n' >&2
+  printf '  rm -rf ~/Library/Developer/Xcode/DerivedData\n' >&2
+  printf '  rm -rf %s/apps/mobile/android/app/build\n' "${REPO_ROOT}" >&2
+  printf '  rm -rf ~/.gradle/caches\n' >&2
+  return 1
+}
+
 # iOSをビルドする（ClipTap.app ＋ 埋め込みのClipTapKeyboard.appex）
 # $1: xcodebuildのscheme名
 build_ios() {
@@ -128,6 +153,8 @@ build_android() {
   printf '詳細: %s\n' "${log_file}" >&2
   return 1
 }
+
+check_free_space || exit 1
 
 case "${TARGET}" in
   ios)
