@@ -27,6 +27,14 @@ public final class KeyboardAreaView: UIView {
     /** キーの見た目。識別子から引く */
     private var keyViews: [String: KeyCapView] = [:]
 
+    /**
+     * 表示中の配列
+     *
+     * 配列の切替はこの識別子の比較で検出する。キー数の比較では、
+     * 数字面と記号面のようにキー数が同じ配列の切替を見逃す。
+     */
+    private var renderedLayoutId: LayoutId?
+
     /** 現在指が乗っているキー */
     private var pressedKey: KeyCapView?
 
@@ -90,6 +98,7 @@ public final class KeyboardAreaView: UIView {
                 keyViews[key.id] = keyView
             }
         }
+        renderedLayoutId = session.layout.id
         applyState()
         setNeedsLayout()
     }
@@ -128,7 +137,7 @@ public final class KeyboardAreaView: UIView {
      * 状態を見た目へ反映する
      */
     private func applyState() {
-        if keyViews.count != session.layout.rows.reduce(0, { $0 + $1.keys.count }) {
+        if renderedLayoutId != session.layout.id {
             /* 配列が変わっている。作り直す */
             rebuild()
             return
@@ -147,7 +156,6 @@ public final class KeyboardAreaView: UIView {
         touchStartPoint = point
         currentFlickDirection = nil
         updatePressedKey(at: point)
-        showFlickGuideIfNeeded()
     }
 
     public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -220,6 +228,15 @@ public final class KeyboardAreaView: UIView {
         pressedKey?.setPressed(false)
         target?.setPressed(true)
         pressedKey = target
+
+        /*
+         * ジェスチャの途中で別のキーへ乗り移ったら、いまの指の位置を
+         * 新たな起点にする。元の押下点から測ると、乗り移るまでの移動だけで
+         * しきい値を超えてしまい、タップのつもりがフリック入力になる。
+         */
+        touchStartPoint = point
+        currentFlickDirection = nil
+        showFlickGuideIfNeeded()
     }
 
     private func clearPressedKey() {

@@ -52,24 +52,44 @@ public final class TextDocumentProxyBridge: HostTextBridge {
 
     private let proxyProvider: () -> UITextDocumentProxy?
 
+    /** 最後に入力欄を操作した時刻。自分の操作起因のtextDidChangeを見分けるために使う */
+    private var lastEditAt: Date?
+
     public init(proxyProvider: @escaping () -> UITextDocumentProxy?) {
         self.proxyProvider = proxyProvider
     }
 
     public func insert(_ text: String) {
+        lastEditAt = Date()
         proxyProvider()?.insertText(text)
     }
 
     public func deleteBackward() {
+        lastEditAt = Date()
         proxyProvider()?.deleteBackward()
     }
 
     public func moveCursor(by offset: Int) {
+        lastEditAt = Date()
         proxyProvider()?.adjustTextPosition(byCharacterOffset: offset)
     }
 
     public var textBeforeCursor: String? {
         proxyProvider()?.documentContextBeforeInput
+    }
+
+    /**
+     * 直近に自分が入力欄を操作したか
+     *
+     * `textDidChange`は自分の挿入・削除でも呼ばれるため、外部要因の
+     * 文脈変化（別の入力欄への移動など）と区別するのに使う。
+     * OSの通知は非同期に届くことがあるため、時刻で近さを判定する。
+     */
+    public func wasEditedRecently(within interval: TimeInterval = 1.0) -> Bool {
+        guard let lastEditAt else {
+            return false
+        }
+        return Date().timeIntervalSince(lastEditAt) < interval
     }
 }
 

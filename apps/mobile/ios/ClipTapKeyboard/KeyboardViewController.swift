@@ -283,15 +283,17 @@ class KeyboardViewController: UIInputViewController {
     /// キー領域
     private lazy var keyboardAreaView = KeyboardAreaView(session: inputSession)
 
-    /// 変換候補のバー
+    /** 変換候補のバー */
     private lazy var candidateBarView = CandidateBarView(session: inputSession)
 
-    /// かな漢字変換エンジン
-    ///
-    /// 学習データはApp Groupコンテナ内のkeyboard/learning/へ置く。
-    /// 共有SQLite（業務データ）とは分離し、エクスポート・インポートの対象にしない。
-    /// 辞書の初期化は最初のかな入力時にInputSession側で行われるため、
-    /// ここでの生成は軽い。
+    /**
+     * かな漢字変換エンジン
+     *
+     * 学習データはApp Groupコンテナ内のkeyboard/learning/へ置く。
+     * 共有SQLite（業務データ）とは分離し、エクスポート・インポートの対象にしない。
+     * 辞書の初期化は最初のかな入力時にInputSession側で行われるため、
+     * ここでの生成は軽い。
+     */
     private lazy var kanaKanjiEngine: KanaKanjiEngine? = {
         guard let containerURL = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: appGroupIdentifier
@@ -662,17 +664,30 @@ class KeyboardViewController: UIInputViewController {
         refreshAllData()
     }
 
-    /// 画面が閉じる直前に呼ばれるメソッド
-    ///
-    /// 打ちかけの未確定文字列を取り残さないよう、読みのまま確定して入力欄へ送る。
+    /**
+     * 画面が閉じる直前に呼ばれるメソッド
+     *
+     * 打ちかけの未確定文字列を取り残さないよう、確定して入力欄へ送る。
+     */
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        inputSession.commitCompositionAsIs()
+        inputSession.flushComposition()
     }
 
     override func textDidChange(_ textInput: UITextInput?) {
         super.textDidChange(textInput)
         applyHostKeyboardAppearance()
+
+        /*
+         * 外部要因で入力文脈が変わったら（別の入力欄への移動、カーソル移動など）、
+         * 打ちかけの未確定文字列を破棄する。未確定文字列は入力欄に書き込まれて
+         * いないため、確定を待つと切替後の欄の無関係な位置へ文字が入ってしまう。
+         * この通知は自分の挿入・削除でも呼ばれるため、直近に自分が操作した
+         * 場合は外部要因とみなさない。
+         */
+        if !hostTextBridge.wasEditedRecently() {
+            inputSession.discardComposition()
+        }
     }
 
     /**
@@ -1552,7 +1567,7 @@ class KeyboardViewController: UIInputViewController {
     private func switchScreenState(to state: ScreenState) {
         /* 入力モードを離れるときは、打ちかけの未確定文字列を捨てずに確定してから移る */
         if screenState == .typing && state != .typing {
-            inputSession.commitCompositionAsIs()
+            inputSession.flushComposition()
         }
         screenState = state
         applyScreenState()

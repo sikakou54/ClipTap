@@ -67,8 +67,9 @@ public final class CandidateBarView: UIView {
         candidateStack.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            rootStack.topAnchor.constraint(equalTo: topAnchor, constant: 4),
-            rootStack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -4),
+            /* セルはバーの全高を使い、44ptの最小タップ領域を確保する */
+            rootStack.topAnchor.constraint(equalTo: topAnchor),
+            rootStack.bottomAnchor.constraint(equalTo: bottomAnchor),
             rootStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
             rootStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
 
@@ -203,6 +204,8 @@ final class CandidateCell: UIControl {
     func setSelected(_ isSelected: Bool) {
         backgroundColor = isSelected ? .systemBlue : .secondarySystemBackground
         label.textColor = isSelected ? .white : .label
+        /* 色の変化はVoiceOverに伝わらないため、選択状態はトレイトでも公開する */
+        accessibilityTraits = isSelected ? [.button, .selected] : .button
     }
 
     @objc private func didTap() {

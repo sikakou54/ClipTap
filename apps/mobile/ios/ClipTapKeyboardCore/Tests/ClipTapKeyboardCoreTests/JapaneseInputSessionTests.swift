@@ -274,9 +274,52 @@ struct JapaneseInputSessionTests {
         session.handle(key("switch_qwerty", in: session.layout))
         session.handle(key("switch_flick", in: session.layout))
         session.handle(key("flick_ka", in: session.layout))
-        session.commitCompositionAsIs()
+        session.flushComposition()
 
         #expect(host.text == "あか")
+    }
+
+    @Test("候補を選んだまま配列を切り替えると選択中の候補が確定される")
+    func switchingLayoutCommitsSelectedCandidate() {
+        let engine = FakeKanaKanjiEngine()
+        engine.candidateTable = ["あ": ["亜", "阿"]]
+        let (session, host, _) = makeSession(engine: engine)
+
+        session.handle(key("flick_a", in: session.layout))
+        session.handle(key("space", in: session.layout))
+        session.handle(key("space", in: session.layout))
+        session.handle(key("switch_qwerty", in: session.layout))
+
+        #expect(host.text == "阿", "利用者に見えている選択を黙って捨てない")
+        #expect(session.layout.id == .qwerty)
+    }
+
+    @Test("候補を選んだまま他のキーボードへ切り替えても選択中の候補が確定される")
+    func nextKeyboardCommitsSelectedCandidate() {
+        let engine = FakeKanaKanjiEngine()
+        engine.candidateTable = ["あ": ["亜", "阿"]]
+        let (session, host, _) = makeSession(engine: engine)
+        var requested = false
+        session.onNextKeyboard = { requested = true }
+
+        session.handle(key("flick_a", in: session.layout))
+        session.handle(key("space", in: session.layout))
+        session.handle(key("next_keyboard", in: session.layout))
+
+        #expect(host.text == "亜")
+        #expect(requested)
+    }
+
+    @Test("破棄要求は未確定文字列を入力欄へ送らず消す")
+    func discardDropsCompositionWithoutInserting() {
+        let (session, host, engine) = makeSession()
+
+        session.handle(key("flick_a", in: session.layout))
+        session.discardComposition()
+
+        #expect(session.composition == .empty)
+        #expect(host.text.isEmpty, "入力欄には何も送らない")
+        #expect(engine.reading.isEmpty, "エンジン側の未確定状態も消える")
     }
 
     @Test("未確定中の「゛゜小」は未確定文字列の末尾を変形する")
@@ -319,17 +362,17 @@ struct JapaneseInputSessionTests {
     }
 
     @Test("キーボードが閉じるときの確定要求で読みが入力欄へ送られる")
-    func commitAsIsFlushesComposition() {
+    func flushSendsReadingToHost() {
         let (session, host, _) = makeSession()
 
         session.handle(key("flick_a", in: session.layout))
-        session.commitCompositionAsIs()
+        session.flushComposition()
 
         #expect(host.text == "あ")
         #expect(session.composition == .empty)
 
         /* 未確定が無いときは何もしない */
-        session.commitCompositionAsIs()
+        session.flushComposition()
         #expect(host.text == "あ")
     }
 }

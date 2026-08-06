@@ -139,22 +139,22 @@ public final class InputSession {
 
         case .switchLayout(let layoutId):
             /* 未確定文字列は配列をまたいで持ち越せない。捨てずに確定してから移る */
-            commitCompositionAsIs()
+            flushComposition()
             layout = KeyLayouts.layout(for: layoutId)
             /* 配列を変えたらシフトは持ち越さない。記号面での大文字指定は意味を持たない */
             shiftState = .off
             notifyStateChanged()
 
         case .nextKeyboard:
-            commitCompositionAsIs()
+            flushComposition()
             onNextKeyboard?()
 
         case .toggleSnippetList:
-            commitCompositionAsIs()
+            flushComposition()
             onToggleSnippetList?()
 
         case .cursor(let offset):
-            commitCompositionAsIs()
+            flushComposition()
             host.moveCursor(by: offset)
             notifyStateChanged()
 
@@ -183,12 +183,39 @@ public final class InputSession {
     }
 
     /**
-     * 未確定文字列を読みのまま確定する
+     * 未確定文字列を確定して流しきる
      *
-     * キーボードが閉じるときやモードを離れるときに、打ちかけの文字を
-     * 取り残さないために拡張側からも呼ぶ。
+     * 候補を選んでいる最中はその候補を、選んでいなければ読みのまま確定する。
+     * 配列の切替やキーボードを離れる操作の直前に呼び、利用者に見えている
+     * 選択が黙って失われないようにする。拡張側からも呼ぶ。
      */
-    public func commitCompositionAsIs() {
+    public func flushComposition() {
+        if let index = selectedCandidateIndex {
+            commitCandidate(at: index)
+        } else {
+            commitCompositionAsIs()
+        }
+    }
+
+    /**
+     * 未確定文字列を確定せず破棄する
+     *
+     * 入力欄が外部要因で切り替わったときに拡張側から呼ぶ。未確定文字列は
+     * 入力欄に書き込まれていないため、切替後の欄へ確定すると無関係な場所へ
+     * 文字が入ってしまう。破棄のほうが被害が小さい。
+     */
+    public func discardComposition() {
+        guard isComposing, let engine = readyEngine() else {
+            return
+        }
+        engine.reset()
+        updateComposition(.empty)
+    }
+
+    /**
+     * 未確定文字列を読みのまま確定する
+     */
+    private func commitCompositionAsIs() {
         guard isComposing, let engine = readyEngine() else {
             return
         }
