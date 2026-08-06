@@ -145,22 +145,10 @@ jobs:
             cat mozc/src/data/dictionary_oss/README.txt
           } > "$RUNNER_TEMP/dist/NOTICE-mozc.txt"
 
-      - name: 配置先を示す手順を同梱
+      # 展開先は apps/mobile/modules/mozc/README.md に書いてある
+      - name: 成果物の内訳を表示
         run: |
           set -eux
-          cat > "$RUNNER_TEMP/dist/README.txt" <<'TXT'
-このアーカイブの中身を apps/mobile/modules/mozc/android/src/main/ 以下へ
-展開してコミットする（NOTICE-mozc.txt を除く）。
-
-  assets/mozc.data            辞書データ。初回起動時に filesDir へ複製して使う
-  jniLibs/<abi>/libmozc.so    変換エンジン本体
-  java/org/mozc/.../*.java    protobufの生成コード
-
-  NOTICE-mozc.txt             ライセンス表記。アプリ内のライセンス表示へ反映する
-
-同梱するABIは modules/mozc/android/build.gradle の abiFilters で決まる。
-そこに無いABIのディレクトリは展開しなくてよい。
-TXT
           find "$RUNNER_TEMP/dist" -maxdepth 2 | sort
           du -sh "$RUNNER_TEMP/dist"
 
