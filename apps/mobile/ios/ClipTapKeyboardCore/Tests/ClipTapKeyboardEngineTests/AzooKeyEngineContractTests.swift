@@ -50,7 +50,7 @@ struct AzooKeyEngineContractTests {
 
         /* 候補の添字は確定要求のキーになるため、0から連番であること */
         for (position, candidate) in output.candidates.enumerated() {
-            #expect(candidate.index == position)
+            #expect(candidate.id == position)
             #expect(!candidate.text.isEmpty)
         }
 
@@ -92,7 +92,7 @@ struct AzooKeyEngineContractTests {
         let output = engine.insertKana("きょうはあめ")
         #expect(!output.candidates.isEmpty)
 
-        let result = engine.selectCandidate(index: 0)
+        let result = engine.selectCandidate(id: 0)
 
         #expect(!result.committedText.isEmpty)
         /* 確定文字列と残りの読みを合わせて、元の読みを取りこぼしていないこと */
@@ -141,7 +141,7 @@ struct AzooKeyEngineContractTests {
         #expect(engine.load())
 
         engine.insertKana("あ")
-        #expect(engine.selectCandidate(index: 999) == .none)
+        #expect(engine.selectCandidate(id: 999) == .none)
     }
 
     @Test("長い読みでも候補を返し、メモリが際限なく増えない")

@@ -46,7 +46,7 @@ public protocol KanaKanjiEngine: AnyObject {
      *
      * 候補が未確定文字列の一部だけを消費する場合、残りは未確定のまま保持する。
      */
-    func selectCandidate(index: Int) -> CommitResult
+    func selectCandidate(id: Int) -> CommitResult
 
     /**
      * 未確定文字列を変換せずそのまま確定する
@@ -94,19 +94,19 @@ public struct EngineOutput: Equatable, Sendable {
 /**
  * 変換候補
  *
- * エンジン固有の情報は`index`越しにエンジン側が保持する。
+ * エンジン固有の情報は`id`越しにエンジン側が保持する。
  * 上位層がエンジンの型に依存しないようにするための間接参照。
  */
 public struct EngineCandidate: Equatable, Sendable {
 
-    /** エンジンが保持する候補列における位置。確定要求のキーになる */
-    public let index: Int
+    /** エンジンが候補を識別するための値。確定要求のキーになる */
+    public let id: Int
 
     /** 画面に表示し、確定時に入力欄へ送る文字列 */
     public let text: String
 
-    public init(index: Int, text: String) {
-        self.index = index
+    public init(id: Int, text: String) {
+        self.id = id
         self.text = text
     }
 }

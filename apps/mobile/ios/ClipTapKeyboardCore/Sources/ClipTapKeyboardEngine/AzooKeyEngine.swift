@@ -82,15 +82,15 @@ public final class AzooKeyEngine: KanaKanjiEngine {
     public var output: EngineOutput {
         EngineOutput(
             reading: composingText.convertTarget,
-            candidates: currentCandidates.enumerated().map { EngineCandidate(index: $0.offset, text: $0.element.text) }
+            candidates: currentCandidates.enumerated().map { EngineCandidate(id: $0.offset, text: $0.element.text) }
         )
     }
 
-    public func selectCandidate(index: Int) -> CommitResult {
-        guard currentCandidates.indices.contains(index) else {
+    public func selectCandidate(id: Int) -> CommitResult {
+        guard currentCandidates.indices.contains(id) else {
             return .none
         }
-        let candidate = currentCandidates[index]
+        let candidate = currentCandidates[id]
 
         /* 学習は確定時にのみ更新する。無効化時はエンジン側で無視される */
         if learningType == .inputAndOutput {

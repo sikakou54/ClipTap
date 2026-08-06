@@ -1,4 +1,4 @@
-package com.sikakou.cliptap.keyboard.engine
+package com.sikakou.cliptap.mozc
 
 /**
  * かな漢字変換エンジンの抽象
@@ -13,6 +13,8 @@ package com.sikakou.cliptap.keyboard.engine
  *
  * 変換候補の並びはエンジン依存であり、iOSとAndroidで一致しない。
  * 一致を保証するのは操作体系と確定規則であって、候補文字列ではない。
+ *
+ * スレッド安全ではない。呼び出し側で直列化すること。
  */
 interface KanaKanjiEngine {
 
@@ -32,7 +34,6 @@ interface KanaKanjiEngine {
     /**
      * 未確定文字列を1入力単位ぶん削除する
      *
-     * ローマ字入力ではローマ字1文字、かな入力ではかな1文字を削除する。
      * 未確定文字列が空の場合は何もせず、空のEngineOutputを返す。
      */
     fun deleteBackward(): EngineOutput
@@ -46,13 +47,13 @@ interface KanaKanjiEngine {
      * 指定した候補を確定する
      *
      * 候補が未確定文字列の一部だけを消費する場合、残りは未確定のまま保持する。
+     *
+     * @param id `EngineCandidate.id`。エンジンが候補を識別するための値
      */
-    fun selectCandidate(index: Int): CommitResult
+    fun selectCandidate(id: Int): CommitResult
 
     /**
      * 未確定文字列を変換せずそのまま確定する
-     *
-     * 変換候補が出ている状態でも、読みのまま確定したい場合に使う。
      */
     fun commitAsIs(): CommitResult
 
@@ -62,57 +63,7 @@ interface KanaKanjiEngine {
     fun reset()
 
     /**
-     * 学習データを消去する
+     * エンジンを解放する
      */
-    fun resetLearning()
-}
-
-/**
- * 変換要求に対するエンジンの応答
- *
- * @property reading 未確定文字列（ひらがな）
- * @property candidates 変換候補。先頭ほど確からしい
- */
-data class EngineOutput(
-    val reading: String,
-    val candidates: List<EngineCandidate>
-) {
-    /** 未確定文字列を保持しているか */
-    val isComposing: Boolean
-        get() = reading.isNotEmpty()
-
-    companion object {
-        /** 未確定文字列も候補もない状態 */
-        val EMPTY = EngineOutput(reading = "", candidates = emptyList())
-    }
-}
-
-/**
- * 変換候補
- *
- * エンジン固有の情報は`index`越しにエンジン側が保持する。
- * 上位層がエンジンの型に依存しないようにするための間接参照。
- *
- * @property index エンジンが保持する候補列における位置。確定要求のキーになる
- * @property text 画面に表示し、確定時に入力欄へ送る文字列
- */
-data class EngineCandidate(
-    val index: Int,
-    val text: String
-)
-
-/**
- * 確定操作の結果
- *
- * @property committedText 入力欄へ送るべき確定文字列
- * @property remaining 確定後に未確定として残る内容
- */
-data class CommitResult(
-    val committedText: String,
-    val remaining: EngineOutput
-) {
-    companion object {
-        /** 確定するものが何もなかった状態 */
-        val NONE = CommitResult(committedText = "", remaining = EngineOutput.EMPTY)
-    }
+    fun close()
 }

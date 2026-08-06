@@ -26,11 +26,11 @@ struct EngineOutputTests {
         let output = EngineOutput(
             reading: "へんかん",
             candidates: [
-                EngineCandidate(index: 0, text: "変換"),
-                EngineCandidate(index: 1, text: "返還")
+                EngineCandidate(id: 0, text: "変換"),
+                EngineCandidate(id: 1, text: "返還")
             ]
         )
-        #expect(output.candidates[1].index == 1)
+        #expect(output.candidates[1].id == 1)
         #expect(output.candidates[1].text == "返還")
     }
 
