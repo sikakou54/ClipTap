@@ -129,8 +129,9 @@ target 'ClipTap' do
       end
     end
 
-    # RNGoogleMobileAds および RNFB の Configuration script phase が Info.plist に依存してビルドサイクルを
-    # 引き起こすため、これらの script phase のシェルスクリプトを無効化する（Expo plugin が設定を処理する）
+    # RNGoogleMobileAds および RNFB の Configuration script phase はビルドサイクル対策として
+    # inputPaths（$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)）を付与した状態でpbxprojにコミットしている。
+    # pod install がこのフェーズを podspec 定義（inputPathsなし）へ同期し直した場合に備え、毎回付与し直す
     project_path = installer.aggregate_targets[0].user_project_path
     project = Xcodeproj::Project.open(project_path)
 
@@ -140,12 +141,11 @@ target 'ClipTap' do
       target.build_phases.each do |phase|
         if phase.is_a?(Xcodeproj::Project::Object::PBXShellScriptBuildPhase)
           if phase.name&.include?('Configuration') && (phase.name.include?('RNGoogleMobileAds') || phase.name.include?('RNFB'))
-            puts "🔧 Disabling #{phase.name} script to prevent build cycle (Expo plugin handles configuration)"
-            # シェルスクリプトを空にして無効化
-            phase.shell_script = "# Disabled to prevent build cycle - Expo plugin handles configuration\nexit 0"
-            # input/output paths を削除
-            phase.input_paths.clear if phase.input_paths
-            phase.output_paths.clear if phase.output_paths
+            input_path = '$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)'
+            unless phase.input_paths&.include?(input_path)
+              puts "🔧 Adding Info.plist input path to #{phase.name} to prevent build cycle"
+              phase.input_paths = [input_path]
+            end
           end
         end
       end

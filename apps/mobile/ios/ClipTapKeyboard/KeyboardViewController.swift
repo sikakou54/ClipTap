@@ -32,6 +32,10 @@
 
 import UIKit
 import os.log
+#if DEBUG
+import ClipTapKeyboardCore
+import ClipTapKeyboardEngine
+#endif
 
 // ログ出力用の設定（デバッグやエラー追跡に使用）
 // 開発中の動作確認や、本番環境でのトラブルシューティングに役立ちます
@@ -580,7 +584,66 @@ class KeyboardViewController: UIInputViewController {
         // データ読み込みをメインスレッドで実行
         // データベースアクセスはDatabase.swiftのdbQueueでスレッドセーフに管理されます
         loadInitialData()
+
+        #if DEBUG
+        runKanaKanjiEngineProbe()
+        #endif
     }
+
+    #if DEBUG
+    /**
+     * かな漢字変換エンジンの動作とメモリ使用量を確かめる開発用の計測
+     *
+     * キーボード拡張にはアプリ本体より遥かに厳しいメモリ上限があり、
+     * 超過はクラッシュではなくOSによる即時終了として現れる。
+     * 入力UIを作り込む前に、この拡張の中で辞書を開けること、および
+     * 上限に対して余裕があることを確認するために置いている。
+     *
+     * 計測が済んだら削除する。
+     */
+    private func runKanaKanjiEngineProbe() {
+        guard let containerURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupIdentifier
+        ) else {
+            KeyboardLog.debug("📏 [Engine] App Groupコンテナを取得できないため計測を中止")
+            return
+        }
+
+        KeyboardLog.debug("📏 [Engine] 初期化前 %@", MemoryProbe.describe())
+
+        let engine = AzooKeyEngine(
+            memoryDirectoryURL: containerURL.appendingPathComponent("engine/memory", isDirectory: true),
+            sharedContainerURL: containerURL.appendingPathComponent("engine", isDirectory: true),
+            isLearningEnabled: false
+        )
+
+        guard engine.load() else {
+            KeyboardLog.debug("📏 [Engine] 辞書の読み込みに失敗")
+            return
+        }
+        KeyboardLog.debug("📏 [Engine] 辞書読込後 %@", MemoryProbe.describe())
+
+        /* 実運用より長めの読みを流し、上限に対する余裕を測る */
+        let readings = ["へんかん", "きょうはいいてんきですね", String(repeating: "あいうえおかきくけこ", count: 4)]
+        for reading in readings {
+            let started = Date()
+            let output = engine.insertKana(reading)
+            let elapsedMs = Date().timeIntervalSince(started) * 1000
+
+            KeyboardLog.debug(
+                "📏 [Engine] 読み%d文字 候補%d件 %.0fms 先頭候補=%@ %@",
+                reading.count,
+                output.candidates.count,
+                elapsedMs,
+                output.candidates.first?.text ?? "なし",
+                MemoryProbe.describe()
+            )
+            engine.reset()
+        }
+
+        KeyboardLog.debug("📏 [Engine] 計測終了 %@", MemoryProbe.describe())
+    }
+    #endif
 
     /// 画面が表示される直前に呼ばれるメソッド
     /// キーボードが表示される度に毎回実行されます（viewDidLoadは1回だけ、こちらは毎回）
