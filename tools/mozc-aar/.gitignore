@@ -1,9 +1,0 @@
-# ワークフローがビルド時に配置する生成物。リポジトリには入れない
-mozc/jniLibs/
-mozc/generated/
-
-# Gradle
-.gradle/
-build/
-mozc/build/
-local.properties

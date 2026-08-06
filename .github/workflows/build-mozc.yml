@@ -1,24 +1,14 @@
-name: Build Mozc AAR
+name: Build Mozc
 
-# Android IME のかな漢字変換に使う Mozc を、Androidライブラリ（AAR）として生成する。
+# Android IME のかな漢字変換に使う Mozc のネイティブライブラリと辞書データを生成する。
 #
-# Bazel・Android NDK・Python 3.12 が必要でビルド領域も20GB以上使うため、
-# 開発機ではなくCIで実行する。生成物は成果物としてダウンロードし、
-# apps/mobile/android/libs/ へコミットして使う。
+# Bazel・Android NDK r29・Python 3.12 が必要でビルド領域も20GB以上使うため、
+# 開発機ではビルドしない。成果物はこのワークフローからダウンロードし、
+# apps/mobile/android/app/src/main/ 以下へコミットして使う。
 #
-# 常時は回さない。Mozcを更新したいときだけ、起動用ブランチへのpushまたは手動実行で回す。
+# 常時は回さない。Mozcを更新したいときだけ手動で実行する。
 
 on:
-  # 起動用ブランチへの push で実行する。
-  #
-  # workflow_dispatch はワークフローがデフォルトブランチ（main）に存在しないと
-  # 起動できない。このリポジトリの main は開発トランクではなく更新が止まっている
-  # ため、ワークフローのためだけに main を進めるのは避け、専用ブランチへの push を
-  # 起動手段にしている。ワークフローがデフォルトブランチへ載った時点で、
-  # この trigger は削除して workflow_dispatch へ一本化してよい。
-  push:
-    branches:
-      - 'ci/build-mozc-aar'
   workflow_dispatch:
     inputs:
       mozc_ref:
@@ -32,17 +22,12 @@ on:
 
 # 同時に走らせても得がなく、片方が中途半端な成果物を上げるだけなので直列化する
 concurrency:
-  group: build-mozc-aar
+  group: build-mozc
   cancel-in-progress: false
 
 # 成果物のアップロード以外に書き込みは不要
 permissions:
   contents: read
-
-# push で起動した場合は inputs が空になるため、既定値へ落とす
-env:
-  MOZC_REF: ${{ inputs.mozc_ref || '3f235b4eb6fcff7d14ef5f0fb8ee56de7ee4c732' }}
-  NDK_VERSION: ${{ inputs.ndk_version || '29.0.13113456' }}
 
 jobs:
   build:
@@ -50,14 +35,11 @@ jobs:
     timeout-minutes: 120
 
     steps:
-      - name: リポジトリを取得
-        uses: actions/checkout@v4
-
       - name: Mozc を取得
         uses: actions/checkout@v4
         with:
           repository: google/mozc
-          ref: ${{ env.MOZC_REF }}
+          ref: ${{ inputs.mozc_ref }}
           path: mozc
           submodules: recursive
 
@@ -66,12 +48,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Java を用意
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
 
       # Bazelの出力だけで10GB超になるため、NDKを入れる前に空けておく。
       # ubuntu-latest の初期空き容量は約25GB。
@@ -86,7 +62,7 @@ jobs:
         uses: android-actions/setup-android@v4
 
       - name: NDK を導入
-        run: sdkmanager --install "ndk;${{ env.NDK_VERSION }}"
+        run: sdkmanager --install "ndk;${{ inputs.ndk_version }}"
 
       - name: bazelisk を導入
         run: |
@@ -100,10 +76,9 @@ jobs:
         working-directory: mozc/src
         run: python3 build_tools/update_deps.py
 
-      # 辞書データはホスト用のコード生成ツールで作るため、Android構成では
-      # 「incompatible」として弾かれる（codegen_bytearray_stream 等がAndroid向けに
-      # 作れないため）。データはホスト構成で作り、ネイティブライブラリだけを
-      # Android構成で作る。
+      # 辞書データはホスト上のコード生成ツールで作るため、Android構成では
+      # 「incompatible」として弾かれる。データはホスト構成で作り、
+      # ネイティブライブラリだけを Android構成で作る。
       #
       # bazel-bin は最後のビルドの構成を指すシンボリックリンクなので、
       # 辞書データはこの場で退避しておく。
@@ -113,38 +88,23 @@ jobs:
           set -eux
           bazelisk build //data_manager/oss:mozc.data \
             --config oss_linux --config release_build
-          cp bazel-bin/data_manager/oss/mozc.data "$RUNNER_TEMP/mozc.data"
-          ls -lh "$RUNNER_TEMP/mozc.data"
+          mkdir -p "$RUNNER_TEMP/dist/assets"
+          cp bazel-bin/data_manager/oss/mozc.data "$RUNNER_TEMP/dist/assets/mozc.data"
+          ls -lh "$RUNNER_TEMP/dist/assets/mozc.data"
 
       - name: ネイティブライブラリをビルド（Android構成）
         working-directory: mozc/src
         env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VERSION }}
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ inputs.ndk_version }}
         run: |
           set -eux
           test -d "$ANDROID_NDK_HOME" || { echo "NDKが見つかりません: $ANDROID_NDK_HOME"; exit 1; }
           bazelisk build package --config oss_android --config release_build
-
-      - name: 生成物を AAR プロジェクトへ配置
-        working-directory: mozc/src
-        run: |
-          set -eux
-          AAR_DIR="$GITHUB_WORKSPACE/tools/mozc-aar/mozc"
-
-          # native_libs.zip は abi ごとの libmozc.so を含む
-          unzip -o bazel-bin/android/jni/native_libs.zip -d "$AAR_DIR/jniLibs"
-          find "$AAR_DIR/jniLibs" -name '*.so' | sort
-
-          # 辞書データは lib*.so の名前で jniLibs へ入れる。
-          # こうするとインストール時に実ファイルとして展開され、
-          # DataManager::CreateFromFile() へ渡せる実パスが得られる。
-          for abi in "$AAR_DIR"/jniLibs/*/; do
-            cp "$RUNNER_TEMP/mozc.data" "$abi/libmozc_data.so"
-          done
-          du -sh "$AAR_DIR/jniLibs"
+          unzip -o bazel-bin/android/jni/native_libs.zip -d "$RUNNER_TEMP/dist/jniLibs"
+          find "$RUNNER_TEMP/dist/jniLibs" -name '*.so' -exec ls -lh {} \;
 
       # 生成の再現性を優先し、mozcのbazel出力ではなくバージョン固定の公式配布を使う。
-      # protocの版は tools/mozc-aar/mozc/build.gradle の protobuf-javalite と揃えること。
+      # protocの版は app/build.gradle の protobuf-javalite と揃えること。
       # protoc 32.x に対応するJavaランタイムは 4.32.x（Javaだけ版数体系が異なる）。
       - name: protoc を導入
         run: |
@@ -159,7 +119,7 @@ jobs:
         working-directory: mozc/src
         run: |
           set -eux
-          OUT="$GITHUB_WORKSPACE/tools/mozc-aar/mozc/generated/java"
+          OUT="$RUNNER_TEMP/dist/java"
           mkdir -p "$OUT"
           # IMEクライアントが使うのは commands / config / candidate_window の3つ。
           # 依存する proto は protoc が自動で辿るため個別指定は不要。
@@ -169,38 +129,42 @@ jobs:
             protocol/candidate_window.proto
           find "$OUT" -name '*.java' | sort
 
-      - name: AAR をビルド
-        working-directory: tools/mozc-aar
-        run: |
-          set -eux
-          gradle --no-daemon :mozc:assembleRelease
-          test -f mozc/build/outputs/aar/mozc-release.aar
-
+      # Mozcのコードは BSD-3-Clause、OSS版辞書は IPAdic（NAIST）と沖縄辞書
+      # （Public Domain）に由来する。IPAdicは著作権表示と無保証条項の同梱が
+      # 必須のため、アプリ内のライセンス画面へ載せる元にする。
       - name: ライセンス表記を収集
         run: |
           set -eux
-          OUT="$GITHUB_WORKSPACE/dist"
-          mkdir -p "$OUT"
           {
-            echo "Mozc (https://github.com/google/mozc) rev ${{ env.MOZC_REF }}"
+            echo "Mozc (https://github.com/google/mozc) rev ${{ inputs.mozc_ref }}"
             echo
             cat mozc/LICENSE
             echo
             echo "----- OSS dictionary (IPAdic / Okinawa dictionary) -----"
             echo
             cat mozc/src/data/dictionary_oss/README.txt
-          } > "$OUT/NOTICE-mozc.txt"
+          } > "$RUNNER_TEMP/dist/NOTICE-mozc.txt"
 
-      - name: 成果物をまとめる
+      - name: 配置先を示す手順を同梱
         run: |
           set -eux
-          SHORT_SHA=$(git -C mozc rev-parse --short HEAD)
-          cp tools/mozc-aar/mozc/build/outputs/aar/mozc-release.aar "dist/mozc-${SHORT_SHA}.aar"
-          ls -lh dist/
+          cat > "$RUNNER_TEMP/dist/README.txt" <<'TXT'
+このアーカイブの中身を apps/mobile/android/app/src/main/ 以下へ展開してコミットする。
+
+  assets/mozc.data                    辞書データ。初回起動時に filesDir へ複製して使う
+  jniLibs/<abi>/libmozc.so            変換エンジン本体
+  java/org/mozc/.../*.java            protobufの生成コード
+  NOTICE-mozc.txt                     ライセンス表記（アプリ内の表示に使う）
+
+jniLibs は release では arm64-v8a と armeabi-v7a のみ同梱する
+（app/build.gradle の abiFilters で指定）。
+TXT
+          find "$RUNNER_TEMP/dist" -maxdepth 2 | sort
+          du -sh "$RUNNER_TEMP/dist"
 
       - name: 成果物をアップロード
         uses: actions/upload-artifact@v4
         with:
-          name: mozc-aar
-          path: dist/
+          name: mozc-android
+          path: ${{ runner.temp }}/dist/
           retention-days: 30
