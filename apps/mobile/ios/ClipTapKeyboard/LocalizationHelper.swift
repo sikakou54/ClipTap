@@ -329,6 +329,15 @@ enum L10n {
 
         /// フルアクセス許可手順
         static let fullAccessInstructions = localized("settings.full_access_instructions")
+
+        /// "変換学習" / "Conversion Learning"
+        static let learning = localized("settings.learning")
+
+        /// "学習データをリセット" / "Reset Learning Data"
+        static let learningReset = localized("settings.learning_reset")
+
+        /// "リセットしました" / "Reset Complete"
+        static let learningResetDone = localized("settings.learning_reset_done")
     }
 
     // MARK: - Localization Helper
@@ -459,6 +468,9 @@ enum L10n {
             return isJapanese
                 ? "1. 設定アプリを開く\n2. 「一般」→「キーボード」→「キーボード」を選択\n3. 「ClipTap」をタップ\n4. 「フルアクセスを許可」をON"
                 : "1. Open the Settings app\n2. Go to \"General\" → \"Keyboard\" → \"Keyboards\"\n3. Tap \"ClipTap\"\n4. Turn on \"Allow Full Access\""
+        case "settings.learning": return isJapanese ? "変換学習" : "Conversion Learning"
+        case "settings.learning_reset": return isJapanese ? "学習データをリセット" : "Reset Learning Data"
+        case "settings.learning_reset_done": return isJapanese ? "リセットしました" : "Reset Complete"
 
         default: return key
         }

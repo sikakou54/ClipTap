@@ -130,6 +130,9 @@ class KeyboardViewController: UIInputViewController {
     /// 最後に使ったモード（定型文の一覧／文字入力）を保存するUserDefaultsキー
     private let keyboardModePreferenceKey = "keyboard_input_mode"
 
+    /// 変換学習の有効・無効を保存するUserDefaultsキー
+    private let learningPreferenceKey = "keyboard_learning_enabled"
+
     /// フルアクセス状態を共有するApp GroupのUserDefaultsキー
     private let fullAccessStateKey = "keyboardHasFullAccess"
 
@@ -303,7 +306,11 @@ class KeyboardViewController: UIInputViewController {
         }
         let learningURL = containerURL.appendingPathComponent("keyboard/learning", isDirectory: true)
         try? FileManager.default.createDirectory(at: learningURL, withIntermediateDirectories: true)
-        return AzooKeyEngine(memoryDirectoryURL: learningURL, sharedContainerURL: containerURL)
+        return AzooKeyEngine(
+            memoryDirectoryURL: learningURL,
+            sharedContainerURL: containerURL,
+            isLearningEnabled: loadLearningPreference()
+        )
     }()
 
     // === スニペット一覧エリア ===
@@ -578,6 +585,51 @@ class KeyboardViewController: UIInputViewController {
         label.font = .systemFont(ofSize: 15, weight: .medium)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+
+    /// 設定項目を縦に並べるスクロール領域
+    ///
+    /// 変換学習の項目が加わり、フルアクセスの案内と合わせるとキーボードの
+    /// 高さ（280pt）へ収まらないため、ヘッダー以外はスクロールさせる
+    private let settingsScrollView: UIScrollView = {
+        let view = UIScrollView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+
+    /// 変換学習スイッチの行コンテナ
+    private let learningRowView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .tertiarySystemFill
+        view.layer.cornerRadius = 10
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+
+    /// 変換学習の見出しラベル
+    private let learningLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 15)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    /// 変換学習のON/OFFスイッチ
+    private let learningSwitch: UISwitch = {
+        let control = UISwitch()
+        control.translatesAutoresizingMaskIntoConstraints = false
+        return control
+    }()
+
+    /// 学習データをリセットする行ボタン
+    private let learningResetButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.backgroundColor = .tertiarySystemFill
+        button.layer.cornerRadius = 10
+        button.titleLabel?.font = .systemFont(ofSize: 15)
+        button.setTitleColor(.systemRed, for: .normal)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
     }()
 
     /// フルアクセス必要ヒントラベル
@@ -1123,14 +1175,21 @@ class KeyboardViewController: UIInputViewController {
         settingsView.addSubview(settingsHeaderView)
         settingsHeaderView.addSubview(settingsTitleLabel)
         settingsHeaderView.addSubview(settingsCloseButton)
-        settingsView.addSubview(usageTrackingRowView)
+        settingsView.addSubview(settingsScrollView)
+        settingsScrollView.addSubview(usageTrackingRowView)
         usageTrackingRowView.addSubview(usageTrackingLabel)
         usageTrackingRowView.addSubview(usageTrackingStatusLabel)
-        settingsView.addSubview(fullAccessHintLabel)
-        settingsView.addSubview(fullAccessInstructionsLabel)
+        settingsScrollView.addSubview(learningRowView)
+        learningRowView.addSubview(learningLabel)
+        learningRowView.addSubview(learningSwitch)
+        settingsScrollView.addSubview(learningResetButton)
+        settingsScrollView.addSubview(fullAccessHintLabel)
+        settingsScrollView.addSubview(fullAccessInstructionsLabel)
 
         // 設定画面のアクションを設定
         settingsCloseButton.addTarget(self, action: #selector(closeSettingsView), for: .touchUpInside)
+        learningSwitch.addTarget(self, action: #selector(learningSwitchChanged), for: .valueChanged)
+        learningResetButton.addTarget(self, action: #selector(learningResetTapped), for: .touchUpInside)
 
         NSLayoutConstraint.activate([
             // Settings View: 全画面表示
@@ -1155,10 +1214,20 @@ class KeyboardViewController: UIInputViewController {
             settingsCloseButton.widthAnchor.constraint(equalToConstant: 30),
             settingsCloseButton.heightAnchor.constraint(equalToConstant: 30),
 
-            // Usage Tracking Row: ヘッダーの下
-            usageTrackingRowView.topAnchor.constraint(equalTo: settingsHeaderView.bottomAnchor, constant: 16),
-            usageTrackingRowView.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor, constant: 12),
-            usageTrackingRowView.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor, constant: -12),
+            // Settings Scroll: ヘッダーの下の残り全体
+            settingsScrollView.topAnchor.constraint(equalTo: settingsHeaderView.bottomAnchor),
+            settingsScrollView.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor),
+            settingsScrollView.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor),
+            settingsScrollView.bottomAnchor.constraint(equalTo: settingsView.bottomAnchor),
+
+            /* 横スクロールはさせない。内容の幅を見た目の幅に一致させる */
+            settingsScrollView.contentLayoutGuide.widthAnchor.constraint(
+                equalTo: settingsScrollView.frameLayoutGuide.widthAnchor),
+
+            // Usage Tracking Row: スクロール内容の先頭
+            usageTrackingRowView.topAnchor.constraint(equalTo: settingsScrollView.contentLayoutGuide.topAnchor, constant: 16),
+            usageTrackingRowView.leadingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.leadingAnchor, constant: 12),
+            usageTrackingRowView.trailingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.trailingAnchor, constant: -12),
             usageTrackingRowView.heightAnchor.constraint(equalToConstant: 52),
 
             // Usage Tracking Label: 行の左側
@@ -1169,15 +1238,33 @@ class KeyboardViewController: UIInputViewController {
             usageTrackingStatusLabel.trailingAnchor.constraint(equalTo: usageTrackingRowView.trailingAnchor, constant: -16),
             usageTrackingStatusLabel.centerYAnchor.constraint(equalTo: usageTrackingRowView.centerYAnchor),
 
-            // Full Access Hint: 行の下
-            fullAccessHintLabel.topAnchor.constraint(equalTo: usageTrackingRowView.bottomAnchor, constant: 8),
-            fullAccessHintLabel.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor, constant: 16),
-            fullAccessHintLabel.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor, constant: -16),
+            // 変換学習の行: 使用頻度の行の下
+            learningRowView.topAnchor.constraint(equalTo: usageTrackingRowView.bottomAnchor, constant: 8),
+            learningRowView.leadingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.leadingAnchor, constant: 12),
+            learningRowView.trailingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.trailingAnchor, constant: -12),
+            learningRowView.heightAnchor.constraint(equalToConstant: 52),
 
-            // Full Access Instructions: ヒントの下
+            learningLabel.leadingAnchor.constraint(equalTo: learningRowView.leadingAnchor, constant: 16),
+            learningLabel.centerYAnchor.constraint(equalTo: learningRowView.centerYAnchor),
+            learningSwitch.trailingAnchor.constraint(equalTo: learningRowView.trailingAnchor, constant: -16),
+            learningSwitch.centerYAnchor.constraint(equalTo: learningRowView.centerYAnchor),
+
+            // 学習データのリセット行: 変換学習の行の下
+            learningResetButton.topAnchor.constraint(equalTo: learningRowView.bottomAnchor, constant: 8),
+            learningResetButton.leadingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.leadingAnchor, constant: 12),
+            learningResetButton.trailingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.trailingAnchor, constant: -12),
+            learningResetButton.heightAnchor.constraint(equalToConstant: 52),
+
+            // Full Access Hint: リセット行の下
+            fullAccessHintLabel.topAnchor.constraint(equalTo: learningResetButton.bottomAnchor, constant: 12),
+            fullAccessHintLabel.leadingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.leadingAnchor, constant: 16),
+            fullAccessHintLabel.trailingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.trailingAnchor, constant: -16),
+
+            // Full Access Instructions: ヒントの下。ここが内容の末尾になる
             fullAccessInstructionsLabel.topAnchor.constraint(equalTo: fullAccessHintLabel.bottomAnchor, constant: 12),
-            fullAccessInstructionsLabel.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor, constant: 16),
-            fullAccessInstructionsLabel.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor, constant: -16)
+            fullAccessInstructionsLabel.leadingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.leadingAnchor, constant: 16),
+            fullAccessInstructionsLabel.trailingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.trailingAnchor, constant: -16),
+            fullAccessInstructionsLabel.bottomAnchor.constraint(equalTo: settingsScrollView.contentLayoutGuide.bottomAnchor, constant: -16)
         ])
 
         applyScreenState()
@@ -1926,6 +2013,12 @@ class KeyboardViewController: UIInputViewController {
         // 見出しの色を更新
         usageTrackingLabel.textColor = self.hasFullAccess ? .label : .secondaryLabel
 
+        /* 変換学習の状態を反映する */
+        learningLabel.text = L10n.Settings.learning
+        learningSwitch.isOn = loadLearningPreference()
+        learningResetButton.setTitle(L10n.Settings.learningReset, for: .normal)
+        learningResetButton.isEnabled = true
+
         // 設定画面を表示
         screenState = .settings
         applyScreenState()
@@ -1936,6 +2029,37 @@ class KeyboardViewController: UIInputViewController {
         KeyboardLog.debug("⚙️ [Settings] Closing settings view")
         screenState = .list
         applyScreenState()
+    }
+
+    /// 変換学習スイッチが切り替えられた時のアクション
+    @objc private func learningSwitchChanged() {
+        UserDefaults.standard.set(learningSwitch.isOn, forKey: learningPreferenceKey)
+        kanaKanjiEngine?.setLearningEnabled(learningSwitch.isOn)
+    }
+
+    /// 学習データのリセットがタップされた時のアクション
+    @objc private func learningResetTapped() {
+        /*
+         * 変換をまだ使っていないセッションでも消せるよう、先に初期化する。
+         * 学習データの実体はエンジン側が管理しており、初期化なしでは消せない。
+         */
+        guard let engine = kanaKanjiEngine, engine.load() else {
+            return
+        }
+        engine.resetLearning()
+
+        /* 消えたことが分かるよう、2秒だけ表示を変える */
+        learningResetButton.setTitle(L10n.Settings.learningResetDone, for: .normal)
+        learningResetButton.isEnabled = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+            self?.learningResetButton.setTitle(L10n.Settings.learningReset, for: .normal)
+            self?.learningResetButton.isEnabled = true
+        }
+    }
+
+    /// 変換学習の設定を読み出す。既定は有効
+    private func loadLearningPreference() -> Bool {
+        UserDefaults.standard.object(forKey: learningPreferenceKey) as? Bool ?? true
     }
 
 }

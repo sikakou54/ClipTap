@@ -92,3 +92,6 @@
 "settings.usage_tracking_inactive" = "Off";
 "settings.usage_tracking_requires_full_access" = "Full Access is required to record how often each snippet is inserted from the keyboard. Allowing it enables sorting by usage.";
 "settings.full_access_instructions" = "1. Open the Settings app\n2. Go to \"General\" → \"Keyboard\" → \"Keyboards\"\n3. Tap \"ClipTap\"\n4. Turn on \"Allow Full Access\"";
+"settings.learning" = "Conversion Learning";
+"settings.learning_reset" = "Reset Learning Data";
+"settings.learning_reset_done" = "Reset Complete";

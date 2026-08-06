@@ -64,6 +64,14 @@ public protocol KanaKanjiEngine: AnyObject {
      * 学習データを消去する
      */
     func resetLearning()
+
+    /**
+     * 変換学習の有効・無効を切り替える
+     *
+     * 利用者がキーボード内の設定で切り替える。無効のあいだは
+     * 確定しても学習データを更新しない。
+     */
+    func setLearningEnabled(_ isEnabled: Bool)
 }
 
 /**

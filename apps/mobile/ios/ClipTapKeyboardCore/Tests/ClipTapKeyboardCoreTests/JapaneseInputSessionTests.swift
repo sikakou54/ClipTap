@@ -70,6 +70,12 @@ final class FakeKanaKanjiEngine: KanaKanjiEngine {
     }
 
     func resetLearning() {}
+
+    private(set) var isLearningEnabled = true
+
+    func setLearningEnabled(_ isEnabled: Bool) {
+        isLearningEnabled = isEnabled
+    }
 }
 
 /**
