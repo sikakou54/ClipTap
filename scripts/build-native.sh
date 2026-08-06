@@ -79,6 +79,38 @@ build_ios() {
   return 1
 }
 
+# 拡張キーボードのSwiftパッケージをテストする
+#
+# 入力機能のロジックとかな漢字変換は apps/mobile/ios/ClipTapKeyboardCore に
+# あり、ここだけがネイティブ側で唯一自動テストできる層になる。
+# xcodebuild は appex をビルドするだけでこのテストを実行しないため、別に回す。
+#
+# 最適化ビルドで実行する理由は、打鍵ごとの変換応答を検証しているため。
+# Debugビルド（-Onone）では実装が正しくても目標値を満たせない。
+test_keyboard_core() {
+  local package_dir="${IOS_DIR}/ClipTapKeyboardCore"
+  local log_file="${LOG_DIR}/ios-keyboard-core-test.log"
+
+  if ! command -v swift >/dev/null 2>&1; then
+    printf '\033[31mswift が見つかりません。パッケージのテストを飛ばします。\033[0m\n' >&2
+    return 0
+  fi
+
+  print_header "iOS: ClipTapKeyboardCore をテスト中（ログ: ${log_file}）"
+
+  if swift test -c release --package-path "${package_dir}" >"${log_file}" 2>&1; then
+    local summary
+    summary="$(grep -oE 'Test run with [0-9]+ tests? in [0-9]+ suites? passed' "${log_file}" | tail -1 || true)"
+    printf '\033[32m✅ ClipTapKeyboardCore テスト成功 %s\033[0m\n' "${summary}"
+    return 0
+  fi
+
+  printf '\033[31m❌ ClipTapKeyboardCore テスト失敗\033[0m\n' >&2
+  grep -E '✘|error:|failed' "${log_file}" | head -40 >&2 || true
+  printf '詳細: %s\n' "${log_file}" >&2
+  return 1
+}
+
 # Androidをビルドする
 build_android() {
   local log_file="${LOG_DIR}/android-assembleDebug.log"
@@ -99,7 +131,10 @@ build_android() {
 
 case "${TARGET}" in
   ios)
-    build_ios ClipTapKeyboard
+    ios_failed=0
+    build_ios ClipTapKeyboard || ios_failed=1
+    test_keyboard_core || ios_failed=1
+    [ "${ios_failed}" -eq 0 ] || exit 1
     ;;
   android)
     build_android
@@ -108,6 +143,7 @@ case "${TARGET}" in
     # 片方が落ちても両方の結果を出したいので、失敗を記録して最後に判定する
     failed=0
     build_ios ClipTapKeyboard || failed=1
+    test_keyboard_core || failed=1
     build_android || failed=1
 
     if [ "${failed}" -ne 0 ]; then
