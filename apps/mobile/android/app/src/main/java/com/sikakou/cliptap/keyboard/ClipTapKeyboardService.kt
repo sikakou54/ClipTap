@@ -72,6 +72,7 @@ class ClipTapKeyboardService : InputMethodService() {
     private lateinit var titleSeparator: View
     private lateinit var detailContentLabel: android.widget.TextView
     private lateinit var copyButton: View
+    private lateinit var insertNewlineButton: View
     private lateinit var closeButton: View
 
     // 選択中のスニペット
@@ -199,6 +200,7 @@ class ClipTapKeyboardService : InputMethodService() {
      *    - SnippetAdapter: スニペットカードを表示
      * 3. 詳細画面のボタンにリスナーを設定
      *    - copyButton: スニペットを挿入
+     *    - insertNewlineButton: 改行を挿入
      *    - closeButton: 詳細画面を閉じる
      *
      * 【理由】
@@ -225,6 +227,7 @@ class ClipTapKeyboardService : InputMethodService() {
         titleSeparator = keyboardView.findViewById(R.id.titleSeparator)
         detailContentLabel = keyboardView.findViewById(R.id.detailContentLabel)
         copyButton = keyboardView.findViewById(R.id.copyButton)
+        insertNewlineButton = keyboardView.findViewById(R.id.insertNewlineButton)
         closeButton = keyboardView.findViewById(R.id.closeButton)
 
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Views found - profileChipGroup: $profileChipGroup")
@@ -254,6 +257,9 @@ class ClipTapKeyboardService : InputMethodService() {
         }
         insertTitleButton.setOnClickListener {
             onInsertTitleButtonClicked()
+        }
+        insertNewlineButton.setOnClickListener {
+            onInsertNewlineButtonClicked()
         }
 
         // ソートボタンの設定
@@ -862,6 +868,39 @@ class ClipTapKeyboardService : InputMethodService() {
         if (ic != null) {
             snippetService.insertTitle(snippet, ic, variablesMap)
             if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Title inserted successfully")
+        } else {
+            Log.e(TAG, "❌ InputConnection is null")
+            Toast.makeText(this, R.string.keyboard_insert_failed, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * 改行ボタンクリック時の処理
+     *
+     * 【目的】
+     * 改行だけをテキストフィールドに挿入します。
+     *
+     * 【何をするか】
+     * 1. currentInputConnectionを取得（テキストフィールドへの接続）
+     * 2. SnippetService.insertNewline()を呼んで改行を挿入
+     * 3. 挿入失敗時はトーストでエラーを表示
+     *
+     * 【selectedSnippetを参照しない理由】
+     * 挿入するのは改行のみで、変数置換もプロファイルも関与しないため、
+     * 選択中のスニペットの有無に関わらず動作します。
+     *
+     * 【詳細画面を閉じない理由】
+     * 「タイトル挿入 → 改行 → 本文挿入」と続けて操作できるようにするため、
+     * 改行挿入後も詳細画面は開いたままにします。
+     */
+    private fun onInsertNewlineButtonClicked() {
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Newline insert requested")
+
+        // 改行を挿入（Serviceに委譲）
+        val ic = currentInputConnection
+        if (ic != null) {
+            snippetService.insertNewline(ic)
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Newline inserted successfully")
         } else {
             Log.e(TAG, "❌ InputConnection is null")
             Toast.makeText(this, R.string.keyboard_insert_failed, Toast.LENGTH_SHORT).show()

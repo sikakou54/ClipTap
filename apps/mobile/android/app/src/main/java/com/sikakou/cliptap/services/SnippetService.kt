@@ -225,6 +225,38 @@ class SnippetService private constructor(private val context: Context) {
     }
 
     /**
+     * 改行だけをテキスト入力欄に挿入
+     *
+     * 【目的】
+     * タイトル挿入と本文挿入はどちらも改行を付けないため、同じ入力欄へ
+     * 「タイトル → 改行 → 本文」と入れたい場合に標準キーボードへの切り替えが必要でした。
+     * 詳細画面の改行ボタンから呼び出すことで、切り替えずに改行を入力できます。
+     *
+     * 【何をするか】
+     * 1. InputConnectionを使って改行を挿入
+     * 2. 振動フィードバックを実行
+     *
+     * 【引数】
+     * @param inputConnection テキストフィールドへの接続
+     *
+     * 【スニペットを引数に取らない理由】
+     * 挿入する文字は改行のみで、変数置換もプロファイルも関与しないためです。
+     *
+     * 【使用回数を加算しない理由】
+     * 使用回数は本文挿入（insertSnippet）でのみ加算します。
+     * 改行を挟むたびに加算すると、1回の利用が複数回として数えられてしまいます。
+     */
+    fun insertNewline(inputConnection: InputConnection) {
+        /* 改行を挿入 */
+        inputConnection.commitText("\n", 1)
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Newline inserted")
+
+        /* 振動フィードバック（本文挿入と同じ） */
+        performHapticFeedback()
+    }
+
+    /**
      * 振動フィードバック
      *
      * 【目的】

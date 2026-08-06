@@ -766,11 +766,86 @@ npm run lint:fix
 
 現行ルートには `format` スクリプトがありません。変更ファイルは既存の書式に合わせ、フォーマッターを導入する場合はルートスクリプトとCIを同じ変更で追加してください。
 
-#### 4. 動作確認
+#### 4. ネイティブビルド検証
 
-- iOS/Androidシミュレーター/エミュレーターで動作確認
+iOS拡張キーボード（Swift）とAndroid IME（Kotlin・レイアウト・リソース）は `npm run type-check` の対象外です。
+これらを変更した場合は、実際にコンパイルして壊れていないことを確認してください。
+
+```bash
+# iOS + Android の両方をビルド
+npm run build:native
+
+# 片方だけ実行する場合
+npm run build:native:ios       # iOS（ClipTapKeyboardスキーム）
+npm run build:native:android   # Android（:app:assembleDebug）
+```
+
+実体は [scripts/build-native.sh](../scripts/build-native.sh) です。ビルドログは `.build-logs/` に出力され（gitignore済み）、失敗時はエラー行を抜き出して表示します。
+
+**ビルド範囲**: どちらのプラットフォームもアプリ本体ごとビルドします。
+
+| プラットフォーム | 生成物 | 備考 |
+|---|---|---|
+| iOS | `ClipTap.app` ＋ `PlugIns/ClipTapKeyboard.appex` | 拡張の実行にはホストアプリが必要なため、`ClipTapKeyboard` スキームでもアプリ本体が構築される |
+| Android | `app-debug.apk` | 拡張キーボード（IME）はアプリ本体と同じ `app` モジュールに含まれる |
+
+**注意**:
+
+- このスクリプトは `expo prebuild --clean` を実行しません。`ios/` が再生成されるとClipTapKeyboardターゲットの手動設定が失われるためです。
+- iOSビルドで `CODE_SIGNING_ALLOWED=NO` を使ってはいけません。エンタイトルメントが埋め込まれず、App Group（`group.com.sikakou.cliptap`）が無効になります。アプリと拡張キーボードは共有SQLiteをApp Group経由で読むため、署名を切るとDB初期化に失敗し（`App Group container not found`）、動作確認に使えないビルドになります。シミュレータ向けはアドホック署名（`CODE_SIGN_IDENTITY = -`）で足りるため、開発者アカウントは不要です。
+
+#### 5. 動作確認
+
+チェックからシミュレータへのインストールまでを1コマンドで通す場合は `npm run verify:ios` / `npm run verify:android` を使います。
+
+```bash
+# 型チェック → テスト → Lint → ネイティブビルド → シミュレータ起動 → インストール
+npm run verify:ios
+npm run verify:android
+
+# インストールせず検証だけ行う場合（コミット前の確認向け）
+npm run verify:ios -- --no-install
+
+# 検証を飛ばしてインストールだけしたい場合
+npm run verify:ios -- --skip-checks --skip-build
+```
+
+**iOSとAndroidは必ず分けて実行します。** プラットフォーム引数は必須で、同時指定はエラーになります。片方の環境不備（エミュレータのディスク不足など）でもう片方の確認が止まらないようにするためです。
+
+実体は [scripts/verify.sh](../scripts/verify.sh) です。処理の流れは次のとおりです。
+
+1. `npm run type-check` / `npm test` / `npm run lint`
+2. `npm run build:native`（指定したプラットフォームのみ）
+3. シミュレータ/エミュレータを起動し、2の生成物をインストール
+4. Metroの起動方法とアプリの起動コマンドを案内して終了
+
+**Metro（`expo start`）はスクリプトに含めません。** 対話的に操作したい場面が多いため、`npm run dev:mobile` は各自で実行します。
+
+```bash
+# 1. Metroを起動
+npm run dev:mobile
+
+# 2. アプリを起動（Metro起動後。UDIDはverifyの出力に表示される）
+xcrun simctl launch <UDID> com.sikakou.cliptap --initialUrl http://localhost:8081
+```
+
+iOSは `expo-dev-launcher` の `--initialUrl` 起動引数でMetroへ自動接続します。`xcrun simctl openurl` によるディープリンクは「"ClipTap" で開きますか？」の確認ダイアログが出てタップが必要になるため使いません。Androidは `adb reverse` でエミュレータ内の `localhost:8081` をホストへ転送済みなので、VIEWインテントでそのまま接続できます。
+
+環境変数で対象を切り替えられます。
+
+| 変数 | 既定値 | 用途 |
+|---|---|---|
+| `IOS_SIMULATOR` | 起動中のもの、なければ利用可能な最初のiPhone | 使用するシミュレータ名 |
+| `ANDROID_AVD` | `emulator -list-avds` の先頭 | 使用するAVD名 |
+| `METRO_PORT` | `8081` | 案内に表示するMetroのポート |
+
+エミュレータが起動できない場合（ディスク容量不足など）は、無限に待たずにエラーで停止し、`emulator.log` から `FATAL`/`ERROR` 行を抜き出して表示します。
+
+そのうえで、以下を目視で確認してください。
+
 - 追加した機能が正しく動作することを確認
 - 既存の機能が壊れていないことを確認
+- ダークモード、iOS/Android両方での表示崩れがないことを確認
 
 ### Gitコミットの規約
 

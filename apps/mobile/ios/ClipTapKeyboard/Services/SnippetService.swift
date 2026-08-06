@@ -282,6 +282,32 @@ class SnippetService {
         KeyboardLog.debug("✅ [SnippetService] Inserted title for snippet: %@", snippet.id)
     }
 
+    /// 改行だけをキーボードから挿入（振動フィードバック付き）
+    ///
+    /// - Parameter textDocumentProxy: iOSのテキスト入力API（カスタムキーボードが提供）
+    ///
+    /// 【用途】
+    /// タイトル挿入と本文挿入はどちらも改行を付けないため、同じ入力欄へ
+    /// 「タイトル → 改行 → 本文」と入れたい場合に標準キーボードへ切り替える必要がありました。
+    /// 詳細画面の改行ボタンからこのメソッドを呼ぶことで、切り替えずに改行を入力できます。
+    ///
+    /// 【スニペットを引数に取らない理由】
+    /// 挿入する文字は改行のみで、変数置換もプロファイルも関与しないためです。
+    ///
+    /// 【copyCountを加算しない理由】
+    /// 使用回数は本文挿入（insertSnippet）でのみ加算します。
+    /// 改行を挟むたびに加算すると、1回の利用が複数回として数えられてしまいます。
+    func insertNewline(into textDocumentProxy: UITextDocumentProxy) {
+        /* キーボードから改行を挿入 */
+        textDocumentProxy.insertText("\n")
+
+        /* 振動フィードバック（本文挿入と同じ軽い振動） */
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+
+        KeyboardLog.debug("✅ [SnippetService] Inserted newline")
+    }
+
     /// プレビュー生成（変数置換後のテキスト）
     ///
     /// - Parameters:

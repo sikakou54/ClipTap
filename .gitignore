@@ -50,3 +50,6 @@ xcuserdata/
 # generated native folders
 /ios
 /android
+
+# ネイティブビルド検証（scripts/build-native.sh）のログ
+.build-logs/

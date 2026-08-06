@@ -277,6 +277,9 @@ enum L10n {
 
         /// "タイトル挿入ボタン" / "Insert title button"
         static let insertTitleButton = localized("accessibility.insert_title_button")
+
+        /// "改行ボタン" / "Insert newline button"
+        static let insertNewlineButton = localized("accessibility.insert_newline_button")
     }
 
     // MARK: - Sort (ソート関連)

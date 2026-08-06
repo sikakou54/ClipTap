@@ -292,7 +292,7 @@ class KeyboardViewController: UIInputViewController {
     /// copyWithTitleフラグがfalseの場合は非表示になります
     private let detailTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = .boldSystemFont(ofSize: 14)  // 太字、14ポイント
+        label.font = .systemFont(ofSize: 16)  // 本文（detailContentLabel）と同じフォント
         label.numberOfLines = 0  // 複数行表示可能（改行を許可）
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -374,6 +374,33 @@ class KeyboardViewController: UIInputViewController {
         // アイコン設定（×マーク）
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         let image = UIImage(systemName: "xmark", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.backgroundColor = .secondarySystemFill
+        button.tintColor = .label  // システム標準のテキスト色
+        button.layer.cornerRadius = 20  // 丸ボタン
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+
+    /// 改行挿入ボタン（閉じるボタンと挿入ボタンの間）
+    /// 改行マークのグレーの丸ボタン
+    ///
+    /// 【なぜ必要か】
+    /// タイトル挿入・本文挿入のどちらも改行を付けないため、同じ入力欄へ
+    /// 「タイトル → 改行 → 本文」と入れるには標準キーボードへの切り替えが必要でした。
+    /// このボタンにより、切り替えずに改行を入力できます。
+    ///
+    /// 【グレーにする理由】
+    /// 主要な操作は青い挿入ボタンであることを保つため、閉じるボタンと同じ副次配色にします。
+    ///
+    /// 【ExpandedHitAreaButtonを使う理由】
+    /// 隣接する2つのボタンと揃えた40x40の見た目のまま、
+    /// タップ領域だけを44x44へ広げてタップしやすさを確保します。
+    private let newlineButton: ExpandedHitAreaButton = {
+        let button = ExpandedHitAreaButton()
+        // アイコン設定（改行マーク）
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        let image = UIImage(systemName: "return", withConfiguration: config)
         button.setImage(image, for: .normal)
         button.backgroundColor = .secondarySystemFill
         button.tintColor = .label  // システム標準のテキスト色
@@ -849,6 +876,7 @@ class KeyboardViewController: UIInputViewController {
         /* ボタンは透明なコンテナに包まずdetailViewへ直接追加する。
            全幅・透明のコンテナを重ねると、その範囲のスクロール操作をコンテナが奪ってしまう */
         detailView.addSubview(copyButton)
+        detailView.addSubview(newlineButton)
         detailView.addSubview(closeButton)
 
         NSLayoutConstraint.activate([
@@ -898,8 +926,14 @@ class KeyboardViewController: UIInputViewController {
             copyButton.widthAnchor.constraint(equalToConstant: 40),
             copyButton.heightAnchor.constraint(equalToConstant: 40),
 
+            // 改行ボタン（挿入ボタンと閉じるボタンの間）
+            newlineButton.bottomAnchor.constraint(equalTo: copyButton.bottomAnchor),
+            newlineButton.trailingAnchor.constraint(equalTo: copyButton.leadingAnchor, constant: -12),
+            newlineButton.widthAnchor.constraint(equalToConstant: 40),
+            newlineButton.heightAnchor.constraint(equalToConstant: 40),
+
             closeButton.bottomAnchor.constraint(equalTo: copyButton.bottomAnchor),
-            closeButton.trailingAnchor.constraint(equalTo: copyButton.leadingAnchor, constant: -12),
+            closeButton.trailingAnchor.constraint(equalTo: newlineButton.leadingAnchor, constant: -12),
             closeButton.widthAnchor.constraint(equalToConstant: 40),
             closeButton.heightAnchor.constraint(equalToConstant: 40)
         ])
@@ -942,6 +976,8 @@ class KeyboardViewController: UIInputViewController {
         closeButton.addTarget(self, action: #selector(closeDetailView), for: .touchUpInside)
         titleInsertButton.addTarget(self, action: #selector(titleInsertButtonTapped), for: .touchUpInside)
         titleInsertButton.accessibilityLabel = L10n.Accessibility.insertTitleButton
+        newlineButton.addTarget(self, action: #selector(newlineButtonTapped), for: .touchUpInside)
+        newlineButton.accessibilityLabel = L10n.Accessibility.insertNewlineButton
 
         // Empty Label
         view.addSubview(emptyLabel)
@@ -1521,6 +1557,25 @@ class KeyboardViewController: UIInputViewController {
             into: textDocumentProxy,  // iOSのテキスト入力API
             profileId: currentProfile?.id  // 環境IDを渡して、環境専用の変数を使用
         )
+    }
+
+    /// 改行ボタンがタップされたときの処理
+    ///
+    /// 【処理の流れ】
+    /// 1. 改行だけをテキスト入力欄に挿入
+    ///
+    /// 【スニペットを参照しない理由】
+    /// 挿入するのは改行のみで、変数置換もプロファイルも関与しないため、
+    /// 選択中のスニペットの有無に関わらず動作します。
+    ///
+    /// 【詳細画面を閉じない理由】
+    /// 「タイトル挿入 → 改行 → 本文挿入」と続けて操作できるようにするため、
+    /// 改行挿入後も詳細画面は開いたままにします。
+    @objc private func newlineButtonTapped() {
+        KeyboardLog.debug("[KeyboardViewController] Newline button tapped")
+
+        // 改行を挿入（振動フィードバックはService側で実行）
+        snippetService.insertNewline(into: textDocumentProxy)  // iOSのテキスト入力API
     }
 
     /// スニペットをテキスト入力欄に挿入（キーボードのメイン処理）

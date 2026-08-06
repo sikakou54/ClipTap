@@ -378,7 +378,24 @@ clipTap/
 ```bash
 npm run type-check    # 型エラー0件を確認
 npm test              # 回帰テストがすべて成功することを確認
+npm run build:native  # ネイティブ（iOS拡張キーボード/Android IME）を変更した場合のみ
 ```
+
+ネイティブのSwift/Kotlin/レイアウト/リソースは `type-check` の対象外のため、変更時は `npm run build:native` で実際にコンパイルして確認する。
+
+上記をまとめて実行し、シミュレータへのインストールまで通す場合は次を使う。iOSとAndroidは必ず分けて実行する（プラットフォーム引数は必須）。
+
+```bash
+npm run verify:ios                  # 型チェック→テスト→Lint→ネイティブビルド→シミュレータへインストール
+npm run verify:android
+npm run verify:ios -- --no-install  # インストールせず検証だけ（コミット前の確認向け）
+```
+
+Metro（`expo start`）はスクリプトに含めない。`npm run dev:mobile` で別途起動する。
+
+**iOSビルドで `CODE_SIGNING_ALLOWED=NO` を使わないこと。** エンタイトルメントが付かずApp Group（`group.com.sikakou.cliptap`）が無効になり、アプリと拡張キーボードの共有SQLiteを開けなくなる（動作確認に使えないビルドになる）。
+
+詳細: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 
 #### データベースマイグレーション
 - リリース済みの移行処理は原則変更しない。データ消失等の修正は旧版fixtureの回帰テストを必須とする

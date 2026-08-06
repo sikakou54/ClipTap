@@ -39,8 +39,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
+                    android:textSize="16sp"
                     android:textColor="?android:attr/textColorPrimary" />
 
                 <!-- タイトル挿入ボタン（タイトルのみを挿入し、詳細画面は開いたまま） -->
@@ -106,6 +105,26 @@
             android:src="@android:drawable/ic_menu_close_clear_cancel"
             android:backgroundTint="@color/keyboardSecondaryButtonBackground"
             android:tint="@color/keyboardSecondaryButtonIcon"
+            app:fabCustomSize="56dp"
+            app:fabSize="normal"
+            app:elevation="0dp"
+            app:pressedTranslationZ="0dp"
+            app:borderWidth="0dp"
+            xmlns:app="http://schemas.android.com/apk/res-auto" />
+
+        <!-- 改行挿入ボタン（閉じるボタンと挿入ボタンの間） -->
+        <!-- タイトル挿入・本文挿入のどちらも改行を付けないため、
+             同じ入力欄へ「タイトル → 改行 → 本文」と入れる用途で使う。
+             主要な操作を挿入ボタンに保つため、閉じるボタンと同じ副次配色にする -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/insertNewlineButton"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="16dp"
+            android:src="@drawable/ic_return"
+            android:backgroundTint="@color/keyboardSecondaryButtonBackground"
+            android:tint="@color/keyboardSecondaryButtonIcon"
+            android:contentDescription="@string/accessibility_insert_newline_button"
             app:fabCustomSize="56dp"
             app:fabSize="normal"
             app:elevation="0dp"

@@ -74,6 +74,7 @@
 "accessibility.copy_button" = "コピーボタン";
 "accessibility.sort_button" = "並び替えボタン";
 "accessibility.insert_title_button" = "タイトル挿入ボタン";
+"accessibility.insert_newline_button" = "改行ボタン";
 
 /* ソート関連 */
 "sort.label" = "並順";

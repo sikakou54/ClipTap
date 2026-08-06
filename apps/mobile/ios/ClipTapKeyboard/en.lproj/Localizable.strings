@@ -74,6 +74,7 @@
 "accessibility.copy_button" = "Copy button";
 "accessibility.sort_button" = "Sort button";
 "accessibility.insert_title_button" = "Insert title button";
+"accessibility.insert_newline_button" = "Insert newline button";
 
 /* Sort related */
 "sort.label" = "Sort";
