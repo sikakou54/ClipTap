@@ -69,6 +69,8 @@
 /* アクセシビリティ */
 "accessibility.profile_button" = "環境ボタン";
 "accessibility.category_button" = "カテゴリボタン";
+"accessibility.keyboard_mode_button" = "キーボードに切り替え";
+"accessibility.snippet_list_button" = "定型文一覧に切り替え";
 "accessibility.snippet_item" = "スニペット項目";
 "accessibility.close_button" = "閉じるボタン";
 "accessibility.copy_button" = "コピーボタン";

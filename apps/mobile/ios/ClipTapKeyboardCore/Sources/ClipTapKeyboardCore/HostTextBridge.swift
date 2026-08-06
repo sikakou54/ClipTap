@@ -37,6 +37,44 @@ public protocol HostTextBridge: AnyObject {
     var textBeforeCursor: String? { get }
 }
 
+#if canImport(UIKit)
+
+import UIKit
+
+/**
+ * 拡張キーボードの入力欄への橋渡し
+ *
+ * `UITextDocumentProxy` は毎回 `textDocumentProxy` から取り直す必要がある。
+ * 保持すると入力欄が切り替わったときに古い参照へ書き込んでしまうため、
+ * 取得のしかたを閉包で受け取る。
+ */
+public final class TextDocumentProxyBridge: HostTextBridge {
+
+    private let proxyProvider: () -> UITextDocumentProxy?
+
+    public init(proxyProvider: @escaping () -> UITextDocumentProxy?) {
+        self.proxyProvider = proxyProvider
+    }
+
+    public func insert(_ text: String) {
+        proxyProvider()?.insertText(text)
+    }
+
+    public func deleteBackward() {
+        proxyProvider()?.deleteBackward()
+    }
+
+    public func moveCursor(by offset: Int) {
+        proxyProvider()?.adjustTextPosition(byCharacterOffset: offset)
+    }
+
+    public var textBeforeCursor: String? {
+        proxyProvider()?.documentContextBeforeInput
+    }
+}
+
+#endif
+
 /**
  * テスト用に操作を記録するだけの実装
  *

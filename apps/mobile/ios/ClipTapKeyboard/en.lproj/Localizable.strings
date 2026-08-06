@@ -69,6 +69,8 @@
 /* Accessibility */
 "accessibility.profile_button" = "Profile button";
 "accessibility.category_button" = "Category button";
+"accessibility.keyboard_mode_button" = "Switch to keyboard";
+"accessibility.snippet_list_button" = "Switch to snippet list";
 "accessibility.snippet_item" = "Snippet item";
 "accessibility.close_button" = "Close button";
 "accessibility.copy_button" = "Copy button";

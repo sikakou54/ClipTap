@@ -263,6 +263,12 @@ enum L10n {
         /// "カテゴリボタン" / "Category button"
         static let categoryButton = localized("accessibility.category_button")
 
+        /// "キーボードに切り替え" / "Switch to keyboard"
+        static let keyboardModeButton = localized("accessibility.keyboard_mode_button")
+
+        /// "定型文一覧に切り替え" / "Switch to snippet list"
+        static let snippetListButton = localized("accessibility.snippet_list_button")
+
         /// "スニペット項目" / "Snippet item"
         static let snippetItem = localized("accessibility.snippet_item")
 
@@ -425,6 +431,8 @@ enum L10n {
         // Accessibility
         case "accessibility.profile_button": return isJapanese ? "環境ボタン" : "Profile button"
         case "accessibility.category_button": return isJapanese ? "カテゴリボタン" : "Category button"
+        case "accessibility.keyboard_mode_button": return isJapanese ? "キーボードに切り替え" : "Switch to keyboard"
+        case "accessibility.snippet_list_button": return isJapanese ? "定型文一覧に切り替え" : "Switch to snippet list"
         case "accessibility.snippet_item": return isJapanese ? "スニペット項目" : "Snippet item"
         case "accessibility.close_button": return isJapanese ? "閉じるボタン" : "Close button"
         case "accessibility.copy_button": return isJapanese ? "コピーボタン" : "Copy button"

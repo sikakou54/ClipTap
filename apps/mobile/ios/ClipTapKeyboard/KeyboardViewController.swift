@@ -32,6 +32,7 @@
 
 import UIKit
 import os.log
+import ClipTapKeyboardCore
 
 // ログ出力用の設定（デバッグやエラー追跡に使用）
 // 開発中の動作確認や、本番環境でのトラブルシューティングに役立ちます
@@ -44,6 +45,8 @@ class KeyboardViewController: UIInputViewController {
     private enum ScreenState {
         case loading
         case list
+        /** 文字入力。キー領域を表示する */
+        case typing
         case detail
         case settings
     }
@@ -122,6 +125,9 @@ class KeyboardViewController: UIInputViewController {
 
     /// ソート設定を保存するUserDefaultsキー
     private let sortPreferenceKey = "keyboard_snippet_sort_by"
+
+    /// 最後に使ったモード（定型文の一覧／文字入力）を保存するUserDefaultsキー
+    private let keyboardModePreferenceKey = "keyboard_input_mode"
 
     /// フルアクセス状態を共有するApp GroupのUserDefaultsキー
     private let fullAccessStateKey = "keyboardHasFullAccess"
@@ -247,6 +253,34 @@ class KeyboardViewController: UIInputViewController {
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
+
+    /// 定型文の一覧と文字入力を切り替えるボタン（左端固定）
+    ///
+    /// 両モードで同じ位置に置く。切り替えるたびに指の当てどころが動くと使いにくいため。
+    private let keyboardModeButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        button.setImage(UIImage(systemName: "keyboard", withConfiguration: config), for: .normal)
+        button.tintColor = .label
+        button.backgroundColor = .clear
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+
+    // === 文字入力エリア ===
+
+    /// 入力欄への橋渡し
+    ///
+    /// `textDocumentProxy` は毎回取り直す必要があるため、保持せず閉包で渡す。
+    private lazy var hostTextBridge = TextDocumentProxyBridge { [weak self] in
+        self?.textDocumentProxy
+    }
+
+    /// 入力の状態機械
+    private lazy var inputSession = InputSession(host: hostTextBridge)
+
+    /// キー領域
+    private lazy var keyboardAreaView = KeyboardAreaView(session: inputSession)
 
     // === スニペット一覧エリア ===
 
@@ -769,10 +803,14 @@ class KeyboardViewController: UIInputViewController {
     private func setupUI() {
         // 統合フィルターコンテナ（環境ドロップダウン + カテゴリドロップダウン + ソートボタン + 設定ボタン）
         view.addSubview(filterContainerView)
+        filterContainerView.addSubview(keyboardModeButton)
         filterContainerView.addSubview(profileDropdownButton)
         filterContainerView.addSubview(categoryDropdownButton)
         filterContainerView.addSubview(sortButton)
         filterContainerView.addSubview(settingsButton)
+
+        keyboardModeButton.addTarget(self, action: #selector(keyboardModeButtonTapped), for: .touchUpInside)
+        setupInputSession()
 
         // シェブロンアイコンをボタンの上に配置
         profileDropdownButton.addSubview(chevronImageView)
@@ -794,8 +832,14 @@ class KeyboardViewController: UIInputViewController {
             filterContainerView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
             filterContainerView.heightAnchor.constraint(equalToConstant: 36),
 
-            /* 環境ドロップダウンボタン: 左端に固定、固定幅100pt */
-            profileDropdownButton.leadingAnchor.constraint(equalTo: filterContainerView.leadingAnchor),
+            /* モード切替ボタン: 左端に固定。両モードで同じ位置を保つ */
+            keyboardModeButton.leadingAnchor.constraint(equalTo: filterContainerView.leadingAnchor),
+            keyboardModeButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
+            keyboardModeButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
+            keyboardModeButton.widthAnchor.constraint(equalToConstant: 36),
+
+            /* 環境ドロップダウンボタン: モード切替ボタンの右隣、固定幅100pt */
+            profileDropdownButton.leadingAnchor.constraint(equalTo: keyboardModeButton.trailingAnchor, constant: 4),
             profileDropdownButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
             profileDropdownButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
             profileDropdownButton.widthAnchor.constraint(equalToConstant: 100),
@@ -861,6 +905,16 @@ class KeyboardViewController: UIInputViewController {
             tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+        ])
+
+        /* キー領域: 一覧と同じ場所を使う。キーボード全体の高さは変えない */
+        keyboardAreaView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(keyboardAreaView)
+        NSLayoutConstraint.activate([
+            keyboardAreaView.topAnchor.constraint(equalTo: filterContainerView.bottomAnchor, constant: 8),
+            keyboardAreaView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 3),
+            keyboardAreaView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -3),
+            keyboardAreaView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -4)
         ])
 
         // Detail View (全画面表示)
@@ -1390,15 +1444,84 @@ class KeyboardViewController: UIInputViewController {
     /** 現在の画面状態に応じて、一覧と全画面ビューを排他的に表示する */
     private func applyScreenState() {
         let isList = screenState == .list
+        let isTyping = screenState == .typing
         let isEmpty = filteredSnippets.isEmpty
 
-        filterContainerView.isHidden = !isList
+        /* ツールバーはモード切替ボタンを載せているため、入力中も出しておく */
+        filterContainerView.isHidden = !isList && !isTyping
+
+        /* 入力中は定型文の絞り込みが意味を持たないため隠す */
+        profileDropdownButton.isHidden = isTyping
+        categoryDropdownButton.isHidden = isTyping
+        sortButton.isHidden = isTyping
+        settingsButton.isHidden = isTyping
+
         tableView.isHidden = !isList || isEmpty
         emptyLabel.isHidden = !isList || !isEmpty
+        keyboardAreaView.isHidden = !isTyping
 
         detailView.isHidden = screenState != .detail
         loadingView.isHidden = screenState != .loading
         settingsView.isHidden = screenState != .settings
+
+        updateKeyboardModeButton()
+    }
+
+    // MARK: - 文字入力
+
+    /**
+     * 入力の状態機械と拡張キーボードのAPIを結ぶ
+     */
+    private func setupInputSession() {
+        /*
+         * 他のキーボードへの切り替えはAppleが全カスタムキーボードに求めている。
+         * 実装していないと審査で落ちる。
+         */
+        inputSession.onNextKeyboard = { [weak self] in
+            self?.advanceToNextInputMode()
+        }
+
+        inputSession.onToggleSnippetList = { [weak self] in
+            self?.switchScreenState(to: .list)
+        }
+    }
+
+    /**
+     * モード切替ボタンのアイコンを現在のモードに合わせる
+     */
+    private func updateKeyboardModeButton() {
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        let name = screenState == .typing ? "list.bullet" : "keyboard"
+        keyboardModeButton.setImage(UIImage(systemName: name, withConfiguration: config), for: .normal)
+        keyboardModeButton.accessibilityLabel = screenState == .typing
+            ? L10n.Accessibility.snippetListButton
+            : L10n.Accessibility.keyboardModeButton
+    }
+
+    /**
+     * 定型文の一覧と文字入力を切り替える
+     */
+    @objc private func keyboardModeButtonTapped() {
+        switchScreenState(to: screenState == .typing ? .list : .typing)
+    }
+
+    /**
+     * 画面を切り替え、次回の起動でも同じモードで開けるよう覚えておく
+     */
+    private func switchScreenState(to state: ScreenState) {
+        screenState = state
+        applyScreenState()
+        saveKeyboardMode()
+    }
+
+    /** 最後に使ったモードを保存する */
+    private func saveKeyboardMode() {
+        UserDefaults.standard.set(screenState == .typing, forKey: keyboardModePreferenceKey)
+    }
+
+    /** 最後に使ったモードを読み出す */
+    private func loadKeyboardMode() -> ScreenState {
+        UserDefaults.standard.bool(forKey: keyboardModePreferenceKey) ? .typing : .list
     }
 
     /// スニペットの詳細画面（プレビュー）を表示
@@ -1813,7 +1936,8 @@ extension KeyboardViewController: UITableViewDelegate {
     /// データ読み込み完了時に呼び出されます
     private func hideLoading() {
         if screenState == .loading {
-            screenState = .list
+            /* 前回使っていたモードで開く。毎回切り替え直す手間をなくすため */
+            screenState = loadKeyboardMode()
             applyScreenState()
         }
         activityIndicator.stopAnimating()
