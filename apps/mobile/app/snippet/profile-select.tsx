@@ -12,7 +12,6 @@
  * @see lib/hooks/screens/useProfileSelectScreen.ts - ビジネスロジック
  */
 
-import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';

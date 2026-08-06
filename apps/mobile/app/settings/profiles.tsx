@@ -16,7 +16,7 @@
  * @see lib/hooks/screens/useProfilesScreen.ts - ビジネスロジック
  */
 
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTranslation } from '@cliptap/shared'
 import { FlashList, ListRenderItemInfo } from '@mobile-types/flashlist';

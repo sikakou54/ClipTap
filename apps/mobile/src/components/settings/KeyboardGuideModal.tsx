@@ -4,7 +4,6 @@
  * キーボード拡張機能の設定方法を4ステップで案内。
  * iOS/Androidそれぞれに対応したガイドテキストを表示。
  */
-import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Platform } from 'react-native';
 import { useTranslation } from '@cliptap/shared';
 import { Ionicons } from '@expo/vector-icons';

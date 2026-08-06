@@ -17,7 +17,7 @@
  * @see SnippetFormScreen - 親コンポーネント
  */
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
 import { useTranslation } from '@cliptap/shared';
 import { Ionicons } from '@expo/vector-icons';

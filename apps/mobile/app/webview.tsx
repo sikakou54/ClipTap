@@ -12,7 +12,6 @@
  * @see assets/html/privacy.html - プライバシーポリシー
  */
 
-import React from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { WebView } from 'react-native-webview';

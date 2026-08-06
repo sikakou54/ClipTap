@@ -20,7 +20,7 @@
  * @see app/_layout.tsx - 使用例
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, Image, Animated, StyleSheet } from 'react-native';
 import appIcon from '@assets/icon.png';
 

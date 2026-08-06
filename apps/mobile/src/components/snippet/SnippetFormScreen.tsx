@@ -21,7 +21,6 @@
  * @see app/snippet/[id]/edit.tsx - 編集ルート
  */
 
-import React from 'react';
 import {
   View,
   Text,

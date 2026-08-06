@@ -12,7 +12,6 @@
  * @see lib/hooks/screens/useProfileValueEditScreen.ts - ビジネスロジック
  */
 
-import React from 'react';
 import {
   View,
   TextInput,

@@ -14,7 +14,6 @@
  * @see lib/hooks/screens/useManageSubscriptionScreen.ts - ビジネスロジック
  */
 
-import React from 'react';
 import {
   View,
   Text,

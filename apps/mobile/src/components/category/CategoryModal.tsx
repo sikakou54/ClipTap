@@ -13,7 +13,6 @@
  * @see app/category/manage.tsx - カテゴリ管理画面での使用
  */
 
-import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, ScrollView } from 'react-native';
 import { useTranslation, type Category, CATEGORY_COLORS } from '@cliptap/shared';
 import { Ionicons } from '@expo/vector-icons';

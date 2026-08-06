@@ -13,7 +13,7 @@
  * - アクセシビリティ対応
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, ViewStyle, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';

@@ -18,7 +18,6 @@
  * @see lib/hooks/screens/useSearchScreen.ts - ビジネスロジック
  */
 
-import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
