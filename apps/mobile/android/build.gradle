@@ -7,10 +7,11 @@ buildscript {
   }
   dependencies {
     classpath 'com.google.gms:google-services:4.4.1'
-    classpath 'com.google.gms:google-services:4.4.1'
     classpath('com.android.tools.build:gradle')
     classpath('com.facebook.react:react-native-gradle-plugin')
-    classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
+    // バージョン未指定だとRN gradle plugin推移の2.1.20が適用されるため、
+    // gradle.propertiesのandroid.kotlinVersion（play-services-ads 25.4のKotlin 2.3メタデータ対応）を明示する
+    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${findProperty('android.kotlinVersion') ?: '2.1.20'}")
   }
 }
 
