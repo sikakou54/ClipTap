@@ -1,0 +1,6 @@
+{
+  "name": "mozc",
+  "version": "1.0.0",
+  "description": "Android IME のかな漢字変換に使う Mozc のネイティブライブラリと辞書データ",
+  "private": true
+}

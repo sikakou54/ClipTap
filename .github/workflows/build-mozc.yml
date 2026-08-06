@@ -4,7 +4,7 @@ name: Build Mozc
 #
 # Bazel・Android NDK r29・Python 3.12 が必要でビルド領域も20GB以上使うため、
 # 開発機ではビルドしない。成果物はこのワークフローからダウンロードし、
-# apps/mobile/android/app/src/main/ 以下へコミットして使う。
+# apps/mobile/modules/mozc/android/src/main/ 以下へ展開してコミットする。
 #
 # 常時は回さない。Mozcを更新したいときだけ手動で実行する。
 
@@ -149,15 +149,17 @@ jobs:
         run: |
           set -eux
           cat > "$RUNNER_TEMP/dist/README.txt" <<'TXT'
-このアーカイブの中身を apps/mobile/android/app/src/main/ 以下へ展開してコミットする。
+このアーカイブの中身を apps/mobile/modules/mozc/android/src/main/ 以下へ
+展開してコミットする（NOTICE-mozc.txt を除く）。
 
-  assets/mozc.data                    辞書データ。初回起動時に filesDir へ複製して使う
-  jniLibs/<abi>/libmozc.so            変換エンジン本体
-  java/org/mozc/.../*.java            protobufの生成コード
-  NOTICE-mozc.txt                     ライセンス表記（アプリ内の表示に使う）
+  assets/mozc.data            辞書データ。初回起動時に filesDir へ複製して使う
+  jniLibs/<abi>/libmozc.so    変換エンジン本体
+  java/org/mozc/.../*.java    protobufの生成コード
 
-jniLibs は release では arm64-v8a と armeabi-v7a のみ同梱する
-（app/build.gradle の abiFilters で指定）。
+  NOTICE-mozc.txt             ライセンス表記。アプリ内のライセンス表示へ反映する
+
+同梱するABIは modules/mozc/android/build.gradle の abiFilters で決まる。
+そこに無いABIのディレクトリは展開しなくてよい。
 TXT
           find "$RUNNER_TEMP/dist" -maxdepth 2 | sort
           du -sh "$RUNNER_TEMP/dist"

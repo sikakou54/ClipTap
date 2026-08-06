@@ -1,0 +1,38 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.sikakou.cliptap.mozc'
+version = '1.0.0'
+
+android {
+  namespace 'com.sikakou.cliptap.mozc'
+
+  defaultConfig {
+    /* expo-module-gradle-plugin が要求するため省略できない */
+    versionCode 1
+    versionName '1.0.0'
+
+    /*
+     * 32bit専用端末はほぼ残っていないが、minSdk 24 を維持している以上は
+     * armeabi-v7a も同梱する。x86_64 はエミュレータでの動作確認に必要。
+     */
+    ndk {
+      abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64'
+    }
+  }
+
+  /*
+   * 辞書データは既に独自形式で圧縮済みで、再圧縮しても縮まらない。
+   * 初回起動時のファイル複製を単純なコピーにするため圧縮しない。
+   */
+  androidResources {
+    noCompress 'data'
+  }
+}
+
+dependencies {
+  /* MozcのJNIはprotobufでコマンドをやり取りする。protocの版と揃えること */
+  implementation 'com.google.protobuf:protobuf-javalite:4.32.1'
+}
