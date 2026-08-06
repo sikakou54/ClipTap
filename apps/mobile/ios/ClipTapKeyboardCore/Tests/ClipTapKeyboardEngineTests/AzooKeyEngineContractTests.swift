@@ -99,6 +99,42 @@ struct AzooKeyEngineContractTests {
         #expect(result.committedText.count + result.remaining.reading.count > 0)
     }
 
+    @Test("打鍵ごとの変換が応答目標に収まる")
+    func perKeystrokeLatency() {
+        /**
+         * 実際の入力は1文字ずつ積み上がるため、その形で計測する。
+         * 打鍵から候補表示までの目標は50ms。これを超えると入力が引っかかる。
+         * Debugビルド（-Onone）では目標を満たせないため、-c release で計測すること。
+         */
+        let engine = makeEngine()
+        #expect(engine.load())
+
+        /* 初回は辞書ファイルを開くため遅い。定常状態を測るので計測前に一度流す */
+        engine.insertKana("あ")
+        engine.reset()
+
+        let phrase = "きょうはいいてんきですね"
+        var elapsedMs: [Double] = []
+
+        for character in phrase {
+            let started = Date()
+            _ = engine.insertKana(String(character))
+            elapsedMs.append(Date().timeIntervalSince(started) * 1000)
+        }
+
+        let sorted = elapsedMs.sorted()
+        let median = sorted[sorted.count / 2]
+        let worst = sorted[sorted.count - 1]
+        let total = elapsedMs.reduce(0, +)
+
+        print("📏 [応答] \(phrase.count)打鍵 中央値 \(String(format: "%.1f", median))ms"
+            + " / 最悪 \(String(format: "%.1f", worst))ms"
+            + " / 合計 \(String(format: "%.1f", total))ms")
+        print("📏 [応答] 各打鍵 " + elapsedMs.map { String(format: "%.0f", $0) }.joined(separator: ", ") + " ms")
+
+        #expect(median < 50, "打鍵ごとの変換の中央値が\(String(format: "%.1f", median))msで目標50msを超えた")
+    }
+
     @Test("存在しない候補を指定しても壊れない")
     func ignoresInvalidCandidateIndex() {
         let engine = makeEngine()
@@ -110,25 +146,46 @@ struct AzooKeyEngineContractTests {
 
     @Test("長い読みでも候補を返し、メモリが際限なく増えない")
     func handlesLongReading() {
+        /**
+         * iOSキーボード拡張のメモリ上限は実測で48MB前後とされる。
+         * ここでの計測はmacOS上のため上限判定そのものにはならないが、
+         * 辞書がどれだけ常駐メモリを要求するかの下限見積もりになる。
+         * 最終判定は実機の拡張プロセスで行う。
+         */
+        func megabytes(_ bytes: UInt64?) -> Double {
+            guard let bytes else { return 0 }
+            return Double(bytes) / 1_048_576
+        }
+
+        let baseline = MemoryProbe.footprintBytes()
+        print("📏 [計測] エンジン生成前 \(String(format: "%.1f", megabytes(baseline)))MB")
+
         let engine = makeEngine()
         #expect(engine.load())
+        let afterLoad = MemoryProbe.footprintBytes()
+        print("📏 [計測] 辞書読込後 \(String(format: "%.1f", megabytes(afterLoad)))MB"
+            + "（増分 \(String(format: "%.1f", megabytes(afterLoad) - megabytes(baseline)))MB）")
 
-        let before = MemoryProbe.footprintBytes()
-
-        /* キーボード拡張の上限判定の目安として、実運用より長めの読みを流す */
+        /* 実運用より長めの読みを流し、辞書の読み込み範囲を広げる */
         let reading = String(repeating: "あいうえおかきくけこ", count: 4)
         let output = engine.insertKana(reading)
         #expect(output.reading == reading)
+
+        let afterConvert = MemoryProbe.footprintBytes()
+        print("📏 [計測] 40文字変換後 \(String(format: "%.1f", megabytes(afterConvert)))MB"
+            + "（増分 \(String(format: "%.1f", megabytes(afterConvert) - megabytes(baseline)))MB）")
 
         for _ in 0 ..< 20 {
             engine.deleteBackward()
         }
         engine.reset()
 
-        if let before, let after = MemoryProbe.footprintBytes() {
-            let grownMB = Double(Int64(after) - Int64(before)) / 1_048_576
-            /* 辞書は読みの先頭文字ごとに読み込まれるため、増分は数十MBに収まるはず */
-            #expect(grownMB < 60, "変換1回でメモリが\(String(format: "%.1f", grownMB))MB増えた")
-        }
+        let afterReset = MemoryProbe.footprintBytes()
+        print("📏 [計測] 削除・破棄後 \(String(format: "%.1f", megabytes(afterReset)))MB"
+            + "（増分 \(String(format: "%.1f", megabytes(afterReset) - megabytes(baseline)))MB）")
+
+        let grownMB = megabytes(afterReset) - megabytes(baseline)
+        /* 辞書は読みの先頭文字ごとに読み込まれるため、増分は数十MBに収まるはず */
+        #expect(grownMB < 60, "変換1回でメモリが\(String(format: "%.1f", grownMB))MB増えた")
     }
 }
