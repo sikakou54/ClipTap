@@ -21,7 +21,8 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
 import { useTranslation } from '@cliptap/shared';
 import { Ionicons } from '@expo/vector-icons';
-import { VariableService, type VariableResolver, useProfiles, useVariables } from '@cliptap/shared';
+import { VariableService, type VariableResolver, useProfiles, useVariables, FREE_VARIABLES_LIMIT } from '@cliptap/shared';
+import { useSubscription } from '@providers/SubscriptionProvider';
 import { useTheme } from '@lib/themeSystem';
 import { Profile } from '@cliptap/shared';
 import { copyToClipboard } from '@utils/clipboard';
@@ -49,8 +50,10 @@ interface VariablePreviewProps {
 
 export function VariablePreview({ title, content, selectedProfileIds = [], copyWithTitle = false }: VariablePreviewProps) {
   const { t } = useTranslation();
-  const { profiles, profileVariables, defaultProfile } = useProfiles();
+  /* プレビュー候補は有効なプロファイルだけとする（Web版と同一の扱い） */
+  const { validProfiles: profiles, profileVariables, defaultProfile } = useProfiles();
   const { variables } = useVariables();
+  const { isSubscribed } = useSubscription();
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
 
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
@@ -123,20 +126,25 @@ export function VariablePreview({ title, content, selectedProfileIds = [], copyW
 
   /**
    * 特定のプロファイル用のカスタム変数リゾルバを作成
-   * プレビューでは全変数を展開（isSubscribed: true固定）
+   *
+   * プレビューの展開結果をコピー・キーボード入力と一致させるため、
+   * 実際のプラン状態と同じ上限で解決する。
    */
   const createProfileResolver = useCallback(
     (profileId: string | null): VariableResolver => {
       Logger.debug(`[VariablePreview] Creating resolver for profile: ${profileId || 'null'}`);
       const profileVariablesMap = buildProfileVariablesMap(profileId);
       const defaultProfileVariablesMap = buildProfileVariablesMap(defaultProfile?.id || null);
-      return VariableService.createCustomVariableResolver({
-        isSubscribed: true,
-        profileVariablesMap,
-        defaultProfileVariablesMap,
-      });
+      return VariableService.createCustomVariableResolver(
+        {
+          isSubscribed,
+          profileVariablesMap,
+          defaultProfileVariablesMap,
+        },
+        { freeTierLimit: FREE_VARIABLES_LIMIT }
+      );
     },
-    [buildProfileVariablesMap, defaultProfile]
+    [buildProfileVariablesMap, defaultProfile, isSubscribed]
   );
 
   /**

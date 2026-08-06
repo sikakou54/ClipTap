@@ -12,7 +12,7 @@
  * @see useImportScreen.ts - インポート処理
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslation } from '@cliptap/shared';
 import {
   useSnippets,
@@ -117,7 +117,7 @@ export function useHomeScreen(): UseHomeScreenReturn {
   const { isLoaded, setLoaded } = useDatabase();
   const { allSnippets, snippetProfiles, copySnippet, copySnippetTitle, deleteSnippet, refresh: refreshSnippets, sortBy, setSortBy } = useSnippets();
   const { categories, getById: getCategoryById } = useCategories();
-  const { profiles, profileVariables, activeProfile, defaultProfile, setActiveProfile } = useProfiles();
+  const { profiles, validProfiles, profileVariables, activeProfile, defaultProfile, setActiveProfile } = useProfiles();
   const { variables } = useVariables();
   const { gridColumns, setGridColumns } = useTheme();
   const { user } = useAuth();
@@ -170,9 +170,6 @@ export function useHomeScreen(): UseHomeScreenReturn {
   /* プロファイル情報 */
   const activeProfileId = activeProfile?.id || null;
   const defaultProfileId = defaultProfile?.id || null;
-
-  /** 有効なプロファイルのみ抽出 */
-  const validProfiles = useMemo(() => profiles.filter((p) => p.valid), [profiles]);
 
   /* 共通フィルタリングフックを使用 */
   const { filteredSnippets } = useFilteredSnippets({

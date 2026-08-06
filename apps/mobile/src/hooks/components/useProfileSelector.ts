@@ -50,7 +50,8 @@ export interface UseProfileSelectorReturn {
 export function useProfileSelector({
   onProfileChange,
 }: UseProfileSelectorProps): UseProfileSelectorReturn {
-  const { profiles, activeProfile, setActiveProfile, loading, refresh } = useProfiles();
+  /* 切替候補は有効なプロファイルだけとする（無効なものはプロファイル管理画面で扱う） */
+  const { validProfiles: profiles, activeProfile, setActiveProfile, loading, refresh } = useProfiles();
 
   const [showModal, setShowModal] = useState(false);
 

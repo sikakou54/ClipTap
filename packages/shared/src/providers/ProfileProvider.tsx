@@ -23,8 +23,10 @@ import type { Profile, ProfileVariable, CreateProfileInput, UpdateProfileInput }
  * ProfileContextの型定義
  */
 export interface ProfileContextValue {
-  /** プロファイル一覧（無効なものも含む） */
+  /** プロファイル一覧（無効なものも含む。管理画面のように無効を明示する画面で使用する） */
   profiles: Profile[];
+  /** 有効なプロファイル一覧（切替・選択・展開など通常利用の選択肢はこちらを使用する） */
+  validProfiles: Profile[];
   /** プロファイル変数一覧 */
   profileVariables: ProfileVariable[];
   /** アクティブなプロファイル */
@@ -198,12 +200,21 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
     [loadProfiles]
   );
 
+  /**
+   * 有効なプロファイル一覧
+   *
+   * プラン上限を超えて無効になったプロファイルは、通常利用の選択肢・展開対象から
+   * 除外する。無効なものを明示的に扱う画面（プロファイル管理）だけがprofilesを使う。
+   */
+  const validProfiles = useMemo(() => profiles.filter((profile) => profile.valid), [profiles]);
+
   /* ======================================== */
   /* Context Value */
   /* ======================================== */
   const value = useMemo<ProfileContextValue>(
     () => ({
       profiles,
+      validProfiles,
       profileVariables,
       activeProfile,
       defaultProfile,
@@ -218,6 +229,7 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
     }),
     [
       profiles,
+      validProfiles,
       profileVariables,
       activeProfile,
       defaultProfile,

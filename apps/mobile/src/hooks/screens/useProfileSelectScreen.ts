@@ -51,7 +51,8 @@ export function useProfileSelectScreen(params: UseProfileSelectScreenParams): Us
   const { selectedIds } = params;
 
   const router = useRouter();
-  const { profiles } = useProfiles();
+  /* 選択肢は有効なプロファイルだけとする。無効なプロファイルへの既存の関連は保持する */
+  const { validProfiles: profiles } = useProfiles();
 
   /* ======================================== */
   /* 状態管理 */

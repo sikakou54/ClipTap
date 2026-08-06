@@ -11,7 +11,8 @@
  * - プレビューコピーボタン
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useTranslation, VariableService, type Profile, type ProfileVariable, type Variable } from '@cliptap/shared';
+import { useTranslation, VariableService, FREE_VARIABLES_LIMIT, type Profile, type ProfileVariable, type Variable } from '@cliptap/shared';
+import { useSubscription } from '@services/SubscriptionService';
 import { PreviewHeader } from './PreviewHeader';
 import { ProfileTabs } from './ProfileTabs';
 import { PreviewContent } from './PreviewContent';
@@ -36,6 +37,7 @@ export function SnippetPreview({
   profileVariables,
 }: SnippetPreviewProps) {
   const { language } = useTranslation();
+  const { isSubscribed } = useSubscription();
   const validProfiles = useMemo(() => profiles.filter((profile) => profile.valid), [profiles]);
 
   const filteredProfiles = useMemo(() => {
@@ -71,16 +73,21 @@ export function SnippetPreview({
 
   /**
    * 変数リゾルバーを作成（変数展開処理で使用）
+   *
+   * プレビューの展開結果をコピーと一致させるため、実際のプラン状態と同じ上限で解決する。
    */
   const createResolver = useCallback((profileId: string | null) => {
     const profileVariablesMap = buildProfileVariablesMap(profileId);
     const defaultProfileVariablesMap = buildProfileVariablesMap(defaultProfileId);
-    return VariableService.createCustomVariableResolver({
-      isSubscribed: true,
-      profileVariablesMap,
-      defaultProfileVariablesMap,
-    });
-  }, [buildProfileVariablesMap, defaultProfileId]);
+    return VariableService.createCustomVariableResolver(
+      {
+        isSubscribed,
+        profileVariablesMap,
+        defaultProfileVariablesMap,
+      },
+      { freeTierLimit: FREE_VARIABLES_LIMIT }
+    );
+  }, [buildProfileVariablesMap, defaultProfileId, isSubscribed]);
 
   useEffect(() => {
     if (filteredProfiles.length === 0) {

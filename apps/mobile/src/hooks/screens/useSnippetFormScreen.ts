@@ -77,7 +77,8 @@ export function useSnippetFormScreen({
   /* ======================================== */
   const { createSnippet, updateSnippet, getById } = useSnippets();
   const { categories, refresh: refreshCategories } = useCategories();
-  const { profiles } = useProfiles();
+  /* 選択済みプロファイル名の表示は、選択肢と同じく有効なプロファイルだけを対象にする */
+  const { validProfiles: profiles } = useProfiles();
 
   /* ======================================== */
   /* 状態管理 */

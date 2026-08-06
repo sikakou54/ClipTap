@@ -76,7 +76,8 @@ export function useSearchScreen(): UseSearchScreenReturn {
   /* ======================================== */
   /* データ取得 */
   /* ======================================== */
-  const { profiles, profileVariables, activeProfile } = useProfiles();
+  /* profilesは標準プロファイルの特定にだけ使い、選択肢にはvalidProfilesを使う */
+  const { profiles, validProfiles, profileVariables, activeProfile } = useProfiles();
   const defaultProfile = useMemo(() => profiles.find((p) => p.isDefault) ?? null, [profiles]);
   const defaultProfileId = defaultProfile?.id;
   const { categories } = useCategories();
@@ -109,11 +110,11 @@ export function useSearchScreen(): UseSearchScreenReturn {
    * effectで書き潰さないため、Provider読込前に画面へ入っても1レンダ分の空表示が発生しない。
    */
   const selectedProfileId = useMemo(() => {
-    if (profileOverride && profiles.some((p: Profile) => p.id === profileOverride)) {
+    if (profileOverride && validProfiles.some((p: Profile) => p.id === profileOverride)) {
       return profileOverride;
     }
     return activeProfile?.id ?? null;
-  }, [profileOverride, profiles, activeProfile?.id]);
+  }, [profileOverride, validProfiles, activeProfile?.id]);
 
   /**
    * 検索ベースの定型文リスト（検索クエリがある場合は検索結果、ない場合は全スニペット）
@@ -141,10 +142,10 @@ export function useSearchScreen(): UseSearchScreenReturn {
    */
   const filteredProfiles = useMemo(() => {
     if (hasSearchQuery) {
-      return profiles.filter((p: Profile) => getProfileSnippetCountFn(p.id) > 0);
+      return validProfiles.filter((p: Profile) => getProfileSnippetCountFn(p.id) > 0);
     }
-    return profiles;
-  }, [profiles, hasSearchQuery, getProfileSnippetCountFn]);
+    return validProfiles;
+  }, [validProfiles, hasSearchQuery, getProfileSnippetCountFn]);
 
   /**
    * 画面表示用の定型文リスト（プロファイルフィルタリング適用、変数展開済み）

@@ -183,6 +183,11 @@ export class ProfileService {
 
   /**
    * アクティブプロファイルを切り替え
+   *
+   * @remarks
+   * アクティブにできるのは有効なプロファイルだけとする。
+   * プラン上限で無効になったプロファイルを指定された場合は、標準プロファイルへ切り替える。
+   *
    * @throws {NotFoundError} プロファイルが存在しない場合
    */
   static setActive(id: string): void {
@@ -190,6 +195,18 @@ export class ProfileService {
     const profile = ProfileMapper.getById(id);
     if (!profile) {
       throw new NotFoundError('profile', id);
+    }
+
+    /* 無効なプロファイルは展開・絞り込みの基準にできないため標準プロファイルへ振り替える */
+    if (!profile.valid) {
+      const defaultProfile = ProfileMapper.getDefault();
+      if (defaultProfile && defaultProfile.id !== id) {
+        Logger.warn(
+          `[ProfileService] Invalid profile requested as active, falling back to default: ${id}`
+        );
+        ProfileMapper.setActive(defaultProfile.id);
+        return;
+      }
     }
 
     /* Mapper層に処理を委譲（全プロファイルのisActiveをリセット後、指定プロファイルのみアクティブ化） */
