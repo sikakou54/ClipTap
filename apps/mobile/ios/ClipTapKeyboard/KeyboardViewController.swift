@@ -33,6 +33,7 @@
 import UIKit
 import os.log
 import ClipTapKeyboardCore
+import ClipTapKeyboardEngine
 
 // ログ出力用の設定（デバッグやエラー追跡に使用）
 // 開発中の動作確認や、本番環境でのトラブルシューティングに役立ちます
@@ -281,6 +282,27 @@ class KeyboardViewController: UIInputViewController {
 
     /// キー領域
     private lazy var keyboardAreaView = KeyboardAreaView(session: inputSession)
+
+    /// 変換候補のバー
+    private lazy var candidateBarView = CandidateBarView(session: inputSession)
+
+    /// かな漢字変換エンジン
+    ///
+    /// 学習データはApp Groupコンテナ内のkeyboard/learning/へ置く。
+    /// 共有SQLite（業務データ）とは分離し、エクスポート・インポートの対象にしない。
+    /// 辞書の初期化は最初のかな入力時にInputSession側で行われるため、
+    /// ここでの生成は軽い。
+    private lazy var kanaKanjiEngine: KanaKanjiEngine? = {
+        guard let containerURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupIdentifier
+        ) else {
+            KeyboardLog.debug("❌ [Engine] App Group container not available")
+            return nil
+        }
+        let learningURL = containerURL.appendingPathComponent("keyboard/learning", isDirectory: true)
+        try? FileManager.default.createDirectory(at: learningURL, withIntermediateDirectories: true)
+        return AzooKeyEngine(memoryDirectoryURL: learningURL, sharedContainerURL: containerURL)
+    }()
 
     // === スニペット一覧エリア ===
 
@@ -640,6 +662,14 @@ class KeyboardViewController: UIInputViewController {
         refreshAllData()
     }
 
+    /// 画面が閉じる直前に呼ばれるメソッド
+    ///
+    /// 打ちかけの未確定文字列を取り残さないよう、読みのまま確定して入力欄へ送る。
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        inputSession.commitCompositionAsIs()
+    }
+
     override func textDidChange(_ textInput: UITextInput?) {
         super.textDidChange(textInput)
         applyHostKeyboardAppearance()
@@ -907,11 +937,18 @@ class KeyboardViewController: UIInputViewController {
             tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
 
-        /* キー領域: 一覧と同じ場所を使う。キーボード全体の高さは変えない */
+        /* 候補バーとキー領域: 一覧と同じ場所を使う。キーボード全体の高さは変えない */
+        candidateBarView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(candidateBarView)
         keyboardAreaView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(keyboardAreaView)
         NSLayoutConstraint.activate([
-            keyboardAreaView.topAnchor.constraint(equalTo: filterContainerView.bottomAnchor, constant: 8),
+            candidateBarView.topAnchor.constraint(equalTo: filterContainerView.bottomAnchor, constant: 2),
+            candidateBarView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 3),
+            candidateBarView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -3),
+            candidateBarView.heightAnchor.constraint(equalToConstant: 44),
+
+            keyboardAreaView.topAnchor.constraint(equalTo: candidateBarView.bottomAnchor, constant: 2),
             keyboardAreaView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 3),
             keyboardAreaView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -3),
             keyboardAreaView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -4)
@@ -1459,6 +1496,7 @@ class KeyboardViewController: UIInputViewController {
         tableView.isHidden = !isList || isEmpty
         emptyLabel.isHidden = !isList || !isEmpty
         keyboardAreaView.isHidden = !isTyping
+        candidateBarView.isHidden = !isTyping
 
         detailView.isHidden = screenState != .detail
         loadingView.isHidden = screenState != .loading
@@ -1484,6 +1522,9 @@ class KeyboardViewController: UIInputViewController {
         inputSession.onToggleSnippetList = { [weak self] in
             self?.switchScreenState(to: .list)
         }
+
+        /* エンジンが無い・辞書が読めない場合、セッションは直接入力へ縮退する */
+        inputSession.engine = kanaKanjiEngine
     }
 
     /**
@@ -1509,6 +1550,10 @@ class KeyboardViewController: UIInputViewController {
      * 画面を切り替え、次回の起動でも同じモードで開けるよう覚えておく
      */
     private func switchScreenState(to state: ScreenState) {
+        /* 入力モードを離れるときは、打ちかけの未確定文字列を捨てずに確定してから移る */
+        if screenState == .typing && state != .typing {
+            inputSession.commitCompositionAsIs()
+        }
         screenState = state
         applyScreenState()
         saveKeyboardMode()
