@@ -22,10 +22,13 @@ import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const LAYOUT_SOURCE = join(REPO_ROOT, 'packages/shared/src/keyboard/layout.ts');
-const SWIFT_OUT = join(
+const VARIANTS_SOURCE = join(REPO_ROOT, 'packages/shared/src/keyboard/kanaVariants.ts');
+const GENERATED_DIR = join(
   REPO_ROOT,
-  'apps/mobile/ios/ClipTapKeyboardCore/Sources/ClipTapKeyboardCore/Generated/KeyLayouts.generated.swift'
+  'apps/mobile/ios/ClipTapKeyboardCore/Sources/ClipTapKeyboardCore/Generated'
 );
+const SWIFT_OUT = join(GENERATED_DIR, 'KeyLayouts.generated.swift');
+const VARIANTS_SWIFT_OUT = join(GENERATED_DIR, 'KanaVariants.generated.swift');
 
 const isCheckMode = process.argv.includes('--check');
 
@@ -36,7 +39,7 @@ const isCheckMode = process.argv.includes('--check');
  * ビルド済みの成果物に依存すると、正本を編集したのに生成が古いままという
  * ずれが起きるため、常にソースから読む。
  */
-async function loadLayouts() {
+async function loadModule(sourcePath) {
   let esbuild;
   try {
     esbuild = await import('esbuild');
@@ -46,7 +49,7 @@ async function loadLayouts() {
   }
 
   const result = await esbuild.build({
-    entryPoints: [LAYOUT_SOURCE],
+    entryPoints: [sourcePath],
     bundle: true,
     format: 'esm',
     platform: 'node',
@@ -54,8 +57,7 @@ async function loadLayouts() {
   });
 
   const code = Buffer.from(result.outputFiles[0].text).toString('base64');
-  const module = await import(`data:text/javascript;base64,${code}`);
-  return module.ALL_LAYOUTS;
+  return import(`data:text/javascript;base64,${code}`);
 }
 
 /** Swiftの文字列リテラルとして安全な形へ変換する */
@@ -154,6 +156,53 @@ ${layouts.map((layout) => `        case .${layout.id}: return ${layout.id}`).joi
 `;
 }
 
+/**
+ * かなの変形規則のSwiftソースを組み立てる
+ *
+ * 巡回の文字列を「文字 → 次の文字」の辞書へ展開する。
+ * ネイティブ側では引くだけにして、巡回の解釈をこの生成へ閉じ込める。
+ */
+function renderVariantsSwift(cycles) {
+  const entries = [];
+  for (const cycle of cycles) {
+    const chars = cycle.split('');
+    chars.forEach((char, index) => {
+      const next = chars[(index + 1) % chars.length];
+      entries.push(`        "${char}": "${next}"`);
+    });
+  }
+
+  return `// このファイルは自動生成されています。直接編集しないでください。
+//
+// 正本: packages/shared/src/keyboard/kanaVariants.ts
+// 生成: node scripts/gen-keyboard-layouts.mjs
+//
+// 「゛゜小」キーによるかなの変形規則。割り当てはOS標準に合わせている。
+// 規則を変えるときは正本を編集し、このスクリプトを実行してください。
+
+/**
+ * 生成されたかなの変形規則
+ */
+public enum KanaVariants {
+
+    /** 「゛゜小」キーで置き換わる次の文字 */
+    private static let transitions: [Character: Character] = [
+${entries.join(',\n')}
+    ]
+
+    /**
+     * 次の形を引く
+     *
+     * - Parameter character: 変形の対象になる文字
+     * - Returns: 次の形。変形を持たない文字はnil
+     */
+    public static func next(after character: Character) -> Character? {
+        transitions[character]
+    }
+}
+`;
+}
+
 /** 生成物を書き出す、または最新かを検査する */
 function emit(path, contents) {
   if (isCheckMode) {
@@ -177,5 +226,7 @@ function emit(path, contents) {
   console.log(`生成しました: ${path}`);
 }
 
-const layouts = await loadLayouts();
-emit(SWIFT_OUT, renderSwift(layouts));
+const { ALL_LAYOUTS } = await loadModule(LAYOUT_SOURCE);
+const { KANA_VARIANT_CYCLES } = await loadModule(VARIANTS_SOURCE);
+emit(SWIFT_OUT, renderSwift(ALL_LAYOUTS));
+emit(VARIANTS_SWIFT_OUT, renderVariantsSwift(KANA_VARIANT_CYCLES));

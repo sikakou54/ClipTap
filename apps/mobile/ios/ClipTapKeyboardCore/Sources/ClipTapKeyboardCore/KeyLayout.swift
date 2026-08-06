@@ -52,6 +52,8 @@ public enum KeyAction: Equatable, Sendable {
     case toggleSnippetList
     /** カーソルを移動する */
     case cursor(offset: Int)
+    /** 直前のかなを濁点・半濁点・小文字へ巡回させる。規則はKanaVariantsが持つ */
+    case kanaVariant
 }
 
 /**

@@ -31,7 +31,9 @@ export type KeyAction =
   /** 定型文の一覧と入力キーボードを切り替える */
   | { readonly type: 'toggleSnippetList' }
   /** カーソルを移動する */
-  | { readonly type: 'cursor'; readonly offset: number };
+  | { readonly type: 'cursor'; readonly offset: number }
+  /** 直前のかなを濁点・半濁点・小文字へ巡回させる。規則はkanaVariants.tsが正本 */
+  | { readonly type: 'kanaVariant' };
 
 /** キー配列の識別子 */
 export type LayoutId = 'qwerty' | 'symbols' | 'numbers' | 'flick';
@@ -252,7 +254,8 @@ export const FLICK_LAYOUT: KeyLayout = {
     {
       keys: [
         flickKey('ma', 'まみむめも'),
-        flickKey('ya', 'やゆよっー'),
+        /* OS標準と同じく、や行はかぎ括弧を左右に持つ */
+        flickKey('ya', 'や「ゆ」よ'),
         flickKey('ra', 'らりるれろ'),
         fn('enter', '⏎', { type: 'enter' }, 1),
       ],
@@ -262,10 +265,11 @@ export const FLICK_LAYOUT: KeyLayout = {
         fn('switch_qwerty', 'ABC', { type: 'switchLayout', layoutId: 'qwerty' }, 1),
         flickKey('wa', 'わをんー〜'),
         {
-          /* 濁点・半濁点・小文字は直前のかなを変換する。中央で巡回させる */
+          /* 直前のかなを 小文字 → 濁点 → 半濁点 の順で巡回させる */
           id: 'flick_dakuten',
           label: '゛゜小',
-          action: { type: 'input', text: '゛' },
+          action: { type: 'kanaVariant' },
+          accessibilityLabelKey: 'accessibility.key.flick_dakuten',
         },
         fn('next_keyboard', '🌐', { type: 'nextKeyboard' }, 1),
       ],

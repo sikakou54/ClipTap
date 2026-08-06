@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ALL_LAYOUTS,
+  FLICK_LAYOUT,
   QWERTY_LAYOUT,
   type Key,
   type KeyLayout,
@@ -118,6 +119,40 @@ describe('キー配列の正本', () => {
     expect(rows[0].keys.map((key) => key.label).join('')).toBe('qwertyuiop');
     expect(rows[1].keys.map((key) => key.label).join('')).toBe('asdfghjkl');
     expect(rows[2].keys.slice(1, 8).map((key) => key.label).join('')).toBe('zxcvbnm');
+  });
+
+  it('12キーフリックはOS標準の割り当てを保つ', () => {
+    /*
+     * 中央・左・上・右・下の並びで固定する。利用者が指の動きを
+     * 覚えているため、独自の割り当てへ変えてはならない。
+     */
+    const expectations: Record<string, string> = {
+      flick_a: 'あいうえお',
+      flick_ka: 'かきくけこ',
+      flick_sa: 'さしすせそ',
+      flick_ta: 'たちつてと',
+      flick_na: 'なにぬねの',
+      flick_ha: 'はひふへほ',
+      flick_ma: 'まみむめも',
+      flick_ya: 'や「ゆ」よ',
+      flick_ra: 'らりるれろ',
+      flick_wa: 'わをんー〜',
+    };
+
+    for (const [id, row] of Object.entries(expectations)) {
+      const key = allKeys(FLICK_LAYOUT).find((item) => item.id === id);
+      expect(key, `キーが見つからない: ${id}`).toBeDefined();
+
+      const texts = [key!.action, key!.flick?.left, key!.flick?.up, key!.flick?.right, key!.flick?.down]
+        .map((action) => (action?.type === 'input' ? action.text : ''))
+        .join('');
+      expect(texts, `${id} の割り当てが期待と異なる`).toBe(row);
+    }
+  });
+
+  it('12キーフリックは濁点・半濁点・小文字のキーを持つ', () => {
+    const hasVariantKey = allKeys(FLICK_LAYOUT).some((key) => key.action.type === 'kanaVariant');
+    expect(hasVariantKey).toBe(true);
   });
 
   it('QWERTYの文字キーはシフトで大文字になる', () => {

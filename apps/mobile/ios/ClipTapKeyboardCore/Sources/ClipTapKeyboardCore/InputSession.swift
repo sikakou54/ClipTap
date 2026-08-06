@@ -118,7 +118,28 @@ public final class InputSession {
         case .cursor(let offset):
             host.moveCursor(by: offset)
             notifyStateChanged()
+
+        case .kanaVariant:
+            applyKanaVariant()
+            notifyStateChanged()
         }
+    }
+
+    /**
+     * 直前のかなを濁点・半濁点・小文字へ巡回させる
+     *
+     * 変形を持たない文字の上では何もしない。誤って押しても
+     * 入力内容が壊れないようにするため。
+     */
+    private func applyKanaVariant() {
+        guard
+            let last = host.textBeforeCursor?.last,
+            let variant = KanaVariants.next(after: last)
+        else {
+            return
+        }
+        host.deleteBackward()
+        host.insert(String(variant))
     }
 
     /**

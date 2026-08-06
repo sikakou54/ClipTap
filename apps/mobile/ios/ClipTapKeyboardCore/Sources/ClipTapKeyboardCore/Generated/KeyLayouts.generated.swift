@@ -170,14 +170,14 @@ public enum KeyLayouts {
             ]),
             KeyRow(keys: [
                     KeyDefinition(id: "flick_ma", label: "ま", shiftLabel: nil, action: .input("ま"), shiftAction: nil, widthUnit: 1, isFunction: false, accessibilityLabelKey: nil, flick: [.left: .input("み"), .up: .input("む"), .right: .input("め"), .down: .input("も")]),
-                    KeyDefinition(id: "flick_ya", label: "や", shiftLabel: nil, action: .input("や"), shiftAction: nil, widthUnit: 1, isFunction: false, accessibilityLabelKey: nil, flick: [.left: .input("ゆ"), .up: .input("よ"), .right: .input("っ"), .down: .input("ー")]),
+                    KeyDefinition(id: "flick_ya", label: "や", shiftLabel: nil, action: .input("や"), shiftAction: nil, widthUnit: 1, isFunction: false, accessibilityLabelKey: nil, flick: [.left: .input("「"), .up: .input("ゆ"), .right: .input("」"), .down: .input("よ")]),
                     KeyDefinition(id: "flick_ra", label: "ら", shiftLabel: nil, action: .input("ら"), shiftAction: nil, widthUnit: 1, isFunction: false, accessibilityLabelKey: nil, flick: [.left: .input("り"), .up: .input("る"), .right: .input("れ"), .down: .input("ろ")]),
                     KeyDefinition(id: "enter", label: "⏎", shiftLabel: nil, action: .enter, shiftAction: nil, widthUnit: 1, isFunction: true, accessibilityLabelKey: "accessibility.key.enter", flick: [:])
             ]),
             KeyRow(keys: [
                     KeyDefinition(id: "switch_qwerty", label: "ABC", shiftLabel: nil, action: .switchLayout(.qwerty), shiftAction: nil, widthUnit: 1, isFunction: true, accessibilityLabelKey: "accessibility.key.switch_qwerty", flick: [:]),
                     KeyDefinition(id: "flick_wa", label: "わ", shiftLabel: nil, action: .input("わ"), shiftAction: nil, widthUnit: 1, isFunction: false, accessibilityLabelKey: nil, flick: [.left: .input("を"), .up: .input("ん"), .right: .input("ー"), .down: .input("〜")]),
-                    KeyDefinition(id: "flick_dakuten", label: "゛゜小", shiftLabel: nil, action: .input("゛"), shiftAction: nil, widthUnit: 1, isFunction: false, accessibilityLabelKey: nil, flick: [:]),
+                    KeyDefinition(id: "flick_dakuten", label: "゛゜小", shiftLabel: nil, action: .kanaVariant, shiftAction: nil, widthUnit: 1, isFunction: false, accessibilityLabelKey: "accessibility.key.flick_dakuten", flick: [:]),
                     KeyDefinition(id: "next_keyboard", label: "🌐", shiftLabel: nil, action: .nextKeyboard, shiftAction: nil, widthUnit: 1, isFunction: true, accessibilityLabelKey: "accessibility.key.next_keyboard", flick: [:])
             ])
         ]

@@ -197,6 +197,59 @@ struct FlickInputSessionTests {
         #expect(session.layout.id == .qwerty)
     }
 
+    @Test("「゛゜小」キーで直前のかなが巡回する")
+    func kanaVariantCycles() {
+        let (session, host) = makeSession()
+        let ta = key("flick_ta", in: session.layout)
+        let variant = key("flick_dakuten", in: session.layout)
+
+        /* た行の上フリックで「つ」。つ → っ → づ → つ と巡回する */
+        session.handle(ta, flickDirection: .up)
+        #expect(host.text == "つ")
+
+        session.handle(variant)
+        #expect(host.text == "っ")
+        session.handle(variant)
+        #expect(host.text == "づ")
+        session.handle(variant)
+        #expect(host.text == "つ")
+    }
+
+    @Test("は行は濁点と半濁点を巡回する")
+    func handakutenCycles() {
+        let (session, host) = makeSession()
+        let variant = key("flick_dakuten", in: session.layout)
+
+        session.handle(key("flick_ha", in: session.layout))
+        session.handle(variant)
+        #expect(host.text == "ば")
+        session.handle(variant)
+        #expect(host.text == "ぱ")
+        session.handle(variant)
+        #expect(host.text == "は")
+    }
+
+    @Test("変形を持たない文字の上では何も起きない")
+    func kanaVariantIgnoresUnrelatedCharacters() {
+        let (session, host) = makeSession()
+        let variant = key("flick_dakuten", in: session.layout)
+
+        /* な行の「ん」（下フリック）は変形を持たない */
+        session.handle(key("flick_wa", in: session.layout), flickDirection: .up)
+        #expect(host.text == "ん")
+
+        session.handle(variant)
+        #expect(host.text == "ん", "変形を持たない文字は変えない")
+    }
+
+    @Test("空の状態で「゛゜小」を押しても壊れない")
+    func kanaVariantOnEmptyIsSafe() {
+        let (session, host) = makeSession()
+        session.handle(key("flick_dakuten", in: session.layout))
+        #expect(host.text.isEmpty)
+        #expect(host.operations.isEmpty, "入力欄には触れない")
+    }
+
     @Test("かなの各行が正しく割り当てられている")
     func allRowsAreAssigned() {
         let (session, host) = makeSession()
