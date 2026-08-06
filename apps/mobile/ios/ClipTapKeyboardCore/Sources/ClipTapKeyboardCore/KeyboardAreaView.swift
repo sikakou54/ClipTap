@@ -30,6 +30,20 @@ public final class KeyboardAreaView: UIView {
     /** 現在指が乗っているキー */
     private var pressedKey: KeyCapView?
 
+    /** 指を置いた位置。フリックの判定に使う */
+    private var touchStartPoint: CGPoint?
+
+    /** 現在判定されているフリック方向 */
+    private var currentFlickDirection: FlickDirection?
+
+    /** フリックの候補を表示する吹き出し */
+    private lazy var flickGuideView: FlickGuideView = {
+        let view = FlickGuideView()
+        view.isHidden = true
+        addSubview(view)
+        return view
+    }()
+
     /** キーの間隔 */
     private let keySpacing: CGFloat = 6
 
@@ -130,13 +144,30 @@ public final class KeyboardAreaView: UIView {
         guard let point = touches.first?.location(in: self) else {
             return
         }
+        touchStartPoint = point
+        currentFlickDirection = nil
         updatePressedKey(at: point)
+        showFlickGuideIfNeeded()
     }
 
     public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let point = touches.first?.location(in: self) else {
             return
         }
+
+        /*
+         * フリックを持つキーでは、指が外れても対象を変えない。
+         * 上下左右へ払う動作でキーの外へ出るのが普通の使い方であるため。
+         */
+        if pressedKey?.key.hasFlick == true, let start = touchStartPoint {
+            let direction = FlickGestureResolver.resolve(from: start, to: point)
+            if direction != currentFlickDirection {
+                currentFlickDirection = direction
+                flickGuideView.highlight(direction)
+            }
+            return
+        }
+
         /* 押し始めたキーから指が外れたら、そのキーの押下表示を解く */
         updatePressedKey(at: point)
     }
@@ -144,9 +175,19 @@ public final class KeyboardAreaView: UIView {
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         defer { clearPressedKey() }
 
+        guard let keyView = pressedKey else {
+            return
+        }
+
+        if keyView.key.hasFlick {
+            session.handle(keyView.key, flickDirection: currentFlickDirection)
+            return
+        }
+
+        /* フリックを持たないキーは、指が離れた位置がキー上にある場合だけ入力する */
         guard
             let point = touches.first?.location(in: self),
-            let keyView = hitKeyView(at: point)
+            hitKeyView(at: point) === keyView
         else {
             return
         }
@@ -155,6 +196,15 @@ public final class KeyboardAreaView: UIView {
 
     public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         clearPressedKey()
+    }
+
+    /** フリックを持つキーなら、押下中に候補を表示する */
+    private func showFlickGuideIfNeeded() {
+        guard let keyView = pressedKey, keyView.key.hasFlick else {
+            flickGuideView.isHidden = true
+            return
+        }
+        flickGuideView.present(for: keyView.key, around: keyView.frame, in: self)
     }
 
     /** 指の位置にあるキーを探す */
@@ -175,6 +225,100 @@ public final class KeyboardAreaView: UIView {
     private func clearPressedKey() {
         pressedKey?.setPressed(false)
         pressedKey = nil
+        touchStartPoint = nil
+        currentFlickDirection = nil
+        flickGuideView.isHidden = true
+    }
+}
+
+/**
+ * フリックの候補を押下中に見せる吹き出し
+ *
+ * 指を置いた時点で上下左右に何が入るかを示す。覚えていない利用者が
+ * 一度離して確かめる、という往復を避けるために出す。
+ */
+final class FlickGuideView: UIView {
+
+    /** 方向ごとの表示。中央は元のキーが見えているため持たない */
+    private var labels: [FlickDirection: UILabel] = [:]
+
+    /** 吹き出し1つ分の大きさ */
+    private let cellSize: CGFloat = 44
+
+    init() {
+        super.init(frame: .zero)
+        isUserInteractionEnabled = false
+
+        for direction in FlickDirection.allCases {
+            let label = UILabel()
+            label.textAlignment = .center
+            label.font = .systemFont(ofSize: 20, weight: .regular)
+            label.textColor = .label
+            label.backgroundColor = .secondarySystemBackground
+            label.layer.cornerRadius = 5
+            label.layer.cornerCurve = .continuous
+            label.layer.masksToBounds = true
+            addSubview(label)
+            labels[direction] = label
+        }
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    /**
+     * 対象のキーの周りに候補を配置して表示する
+     */
+    func present(for key: KeyDefinition, around keyFrame: CGRect, in container: UIView) {
+        for direction in FlickDirection.allCases {
+            guard let label = labels[direction] else {
+                continue
+            }
+            if case .input(let text)? = key.flick[direction] {
+                label.text = text
+                label.isHidden = false
+            } else {
+                label.isHidden = true
+            }
+        }
+
+        /* キーを中心に十字へ配置する。画面外へ出る分は内側へ寄せる */
+        let center = CGPoint(x: keyFrame.midX, y: keyFrame.midY)
+        frame = CGRect(
+            x: center.x - cellSize * 1.5,
+            y: center.y - cellSize * 1.5,
+            width: cellSize * 3,
+            height: cellSize * 3
+        )
+        frame.origin.x = min(max(0, frame.origin.x), container.bounds.width - frame.width)
+        frame.origin.y = min(max(0, frame.origin.y), container.bounds.height - frame.height)
+
+        let offsets: [FlickDirection: CGPoint] = [
+            .left: CGPoint(x: 0, y: cellSize),
+            .up: CGPoint(x: cellSize, y: 0),
+            .right: CGPoint(x: cellSize * 2, y: cellSize),
+            .down: CGPoint(x: cellSize, y: cellSize * 2)
+        ]
+        for (direction, origin) in offsets {
+            labels[direction]?.frame = CGRect(origin: origin, size: CGSize(width: cellSize, height: cellSize))
+        }
+
+        highlight(nil)
+        isHidden = false
+        container.bringSubviewToFront(self)
+    }
+
+    /**
+     * 選ばれている方向を強調する
+     */
+    func highlight(_ direction: FlickDirection?) {
+        for (labelDirection, label) in labels {
+            let isSelected = labelDirection == direction
+            label.backgroundColor = isSelected ? .systemBlue : .secondarySystemBackground
+            label.textColor = isSelected ? .white : .label
+        }
     }
 }
 

@@ -54,9 +54,21 @@ public final class InputSession {
 
     /**
      * キーが押されたときの処理
+     *
+     * - Parameters:
+     *   - key: 押されたキー
+     *   - flickDirection: フリックの方向。タップならnil
      */
-    public func handle(_ key: KeyDefinition) {
-        switch key.resolvedAction(isShifted: isShifted) {
+    public func handle(_ key: KeyDefinition, flickDirection: FlickDirection? = nil) {
+        /*
+         * フリックを持つキーは方向で動作が決まる。シフトは英字配列の概念であり、
+         * かなの12キー配列とは併用しない。
+         */
+        let action = key.hasFlick
+            ? key.resolvedAction(flickDirection: flickDirection)
+            : key.resolvedAction(isShifted: isShifted)
+
+        switch action {
         case .input(let text):
             host.insert(text)
             /* 1文字だけの大文字指定は入力後に解除する。固定時は維持する */

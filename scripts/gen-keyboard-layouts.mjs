@@ -82,6 +82,17 @@ function swiftOptional(value, transform) {
   return value === undefined ? 'nil' : transform(value);
 }
 
+/** フリックの割り当てを Swift の辞書リテラルへ変換する */
+function swiftFlick(flick) {
+  if (!flick) {
+    return '[:]';
+  }
+  const entries = Object.entries(flick).map(
+    ([direction, action]) => `.${direction}: ${swiftAction(action)}`
+  );
+  return entries.length === 0 ? '[:]' : `[${entries.join(', ')}]`;
+}
+
 /** 1つのキーを Swift の式へ変換する */
 function swiftKey(key) {
   const parts = [
@@ -93,6 +104,7 @@ function swiftKey(key) {
     `widthUnit: ${key.width?.unit ?? 1}`,
     `isFunction: ${key.isFunction === true}`,
     `accessibilityLabelKey: ${swiftOptional(key.accessibilityLabelKey, swiftString)}`,
+    `flick: ${swiftFlick(key.flick)}`,
   ];
   return `                    KeyDefinition(${parts.join(', ')})`;
 }

@@ -13,6 +13,19 @@ public enum LayoutId: String, Sendable, CaseIterable {
     case qwerty
     case numbers
     case symbols
+    case flick
+}
+
+/**
+ * フリックの方向
+ *
+ * 中央（タップ）はここに含めない。キーの`action`が担う。
+ */
+public enum FlickDirection: String, Sendable, CaseIterable {
+    case up
+    case down
+    case left
+    case right
 }
 
 /**
@@ -70,6 +83,9 @@ public struct KeyDefinition: Equatable, Sendable {
     /** 読み上げラベルのキー。省略時はlabelを読む */
     public let accessibilityLabelKey: String?
 
+    /** フリック入力の割り当て。12キー配列でのみ使う */
+    public let flick: [FlickDirection: KeyAction]
+
     public init(
         id: String,
         label: String?,
@@ -78,7 +94,8 @@ public struct KeyDefinition: Equatable, Sendable {
         shiftAction: KeyAction?,
         widthUnit: Double,
         isFunction: Bool,
-        accessibilityLabelKey: String?
+        accessibilityLabelKey: String?,
+        flick: [FlickDirection: KeyAction] = [:]
     ) {
         self.id = id
         self.label = label
@@ -88,6 +105,24 @@ public struct KeyDefinition: Equatable, Sendable {
         self.widthUnit = widthUnit
         self.isFunction = isFunction
         self.accessibilityLabelKey = accessibilityLabelKey
+        self.flick = flick
+    }
+
+    /** フリック入力を持つキーか */
+    public var hasFlick: Bool {
+        !flick.isEmpty
+    }
+
+    /**
+     * フリック方向に応じて実行すべき動作を返す
+     *
+     * - Parameter direction: 判定された方向。nilならタップ扱い
+     */
+    public func resolvedAction(flickDirection direction: FlickDirection?) -> KeyAction {
+        guard let direction, let flickAction = flick[direction] else {
+            return action
+        }
+        return flickAction
     }
 
     /**

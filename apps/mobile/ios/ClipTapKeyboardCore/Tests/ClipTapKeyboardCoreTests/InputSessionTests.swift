@@ -143,3 +143,82 @@ struct InputSessionTests {
         #expect(host.operations.isEmpty, "入力欄は変更しない")
     }
 }
+
+/**
+ * 12キーフリックの入力規則に対する検証
+ */
+struct FlickInputSessionTests {
+
+    private func key(_ id: String, in layout: KeyLayout) -> KeyDefinition {
+        let found = layout.rows.flatMap(\.keys).first { $0.id == id }
+        #expect(found != nil, "キーが見つからない: \(id)")
+        return found!
+    }
+
+    private func makeSession() -> (InputSession, RecordingTextBridge) {
+        let host = RecordingTextBridge()
+        let session = InputSession(host: host, layout: KeyLayouts.flick)
+        return (session, host)
+    }
+
+    @Test("タップすると中央のかなが入る")
+    func tapInsertsCenterKana() {
+        let (session, host) = makeSession()
+        session.handle(key("flick_a", in: session.layout))
+        #expect(host.text == "あ")
+    }
+
+    @Test("四方向のフリックで対応するかなが入る")
+    func flickInsertsDirectionalKana() {
+        let (session, host) = makeSession()
+        let a = key("flick_a", in: session.layout)
+
+        session.handle(a, flickDirection: .left)
+        session.handle(a, flickDirection: .up)
+        session.handle(a, flickDirection: .right)
+        session.handle(a, flickDirection: .down)
+
+        /* OS標準と同じ 中央=あ 左=い 上=う 右=え 下=お の割り当て */
+        #expect(host.text == "いうえお")
+    }
+
+    @Test("フリックを持たないキーは方向を無視する")
+    func functionKeysIgnoreFlick() {
+        let (session, host) = makeSession()
+        session.handle(key("flick_a", in: session.layout))
+        session.handle(key("backspace", in: session.layout), flickDirection: .up)
+        #expect(host.text.isEmpty, "削除キーはフリック方向に関係なく削除する")
+    }
+
+    @Test("英字配列へ戻れる")
+    func switchesBackToQwerty() {
+        let (session, _) = makeSession()
+        session.handle(key("switch_qwerty", in: session.layout))
+        #expect(session.layout.id == .qwerty)
+    }
+
+    @Test("かなの各行が正しく割り当てられている")
+    func allRowsAreAssigned() {
+        let (session, host) = makeSession()
+        let expectations: [(String, String)] = [
+            ("flick_ka", "かきくけこ"),
+            ("flick_sa", "さしすせそ"),
+            ("flick_ta", "たちつてと"),
+            ("flick_na", "なにぬねの"),
+            ("flick_ha", "はひふへほ"),
+            ("flick_ma", "まみむめも"),
+            ("flick_ra", "らりるれろ")
+        ]
+
+        for (id, row) in expectations {
+            host.reset()
+            let target = key(id, in: session.layout)
+            session.handle(target)
+            session.handle(target, flickDirection: .left)
+            session.handle(target, flickDirection: .up)
+            session.handle(target, flickDirection: .right)
+            session.handle(target, flickDirection: .down)
+            #expect(host.text == row, "\(id) の割り当てが期待と異なる")
+        }
+    }
+}

@@ -208,6 +208,10 @@ export const SYMBOLS_LAYOUT: KeyLayout = {
  */
 const flickKey = (id: string, row: string): Key => {
   const [center, left, up, right, down] = row.split('');
+  /* 過不足は正本の書き誤り。実行時ではなく生成・テストの段階で落とす */
+  if (!center || !left || !up || !right || !down) {
+    throw new Error(`フリックキー ${id} は中央・左・上・右・下の5文字で指定すること: "${row}"`);
+  }
   return {
     id: `flick_${id}`,
     label: center,
