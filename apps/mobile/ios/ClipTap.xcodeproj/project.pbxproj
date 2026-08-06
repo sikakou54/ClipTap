@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		0BFF775ADD794D621B14CC0D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AB3E2D6933F9E8EE0086FF6E /* Foundation.framework */; };
-		970614121247AAD854EE4B3A /* ClipTapKeyboardEngine in Frameworks */ = {isa = PBXBuildFile; productRef = 859F2B8ED5DC180F1C5B0EAC /* ClipTapKeyboardEngine */; };
-		EADF6F54049B12BFB89E7DD4 /* ClipTapKeyboardCore in Frameworks */ = {isa = PBXBuildFile; productRef = 785746587CD203FB635BF7B0 /* ClipTapKeyboardCore */; };
 		0CFED577DA08539B70DE4BFC /* ProfileMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E86FF12EEFE9769C7153A6 /* ProfileMapper.swift */; };
 		0D561D40AD2C461499CC8596 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D3F2BD2D366B4500A02A7C4A /* InfoPlist.strings */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
@@ -27,6 +25,7 @@
 		6BBBF01CF562044AD12FDAB8 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A4E265BB7EF49ED8764E12 /* Database.swift */; };
 		72146C91E7DBAFE02335129A /* VariableReplacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBF35E69B20BB301E0C68A83 /* VariableReplacer.swift */; };
 		7D946F2D307F4791BE59554D /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 9EE76072582C4DF497F6E919 /* InfoPlist.strings */; };
+		970614121247AAD854EE4B3A /* ClipTapKeyboardEngine in Frameworks */ = {isa = PBXBuildFile; productRef = 859F2B8ED5DC180F1C5B0EAC /* ClipTapKeyboardEngine */; };
 		9ED9CD021CFC0C26F98238A8 /* VariableMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89C0725F05BA12D69B304472 /* VariableMapper.swift */; };
 		B216BCAD31787BB9A9197584 /* LocalizationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07CE46E48AEA0D25A6FAC3B /* LocalizationHelper.swift */; };
 		B8F2301B4D8E9C0011223344 /* PatternFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F2301B4D8E9C0011223344 /* PatternFormatter.swift */; };
@@ -38,6 +37,7 @@
 		CF7094334FA54EF194A64966 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9364222E5A58418DA15C00D5 /* GoogleService-Info.plist */; };
 		DAF2301B4D8E9C0011223344 /* SystemVariableFormatMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F2301B4D8E9C0011223344 /* SystemVariableFormatMapper.swift */; };
 		E0EF7C4C39AA8CD58E6B7C4A /* ClipTapKeyboard.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 5EC637673C5C41A780789BF1 /* ClipTapKeyboard.appex */; };
+		EADF6F54049B12BFB89E7DD4 /* ClipTapKeyboardCore in Frameworks */ = {isa = PBXBuildFile; productRef = 785746587CD203FB635BF7B0 /* ClipTapKeyboardCore */; };
 		EBE651AA7D47E45F97D52F94 /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BA8D63360CEFD9CC816A334 /* KeyboardViewController.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 		F6A1D067C26B9C5E0854D7B2 /* CategoryMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B9C41A4D69717B71D14456A /* CategoryMapper.swift */; };
@@ -683,24 +683,6 @@
 		};
 /* End PBXTargetDependency section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		C85F9BF0D4671866D6D056D5 /* XCLocalSwiftPackageReference "ClipTapKeyboardCore" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ClipTapKeyboardCore;
-		};
-/* End XCLocalSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		785746587CD203FB635BF7B0 /* ClipTapKeyboardCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ClipTapKeyboardCore;
-		};
-		859F2B8ED5DC180F1C5B0EAC /* ClipTapKeyboardEngine */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ClipTapKeyboardEngine;
-		};
-/* End XCSwiftPackageProductDependency section */
-
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -991,6 +973,24 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		C85F9BF0D4671866D6D056D5 /* XCLocalSwiftPackageReference "ClipTapKeyboardCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ClipTapKeyboardCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		785746587CD203FB635BF7B0 /* ClipTapKeyboardCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ClipTapKeyboardCore;
+		};
+		859F2B8ED5DC180F1C5B0EAC /* ClipTapKeyboardEngine */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ClipTapKeyboardEngine;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }
