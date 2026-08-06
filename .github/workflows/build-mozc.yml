@@ -121,12 +121,11 @@ jobs:
           set -eux
           OUT="$RUNNER_TEMP/dist/java"
           mkdir -p "$OUT"
-          # IMEクライアントが使うのは commands / config / candidate_window の3つ。
-          # 依存する proto は protoc が自動で辿るため個別指定は不要。
-          protoc --proto_path=. --java_out=lite:"$OUT" \
-            protocol/commands.proto \
-            protocol/config.proto \
-            protocol/candidate_window.proto
+          # protoc は指定したファイルのぶんしかJavaを生成しない。commands.proto は
+          # user_dictionary_storage / engine_builder などを import しており、
+          # それらを生成しないと参照先が無くコンパイルできない。
+          # 依存関係を追うより、protocol配下をまとめて生成するほうが確実で壊れにくい。
+          protoc --proto_path=. --java_out=lite:"$OUT" protocol/*.proto
           find "$OUT" -name '*.java' | sort
 
       # Mozcのコードは BSD-3-Clause、OSS版辞書は IPAdic（NAIST）と沖縄辞書

@@ -1,0 +1,3 @@
+# Gradleのビルド生成物。Mozcのライブラリと辞書を含むため150MB超になる
+android/build/
+.gradle/
