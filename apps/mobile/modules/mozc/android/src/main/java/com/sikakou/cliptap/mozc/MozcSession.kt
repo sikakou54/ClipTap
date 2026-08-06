@@ -3,6 +3,8 @@ package com.sikakou.cliptap.mozc
 import android.content.Context
 import android.util.Log
 import com.google.android.apps.inputmethod.libs.mozc.session.MozcJNI
+import org.mozc.android.inputmethod.japanese.protobuf.ProtoCommands.Command
+import org.mozc.android.inputmethod.japanese.protobuf.ProtoCommands.CompositionMode
 import org.mozc.android.inputmethod.japanese.protobuf.ProtoCommands.Input
 import org.mozc.android.inputmethod.japanese.protobuf.ProtoCommands.KeyEvent
 import org.mozc.android.inputmethod.japanese.protobuf.ProtoCommands.Output
@@ -75,8 +77,13 @@ class MozcSession private constructor(private val sessionId: Long) {
          */
         private fun evaluate(input: Input): Output? =
             runCatching {
-                val response = MozcJNI.evalCommand(input.toByteArray())
-                Output.parseFrom(response)
+                /*
+                 * JNIがやり取りするのは Input ではなく、それを内包する Command。
+                 * 応答も Command で返るため、そこから output を取り出す。
+                 */
+                val request = Command.newBuilder().setInput(input).build()
+                val response = MozcJNI.evalCommand(request.toByteArray())
+                Command.parseFrom(response).output
             }.onFailure {
                 Log.e(TAG, "Mozcのコマンド実行に失敗しました", it)
             }.getOrNull()
@@ -90,20 +97,33 @@ class MozcSession private constructor(private val sessionId: Long) {
      * 同じ「読み全体のN-best候補＋先頭一致の部分確定」の意味論になる。
      */
     fun configureForMobile() {
-        val request = Request.newBuilder()
-            .setMixedConversion(true)
-            .setZeroQuerySuggestion(true)
-            .setAutoPartialSuggestion(true)
-            .build()
+        /* 設定の反映は専用のコマンドで行う。SEND_COMMAND へ添えても永続しない */
+        send(
+            Input.newBuilder()
+                .setType(Input.CommandType.SET_REQUEST)
+                .setId(sessionId)
+                .setRequest(
+                    Request.newBuilder()
+                        .setMixedConversion(true)
+                        .setZeroQuerySuggestion(true)
+                        .setAutoPartialSuggestion(true)
+                        .build()
+                )
+                .build()
+        )
 
+        /*
+         * 新しいセッションは直接入力（DIRECT）で始まる。この状態ではキーが
+         * そのまま素通りし、かなの合成も変換も行われない。ひらがな入力へ切り替える。
+         */
         send(
             Input.newBuilder()
                 .setType(Input.CommandType.SEND_COMMAND)
                 .setId(sessionId)
-                .setRequest(request)
                 .setCommand(
                     SessionCommand.newBuilder()
-                        .setType(SessionCommand.CommandType.RESET_CONTEXT)
+                        .setType(SessionCommand.CommandType.SWITCH_COMPOSITION_MODE)
+                        .setCompositionMode(CompositionMode.HIRAGANA)
                         .build()
                 )
                 .build()

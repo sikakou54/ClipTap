@@ -15,6 +15,12 @@ android {
     versionName '1.0.0'
 
     /*
+     * 変換エンジンはネイティブライブラリと辞書の展開を伴うため、端末上でしか
+     * 検証できない。契約テストを connectedAndroidTest で回すために指定する。
+     */
+    testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+
+    /*
      * 32bit専用端末はほぼ残っていないが、minSdk 24 を維持している以上は
      * armeabi-v7a も同梱する。x86_64 はエミュレータでの動作確認に必要。
      */
@@ -35,4 +41,7 @@ android {
 dependencies {
   /* MozcのJNIはprotobufでコマンドをやり取りする。protocの版と揃えること */
   implementation 'com.google.protobuf:protobuf-javalite:4.32.1'
+
+  androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+  androidTestImplementation 'androidx.test:runner:1.6.2'
 }

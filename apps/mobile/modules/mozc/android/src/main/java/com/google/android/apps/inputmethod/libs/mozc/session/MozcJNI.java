@@ -35,12 +35,27 @@ public final class MozcJNI {
         } catch (UnsatisfiedLinkError error) {
             return false;
         }
+        /*
+         * ネイティブ側は JNI_OnLoad ではなく initialize の中で RegisterNatives を行う。
+         * これを呼ばないと evalCommand などは未登録のままで、
+         * 実行時に UnsatisfiedLinkError になる。
+         */
+        if (!initialize()) {
+            return false;
+        }
         if (!onPostLoad(userProfileDirectory, dataFilePath)) {
             return false;
         }
         isLoaded = true;
         return true;
     }
+
+    /**
+     * 残りのネイティブメソッドを登録する。
+     *
+     * <p>このメソッドだけがライブラリ内で通常のJNI命名規則で公開されている。
+     */
+    private static native boolean initialize();
 
     /**
      * 変換コマンドを実行する。

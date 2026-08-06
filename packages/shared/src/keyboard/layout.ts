@@ -34,7 +34,17 @@ export type KeyAction =
   | { readonly type: 'cursor'; readonly offset: number };
 
 /** キー配列の識別子 */
-export type LayoutId = 'qwerty' | 'symbols' | 'numbers';
+export type LayoutId = 'qwerty' | 'symbols' | 'numbers' | 'flick';
+
+/** フリックの方向 */
+export type FlickDirection = 'up' | 'down' | 'left' | 'right';
+
+/**
+ * フリック入力の割り当て
+ *
+ * 中央（タップ）は`action`が担う。ここには上下左右だけを持たせる。
+ */
+export type FlickMap = Partial<Record<FlickDirection, KeyAction>>;
 
 /**
  * キーの見た目上の幅
@@ -52,6 +62,8 @@ export interface KeyWidth {
 export interface Key {
   /** レイアウト内で一意。テストとアクセシビリティ識別に使う */
   readonly id: string;
+  /** フリック入力の割り当て。12キー配列でのみ使う */
+  readonly flick?: FlickMap;
   /** キーに表示する文字。省略時はactionのtextを表示する */
   readonly label?: string;
   /** シフト時に表示する文字。シフトを持つ配列でのみ使う */
@@ -125,7 +137,8 @@ export const QWERTY_LAYOUT: KeyLayout = {
       keys: [
         fn('switch_numbers', '123', { type: 'switchLayout', layoutId: 'numbers' }, 1.5),
         fn('next_keyboard', '🌐', { type: 'nextKeyboard' }, 1),
-        fn('space', ' ', { type: 'space' }, 5),
+        fn('switch_flick', 'あ', { type: 'switchLayout', layoutId: 'flick' }, 1.5),
+        fn('space', ' ', { type: 'space' }, 3.5),
         fn('enter', '⏎', { type: 'enter' }, 1.5),
       ],
     },
@@ -184,5 +197,82 @@ export const SYMBOLS_LAYOUT: KeyLayout = {
   ],
 };
 
+/**
+ * 12キーフリック（日本語）の1キーを作る
+ *
+ * 中央がタップ、上下左右がフリックに対応する。「あ」なら
+ * 中央=あ、左=い、上=う、右=え、下=お。この割り当てはOS標準と同じで、
+ * 利用者が既に指の動きを覚えているため独自の配置にする利点がない。
+ *
+ * @param row 「あいうえお」のように、中央・左・上・右・下の順に並べたかな
+ */
+const flickKey = (id: string, row: string): Key => {
+  const [center, left, up, right, down] = row.split('');
+  return {
+    id: `flick_${id}`,
+    label: center,
+    action: { type: 'input', text: center },
+    flick: {
+      left: { type: 'input', text: left },
+      up: { type: 'input', text: up },
+      right: { type: 'input', text: right },
+      down: { type: 'input', text: down },
+    },
+  };
+};
+
+/**
+ * 12キーフリック（日本語）
+ *
+ * かな入力の結果は変換エンジンへ渡され、候補バーに変換候補が並ぶ。
+ */
+export const FLICK_LAYOUT: KeyLayout = {
+  id: 'flick',
+  rows: [
+    {
+      keys: [
+        flickKey('a', 'あいうえお'),
+        flickKey('ka', 'かきくけこ'),
+        flickKey('sa', 'さしすせそ'),
+        fn('backspace', '⌫', { type: 'backspace' }, 1),
+      ],
+    },
+    {
+      keys: [
+        flickKey('ta', 'たちつてと'),
+        flickKey('na', 'なにぬねの'),
+        flickKey('ha', 'はひふへほ'),
+        fn('space', '␣', { type: 'space' }, 1),
+      ],
+    },
+    {
+      keys: [
+        flickKey('ma', 'まみむめも'),
+        flickKey('ya', 'やゆよっー'),
+        flickKey('ra', 'らりるれろ'),
+        fn('enter', '⏎', { type: 'enter' }, 1),
+      ],
+    },
+    {
+      keys: [
+        fn('switch_qwerty', 'ABC', { type: 'switchLayout', layoutId: 'qwerty' }, 1),
+        flickKey('wa', 'わをんー〜'),
+        {
+          /* 濁点・半濁点・小文字は直前のかなを変換する。中央で巡回させる */
+          id: 'flick_dakuten',
+          label: '゛゜小',
+          action: { type: 'input', text: '゛' },
+        },
+        fn('next_keyboard', '🌐', { type: 'nextKeyboard' }, 1),
+      ],
+    },
+  ],
+};
+
 /** 生成対象のすべての配列 */
-export const ALL_LAYOUTS: readonly KeyLayout[] = [QWERTY_LAYOUT, NUMBERS_LAYOUT, SYMBOLS_LAYOUT];
+export const ALL_LAYOUTS: readonly KeyLayout[] = [
+  QWERTY_LAYOUT,
+  NUMBERS_LAYOUT,
+  SYMBOLS_LAYOUT,
+  FLICK_LAYOUT,
+];
