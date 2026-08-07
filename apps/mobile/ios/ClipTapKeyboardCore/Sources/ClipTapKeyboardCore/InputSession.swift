@@ -65,6 +65,14 @@ public final class InputSession {
     /** 状態が変わったときに呼ばれる。キー領域の再描画に使う */
     public var onStateChanged: (() -> Void)?
 
+    /**
+     * 配列が切り替わったときに呼ばれる
+     *
+     * キー領域の外（ツールバーのモード表示など）が配列に追従するために使う。
+     * キー領域の再描画はonStateChangedが担うため、ここでは行わない。
+     */
+    public var onLayoutChanged: (() -> Void)?
+
     /** 未確定文字列・候補・候補の選択が変わったときに呼ばれる。候補バーの再描画に使う */
     public var onCompositionChanged: (() -> Void)?
 
@@ -138,12 +146,7 @@ public final class InputSession {
             notifyStateChanged()
 
         case .switchLayout(let layoutId):
-            /* 未確定文字列は配列をまたいで持ち越せない。捨てずに確定してから移る */
-            flushComposition()
-            layout = KeyLayouts.layout(for: layoutId)
-            /* 配列を変えたらシフトは持ち越さない。記号面での大文字指定は意味を持たない */
-            shiftState = .off
-            notifyStateChanged()
+            switchLayout(to: layoutId)
 
         case .nextKeyboard:
             flushComposition()
@@ -162,6 +165,21 @@ public final class InputSession {
             applyKanaVariant()
             notifyStateChanged()
         }
+    }
+
+    /**
+     * 配列を切り替える
+     *
+     * キーからの切替も、ツールバーなどキー以外からの切替もここを通す。
+     * 未確定文字列は配列をまたいで持ち越せないため、捨てずに確定してから移る。
+     */
+    public func switchLayout(to layoutId: LayoutId) {
+        flushComposition()
+        layout = KeyLayouts.layout(for: layoutId)
+        /* 配列を変えたらシフトは持ち越さない。記号面での大文字指定は意味を持たない */
+        shiftState = .off
+        notifyStateChanged()
+        onLayoutChanged?()
     }
 
     /**

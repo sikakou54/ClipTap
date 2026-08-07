@@ -71,6 +71,11 @@
 "accessibility.category_button" = "カテゴリボタン";
 "accessibility.keyboard_mode_button" = "キーボードに切り替え";
 "accessibility.snippet_list_button" = "定型文一覧に切り替え";
+"accessibility.switch_to_english" = "英字入力に切り替え";
+"accessibility.switch_to_japanese" = "日本語入力に切り替え";
+"mode.snippets" = "定型文";
+"mode.english" = "英字";
+"mode.japanese" = "日本語";
 "accessibility.snippet_item" = "スニペット項目";
 "accessibility.close_button" = "閉じるボタン";
 "accessibility.copy_button" = "コピーボタン";

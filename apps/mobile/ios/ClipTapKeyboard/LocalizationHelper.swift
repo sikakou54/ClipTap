@@ -269,6 +269,12 @@ enum L10n {
         /// "定型文一覧に切り替え" / "Switch to snippet list"
         static let snippetListButton = localized("accessibility.snippet_list_button")
 
+        /// "英字入力に切り替え" / "Switch to English input"
+        static let switchToEnglish = localized("accessibility.switch_to_english")
+
+        /// "日本語入力に切り替え" / "Switch to Japanese input"
+        static let switchToJapanese = localized("accessibility.switch_to_japanese")
+
         /// "スニペット項目" / "Snippet item"
         static let snippetItem = localized("accessibility.snippet_item")
 
@@ -306,6 +312,20 @@ enum L10n {
 
         /// "使用頻度" / "Frequency"
         static let usage = localized("sort.usage")
+    }
+
+    // MARK: - Mode (モード切替)
+
+    /// モード切替の翻訳
+    enum Mode {
+        /// "定型文" / "Snippets"
+        static let snippets = localized("mode.snippets")
+
+        /// "英字" / "English"
+        static let english = localized("mode.english")
+
+        /// "日本語" / "Japanese"
+        static let japanese = localized("mode.japanese")
     }
 
     // MARK: - Settings (設定関連)
@@ -442,6 +462,13 @@ enum L10n {
         case "accessibility.category_button": return isJapanese ? "カテゴリボタン" : "Category button"
         case "accessibility.keyboard_mode_button": return isJapanese ? "キーボードに切り替え" : "Switch to keyboard"
         case "accessibility.snippet_list_button": return isJapanese ? "定型文一覧に切り替え" : "Switch to snippet list"
+        case "accessibility.switch_to_english": return isJapanese ? "英字入力に切り替え" : "Switch to English input"
+        case "accessibility.switch_to_japanese": return isJapanese ? "日本語入力に切り替え" : "Switch to Japanese input"
+
+        // Mode
+        case "mode.snippets": return isJapanese ? "定型文" : "Snippets"
+        case "mode.english": return isJapanese ? "英字" : "English"
+        case "mode.japanese": return isJapanese ? "日本語" : "Japanese"
         case "accessibility.snippet_item": return isJapanese ? "スニペット項目" : "Snippet item"
         case "accessibility.close_button": return isJapanese ? "閉じるボタン" : "Close button"
         case "accessibility.copy_button": return isJapanese ? "コピーボタン" : "Copy button"

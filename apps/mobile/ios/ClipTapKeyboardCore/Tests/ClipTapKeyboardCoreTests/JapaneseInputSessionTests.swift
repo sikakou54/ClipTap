@@ -316,6 +316,32 @@ struct JapaneseInputSessionTests {
         #expect(requested)
     }
 
+    @Test("外部からの配列切替でも読みのまま確定してから移る")
+    func programmaticSwitchCommitsComposition() {
+        let (session, host, _) = makeSession()
+
+        session.handle(key("flick_a", in: session.layout))
+        session.switchLayout(to: .qwerty)
+
+        #expect(host.text == "あ", "打ちかけの文字を捨てない")
+        #expect(session.layout.id == .qwerty)
+    }
+
+    @Test("配列の切替は外へ通知される")
+    func layoutChangeIsNotified() {
+        let (session, _, _) = makeSession()
+        var notified = 0
+        session.onLayoutChanged = { notified += 1 }
+
+        session.switchLayout(to: .qwerty)
+        #expect(notified == 1)
+
+        /* キーからの切替でも同じ経路を通る */
+        session.handle(key("switch_flick", in: session.layout))
+        #expect(notified == 2)
+        #expect(session.layout.id == .flick)
+    }
+
     @Test("破棄要求は未確定文字列を入力欄へ送らず消す")
     func discardDropsCompositionWithoutInserting() {
         let (session, host, engine) = makeSession()

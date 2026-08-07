@@ -52,6 +52,18 @@ class KeyboardViewController: UIInputViewController {
         case settings
     }
 
+    /**
+     * ツールバーのトグルが巡回する3つのモード
+     *
+     * 画面状態（一覧か入力か）と入力配列（英字か日本語か）を、
+     * 利用者から見た1つの切替対象として扱う。rawValueは保存にも使う。
+     */
+    private enum KeyboardMode: String {
+        case snippets
+        case english
+        case japanese
+    }
+
     // MARK: - Services（サービス層：ビジネスロジックを担当）
     // 3層アーキテクチャを採用: UI層（ViewController） → ビジネスロジック層（Service） → データアクセス層（Mapper）
     // これにより、コードの見通しが良くなり、テストもしやすくなります
@@ -127,8 +139,8 @@ class KeyboardViewController: UIInputViewController {
     /// ソート設定を保存するUserDefaultsキー
     private let sortPreferenceKey = "keyboard_snippet_sort_by"
 
-    /// 最後に使ったモード（定型文の一覧／文字入力）を保存するUserDefaultsキー
-    private let keyboardModePreferenceKey = "keyboard_input_mode"
+    /// 最後に使ったモード（定型文／英字／日本語）を保存するUserDefaultsキー
+    private let keyboardModePreferenceKey = "keyboard_mode_state"
 
     /// 変換学習の有効・無効を保存するUserDefaultsキー
     private let learningPreferenceKey = "keyboard_learning_enabled"
@@ -258,13 +270,15 @@ class KeyboardViewController: UIInputViewController {
         return button
     }()
 
-    /// 定型文の一覧と文字入力を切り替えるボタン（左端固定）
+    /// 定型文・英字・日本語を巡回するモード切替ボタン（左端固定）
     ///
     /// 両モードで同じ位置に置く。切り替えるたびに指の当てどころが動くと使いにくいため。
+    /// タップで次のモードへ巡回し、長押しで行き先を直接選ぶメニューが開く。
     private let keyboardModeButton: UIButton = {
         let button = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         button.setImage(UIImage(systemName: "keyboard", withConfiguration: config), for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
         button.tintColor = .label
         button.backgroundColor = .clear
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -907,6 +921,18 @@ class KeyboardViewController: UIInputViewController {
         filterContainerView.addSubview(settingsButton)
 
         keyboardModeButton.addTarget(self, action: #selector(keyboardModeButtonTapped), for: .touchUpInside)
+
+        /*
+         * 長押しで行き先を直接選べるメニューを出す。タップは巡回のまま。
+         * 選択肢は表示のたびに組み立て、現在のモードへチェックを付ける。
+         */
+        keyboardModeButton.menu = UIMenu(children: [
+            UIDeferredMenuElement.uncached { [weak self] completion in
+                completion(self?.makeKeyboardModeMenuActions() ?? [])
+            }
+        ])
+        keyboardModeButton.showsMenuAsPrimaryAction = false
+
         setupInputSession()
 
         // シェブロンアイコンをボタンの上に配置
@@ -1625,27 +1651,97 @@ class KeyboardViewController: UIInputViewController {
             self?.switchScreenState(to: .list)
         }
 
+        /* 配列の切替（キー面のABC/あを含む）にツールバーの表示と保存を追従させる */
+        inputSession.onLayoutChanged = { [weak self] in
+            self?.updateKeyboardModeButton()
+            self?.saveKeyboardMode()
+        }
+
         /* エンジンが無い・辞書が読めない場合、セッションは直接入力へ縮退する */
         inputSession.engine = kanaKanjiEngine
     }
 
-    /**
-     * モード切替ボタンのアイコンを現在のモードに合わせる
-     */
-    private func updateKeyboardModeButton() {
-        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        let name = screenState == .typing ? "list.bullet" : "keyboard"
-        keyboardModeButton.setImage(UIImage(systemName: name, withConfiguration: config), for: .normal)
-        keyboardModeButton.accessibilityLabel = screenState == .typing
-            ? L10n.Accessibility.snippetListButton
-            : L10n.Accessibility.keyboardModeButton
+    /// いまのモード。入力モードは配列で英字と日本語に分かれる
+    private var currentKeyboardMode: KeyboardMode {
+        guard screenState == .typing else {
+            return .snippets
+        }
+        return inputSession.layout.id == .flick ? .japanese : .english
+    }
+
+    /// トグルを押したときの行き先。定型文 → 英字 → 日本語 の順に巡回する
+    private var nextKeyboardMode: KeyboardMode {
+        switch currentKeyboardMode {
+        case .snippets: return .english
+        case .english: return .japanese
+        case .japanese: return .snippets
+        }
     }
 
     /**
-     * 定型文の一覧と文字入力を切り替える
+     * モード切替ボタンの表示を行き先に合わせる
+     *
+     * ボタンは押したときの行き先（次のモード）を示す。定型文一覧では
+     * 英字を、英字では日本語を、日本語では定型文一覧を示す。
+     */
+    private func updateKeyboardModeButton() {
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        switch nextKeyboardMode {
+        case .snippets:
+            keyboardModeButton.setTitle(nil, for: .normal)
+            keyboardModeButton.setImage(UIImage(systemName: "list.bullet", withConfiguration: config), for: .normal)
+            keyboardModeButton.accessibilityLabel = L10n.Accessibility.snippetListButton
+        case .english:
+            keyboardModeButton.setImage(nil, for: .normal)
+            keyboardModeButton.setTitle("ABC", for: .normal)
+            keyboardModeButton.accessibilityLabel = L10n.Accessibility.switchToEnglish
+        case .japanese:
+            keyboardModeButton.setImage(nil, for: .normal)
+            keyboardModeButton.setTitle("あ", for: .normal)
+            keyboardModeButton.accessibilityLabel = L10n.Accessibility.switchToJapanese
+        }
+    }
+
+    /**
+     * モード切替ボタンがタップされた時のアクション。次のモードへ巡回する
      */
     @objc private func keyboardModeButtonTapped() {
-        switchScreenState(to: screenState == .typing ? .list : .typing)
+        switchKeyboardMode(to: nextKeyboardMode)
+    }
+
+    /**
+     * 長押しメニューの選択肢を組み立てる
+     */
+    private func makeKeyboardModeMenuActions() -> [UIMenuElement] {
+        let entries: [(KeyboardMode, String)] = [
+            (.snippets, L10n.Mode.snippets),
+            (.english, L10n.Mode.english),
+            (.japanese, L10n.Mode.japanese)
+        ]
+        return entries.map { mode, title in
+            UIAction(title: title, state: currentKeyboardMode == mode ? .on : .off) { [weak self] _ in
+                self?.switchKeyboardMode(to: mode)
+            }
+        }
+    }
+
+    /**
+     * モードを切り替える
+     *
+     * 配列の切替は画面状態より先に行う。切替時に未確定文字列の確定が
+     * 走るため、キー領域が見えている状態で配列だけが変わる瞬間を作らない。
+     */
+    private func switchKeyboardMode(to mode: KeyboardMode) {
+        switch mode {
+        case .snippets:
+            switchScreenState(to: .list)
+        case .english:
+            inputSession.switchLayout(to: .qwerty)
+            switchScreenState(to: .typing)
+        case .japanese:
+            inputSession.switchLayout(to: .flick)
+            switchScreenState(to: .typing)
+        }
     }
 
     /**
@@ -1663,12 +1759,22 @@ class KeyboardViewController: UIInputViewController {
 
     /** 最後に使ったモードを保存する */
     private func saveKeyboardMode() {
-        UserDefaults.standard.set(screenState == .typing, forKey: keyboardModePreferenceKey)
+        UserDefaults.standard.set(currentKeyboardMode.rawValue, forKey: keyboardModePreferenceKey)
     }
 
-    /** 最後に使ったモードを読み出す */
-    private func loadKeyboardMode() -> ScreenState {
-        UserDefaults.standard.bool(forKey: keyboardModePreferenceKey) ? .typing : .list
+    /** 最後に使ったモードを読み出して適用する */
+    private func restoreKeyboardMode() {
+        let saved = UserDefaults.standard.string(forKey: keyboardModePreferenceKey) ?? ""
+        switch KeyboardMode(rawValue: saved) ?? .snippets {
+        case .snippets:
+            screenState = .list
+        case .english:
+            inputSession.switchLayout(to: .qwerty)
+            screenState = .typing
+        case .japanese:
+            inputSession.switchLayout(to: .flick)
+            screenState = .typing
+        }
     }
 
     /// スニペットの詳細画面（プレビュー）を表示
@@ -2121,7 +2227,7 @@ extension KeyboardViewController: UITableViewDelegate {
     private func hideLoading() {
         if screenState == .loading {
             /* 前回使っていたモードで開く。毎回切り替え直す手間をなくすため */
-            screenState = loadKeyboardMode()
+            restoreKeyboardMode()
             applyScreenState()
         }
         activityIndicator.stopAnimating()

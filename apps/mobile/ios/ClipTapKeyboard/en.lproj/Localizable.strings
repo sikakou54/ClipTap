@@ -71,6 +71,11 @@
 "accessibility.category_button" = "Category button";
 "accessibility.keyboard_mode_button" = "Switch to keyboard";
 "accessibility.snippet_list_button" = "Switch to snippet list";
+"accessibility.switch_to_english" = "Switch to English input";
+"accessibility.switch_to_japanese" = "Switch to Japanese input";
+"mode.snippets" = "Snippets";
+"mode.english" = "English";
+"mode.japanese" = "Japanese";
 "accessibility.snippet_item" = "Snippet item";
 "accessibility.close_button" = "Close button";
 "accessibility.copy_button" = "Copy button";
