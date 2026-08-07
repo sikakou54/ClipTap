@@ -170,11 +170,31 @@ describe('キー配列の正本', () => {
     }
   );
 
-  it('12キーフリックは地球儀キーの代わりの句読点キーを持つ', () => {
-    /* 地球儀が消えた機種でも4列の格子が崩れないよう、同じセルに句読点を置く */
-    const punct = allKeys(FLICK_LAYOUT).find((key) => key.visibility === 'noInputModeSwitch');
-    expect(punct).toBeDefined();
-    expect(punct!.action).toEqual({ type: 'input', text: '、' });
+  it('12キーフリックは地球儀キーの代わりの顔文字キーを持つ', () => {
+    /* 地球儀が消えた機種でも5列の格子が崩れないよう、同じセルに顔文字を置く */
+    const kaomoji = allKeys(FLICK_LAYOUT).find((key) => key.visibility === 'noInputModeSwitch');
+    expect(kaomoji).toBeDefined();
+    expect(kaomoji!.id).toBe('flick_kaomoji');
+  });
+
+  it('12キーフリックはOS標準と同じ5列の格子が揃っている', () => {
+    /* 表示条件つきのキーは同じセルを共有するため、どちらか片方だけを数える */
+    for (const row of FLICK_LAYOUT.rows) {
+      const total = row.keys
+        .filter((key) => key.visibility !== 'noInputModeSwitch')
+        .reduce((sum, key) => sum + (key.width?.unit ?? 1), 0);
+      expect(total).toBe(5);
+    }
+  });
+
+  it('12キーフリックの改行はOS標準と同じく2行の高さを持つ', () => {
+    const enter = allKeys(FLICK_LAYOUT).find((key) => key.action.type === 'enter');
+    expect(enter?.rowSpan).toBe(2);
+
+    /* 伸びた先の行に場所取りがあること。無いと下の行が横に広がって格子が崩れる */
+    const lastRow = FLICK_LAYOUT.rows[FLICK_LAYOUT.rows.length - 1];
+    const spacer = lastRow?.keys[lastRow.keys.length - 1];
+    expect(spacer?.isSpacer).toBe(true);
   });
 
   it('QWERTYの文字キーはシフトで大文字になる', () => {

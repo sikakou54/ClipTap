@@ -266,8 +266,8 @@ struct FlickInputSessionTests {
         #expect(host.operations.isEmpty, "入力欄には触れない")
     }
 
-    @Test("地球儀キーが不要な機種では句読点キーに置き換わる")
-    func punctuationReplacesGlobeWhenNotNeeded() {
+    @Test("地球儀キーが不要な機種では顔文字キーに置き換わる")
+    func kaomojiReplacesGlobeWhenNotNeeded() {
         let (session, host) = makeSession()
         session.needsInputModeSwitch = false
 
@@ -276,7 +276,14 @@ struct FlickInputSessionTests {
             "地球儀キーは消える"
         )
 
-        /* 空いたセルにはOS標準と同じ句読点キーが入る */
+        session.handle(key("flick_kaomoji", in: session.layout))
+        #expect(host.text == "^_^")
+    }
+
+    @Test("句読点キーでOS標準と同じ記号が入る")
+    func punctuationKeyInsertsSymbols() {
+        let (session, host) = makeSession()
+
         let punct = key("flick_punct", in: session.layout)
         session.handle(punct)
         session.handle(punct, flickDirection: .left)
@@ -284,6 +291,18 @@ struct FlickInputSessionTests {
         session.handle(punct, flickDirection: .right)
         session.handle(punct, flickDirection: .down)
         #expect(host.text == "、。？！…")
+    }
+
+    @Test("カーソルキーで入力欄のカーソルが動く")
+    func cursorKeyMovesCursor() {
+        let (session, host) = makeSession()
+
+        let cursor = key("flick_cursor", in: session.layout)
+        session.handle(cursor)
+        #expect(host.operations == [.moveCursor(1)])
+
+        session.handle(cursor, flickDirection: .left)
+        #expect(host.operations == [.moveCursor(1), .moveCursor(-1)], "左フリックで戻れる")
     }
 
     @Test("かなの各行が正しく割り当てられている")

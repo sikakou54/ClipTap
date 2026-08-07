@@ -107,6 +107,8 @@ function swiftKey(key) {
     `isFunction: ${key.isFunction === true}`,
     `accessibilityLabelKey: ${swiftOptional(key.accessibilityLabelKey, swiftString)}`,
     `visibility: .${key.visibility ?? 'always'}`,
+    `rowSpan: ${key.rowSpan ?? 1}`,
+    `isSpacer: ${key.isSpacer === true}`,
     `flick: ${swiftFlick(key.flick)}`,
   ];
   return `                    KeyDefinition(${parts.join(', ')})`;

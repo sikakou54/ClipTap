@@ -54,6 +54,8 @@ public enum KeyAction: Equatable, Sendable {
     case cursor(offset: Int)
     /** 直前のかなを濁点・半濁点・小文字へ巡回させる。規則はKanaVariantsが持つ */
     case kanaVariant
+    /** 何もしない。縦長キーの場所取り（spacer）用 */
+    case noop
 }
 
 /**
@@ -103,6 +105,17 @@ public struct KeyDefinition: Equatable, Sendable {
     /** 表示条件 */
     public let visibility: KeyVisibility
 
+    /**
+     * 縦に占める行数
+     *
+     * OS標準の改行キーのような縦長キーに使う。伸びた先の行には
+     * isSpacerのキーを置いて場所を空けておくこと。
+     */
+    public let rowSpan: Int
+
+    /** 場所取り。描画もタッチもされず、幅の計算にだけ使われる */
+    public let isSpacer: Bool
+
     /** フリック入力の割り当て。12キー配列でのみ使う */
     public let flick: [FlickDirection: KeyAction]
 
@@ -116,6 +129,8 @@ public struct KeyDefinition: Equatable, Sendable {
         isFunction: Bool,
         accessibilityLabelKey: String?,
         visibility: KeyVisibility = .always,
+        rowSpan: Int = 1,
+        isSpacer: Bool = false,
         flick: [FlickDirection: KeyAction] = [:]
     ) {
         self.id = id
@@ -127,6 +142,8 @@ public struct KeyDefinition: Equatable, Sendable {
         self.isFunction = isFunction
         self.accessibilityLabelKey = accessibilityLabelKey
         self.visibility = visibility
+        self.rowSpan = rowSpan
+        self.isSpacer = isSpacer
         self.flick = flick
     }
 

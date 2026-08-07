@@ -180,6 +180,9 @@ public final class InputSession {
         case .kanaVariant:
             applyKanaVariant()
             notifyStateChanged()
+
+        case .noop:
+            break
         }
     }
 

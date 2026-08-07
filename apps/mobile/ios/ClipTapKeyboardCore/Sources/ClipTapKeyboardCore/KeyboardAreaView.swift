@@ -92,7 +92,8 @@ public final class KeyboardAreaView: UIView {
         keyViews = [:]
 
         for row in session.layout.rows {
-            for key in row.keys {
+            /* 場所取りキーは描画しない。幅の計算にだけ使う */
+            for key in row.keys where !key.isSpacer {
                 let keyView = KeyCapView(key: key)
                 addSubview(keyView)
                 keyViews[key.id] = keyView
@@ -127,7 +128,12 @@ public final class KeyboardAreaView: UIView {
 
             for key in row.keys {
                 let width = unitWidth * CGFloat(key.widthUnit)
-                keyViews[key.id]?.frame = CGRect(x: x, y: y, width: width, height: rowHeight)
+                if let keyView = keyViews[key.id] {
+                    /* 縦長キーは下の行まで伸ばす。行間も高さに含める */
+                    let span = CGFloat(max(key.rowSpan, 1))
+                    let height = rowHeight * span + rowSpacing * (span - 1)
+                    keyView.frame = CGRect(x: x, y: y, width: width, height: height)
+                }
                 x += width + keySpacing
             }
         }

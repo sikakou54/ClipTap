@@ -33,7 +33,9 @@ export type KeyAction =
   /** カーソルを移動する */
   | { readonly type: 'cursor'; readonly offset: number }
   /** 直前のかなを濁点・半濁点・小文字へ巡回させる。規則はkanaVariants.tsが正本 */
-  | { readonly type: 'kanaVariant' };
+  | { readonly type: 'kanaVariant' }
+  /** 何もしない。縦長キーの場所取り（spacer）用 */
+  | { readonly type: 'noop' };
 
 /** キー配列の識別子 */
 export type LayoutId = 'qwerty' | 'symbols' | 'numbers' | 'flick';
@@ -87,6 +89,15 @@ export interface Key {
    * Face ID機種ではOSが地球儀キーを提供して重複する。条件で出し分ける。
    */
   readonly visibility?: 'needsInputModeSwitch' | 'noInputModeSwitch';
+  /**
+   * 縦に占める行数。省略時は1
+   *
+   * OS標準の改行キーのような縦長キーに使う。伸びた先の行には
+   * isSpacerのキーを置いて場所を空けておくこと。
+   */
+  readonly rowSpan?: number;
+  /** 場所取り。描画もタッチもされず、幅の計算にだけ使われる */
+  readonly isSpacer?: boolean;
 }
 
 /** キーの行 */
@@ -238,12 +249,22 @@ const flickKey = (id: string, row: string): Key => {
  * 12キーフリック（日本語）
  *
  * かな入力の結果は変換エンジンへ渡され、候補バーに変換候補が並ぶ。
+ * OS標準のかなキーボードと同じ5列構成にする。左が機能列、中央3列がかな、
+ * 右列が削除・空白・改行（縦長）。利用者が指の位置を覚えているため。
  */
 export const FLICK_LAYOUT: KeyLayout = {
   id: 'flick',
   rows: [
     {
       keys: [
+        {
+          /* カーソル移動。左フリックで戻れる */
+          ...fn('flick_cursor', '→', { type: 'cursor', offset: 1 }, 1),
+          flick: {
+            left: { type: 'cursor', offset: -1 },
+            right: { type: 'cursor', offset: 1 },
+          },
+        },
         flickKey('a', 'あいうえお'),
         flickKey('ka', 'かきくけこ'),
         flickKey('sa', 'さしすせそ'),
@@ -252,35 +273,44 @@ export const FLICK_LAYOUT: KeyLayout = {
     },
     {
       keys: [
+        fn('switch_numbers', '☆123', { type: 'switchLayout', layoutId: 'numbers' }, 1),
         flickKey('ta', 'たちつてと'),
         flickKey('na', 'なにぬねの'),
         flickKey('ha', 'はひふへほ'),
-        fn('space', '␣', { type: 'space' }, 1),
-      ],
-    },
-    {
-      keys: [
-        flickKey('ma', 'まみむめも'),
-        /* OS標準と同じく、や行はかぎ括弧を左右に持つ */
-        flickKey('ya', 'や「ゆ」よ'),
-        flickKey('ra', 'らりるれろ'),
-        fn('enter', '⏎', { type: 'enter' }, 1),
+        fn('space', '空白', { type: 'space' }, 1),
       ],
     },
     {
       keys: [
         fn('switch_qwerty', 'ABC', { type: 'switchLayout', layoutId: 'qwerty' }, 1),
-        flickKey('wa', 'わをんー〜'),
+        flickKey('ma', 'まみむめも'),
+        /* OS標準と同じく、や行はかぎ括弧を左右に持つ */
+        flickKey('ya', 'や「ゆ」よ'),
+        flickKey('ra', 'らりるれろ'),
+        { ...fn('enter', '⏎', { type: 'enter' }, 1), rowSpan: 2 },
+      ],
+    },
+    {
+      keys: [
         {
           /* 直前のかなを 小文字 → 濁点 → 半濁点 の順で巡回させる */
           id: 'flick_dakuten',
           label: '゛゜小',
           action: { type: 'kanaVariant' },
+          isFunction: true,
           accessibilityLabelKey: 'accessibility.key.flick_dakuten',
         },
         { ...fn('next_keyboard', '🌐', { type: 'nextKeyboard' }, 1), visibility: 'needsInputModeSwitch' },
         {
-          /* 地球儀キーが不要な機種では、OS標準と同じ句読点キーを置く */
+          /* 地球儀キーが不要な機種では、OS標準と同じ顔文字キーを置く */
+          id: 'flick_kaomoji',
+          label: '^_^',
+          action: { type: 'input', text: '^_^' },
+          visibility: 'noInputModeSwitch',
+        },
+        flickKey('wa', 'わをんー〜'),
+        {
+          /* OS標準と同じ句読点キー */
           id: 'flick_punct',
           label: '、。?!',
           action: { type: 'input', text: '、' },
@@ -290,7 +320,12 @@ export const FLICK_LAYOUT: KeyLayout = {
             right: { type: 'input', text: '！' },
             down: { type: 'input', text: '…' },
           },
-          visibility: 'noInputModeSwitch',
+        },
+        {
+          /* 上の行から伸びてくる改行キーの場所を空けておく */
+          id: 'spacer_enter',
+          action: { type: 'noop' },
+          isSpacer: true,
         },
       ],
     },
