@@ -279,7 +279,9 @@ class KeyboardViewController: UIInputViewController {
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         button.setImage(UIImage(systemName: "keyboard", withConfiguration: config), for: .normal)
         button.tintColor = .label
-        button.backgroundColor = .clear
+        /* 環境・カテゴリのチップと同じ面で、押せるボタンであることを示す */
+        button.backgroundColor = .secondarySystemFill
+        button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
