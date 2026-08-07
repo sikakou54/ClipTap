@@ -220,6 +220,16 @@ struct FlickInputSessionTests {
         #expect(host.text == "^_^")
     }
 
+    @Test("「あいう」キーはかな面に留まる")
+    func kanaKeyStaysOnFlick() {
+        let (session, host) = makeSession()
+        session.needsInputModeSwitch = false
+
+        session.handle(key("switch_kana", in: session.layout))
+        #expect(session.layout.id == .flick, "かな面では現在面の表示を兼ねる")
+        #expect(host.operations.isEmpty, "入力欄には触れない")
+    }
+
     @Test("地球儀キーが不要な機種では顔文字キーに置き換わる")
     func kaomojiReplacesGlobeWhenNotNeeded() {
         let (session, host) = makeSession()

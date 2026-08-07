@@ -300,10 +300,8 @@ export const FLICK_LAYOUT: KeyLayout = {
       keys: [
         { ...fn('next_keyboard', '🌐', { type: 'nextKeyboard' }, 1), visibility: 'needsInputModeSwitch' },
         {
-          /* 地球儀キーが不要な機種では空けておく。OS標準では絵文字キーの位置 */
-          id: 'spacer_emoji',
-          action: { type: 'noop' },
-          isSpacer: true,
+          /* 地球儀キーが不要な機種では、OS標準と同じ「あいう」（かな面）を置く */
+          ...fn('switch_kana', 'あいう', { type: 'switchLayout', layoutId: 'flick' }, 1),
           visibility: 'noInputModeSwitch',
         },
         {

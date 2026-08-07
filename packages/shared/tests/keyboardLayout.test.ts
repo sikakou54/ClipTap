@@ -173,10 +173,11 @@ describe('キー配列の正本', () => {
     }
   );
 
-  it('12キーフリックは地球儀キーが不要な機種ではそのセルを空けておく', () => {
-    /* 地球儀が消えても5列の格子が崩れないよう、場所取りに置き換える */
+  it('12キーフリックは地球儀キーが不要な機種では「あいう」を置く', () => {
+    /* OS標準の左列（☆123・ABC・あいう）を揃える。かな面では現在面の表示を兼ねる */
     const substitute = allKeys(FLICK_LAYOUT).find((key) => key.visibility === 'noInputModeSwitch');
-    expect(substitute?.isSpacer).toBe(true);
+    expect(substitute?.id).toBe('switch_kana');
+    expect(substitute?.action).toEqual({ type: 'switchLayout', layoutId: 'flick' });
   });
 
   it('12キーフリックはOS標準と同じ5列の格子が揃っている', () => {
