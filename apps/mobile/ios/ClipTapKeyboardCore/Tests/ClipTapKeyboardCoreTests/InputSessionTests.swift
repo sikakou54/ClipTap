@@ -293,16 +293,13 @@ struct FlickInputSessionTests {
         #expect(host.text == "、。？！…")
     }
 
-    @Test("カーソルキーで入力欄のカーソルが動く")
-    func cursorKeyMovesCursor() {
-        let (session, host) = makeSession()
+    @Test("空きセルは描画対象のキーを持たない")
+    func cursorCellStaysEmpty() {
+        let (session, _) = makeSession()
 
-        let cursor = key("flick_cursor", in: session.layout)
-        session.handle(cursor)
-        #expect(host.operations == [.moveCursor(1)])
-
-        session.handle(cursor, flickDirection: .left)
-        #expect(host.operations == [.moveCursor(1), .moveCursor(-1)], "左フリックで戻れる")
+        /* OS標準ではカーソルキーの位置。使わない方針のため場所取りだけを置く */
+        let firstRow = session.layout.rows.first
+        #expect(firstRow?.keys.first?.isSpacer == true)
     }
 
     @Test("かなの各行が正しく割り当てられている")

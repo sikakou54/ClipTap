@@ -258,12 +258,10 @@ export const FLICK_LAYOUT: KeyLayout = {
     {
       keys: [
         {
-          /* カーソル移動。左フリックで戻れる */
-          ...fn('flick_cursor', '→', { type: 'cursor', offset: 1 }, 1),
-          flick: {
-            left: { type: 'cursor', offset: -1 },
-            right: { type: 'cursor', offset: 1 },
-          },
+          /* OS標準ではカーソルキーの位置。使わないため空けておく */
+          id: 'spacer_cursor',
+          action: { type: 'noop' },
+          isSpacer: true,
         },
         flickKey('a', 'あいうえお'),
         flickKey('ka', 'かきくけこ'),

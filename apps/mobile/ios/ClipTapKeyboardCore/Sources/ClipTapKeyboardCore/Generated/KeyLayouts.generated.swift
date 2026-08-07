@@ -157,7 +157,7 @@ public enum KeyLayouts {
         id: .flick,
         rows: [
             KeyRow(keys: [
-                    KeyDefinition(id: "flick_cursor", label: "→", shiftLabel: nil, action: .cursor(offset: 1), shiftAction: nil, widthUnit: 1, isFunction: true, accessibilityLabelKey: "accessibility.key.flick_cursor", visibility: .always, rowSpan: 1, isSpacer: false, flick: [.left: .cursor(offset: -1), .right: .cursor(offset: 1)]),
+                    KeyDefinition(id: "spacer_cursor", label: nil, shiftLabel: nil, action: .noop, shiftAction: nil, widthUnit: 1, isFunction: false, accessibilityLabelKey: nil, visibility: .always, rowSpan: 1, isSpacer: true, flick: [:]),
                     KeyDefinition(id: "flick_a", label: "あ", shiftLabel: nil, action: .input("あ"), shiftAction: nil, widthUnit: 1, isFunction: false, accessibilityLabelKey: nil, visibility: .always, rowSpan: 1, isSpacer: false, flick: [.left: .input("い"), .up: .input("う"), .right: .input("え"), .down: .input("お")]),
                     KeyDefinition(id: "flick_ka", label: "か", shiftLabel: nil, action: .input("か"), shiftAction: nil, widthUnit: 1, isFunction: false, accessibilityLabelKey: nil, visibility: .always, rowSpan: 1, isSpacer: false, flick: [.left: .input("き"), .up: .input("く"), .right: .input("け"), .down: .input("こ")]),
                     KeyDefinition(id: "flick_sa", label: "さ", shiftLabel: nil, action: .input("さ"), shiftAction: nil, widthUnit: 1, isFunction: false, accessibilityLabelKey: nil, visibility: .always, rowSpan: 1, isSpacer: false, flick: [.left: .input("し"), .up: .input("す"), .right: .input("せ"), .down: .input("そ")]),
