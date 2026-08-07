@@ -130,12 +130,19 @@ public final class InputSession {
      */
     public func handle(_ key: KeyDefinition, flickDirection: FlickDirection? = nil) {
         /*
-         * フリックを持つキーは方向で動作が決まる。シフトは英字配列の概念であり、
-         * かなの12キー配列とは併用しない。
+         * 未確定文字列があるあいだは、composing用の動作を持つキーを優先する
+         * （OS標準の顔文字キーが入力中に「゛゜小」へ変わる挙動）。
+         * それ以外は、フリックを持つキーは方向で、持たないキーはシフトで決まる。
+         * シフトは英字配列の概念であり、かなの12キー配列とは併用しない。
          */
-        let action = key.hasFlick
-            ? key.resolvedAction(flickDirection: flickDirection)
-            : key.resolvedAction(isShifted: isShifted)
+        let action: KeyAction
+        if isComposing, let composingAction = key.composingAction {
+            action = composingAction
+        } else if key.hasFlick {
+            action = key.resolvedAction(flickDirection: flickDirection)
+        } else {
+            action = key.resolvedAction(isShifted: isShifted)
+        }
 
         switch action {
         case .input(let text):
@@ -397,9 +404,15 @@ public final class InputSession {
 
     /** 未確定文字列を差し替え、候補の選択を解いて通知する */
     private func updateComposition(_ output: EngineOutput) {
+        let wasComposing = composition.isComposing
         composition = output
         selectedCandidateIndex = nil
         onCompositionChanged?()
+
+        /* 未確定の有無で表示が変わるキー（顔文字⇄゛゜小）を追従させる */
+        if wasComposing != composition.isComposing {
+            notifyStateChanged()
+        }
     }
 
     /** 1文字だけの大文字指定は入力後に解除する。固定時は維持する */

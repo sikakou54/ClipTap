@@ -149,7 +149,11 @@ public final class KeyboardAreaView: UIView {
             return
         }
         for keyView in keyViews.values {
-            keyView.apply(isShifted: session.isShifted, shiftState: session.shiftState)
+            keyView.apply(
+                isShifted: session.isShifted,
+                shiftState: session.shiftState,
+                isComposing: session.isComposing
+            )
         }
     }
 
@@ -393,10 +397,15 @@ final class KeyCapView: UIView {
     }
 
     /**
-     * シフト状態に応じて表示を更新する
+     * シフト状態と未確定の有無に応じて表示を更新する
      */
-    func apply(isShifted: Bool, shiftState: InputSession.ShiftState) {
-        label.text = key.displayLabel(isShifted: isShifted)
+    func apply(isShifted: Bool, shiftState: InputSession.ShiftState, isComposing: Bool) {
+        /* 未確定文字列があるあいだだけ表示が変わるキー（顔文字⇄゛゜小） */
+        if isComposing, let composingLabel = key.composingLabel {
+            label.text = composingLabel
+        } else {
+            label.text = key.displayLabel(isShifted: isShifted)
+        }
         label.font = .systemFont(ofSize: key.isFunction ? 16 : 22, weight: .regular)
 
         /* シフトキーは固定中であることが分かるように色を変える */

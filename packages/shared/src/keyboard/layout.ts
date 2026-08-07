@@ -76,6 +76,14 @@ export interface Key {
   readonly action: KeyAction;
   /** シフト時の動作。省略時はactionのtextを大文字にする */
   readonly shiftAction?: KeyAction;
+  /**
+   * 未確定文字列があるあいだの表示。省略時はlabelのまま
+   *
+   * OS標準の顔文字キーが入力中に「゛゜小」へ変わる挙動に使う。
+   */
+  readonly composingLabel?: string;
+  /** 未確定文字列があるあいだの動作。省略時はactionのまま */
+  readonly composingAction?: KeyAction;
   /** 相対幅。省略時は1 */
   readonly width?: KeyWidth;
   /** 文字キーではないことを示す。配色を変えるために使う */
@@ -290,21 +298,26 @@ export const FLICK_LAYOUT: KeyLayout = {
     },
     {
       keys: [
-        {
-          /* 直前のかなを 小文字 → 濁点 → 半濁点 の順で巡回させる */
-          id: 'flick_dakuten',
-          label: '゛゜小',
-          action: { type: 'kanaVariant' },
-          isFunction: true,
-          accessibilityLabelKey: 'accessibility.key.flick_dakuten',
-        },
         { ...fn('next_keyboard', '🌐', { type: 'nextKeyboard' }, 1), visibility: 'needsInputModeSwitch' },
         {
-          /* 地球儀キーが不要な機種では、OS標準と同じ顔文字キーを置く */
+          /* 地球儀キーが不要な機種では空けておく。OS標準では絵文字キーの位置 */
+          id: 'spacer_emoji',
+          action: { type: 'noop' },
+          isSpacer: true,
+          visibility: 'noInputModeSwitch',
+        },
+        {
+          /*
+           * OS標準と同じ動的キー。待機中は顔文字、未確定文字列がある
+           * あいだは直前のかなを 小文字 → 濁点 → 半濁点 で巡回させる
+           * 「゛゜小」に切り替わる
+           */
           id: 'flick_kaomoji',
           label: '^_^',
           action: { type: 'input', text: '^_^' },
-          visibility: 'noInputModeSwitch',
+          composingLabel: '゛゜小',
+          composingAction: { type: 'kanaVariant' },
+          accessibilityLabelKey: 'accessibility.key.flick_kaomoji',
         },
         flickKey('wa', 'わをんー〜'),
         {

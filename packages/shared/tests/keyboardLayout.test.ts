@@ -150,9 +150,12 @@ describe('キー配列の正本', () => {
     }
   });
 
-  it('12キーフリックは濁点・半濁点・小文字のキーを持つ', () => {
-    const hasVariantKey = allKeys(FLICK_LAYOUT).some((key) => key.action.type === 'kanaVariant');
-    expect(hasVariantKey).toBe(true);
+  it('12キーフリックの顔文字キーは入力中に「゛゜小」へ切り替わる', () => {
+    /* OS標準と同じ動的キー。濁点・半濁点・小文字はこの切り替えで入力する */
+    const kaomoji = allKeys(FLICK_LAYOUT).find((key) => key.id === 'flick_kaomoji');
+    expect(kaomoji).toBeDefined();
+    expect(kaomoji!.composingLabel).toBe('゛゜小');
+    expect(kaomoji!.composingAction).toEqual({ type: 'kanaVariant' });
   });
 
   it.each(ALL_LAYOUTS.map((layout) => [layout.id, layout] as const))(
@@ -170,11 +173,10 @@ describe('キー配列の正本', () => {
     }
   );
 
-  it('12キーフリックは地球儀キーの代わりの顔文字キーを持つ', () => {
-    /* 地球儀が消えた機種でも5列の格子が崩れないよう、同じセルに顔文字を置く */
-    const kaomoji = allKeys(FLICK_LAYOUT).find((key) => key.visibility === 'noInputModeSwitch');
-    expect(kaomoji).toBeDefined();
-    expect(kaomoji!.id).toBe('flick_kaomoji');
+  it('12キーフリックは地球儀キーが不要な機種ではそのセルを空けておく', () => {
+    /* 地球儀が消えても5列の格子が崩れないよう、場所取りに置き換える */
+    const substitute = allKeys(FLICK_LAYOUT).find((key) => key.visibility === 'noInputModeSwitch');
+    expect(substitute?.isSpacer).toBe(true);
   });
 
   it('12キーフリックはOS標準と同じ5列の格子が揃っている', () => {

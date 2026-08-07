@@ -103,6 +103,8 @@ function swiftKey(key) {
     `shiftLabel: ${swiftOptional(key.shiftLabel, swiftString)}`,
     `action: ${swiftAction(key.action)}`,
     `shiftAction: ${swiftOptional(key.shiftAction, swiftAction)}`,
+    `composingLabel: ${swiftOptional(key.composingLabel, swiftString)}`,
+    `composingAction: ${swiftOptional(key.composingAction, swiftAction)}`,
     `widthUnit: ${key.width?.unit ?? 1}`,
     `isFunction: ${key.isFunction === true}`,
     `accessibilityLabelKey: ${swiftOptional(key.accessibilityLabelKey, swiftString)}`,

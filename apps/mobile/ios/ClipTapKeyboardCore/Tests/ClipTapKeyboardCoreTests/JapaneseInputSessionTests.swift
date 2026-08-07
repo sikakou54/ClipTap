@@ -354,18 +354,30 @@ struct JapaneseInputSessionTests {
         #expect(engine.reading.isEmpty, "エンジン側の未確定状態も消える")
     }
 
-    @Test("未確定中の「゛゜小」は未確定文字列の末尾を変形する")
-    func kanaVariantEditsComposition() {
+    @Test("未確定中の顔文字キーは「゛゜小」として末尾を変形する")
+    func kaomojiBecomesKanaVariantWhileComposing() {
         let (session, host, _) = makeSession()
+        let kaomoji = key("flick_kaomoji", in: session.layout)
 
         session.handle(key("flick_ha", in: session.layout))
-        session.handle(key("flick_dakuten", in: session.layout))
+        session.handle(kaomoji)
 
         #expect(session.composition.reading == "ば")
         #expect(host.operations.isEmpty, "入力欄には触れない")
 
-        session.handle(key("flick_dakuten", in: session.layout))
+        session.handle(kaomoji)
         #expect(session.composition.reading == "ぱ")
+
+        session.handle(kaomoji)
+        #expect(session.composition.reading == "は", "は → ば → ぱ → は と巡回する")
+    }
+
+    @Test("顔文字キーは未確定がなければ顔文字を未確定として積む")
+    func kaomojiStartsCompositionWhenIdle() {
+        let (session, _, engine) = makeSession()
+
+        session.handle(key("flick_kaomoji", in: session.layout))
+        #expect(engine.reading == "^_^", "候補バーから確定できる")
     }
 
     @Test("未確定中の空白キーは入力欄に空白を入れない")

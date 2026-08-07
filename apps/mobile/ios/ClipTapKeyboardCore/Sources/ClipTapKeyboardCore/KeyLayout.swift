@@ -93,6 +93,16 @@ public struct KeyDefinition: Equatable, Sendable {
     /** シフト時の動作 */
     public let shiftAction: KeyAction?
 
+    /**
+     * 未確定文字列があるあいだの表示。nilならlabelのまま
+     *
+     * OS標準の顔文字キーが入力中に「゛゜小」へ変わる挙動に使う。
+     */
+    public let composingLabel: String?
+
+    /** 未確定文字列があるあいだの動作。nilならactionのまま */
+    public let composingAction: KeyAction?
+
     /** 行内の他のキーに対する相対幅。1が標準の文字キー */
     public let widthUnit: Double
 
@@ -125,6 +135,8 @@ public struct KeyDefinition: Equatable, Sendable {
         shiftLabel: String?,
         action: KeyAction,
         shiftAction: KeyAction?,
+        composingLabel: String? = nil,
+        composingAction: KeyAction? = nil,
         widthUnit: Double,
         isFunction: Bool,
         accessibilityLabelKey: String?,
@@ -138,6 +150,8 @@ public struct KeyDefinition: Equatable, Sendable {
         self.shiftLabel = shiftLabel
         self.action = action
         self.shiftAction = shiftAction
+        self.composingLabel = composingLabel
+        self.composingAction = composingAction
         self.widthUnit = widthUnit
         self.isFunction = isFunction
         self.accessibilityLabelKey = accessibilityLabelKey
