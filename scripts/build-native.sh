@@ -14,8 +14,10 @@
 #
 # 【ビルド範囲】
 # どちらのプラットフォームもアプリ本体ごとビルドする。
-# - iOS: ClipTapKeyboardスキームは拡張の実行にホストアプリを必要とするため、
-#        ClipTap.app を構築し、その PlugIns に ClipTapKeyboard.appex を埋め込む。
+# - iOS: ClipTapスキームでビルドする。ClipTapKeyboardはターゲット依存として
+#        一緒にビルドされ、ClipTap.app の PlugIns に .appex として埋め込まれる。
+#        （ClipTapKeyboardスキームはXcodeがローカル生成するユーザースキームで、
+#          リポジトリには含まれないため指定できない）
 # - Android: 拡張キーボード（IME）はアプリ本体と同じappモジュールに含まれるため、
 #            :app:assembleDebug がアプリ本体とIMEの両方を含むAPKを生成する。
 #
@@ -47,7 +49,7 @@ print_header() {
 # 空き容量を確かめる
 #
 # ネイティブビルドは iOS の DerivedData だけで10GB近くまで育ち、
-# Androidのビルド生成物とMozcの辞書も加わる。
+# Androidのビルド生成物も加わる。
 # 途中で空き容量が尽きるとビルドの失敗としてではなく、
 # ログの書き込み失敗など分かりにくい形で現れるため、始める前に見る。
 readonly REQUIRED_FREE_GB=10
@@ -66,6 +68,37 @@ check_free_space() {
   printf '  rm -rf ~/Library/Developer/Xcode/DerivedData\n' >&2
   printf '  rm -rf %s/apps/mobile/android/app/build\n' "${REPO_ROOT}" >&2
   printf '  rm -rf ~/.gradle/caches\n' >&2
+  return 1
+}
+
+# 拡張キーボードがアプリへ埋め込まれたかを確かめる
+#
+# ClipTapKeyboardターゲットがプロジェクトから失われても、ClipTap.appのビルド自体は
+# 成功してしまう。過去に `expo prebuild --clean` でターゲットが消えたとき、
+# ビルドが緑のまま実行時にだけキーボードが選べなくなり、発見が遅れた。
+# 成果物を直接見て、静かに壊れる経路を塞ぐ。
+#
+# $1: xcodebuildのscheme名（ログ出力用）
+verify_appex_embedded() {
+  local scheme="$1"
+  local products_dir appex_path
+
+  products_dir="$(xcodebuild \
+    -workspace "${IOS_DIR}/ClipTap.xcworkspace" \
+    -scheme "${scheme}" \
+    -sdk iphonesimulator \
+    -configuration Debug \
+    -showBuildSettings 2>/dev/null \
+    | grep -m1 -E '^[[:space:]]+BUILT_PRODUCTS_DIR = ' | sed 's/.*= //')"
+
+  appex_path="${products_dir}/ClipTap.app/PlugIns/ClipTapKeyboard.appex"
+
+  if [ -d "${appex_path}" ]; then
+    return 0
+  fi
+
+  printf '\033[31m❌ 拡張キーボードが埋め込まれていません: %s\033[0m\n' "${appex_path}" >&2
+  printf 'ClipTapKeyboardターゲットがproject.pbxprojから失われていないか確認してください。\n' >&2
   return 1
 }
 
@@ -93,6 +126,7 @@ build_ios() {
     -sdk iphonesimulator \
     -configuration Debug \
     build >"${log_file}" 2>&1; then
+    verify_appex_embedded "${scheme}" || return 1
     printf '\033[32m✅ iOS (%s) ビルド成功\033[0m\n' "${scheme}"
     return 0
   fi
@@ -100,38 +134,6 @@ build_ios() {
   printf '\033[31m❌ iOS (%s) ビルド失敗\033[0m\n' "${scheme}" >&2
   # 自前コードのエラーを拾いやすいよう、error: 行だけ抜き出す
   grep -E 'error:|BUILD FAILED' "${log_file}" | head -40 >&2 || true
-  printf '詳細: %s\n' "${log_file}" >&2
-  return 1
-}
-
-# 拡張キーボードのSwiftパッケージをテストする
-#
-# 入力機能のロジックとかな漢字変換は apps/mobile/ios/ClipTapKeyboardCore に
-# あり、ここだけがネイティブ側で唯一自動テストできる層になる。
-# xcodebuild は appex をビルドするだけでこのテストを実行しないため、別に回す。
-#
-# 最適化ビルドで実行する理由は、打鍵ごとの変換応答を検証しているため。
-# Debugビルド（-Onone）では実装が正しくても目標値を満たせない。
-test_keyboard_core() {
-  local package_dir="${IOS_DIR}/ClipTapKeyboardCore"
-  local log_file="${LOG_DIR}/ios-keyboard-core-test.log"
-
-  if ! command -v swift >/dev/null 2>&1; then
-    printf '\033[31mswift が見つかりません。パッケージのテストを飛ばします。\033[0m\n' >&2
-    return 0
-  fi
-
-  print_header "iOS: ClipTapKeyboardCore をテスト中（ログ: ${log_file}）"
-
-  if swift test -c release --package-path "${package_dir}" >"${log_file}" 2>&1; then
-    local summary
-    summary="$(grep -oE 'Test run with [0-9]+ tests? in [0-9]+ suites? passed' "${log_file}" | tail -1 || true)"
-    printf '\033[32m✅ ClipTapKeyboardCore テスト成功 %s\033[0m\n' "${summary}"
-    return 0
-  fi
-
-  printf '\033[31m❌ ClipTapKeyboardCore テスト失敗\033[0m\n' >&2
-  grep -E '✘|error:|failed' "${log_file}" | head -40 >&2 || true
   printf '詳細: %s\n' "${log_file}" >&2
   return 1
 }
@@ -158,10 +160,7 @@ check_free_space || exit 1
 
 case "${TARGET}" in
   ios)
-    ios_failed=0
-    build_ios ClipTapKeyboard || ios_failed=1
-    test_keyboard_core || ios_failed=1
-    [ "${ios_failed}" -eq 0 ] || exit 1
+    build_ios ClipTap
     ;;
   android)
     build_android
@@ -169,8 +168,7 @@ case "${TARGET}" in
   all)
     # 片方が落ちても両方の結果を出したいので、失敗を記録して最後に判定する
     failed=0
-    build_ios ClipTapKeyboard || failed=1
-    test_keyboard_core || failed=1
+    build_ios ClipTap || failed=1
     build_android || failed=1
 
     if [ "${failed}" -ne 0 ]; then

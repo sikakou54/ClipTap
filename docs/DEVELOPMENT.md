@@ -776,7 +776,7 @@ iOS拡張キーボード（Swift）とAndroid IME（Kotlin・レイアウト・�
 npm run build:native
 
 # 片方だけ実行する場合
-npm run build:native:ios       # iOS（ClipTapKeyboardスキーム）
+npm run build:native:ios       # iOS（ClipTapスキーム）
 npm run build:native:android   # Android（:app:assembleDebug）
 ```
 
@@ -786,57 +786,15 @@ npm run build:native:android   # Android（:app:assembleDebug）
 
 | プラットフォーム | 生成物 | 備考 |
 |---|---|---|
-| iOS | `ClipTap.app` ＋ `PlugIns/ClipTapKeyboard.appex` | 拡張の実行にはホストアプリが必要なため、`ClipTapKeyboard` スキームでもアプリ本体が構築される |
+| iOS | `ClipTap.app` ＋ `PlugIns/ClipTapKeyboard.appex` | `ClipTap` スキームでビルドする。`ClipTapKeyboard` はターゲット依存として一緒にビルドされ、`Embed App Extensions` フェーズで `PlugIns/` へ埋め込まれる |
 | Android | `app-debug.apk` | 拡張キーボード（IME）はアプリ本体と同じ `app` モジュールに含まれる |
 
 **注意**:
 
+- `ClipTapKeyboard` スキームは指定できません。Xcodeがローカルに自動生成するユーザースキーム（`xcuserdata/` 配下・gitignore対象）で、リポジトリには含まれないためです。
+- ビルド成功後に `ClipTap.app/PlugIns/ClipTapKeyboard.appex` の存在を検査します。ClipTapKeyboardターゲットが `project.pbxproj` から失われても `ClipTap.app` のビルド自体は成功してしまい、実行時にだけキーボードが選べなくなる（静かに壊れる）ためです。
 - このスクリプトは `expo prebuild --clean` を実行しません。`ios/` が再生成されるとClipTapKeyboardターゲットの手動設定が失われるためです。
 - iOSビルドで `CODE_SIGNING_ALLOWED=NO` を使ってはいけません。エンタイトルメントが埋め込まれず、App Group（`group.com.sikakou.cliptap`）が無効になります。アプリと拡張キーボードは共有SQLiteをApp Group経由で読むため、署名を切るとDB初期化に失敗し（`App Group container not found`）、動作確認に使えないビルドになります。シミュレータ向けはアドホック署名（`CODE_SIGN_IDENTITY = -`）で足りるため、開発者アカウントは不要です。
-
-#### 4-1. iOS拡張キーボードのSwiftパッケージ
-
-拡張キーボードの入力機能（キーレイアウト、入力状態機械、かな漢字変換）は、`ClipTapKeyboard` ターゲットへ直接ではなく、ローカルSwiftパッケージ [apps/mobile/ios/ClipTapKeyboardCore](../apps/mobile/ios/ClipTapKeyboardCore) に置いています。
-
-**なぜパッケージにしているか**: `ClipTapKeyboard` ターゲットへSwiftファイルを追加するたびに `project.pbxproj` の4セクションを手で編集する必要があり、登録漏れはビルドエラーにならず実行時に静かに壊れます。パッケージ参照なら、ファイルを何本増やしても `project.pbxproj` の編集は最初の1回だけで済みます。
-
-| ターゲット | 内容 |
-|---|---|
-| `ClipTapKeyboardCore` | 変換エンジンに依存しない層。キーレイアウト、入力状態機械、メモリ計測 |
-| `ClipTapKeyboardEngine` | AzooKeyKanaKanjiConverter を用いた変換エンジン実装 |
-
-2つに分けているのは、変換エンジンを差し替え可能に保ち、エンジンを含まない層だけをmacOS上で高速に検証できるようにするためです。
-
-```bash
-# パッケージ単体のテスト（実エンジンでの変換も含む。macOS上で動く）
-swift test --package-path apps/mobile/ios/ClipTapKeyboardCore
-```
-
-**注意**:
-
-- 変換辞書は依存パッケージのリソースとして自動的にappexへ同梱されます（約38MB）。`project.pbxproj` のリソースビルドフェーズへ登録する必要はありません。
-- `.build/` は依存のチェックアウトを含み200MB近くになるためgit管理外です。
-- ニューラル変換「Zenzai」はC++相互運用とllama.cppを必要とし、キーボード拡張のメモリ上限に収まらないため有効化しないでください（既定で無効です）。
-- `KanaKanjiConverter.withDefaultDictionary()` の `preloadDictionary` を有効にすると辞書を全読み込みします。読みの先頭文字ごとの遅延読み込みが上限内に収まる前提なので、有効化しないでください。
-
-#### 4-2. Android IME のかな漢字変換（Mozc）
-
-Android IME の変換エンジンは [Mozc](https://github.com/google/mozc) を使い、Expoのローカルモジュール [apps/mobile/modules/mozc](../apps/mobile/modules/mozc) として取り込んでいます。
-
-**なぜモジュールにしているか**: `expo prebuild` は `android/` を作り直すため、そこへ直接置いたネイティブライブラリやGradleの設定は失われます。`modules/` 配下は `android/` の外にあるため影響を受けず、GradleへはExpoのオートリンクが自動で取り込みます。この方式なら config plugin での依存注入も、AAR化も、`app/build.gradle` の編集も不要です。
-
-**ローカルではビルドしません。** Bazel・Android NDK r29・Python 3.12 が必要で、ビルド領域も20GB以上使います。Mozcを更新したいときだけ GitHub Actions の **Build Mozc** ワークフローを手動実行し、成果物を `modules/mozc/android/src/main/` へ展開してコミットします。
-
-```bash
-gh workflow run build-mozc.yml --ref <ブランチ>
-```
-
-**注意**:
-
-- ワークフローはデフォルトブランチにも置いてあります。`workflow_dispatch` はデフォルトブランチにファイルが無いと起動できないためです。実際にビルドされる内容は実行時に選んだブランチのものが使われます。
-- `MozcJNI` の完全修飾名（`com.google.android.apps.inputmethod.libs.mozc.session.MozcJNI`）は変更できません。ネイティブ側が `RegisterNatives` でこの名前へメソッドを登録しているため、変えると実行時に `UnsatisfiedLinkError` になります。
-- 辞書データはホスト用のコード生成ツールで作るため、Android構成ではビルドできません（`incompatible` として弾かれます）。ワークフローは辞書をホスト構成、ネイティブライブラリをAndroid構成と分けてビルドしています。
-- ワークフローを編集したら、push前にYAMLとして解釈できることを確認してください。GitHubはパースできないワークフローを0秒で失敗させるだけで理由を返さず、`workflow_dispatch` も認識されなくなります。
 
 #### 5. 動作確認
 

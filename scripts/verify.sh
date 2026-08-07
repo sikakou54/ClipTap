@@ -201,7 +201,7 @@ resolve_ios_app_path() {
   local products_dir
   products_dir="$(cd "${IOS_DIR}" && xcodebuild \
     -workspace ClipTap.xcworkspace \
-    -scheme ClipTapKeyboard \
+    -scheme ClipTap \
     -sdk iphonesimulator \
     -configuration Debug \
     -showBuildSettings 2>/dev/null \
