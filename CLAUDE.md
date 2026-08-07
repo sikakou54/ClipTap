@@ -47,20 +47,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **モノレポ構成**: npm workspaces
 
 **Mobile App (apps/mobile)**:
-- **フレームワーク**: Expo SDK 54 + React Native 0.81.5
-- **React**: 19.1.0
+- **フレームワーク**: Expo SDK 57 + React Native 0.86.2
+- **React**: 19.2.3
 - **TypeScript**: 5.9.2
 - **スタイリング**: 統合テーマシステム（`src/themeSystem.tsx`）+ StyleSheet
-- **データベース**: SQLite (expo-sqlite 16.0.10) + Repository Pattern
-- **ナビゲーション**: Expo Router 6.0.19
+- **データベース**: SQLite (expo-sqlite 57.0.1) + Repository Pattern
+- **ナビゲーション**: Expo Router 57.0.10
 - **多言語**: i18next 25.5.2
 - **状態管理**: React Context + Custom Hooks
-- **広告**: react-native-google-mobile-ads 15.8.3 (AdMob)
-- **課金**: react-native-purchases 9.6.1 (RevenueCat)
-- **認証**: Firebase Authentication
+- **広告**: react-native-google-mobile-ads 16.4.0 (AdMob)
+- **課金**: react-native-purchases 10.6.0 (RevenueCat)
+- **認証**: Firebase Authentication (@react-native-firebase 26.1.0)
 
 **Web App (apps/web)**:
-- **フレームワーク**: React 19 + Vite 7.2.4
+- **フレームワーク**: React 19.2 + Vite 7.2.4
 - **TypeScript**: 5.9.3
 - **データベース**: sql.js (WASM)
 - **スタイリング**: Tailwind CSS 4.1.17
@@ -73,7 +73,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 現在のバージョン情報
 - **アプリバージョン**: 1.3.0
 - **データベーススキーマ**: V7
-- **対応OS**: iOS 15.1以上、Android 7.0 (API 24) 以上
+- **対応OS**: iOS 17.0以上、Android 7.0 (API 24) 以上
 - **新アーキテクチャ**: 対応済み（React Native）
 - **JSエンジン**: Hermes
 

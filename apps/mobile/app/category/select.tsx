@@ -13,7 +13,7 @@
  * @see lib/hooks/screens/useCategorySelectScreen.ts - ビジネスロジック
  */
 
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, ListRenderItem } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from '@cliptap/shared'

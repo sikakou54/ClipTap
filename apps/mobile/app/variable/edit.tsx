@@ -13,7 +13,6 @@
  * @see lib/hooks/screens/useVariableEditScreen.ts - ビジネスロジック
  */
 
-import React from 'react';
 import {
   View,
   Text,

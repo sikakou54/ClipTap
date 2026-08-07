@@ -12,7 +12,6 @@
  * @see lib/hooks/screens/useProfileVariableEditScreen.ts - ビジネスロジック
  */
 
-import React from 'react';
 import {
   View,
   Text,

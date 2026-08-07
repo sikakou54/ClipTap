@@ -275,7 +275,9 @@ const ThemeContext = createContext<ThemeContextType | null>(null);
  */
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [themeMode, setThemeMode] = useState<ThemeMode>('auto');
-  const colorScheme = useColorScheme();
+  /* RN 0.86のuseColorSchemeは'unspecified'を返しうるため、テーマ型の'light'|'dark'|nullへ正規化する */
+  const rawColorScheme = useColorScheme();
+  const colorScheme = rawColorScheme === 'unspecified' ? null : rawColorScheme;
 
   const isDark = themeMode === 'auto'
     ? (colorScheme === 'dark' || (Platform.OS === 'web' && getWebDarkMode()))
@@ -326,7 +328,9 @@ export const useTheme = () => {
   const context = useContext(ThemeContext);
 
   /* フックは条件分岐の外で無条件に呼ぶ（値はフォールバック時のみ使用する） */
-  const colorScheme = useColorScheme();
+  /* RN 0.86のuseColorSchemeは'unspecified'を返しうるため、テーマ型の'light'|'dark'|nullへ正規化する */
+  const rawColorScheme = useColorScheme();
+  const colorScheme = rawColorScheme === 'unspecified' ? null : rawColorScheme;
 
   if (!context) {
     const isDark = colorScheme === 'dark' || (Platform.OS === 'web' && getWebDarkMode());

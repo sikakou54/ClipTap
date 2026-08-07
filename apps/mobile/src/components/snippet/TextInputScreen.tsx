@@ -19,7 +19,6 @@
  * @see VariableToolbar - 変数挿入ツールバー
  */
 
-import React from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { useTranslation } from '@cliptap/shared';
 import { useTheme } from '@lib/themeSystem';

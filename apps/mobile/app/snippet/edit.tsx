@@ -19,7 +19,6 @@
  * @see components/snippet/SnippetFormScreen.tsx - 共通フォームコンポーネント
  * @see app/snippet/create.tsx - 新規作成画面
  */
-import React from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { SnippetFormScreen } from '@components/snippet/SnippetFormScreen';
 

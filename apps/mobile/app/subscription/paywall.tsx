@@ -14,7 +14,6 @@
  * @see lib/hooks/screens/usePaywallScreen.ts - ビジネスロジック
  */
 
-import React from 'react';
 import {
   View,
   Text,

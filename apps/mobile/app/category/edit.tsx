@@ -13,7 +13,6 @@
  * @see lib/hooks/screens/useCategoryEditScreen.ts - ビジネスロジック
  */
 
-import React from 'react';
 import {
   View,
   Text,

@@ -12,7 +12,7 @@
  * @see useProfiles - プロファイル管理フック
  */
 
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@mobile-types/flashlist';
@@ -183,9 +183,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
-  /** 背景オーバーレイ（半透明黒） */
+  /** 背景オーバーレイ（半透明黒）。RN 0.86でStyleSheet.absoluteFillObjectが削除されたため明示指定 */
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   /** ボトムシート本体 */

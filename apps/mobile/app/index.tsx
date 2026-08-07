@@ -20,7 +20,6 @@
  * @see components/snippet/SnippetList.tsx - 一覧表示コンポーネント
  */
 
-import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

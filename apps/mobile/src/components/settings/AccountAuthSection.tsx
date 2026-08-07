@@ -5,7 +5,6 @@
  * ログイン済み: メールアドレスとログアウトボタン
  * 未ログイン: Apple/Googleサインインボタン（iOSのみApple対応）
  */
-import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { useTranslation } from '@cliptap/shared';
 import { Ionicons } from '@expo/vector-icons';

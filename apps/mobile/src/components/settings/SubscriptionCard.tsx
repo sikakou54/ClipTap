@@ -5,7 +5,6 @@
  * 購読中: ダイアモンドアイコン（塗りつぶし）+ プライマリカラー背景
  * 未購読: ダイアモンドアイコン（アウトライン）+ 通常背景
  */
-import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useTranslation } from '@cliptap/shared';
 import { Ionicons } from '@expo/vector-icons';

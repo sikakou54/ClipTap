@@ -6,9 +6,9 @@ import {
   signOut as firebaseSignOut,
   GoogleAuthProvider,
   AppleAuthProvider,
-  FirebaseAuthTypes,
   onAuthStateChanged,
 } from '@react-native-firebase/auth';
+import type { User as FirebaseUser } from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
@@ -48,7 +48,7 @@ function generateSecureNonce(length = 32): string {
   return result;
 }
 
-function mapUser(user: FirebaseAuthTypes.User | null): SharedUser | null {
+function mapUser(user: FirebaseUser | null): SharedUser | null {
   if (!user) return null;
   return {
     uid: user.uid,

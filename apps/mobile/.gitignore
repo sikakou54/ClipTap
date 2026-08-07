@@ -43,6 +43,7 @@ yarn-error.*
 xcode-build-*.log
 
 # Build artifacts (large files)
+android/build/
 android/app/build/
 android/app/.cxx/
 android/.gradle/

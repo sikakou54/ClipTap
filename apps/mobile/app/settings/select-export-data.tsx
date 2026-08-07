@@ -11,7 +11,6 @@
  *
  * @see lib/hooks/screens/useSelectExportDataScreen.ts - ビジネスロジック
  */
-import React from 'react';
 import {
   View,
   Text,
