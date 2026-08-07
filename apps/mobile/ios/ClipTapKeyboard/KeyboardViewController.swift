@@ -1678,14 +1678,15 @@ class KeyboardViewController: UIInputViewController {
     }
 
     /**
-     * モード切替ボタンの表示を行き先に合わせる
+     * モード切替ボタンの表示を現在のモードに合わせる
      *
-     * ボタンは押したときの行き先（次のモード）を示す。定型文一覧では
-     * 英字を、英字では日本語を、日本語では定型文一覧を示す。
+     * ボタンはいまのモード（定型文・英字・日本語）を示す。
+     * 読み上げは、見た目ではなくタップしたときの動作（次のモードへの
+     * 切替）を伝える。
      */
     private func updateKeyboardModeButton() {
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        keyboardModeButton.setImage(keyboardModeImage(for: nextKeyboardMode, applying: config), for: .normal)
+        keyboardModeButton.setImage(keyboardModeImage(for: currentKeyboardMode, applying: config), for: .normal)
         switch nextKeyboardMode {
         case .snippets:
             keyboardModeButton.accessibilityLabel = L10n.Accessibility.snippetListButton
@@ -1789,15 +1790,20 @@ class KeyboardViewController: UIInputViewController {
     /** 最後に使ったモードを読み出して適用する */
     private func restoreKeyboardMode() {
         let saved = UserDefaults.standard.string(forKey: keyboardModePreferenceKey) ?? ""
+        /*
+         * 画面状態を先に確定させる。switchLayoutはonLayoutChanged経由で
+         * 保存を走らせるため、後から画面状態を変えると復元中の保存が
+         * 古い状態（=定型文）で上書きしてしまう。
+         */
         switch KeyboardMode(rawValue: saved) ?? .snippets {
         case .snippets:
             screenState = .list
         case .english:
+            screenState = .typing
             inputSession.switchLayout(to: .qwerty)
-            screenState = .typing
         case .japanese:
-            inputSession.switchLayout(to: .flick)
             screenState = .typing
+            inputSession.switchLayout(to: .flick)
         }
     }
 
