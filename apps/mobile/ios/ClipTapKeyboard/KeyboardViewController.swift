@@ -32,8 +32,6 @@
 
 import UIKit
 import os.log
-import ClipTapKeyboardCore
-import ClipTapKeyboardEngine
 
 // ログ出力用の設定（デバッグやエラー追跡に使用）
 // 開発中の動作確認や、本番環境でのトラブルシューティングに役立ちます
@@ -46,22 +44,8 @@ class KeyboardViewController: UIInputViewController {
     private enum ScreenState {
         case loading
         case list
-        /** 文字入力。キー領域を表示する */
-        case typing
         case detail
         case settings
-    }
-
-    /**
-     * ツールバーのトグルが巡回する3つのモード
-     *
-     * 画面状態（一覧か入力か）と入力配列（英字か日本語か）を、
-     * 利用者から見た1つの切替対象として扱う。rawValueは保存にも使う。
-     */
-    private enum KeyboardMode: String {
-        case snippets
-        case english
-        case japanese
     }
 
     // MARK: - Services（サービス層：ビジネスロジックを担当）
@@ -138,12 +122,6 @@ class KeyboardViewController: UIInputViewController {
 
     /// ソート設定を保存するUserDefaultsキー
     private let sortPreferenceKey = "keyboard_snippet_sort_by"
-
-    /// 最後に使ったモード（定型文／英字／日本語）を保存するUserDefaultsキー
-    private let keyboardModePreferenceKey = "keyboard_mode_state"
-
-    /// 変換学習の有効・無効を保存するUserDefaultsキー
-    private let learningPreferenceKey = "keyboard_learning_enabled"
 
     /// フルアクセス状態を共有するApp GroupのUserDefaultsキー
     private let fullAccessStateKey = "keyboardHasFullAccess"
@@ -268,64 +246,6 @@ class KeyboardViewController: UIInputViewController {
         button.backgroundColor = .clear
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
-    }()
-
-    /// 定型文・英字・日本語を巡回するモード切替ボタン（左端固定）
-    ///
-    /// 両モードで同じ位置に置く。切り替えるたびに指の当てどころが動くと使いにくいため。
-    /// タップで次のモードへ巡回し、長押しで行き先を直接選ぶメニューが開く。
-    private let keyboardModeButton: UIButton = {
-        let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        button.setImage(UIImage(systemName: "keyboard", withConfiguration: config), for: .normal)
-        button.tintColor = .label
-        /* 環境・カテゴリのチップと同じ面で、押せるボタンであることを示す */
-        button.backgroundColor = .secondarySystemFill
-        button.layer.cornerRadius = 16
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-
-    // === 文字入力エリア ===
-
-    /// 入力欄への橋渡し
-    ///
-    /// `textDocumentProxy` は毎回取り直す必要があるため、保持せず閉包で渡す。
-    private lazy var hostTextBridge = TextDocumentProxyBridge { [weak self] in
-        self?.textDocumentProxy
-    }
-
-    /// 入力の状態機械
-    private lazy var inputSession = InputSession(host: hostTextBridge)
-
-    /// キー領域
-    private lazy var keyboardAreaView = KeyboardAreaView(session: inputSession)
-
-    /** 変換候補のバー */
-    private lazy var candidateBarView = CandidateBarView(session: inputSession)
-
-    /**
-     * かな漢字変換エンジン
-     *
-     * 学習データはApp Groupコンテナ内のkeyboard/learning/へ置く。
-     * 共有SQLite（業務データ）とは分離し、エクスポート・インポートの対象にしない。
-     * 辞書の初期化は最初のかな入力時にInputSession側で行われるため、
-     * ここでの生成は軽い。
-     */
-    private lazy var kanaKanjiEngine: KanaKanjiEngine? = {
-        guard let containerURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: appGroupIdentifier
-        ) else {
-            KeyboardLog.debug("❌ [Engine] App Group container not available")
-            return nil
-        }
-        let learningURL = containerURL.appendingPathComponent("keyboard/learning", isDirectory: true)
-        try? FileManager.default.createDirectory(at: learningURL, withIntermediateDirectories: true)
-        return AzooKeyEngine(
-            memoryDirectoryURL: learningURL,
-            sharedContainerURL: containerURL,
-            isLearningEnabled: loadLearningPreference()
-        )
     }()
 
     // === スニペット一覧エリア ===
@@ -602,51 +522,6 @@ class KeyboardViewController: UIInputViewController {
         return label
     }()
 
-    /// 設定項目を縦に並べるスクロール領域
-    ///
-    /// 変換学習の項目が加わり、フルアクセスの案内と合わせるとキーボードの
-    /// 高さ（280pt）へ収まらないため、ヘッダー以外はスクロールさせる
-    private let settingsScrollView: UIScrollView = {
-        let view = UIScrollView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-
-    /// 変換学習スイッチの行コンテナ
-    private let learningRowView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .tertiarySystemFill
-        view.layer.cornerRadius = 10
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-
-    /// 変換学習の見出しラベル
-    private let learningLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 15)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-
-    /// 変換学習のON/OFFスイッチ
-    private let learningSwitch: UISwitch = {
-        let control = UISwitch()
-        control.translatesAutoresizingMaskIntoConstraints = false
-        return control
-    }()
-
-    /// 学習データをリセットする行ボタン
-    private let learningResetButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.backgroundColor = .tertiarySystemFill
-        button.layer.cornerRadius = 10
-        button.titleLabel?.font = .systemFont(ofSize: 15)
-        button.setTitleColor(.systemRed, for: .normal)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-
     /// フルアクセス必要ヒントラベル
     private let fullAccessHintLabel: UILabel = {
         let label = UILabel()
@@ -725,39 +600,15 @@ class KeyboardViewController: UIInputViewController {
 
         applyHostKeyboardAppearance()
 
-        /* 地球儀キーの要否は表示のたびに確定する（viewDidLoad時点では未確定のことがある） */
-        inputSession.needsInputModeSwitch = needsInputModeSwitchKey
-
         // キーボードが表示される度に全データをリフレッシュ
         // これにより、メインアプリでの変更がキーボードにも即座に反映されます
         KeyboardLog.debug("🔄 [KeyboardViewController] viewWillAppear - Refreshing all data...")
         refreshAllData()
     }
 
-    /**
-     * 画面が閉じる直前に呼ばれるメソッド
-     *
-     * 打ちかけの未確定文字列を取り残さないよう、確定して入力欄へ送る。
-     */
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        inputSession.flushComposition()
-    }
-
     override func textDidChange(_ textInput: UITextInput?) {
         super.textDidChange(textInput)
         applyHostKeyboardAppearance()
-
-        /*
-         * 外部要因で入力文脈が変わったら（別の入力欄への移動、カーソル移動など）、
-         * 打ちかけの未確定文字列を破棄する。未確定文字列は入力欄に書き込まれて
-         * いないため、確定を待つと切替後の欄の無関係な位置へ文字が入ってしまう。
-         * この通知は自分の挿入・削除でも呼ばれるため、直近に自分が操作した
-         * 場合は外部要因とみなさない。
-         */
-        if !hostTextBridge.wasEditedRecently() {
-            inputSession.discardComposition()
-        }
     }
 
     /**
@@ -918,26 +769,10 @@ class KeyboardViewController: UIInputViewController {
     private func setupUI() {
         // 統合フィルターコンテナ（環境ドロップダウン + カテゴリドロップダウン + ソートボタン + 設定ボタン）
         view.addSubview(filterContainerView)
-        filterContainerView.addSubview(keyboardModeButton)
         filterContainerView.addSubview(profileDropdownButton)
         filterContainerView.addSubview(categoryDropdownButton)
         filterContainerView.addSubview(sortButton)
         filterContainerView.addSubview(settingsButton)
-
-        keyboardModeButton.addTarget(self, action: #selector(keyboardModeButtonTapped), for: .touchUpInside)
-
-        /*
-         * 長押しで行き先を直接選べるメニューを出す。タップは巡回のまま。
-         * 選択肢は表示のたびに組み立て、現在のモードへチェックを付ける。
-         */
-        keyboardModeButton.menu = UIMenu(children: [
-            UIDeferredMenuElement.uncached { [weak self] completion in
-                completion(self?.makeKeyboardModeMenuActions() ?? [])
-            }
-        ])
-        keyboardModeButton.showsMenuAsPrimaryAction = false
-
-        setupInputSession()
 
         // シェブロンアイコンをボタンの上に配置
         profileDropdownButton.addSubview(chevronImageView)
@@ -959,14 +794,8 @@ class KeyboardViewController: UIInputViewController {
             filterContainerView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
             filterContainerView.heightAnchor.constraint(equalToConstant: 36),
 
-            /* モード切替ボタン: 左端に固定。両モードで同じ位置を保つ */
-            keyboardModeButton.leadingAnchor.constraint(equalTo: filterContainerView.leadingAnchor),
-            keyboardModeButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
-            keyboardModeButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
-            keyboardModeButton.widthAnchor.constraint(equalToConstant: 36),
-
-            /* 環境ドロップダウンボタン: モード切替ボタンの右隣、固定幅100pt */
-            profileDropdownButton.leadingAnchor.constraint(equalTo: keyboardModeButton.trailingAnchor, constant: 4),
+            /* 環境ドロップダウンボタン: 左端に固定、固定幅100pt */
+            profileDropdownButton.leadingAnchor.constraint(equalTo: filterContainerView.leadingAnchor),
             profileDropdownButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
             profileDropdownButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
             profileDropdownButton.widthAnchor.constraint(equalToConstant: 100),
@@ -1032,23 +861,6 @@ class KeyboardViewController: UIInputViewController {
             tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
-        ])
-
-        /* 候補バーとキー領域: 一覧と同じ場所を使う。キーボード全体の高さは変えない */
-        candidateBarView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(candidateBarView)
-        keyboardAreaView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(keyboardAreaView)
-        NSLayoutConstraint.activate([
-            candidateBarView.topAnchor.constraint(equalTo: filterContainerView.bottomAnchor, constant: 2),
-            candidateBarView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 3),
-            candidateBarView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -3),
-            candidateBarView.heightAnchor.constraint(equalToConstant: 44),
-
-            keyboardAreaView.topAnchor.constraint(equalTo: candidateBarView.bottomAnchor, constant: 2),
-            keyboardAreaView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 3),
-            keyboardAreaView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -3),
-            keyboardAreaView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -4)
         ])
 
         // Detail View (全画面表示)
@@ -1205,21 +1017,14 @@ class KeyboardViewController: UIInputViewController {
         settingsView.addSubview(settingsHeaderView)
         settingsHeaderView.addSubview(settingsTitleLabel)
         settingsHeaderView.addSubview(settingsCloseButton)
-        settingsView.addSubview(settingsScrollView)
-        settingsScrollView.addSubview(usageTrackingRowView)
+        settingsView.addSubview(usageTrackingRowView)
         usageTrackingRowView.addSubview(usageTrackingLabel)
         usageTrackingRowView.addSubview(usageTrackingStatusLabel)
-        settingsScrollView.addSubview(learningRowView)
-        learningRowView.addSubview(learningLabel)
-        learningRowView.addSubview(learningSwitch)
-        settingsScrollView.addSubview(learningResetButton)
-        settingsScrollView.addSubview(fullAccessHintLabel)
-        settingsScrollView.addSubview(fullAccessInstructionsLabel)
+        settingsView.addSubview(fullAccessHintLabel)
+        settingsView.addSubview(fullAccessInstructionsLabel)
 
         // 設定画面のアクションを設定
         settingsCloseButton.addTarget(self, action: #selector(closeSettingsView), for: .touchUpInside)
-        learningSwitch.addTarget(self, action: #selector(learningSwitchChanged), for: .valueChanged)
-        learningResetButton.addTarget(self, action: #selector(learningResetTapped), for: .touchUpInside)
 
         NSLayoutConstraint.activate([
             // Settings View: 全画面表示
@@ -1244,20 +1049,10 @@ class KeyboardViewController: UIInputViewController {
             settingsCloseButton.widthAnchor.constraint(equalToConstant: 30),
             settingsCloseButton.heightAnchor.constraint(equalToConstant: 30),
 
-            // Settings Scroll: ヘッダーの下の残り全体
-            settingsScrollView.topAnchor.constraint(equalTo: settingsHeaderView.bottomAnchor),
-            settingsScrollView.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor),
-            settingsScrollView.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor),
-            settingsScrollView.bottomAnchor.constraint(equalTo: settingsView.bottomAnchor),
-
-            /* 横スクロールはさせない。内容の幅を見た目の幅に一致させる */
-            settingsScrollView.contentLayoutGuide.widthAnchor.constraint(
-                equalTo: settingsScrollView.frameLayoutGuide.widthAnchor),
-
-            // Usage Tracking Row: スクロール内容の先頭
-            usageTrackingRowView.topAnchor.constraint(equalTo: settingsScrollView.contentLayoutGuide.topAnchor, constant: 16),
-            usageTrackingRowView.leadingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.leadingAnchor, constant: 12),
-            usageTrackingRowView.trailingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.trailingAnchor, constant: -12),
+            // Usage Tracking Row: ヘッダーの下
+            usageTrackingRowView.topAnchor.constraint(equalTo: settingsHeaderView.bottomAnchor, constant: 16),
+            usageTrackingRowView.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor, constant: 12),
+            usageTrackingRowView.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor, constant: -12),
             usageTrackingRowView.heightAnchor.constraint(equalToConstant: 52),
 
             // Usage Tracking Label: 行の左側
@@ -1268,33 +1063,15 @@ class KeyboardViewController: UIInputViewController {
             usageTrackingStatusLabel.trailingAnchor.constraint(equalTo: usageTrackingRowView.trailingAnchor, constant: -16),
             usageTrackingStatusLabel.centerYAnchor.constraint(equalTo: usageTrackingRowView.centerYAnchor),
 
-            // 変換学習の行: 使用頻度の行の下
-            learningRowView.topAnchor.constraint(equalTo: usageTrackingRowView.bottomAnchor, constant: 8),
-            learningRowView.leadingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.leadingAnchor, constant: 12),
-            learningRowView.trailingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.trailingAnchor, constant: -12),
-            learningRowView.heightAnchor.constraint(equalToConstant: 52),
+            // Full Access Hint: 行の下
+            fullAccessHintLabel.topAnchor.constraint(equalTo: usageTrackingRowView.bottomAnchor, constant: 8),
+            fullAccessHintLabel.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor, constant: 16),
+            fullAccessHintLabel.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor, constant: -16),
 
-            learningLabel.leadingAnchor.constraint(equalTo: learningRowView.leadingAnchor, constant: 16),
-            learningLabel.centerYAnchor.constraint(equalTo: learningRowView.centerYAnchor),
-            learningSwitch.trailingAnchor.constraint(equalTo: learningRowView.trailingAnchor, constant: -16),
-            learningSwitch.centerYAnchor.constraint(equalTo: learningRowView.centerYAnchor),
-
-            // 学習データのリセット行: 変換学習の行の下
-            learningResetButton.topAnchor.constraint(equalTo: learningRowView.bottomAnchor, constant: 8),
-            learningResetButton.leadingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.leadingAnchor, constant: 12),
-            learningResetButton.trailingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.trailingAnchor, constant: -12),
-            learningResetButton.heightAnchor.constraint(equalToConstant: 52),
-
-            // Full Access Hint: リセット行の下
-            fullAccessHintLabel.topAnchor.constraint(equalTo: learningResetButton.bottomAnchor, constant: 12),
-            fullAccessHintLabel.leadingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.leadingAnchor, constant: 16),
-            fullAccessHintLabel.trailingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.trailingAnchor, constant: -16),
-
-            // Full Access Instructions: ヒントの下。ここが内容の末尾になる
+            // Full Access Instructions: ヒントの下
             fullAccessInstructionsLabel.topAnchor.constraint(equalTo: fullAccessHintLabel.bottomAnchor, constant: 12),
-            fullAccessInstructionsLabel.leadingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.leadingAnchor, constant: 16),
-            fullAccessInstructionsLabel.trailingAnchor.constraint(equalTo: settingsScrollView.frameLayoutGuide.trailingAnchor, constant: -16),
-            fullAccessInstructionsLabel.bottomAnchor.constraint(equalTo: settingsScrollView.contentLayoutGuide.bottomAnchor, constant: -16)
+            fullAccessInstructionsLabel.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor, constant: 16),
+            fullAccessInstructionsLabel.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor, constant: -16)
         ])
 
         applyScreenState()
@@ -1613,206 +1390,15 @@ class KeyboardViewController: UIInputViewController {
     /** 現在の画面状態に応じて、一覧と全画面ビューを排他的に表示する */
     private func applyScreenState() {
         let isList = screenState == .list
-        let isTyping = screenState == .typing
         let isEmpty = filteredSnippets.isEmpty
 
-        /* ツールバーはモード切替ボタンを載せているため、入力中も出しておく */
-        filterContainerView.isHidden = !isList && !isTyping
-
-        /* 入力中は定型文の絞り込みが意味を持たないため隠す */
-        profileDropdownButton.isHidden = isTyping
-        categoryDropdownButton.isHidden = isTyping
-        sortButton.isHidden = isTyping
-        settingsButton.isHidden = isTyping
-
+        filterContainerView.isHidden = !isList
         tableView.isHidden = !isList || isEmpty
         emptyLabel.isHidden = !isList || !isEmpty
-        keyboardAreaView.isHidden = !isTyping
-        candidateBarView.isHidden = !isTyping
 
         detailView.isHidden = screenState != .detail
         loadingView.isHidden = screenState != .loading
         settingsView.isHidden = screenState != .settings
-
-        updateKeyboardModeButton()
-    }
-
-    // MARK: - 文字入力
-
-    /**
-     * 入力の状態機械と拡張キーボードのAPIを結ぶ
-     */
-    private func setupInputSession() {
-        /*
-         * 他のキーボードへの切り替えはAppleが全カスタムキーボードに求めている。
-         * 実装していないと審査で落ちる。
-         */
-        inputSession.onNextKeyboard = { [weak self] in
-            self?.advanceToNextInputMode()
-        }
-
-        inputSession.onToggleSnippetList = { [weak self] in
-            self?.switchScreenState(to: .list)
-        }
-
-        /* 配列の切替（キー面のABC/あを含む）にツールバーの表示と保存を追従させる */
-        inputSession.onLayoutChanged = { [weak self] in
-            self?.updateKeyboardModeButton()
-            self?.saveKeyboardMode()
-        }
-
-        /* Face ID機種ではOSが地球儀キーを提供するため、キー側の地球儀は出さない */
-        inputSession.needsInputModeSwitch = needsInputModeSwitchKey
-
-        /* エンジンが無い・辞書が読めない場合、セッションは直接入力へ縮退する */
-        inputSession.engine = kanaKanjiEngine
-    }
-
-    /// いまのモード。入力モードは配列で英字と日本語に分かれる
-    private var currentKeyboardMode: KeyboardMode {
-        guard screenState == .typing else {
-            return .snippets
-        }
-        return inputSession.layout.id == .flick ? .japanese : .english
-    }
-
-    /// トグルを押したときの行き先。定型文 → 英字 → 日本語 の順に巡回する
-    private var nextKeyboardMode: KeyboardMode {
-        switch currentKeyboardMode {
-        case .snippets: return .english
-        case .english: return .japanese
-        case .japanese: return .snippets
-        }
-    }
-
-    /**
-     * モード切替ボタンの表示を現在のモードに合わせる
-     *
-     * ボタンはいまのモード（定型文・英字・日本語）を示す。
-     * 読み上げは、見た目ではなくタップしたときの動作（次のモードへの
-     * 切替）を伝える。
-     */
-    private func updateKeyboardModeButton() {
-        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        keyboardModeButton.setImage(keyboardModeImage(for: currentKeyboardMode, applying: config), for: .normal)
-        switch nextKeyboardMode {
-        case .snippets:
-            keyboardModeButton.accessibilityLabel = L10n.Accessibility.snippetListButton
-        case .english:
-            keyboardModeButton.accessibilityLabel = L10n.Accessibility.switchToEnglish
-        case .japanese:
-            keyboardModeButton.accessibilityLabel = L10n.Accessibility.switchToJapanese
-        }
-    }
-
-    /**
-     * モードを表すアイコンを返す
-     *
-     * 「textformat.abc」は端末のロケールで字形が置き換わる（日本語では「あいう」）。
-     * 行き先が伝わらなくなるため、英字はラテン文字の字形をロケール指定で固定し、
-     * 日本語はどのOS版でも存在する「あ」の字形（character.ja、iOS 14以上）を使う。
-     */
-    private func keyboardModeImage(
-        for mode: KeyboardMode,
-        applying config: UIImage.SymbolConfiguration? = nil
-    ) -> UIImage? {
-        let symbolName: String
-        var resolved = config
-        switch mode {
-        case .snippets:
-            symbolName = "list.bullet"
-        case .english:
-            symbolName = "textformat.abc"
-            let latin = UIImage.SymbolConfiguration(locale: Locale(identifier: "en"))
-            resolved = resolved?.applying(latin) ?? latin
-        case .japanese:
-            symbolName = "character.ja"
-        }
-        return UIImage(systemName: symbolName, withConfiguration: resolved)
-    }
-
-    /**
-     * モード切替ボタンがタップされた時のアクション。次のモードへ巡回する
-     */
-    @objc private func keyboardModeButtonTapped() {
-        switchKeyboardMode(to: nextKeyboardMode)
-    }
-
-    /**
-     * 長押しメニューの選択肢を組み立てる
-     */
-    private func makeKeyboardModeMenuActions() -> [UIMenuElement] {
-        let entries: [(KeyboardMode, String)] = [
-            (.snippets, L10n.Mode.snippets),
-            (.english, L10n.Mode.english),
-            (.japanese, L10n.Mode.japanese)
-        ]
-        return entries.map { mode, title in
-            UIAction(
-                title: title,
-                image: keyboardModeImage(for: mode),
-                state: currentKeyboardMode == mode ? .on : .off
-            ) { [weak self] _ in
-                self?.switchKeyboardMode(to: mode)
-            }
-        }
-    }
-
-    /**
-     * モードを切り替える
-     *
-     * 配列の切替は画面状態より先に行う。切替時に未確定文字列の確定が
-     * 走るため、キー領域が見えている状態で配列だけが変わる瞬間を作らない。
-     */
-    private func switchKeyboardMode(to mode: KeyboardMode) {
-        switch mode {
-        case .snippets:
-            switchScreenState(to: .list)
-        case .english:
-            inputSession.switchLayout(to: .qwerty)
-            switchScreenState(to: .typing)
-        case .japanese:
-            inputSession.switchLayout(to: .flick)
-            switchScreenState(to: .typing)
-        }
-    }
-
-    /**
-     * 画面を切り替え、次回の起動でも同じモードで開けるよう覚えておく
-     */
-    private func switchScreenState(to state: ScreenState) {
-        /* 入力モードを離れるときは、打ちかけの未確定文字列を捨てずに確定してから移る */
-        if screenState == .typing && state != .typing {
-            inputSession.flushComposition()
-        }
-        screenState = state
-        applyScreenState()
-        saveKeyboardMode()
-    }
-
-    /** 最後に使ったモードを保存する */
-    private func saveKeyboardMode() {
-        UserDefaults.standard.set(currentKeyboardMode.rawValue, forKey: keyboardModePreferenceKey)
-    }
-
-    /** 最後に使ったモードを読み出して適用する */
-    private func restoreKeyboardMode() {
-        let saved = UserDefaults.standard.string(forKey: keyboardModePreferenceKey) ?? ""
-        /*
-         * 画面状態を先に確定させる。switchLayoutはonLayoutChanged経由で
-         * 保存を走らせるため、後から画面状態を変えると復元中の保存が
-         * 古い状態（=定型文）で上書きしてしまう。
-         */
-        switch KeyboardMode(rawValue: saved) ?? .snippets {
-        case .snippets:
-            screenState = .list
-        case .english:
-            screenState = .typing
-            inputSession.switchLayout(to: .qwerty)
-        case .japanese:
-            screenState = .typing
-            inputSession.switchLayout(to: .flick)
-        }
     }
 
     /// スニペットの詳細画面（プレビュー）を表示
@@ -2157,12 +1743,6 @@ class KeyboardViewController: UIInputViewController {
         // 見出しの色を更新
         usageTrackingLabel.textColor = self.hasFullAccess ? .label : .secondaryLabel
 
-        /* 変換学習の状態を反映する */
-        learningLabel.text = L10n.Settings.learning
-        learningSwitch.isOn = loadLearningPreference()
-        learningResetButton.setTitle(L10n.Settings.learningReset, for: .normal)
-        learningResetButton.isEnabled = true
-
         // 設定画面を表示
         screenState = .settings
         applyScreenState()
@@ -2173,37 +1753,6 @@ class KeyboardViewController: UIInputViewController {
         KeyboardLog.debug("⚙️ [Settings] Closing settings view")
         screenState = .list
         applyScreenState()
-    }
-
-    /// 変換学習スイッチが切り替えられた時のアクション
-    @objc private func learningSwitchChanged() {
-        UserDefaults.standard.set(learningSwitch.isOn, forKey: learningPreferenceKey)
-        kanaKanjiEngine?.setLearningEnabled(learningSwitch.isOn)
-    }
-
-    /// 学習データのリセットがタップされた時のアクション
-    @objc private func learningResetTapped() {
-        /*
-         * 変換をまだ使っていないセッションでも消せるよう、先に初期化する。
-         * 学習データの実体はエンジン側が管理しており、初期化なしでは消せない。
-         */
-        guard let engine = kanaKanjiEngine, engine.load() else {
-            return
-        }
-        engine.resetLearning()
-
-        /* 消えたことが分かるよう、2秒だけ表示を変える */
-        learningResetButton.setTitle(L10n.Settings.learningResetDone, for: .normal)
-        learningResetButton.isEnabled = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
-            self?.learningResetButton.setTitle(L10n.Settings.learningReset, for: .normal)
-            self?.learningResetButton.isEnabled = true
-        }
-    }
-
-    /// 変換学習の設定を読み出す。既定は有効
-    private func loadLearningPreference() -> Bool {
-        UserDefaults.standard.object(forKey: learningPreferenceKey) as? Bool ?? true
     }
 
 }
@@ -2264,8 +1813,7 @@ extension KeyboardViewController: UITableViewDelegate {
     /// データ読み込み完了時に呼び出されます
     private func hideLoading() {
         if screenState == .loading {
-            /* 前回使っていたモードで開く。毎回切り替え直す手間をなくすため */
-            restoreKeyboardMode()
+            screenState = .list
             applyScreenState()
         }
         activityIndicator.stopAnimating()

@@ -65,7 +65,14 @@
       ],
       "expo-localization",
       "expo-system-ui",
-      "@react-native-firebase/app",
+      [
+        "@react-native-firebase/app",
+        {
+          "ios": {
+            "disableSPM": true
+          }
+        }
+      ],
       "@react-native-firebase/auth",
       "@react-native-google-signin/google-signin/app.plugin.js",
       "expo-apple-authentication",
@@ -102,7 +109,8 @@
       "expo-font",
       "expo-audio",
       "expo-asset",
-      "./plugins/withClipTapKeyboard"
+      "./plugins/withClipTapKeyboard",
+      "expo-sharing"
     ],
     "updates": {
       "enabled": false

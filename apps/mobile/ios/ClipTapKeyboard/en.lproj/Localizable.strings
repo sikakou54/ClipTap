@@ -69,13 +69,6 @@
 /* Accessibility */
 "accessibility.profile_button" = "Profile button";
 "accessibility.category_button" = "Category button";
-"accessibility.keyboard_mode_button" = "Switch to keyboard";
-"accessibility.snippet_list_button" = "Switch to snippet list";
-"accessibility.switch_to_english" = "Switch to English input";
-"accessibility.switch_to_japanese" = "Switch to Japanese input";
-"mode.snippets" = "Snippets";
-"mode.english" = "English";
-"mode.japanese" = "Japanese";
 "accessibility.snippet_item" = "Snippet item";
 "accessibility.close_button" = "Close button";
 "accessibility.copy_button" = "Copy button";
@@ -97,6 +90,3 @@
 "settings.usage_tracking_inactive" = "Off";
 "settings.usage_tracking_requires_full_access" = "Full Access is required to record how often each snippet is inserted from the keyboard. Allowing it enables sorting by usage.";
 "settings.full_access_instructions" = "1. Open the Settings app\n2. Go to \"General\" → \"Keyboard\" → \"Keyboards\"\n3. Tap \"ClipTap\"\n4. Turn on \"Allow Full Access\"";
-"settings.learning" = "Conversion Learning";
-"settings.learning_reset" = "Reset Learning Data";
-"settings.learning_reset_done" = "Reset Complete";

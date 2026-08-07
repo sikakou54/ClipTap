@@ -263,18 +263,6 @@ enum L10n {
         /// "カテゴリボタン" / "Category button"
         static let categoryButton = localized("accessibility.category_button")
 
-        /// "キーボードに切り替え" / "Switch to keyboard"
-        static let keyboardModeButton = localized("accessibility.keyboard_mode_button")
-
-        /// "定型文一覧に切り替え" / "Switch to snippet list"
-        static let snippetListButton = localized("accessibility.snippet_list_button")
-
-        /// "英字入力に切り替え" / "Switch to English input"
-        static let switchToEnglish = localized("accessibility.switch_to_english")
-
-        /// "日本語入力に切り替え" / "Switch to Japanese input"
-        static let switchToJapanese = localized("accessibility.switch_to_japanese")
-
         /// "スニペット項目" / "Snippet item"
         static let snippetItem = localized("accessibility.snippet_item")
 
@@ -314,20 +302,6 @@ enum L10n {
         static let usage = localized("sort.usage")
     }
 
-    // MARK: - Mode (モード切替)
-
-    /// モード切替の翻訳
-    enum Mode {
-        /// "定型文" / "Snippets"
-        static let snippets = localized("mode.snippets")
-
-        /// "英字" / "English"
-        static let english = localized("mode.english")
-
-        /// "日本語" / "Japanese"
-        static let japanese = localized("mode.japanese")
-    }
-
     // MARK: - Settings (設定関連)
 
     /// 設定関連の翻訳
@@ -349,15 +323,6 @@ enum L10n {
 
         /// フルアクセス許可手順
         static let fullAccessInstructions = localized("settings.full_access_instructions")
-
-        /// "変換学習" / "Conversion Learning"
-        static let learning = localized("settings.learning")
-
-        /// "学習データをリセット" / "Reset Learning Data"
-        static let learningReset = localized("settings.learning_reset")
-
-        /// "リセットしました" / "Reset Complete"
-        static let learningResetDone = localized("settings.learning_reset_done")
     }
 
     // MARK: - Localization Helper
@@ -460,15 +425,6 @@ enum L10n {
         // Accessibility
         case "accessibility.profile_button": return isJapanese ? "環境ボタン" : "Profile button"
         case "accessibility.category_button": return isJapanese ? "カテゴリボタン" : "Category button"
-        case "accessibility.keyboard_mode_button": return isJapanese ? "キーボードに切り替え" : "Switch to keyboard"
-        case "accessibility.snippet_list_button": return isJapanese ? "定型文一覧に切り替え" : "Switch to snippet list"
-        case "accessibility.switch_to_english": return isJapanese ? "英字入力に切り替え" : "Switch to English input"
-        case "accessibility.switch_to_japanese": return isJapanese ? "日本語入力に切り替え" : "Switch to Japanese input"
-
-        // Mode
-        case "mode.snippets": return isJapanese ? "定型文" : "Snippets"
-        case "mode.english": return isJapanese ? "英字" : "English"
-        case "mode.japanese": return isJapanese ? "日本語" : "Japanese"
         case "accessibility.snippet_item": return isJapanese ? "スニペット項目" : "Snippet item"
         case "accessibility.close_button": return isJapanese ? "閉じるボタン" : "Close button"
         case "accessibility.copy_button": return isJapanese ? "コピーボタン" : "Copy button"
@@ -495,9 +451,6 @@ enum L10n {
             return isJapanese
                 ? "1. 設定アプリを開く\n2. 「一般」→「キーボード」→「キーボード」を選択\n3. 「ClipTap」をタップ\n4. 「フルアクセスを許可」をON"
                 : "1. Open the Settings app\n2. Go to \"General\" → \"Keyboard\" → \"Keyboards\"\n3. Tap \"ClipTap\"\n4. Turn on \"Allow Full Access\""
-        case "settings.learning": return isJapanese ? "変換学習" : "Conversion Learning"
-        case "settings.learning_reset": return isJapanese ? "学習データをリセット" : "Reset Learning Data"
-        case "settings.learning_reset_done": return isJapanese ? "リセットしました" : "Reset Complete"
 
         default: return key
         }

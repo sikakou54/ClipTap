@@ -51,8 +51,5 @@ android/.idea/
 ios/Pods/
 ios/build/
 
-# SwiftPMのビルド生成物と依存チェックアウト（変換辞書を含むため数百MBになる）
-ios/ClipTapKeyboardCore/.build/
-
 # 開発者ごとのnode配置を書くファイル。versionedな ios/.xcode.env が既定値を持つ
 ios/.xcode.env.local

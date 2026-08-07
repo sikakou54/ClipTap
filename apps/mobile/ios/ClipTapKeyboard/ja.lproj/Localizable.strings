@@ -69,13 +69,6 @@
 /* アクセシビリティ */
 "accessibility.profile_button" = "環境ボタン";
 "accessibility.category_button" = "カテゴリボタン";
-"accessibility.keyboard_mode_button" = "キーボードに切り替え";
-"accessibility.snippet_list_button" = "定型文一覧に切り替え";
-"accessibility.switch_to_english" = "英字入力に切り替え";
-"accessibility.switch_to_japanese" = "日本語入力に切り替え";
-"mode.snippets" = "定型文";
-"mode.english" = "英字";
-"mode.japanese" = "日本語";
 "accessibility.snippet_item" = "スニペット項目";
 "accessibility.close_button" = "閉じるボタン";
 "accessibility.copy_button" = "コピーボタン";
@@ -97,6 +90,3 @@
 "settings.usage_tracking_inactive" = "無効";
 "settings.usage_tracking_requires_full_access" = "キーボードからの挿入回数を記録するには、フルアクセスの許可が必要です。許可すると使用頻度順の並べ替えが使えます。";
 "settings.full_access_instructions" = "1. 設定アプリを開く\n2. 「一般」→「キーボード」→「キーボード」を選択\n3. 「ClipTap」をタップ\n4. 「フルアクセスを許可」をON";
-"settings.learning" = "変換学習";
-"settings.learning_reset" = "学習データをリセット";
-"settings.learning_reset_done" = "リセットしました";
