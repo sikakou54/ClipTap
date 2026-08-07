@@ -376,14 +376,16 @@ clipTap/
 
 #### コミット前の必須チェック
 ```bash
-npm run type-check    # 型エラー0件を確認
-npm test              # 回帰テストがすべて成功することを確認
-npm run build:native  # ネイティブ（iOS拡張キーボード/Android IME）を変更した場合のみ
+npm run type-check                        # 型エラー0件を確認
+npm test                                  # 回帰テストがすべて成功することを確認
+npm run build:native:ios -- --no-install  # ネイティブ（iOS拡張キーボード/Android IME）を変更した場合のみ
 ```
 
 ネイティブのSwift/Kotlin/レイアウト/リソースは `type-check` の対象外のため、変更時は `npm run build:native` で実際にコンパイルして確認する。
 
-上記をまとめて実行し、シミュレータへのインストールまで通す場合は次を使う。iOSとAndroidは必ず分けて実行する（プラットフォーム引数は必須）。
+**`npm run build:native` はビルドに加えてシミュレータ/エミュレータへのインストールまで行う。** ビルドしただけでは端末の中身が古いままになり、拡張キーボードは別バンドル（`.appex`）のため「直したはずなのに直っていない」に陥りやすいため。端末を触らずコンパイルだけ確認したいときは `--no-install` を付ける。
+
+上記をまとめて実行する場合は次を使う。iOSとAndroidは必ず分けて実行する（プラットフォーム引数は必須）。
 
 ```bash
 npm run verify:ios                  # 型チェック→テスト→Lint→ネイティブビルド→シミュレータへインストール

@@ -766,31 +766,40 @@ npm run lint:fix
 
 現行ルートには `format` スクリプトがありません。変更ファイルは既存の書式に合わせ、フォーマッターを導入する場合はルートスクリプトとCIを同じ変更で追加してください。
 
-#### 4. ネイティブビルド検証
+#### 4. ネイティブビルドとインストール
 
 iOS拡張キーボード（Swift）とAndroid IME（Kotlin・レイアウト・リソース）は `npm run type-check` の対象外です。
 これらを変更した場合は、実際にコンパイルして壊れていないことを確認してください。
 
 ```bash
-# iOS + Android の両方をビルド
+# iOS + Android の両方をビルドし、シミュレータ/エミュレータへインストール
 npm run build:native
 
 # 片方だけ実行する場合
-npm run build:native:ios       # iOS（ClipTapKeyboardスキーム）
-npm run build:native:android   # Android（:app:assembleDebug）
+npm run build:native:ios       # iOS（ClipTapスキーム）→ シミュレータへインストール
+npm run build:native:android   # Android（:app:assembleDebug）→ エミュレータへインストール
+
+# ビルドだけ行い、端末を触らない場合
+npm run build:native:ios -- --no-install
 ```
 
 実体は [scripts/build-native.sh](../scripts/build-native.sh) です。ビルドログは `.build-logs/` に出力され（gitignore済み）、失敗時はエラー行を抜き出して表示します。
 
+**インストールまで責務に含める理由**: ビルドしただけでは端末の中身は古いままです。拡張キーボードは別バンドル（`.appex`）で、アプリを起動しても更新されたように見えないため、「直したはずなのに直っていない」に陥りやすい。ビルドと端末への反映を一続きにして、この乖離を作らないようにしています。
+
 **ビルド範囲**: どちらのプラットフォームもアプリ本体ごとビルドします。
 
-| プラットフォーム | 生成物 | 備考 |
-|---|---|---|
-| iOS | `ClipTap.app` ＋ `PlugIns/ClipTapKeyboard.appex` | 拡張の実行にはホストアプリが必要なため、`ClipTapKeyboard` スキームでもアプリ本体が構築される |
-| Android | `app-debug.apk` | 拡張キーボード（IME）はアプリ本体と同じ `app` モジュールに含まれる |
+| プラットフォーム | 生成物 | インストール先 | 備考 |
+|---|---|---|---|
+| iOS | `ClipTap.app` ＋ `PlugIns/ClipTapKeyboard.appex` | シミュレータ（`IOS_SIMULATOR` で指定可） | `ClipTap` スキームでビルドする。`ClipTapKeyboard` はターゲット依存として一緒にビルドされ、`Embed App Extensions` フェーズで `PlugIns/` へ埋め込まれる |
+| Android | `app-debug.apk` | エミュレータ（`ANDROID_AVD` で指定可） | 拡張キーボード（IME）はアプリ本体と同じ `app` モジュールに含まれる |
 
 **注意**:
 
+- `ClipTapKeyboard` スキームは指定できません。Xcodeがローカルに自動生成するユーザースキーム（`xcuserdata/` 配下・gitignore対象）で、リポジトリには含まれないためです。
+- ビルド成功後に `ClipTap.app/PlugIns/ClipTapKeyboard.appex` の存在を検査します。ClipTapKeyboardターゲットが `project.pbxproj` から失われても `ClipTap.app` のビルド自体は成功してしまい、実行時にだけキーボードが選べなくなる（静かに壊れる）ためです。
+- iOSは上書きインストールの前に一度アンインストールします。`.appex` はアプリ本体と別バンドルのため、上書きだけでは古い拡張キーボードが残ることがあるためです。
+- インストール後、iOSは端末上の `.appex` の存在とApp Groupの有効性を、Androidは `adb shell ime list` でIMEが入力方式として認識されているかを確認します。
 - このスクリプトは `expo prebuild --clean` を実行しません。`ios/` が再生成されるとClipTapKeyboardターゲットの手動設定が失われるためです。
 - iOSビルドで `CODE_SIGNING_ALLOWED=NO` を使ってはいけません。エンタイトルメントが埋め込まれず、App Group（`group.com.sikakou.cliptap`）が無効になります。アプリと拡張キーボードは共有SQLiteをApp Group経由で読むため、署名を切るとDB初期化に失敗し（`App Group container not found`）、動作確認に使えないビルドになります。シミュレータ向けはアドホック署名（`CODE_SIGN_IDENTITY = -`）で足りるため、開発者アカウントは不要です。
 
@@ -815,9 +824,10 @@ npm run verify:ios -- --skip-checks --skip-build
 実体は [scripts/verify.sh](../scripts/verify.sh) です。処理の流れは次のとおりです。
 
 1. `npm run type-check` / `npm test` / `npm run lint`
-2. `npm run build:native`（指定したプラットフォームのみ）
-3. シミュレータ/エミュレータを起動し、2の生成物をインストール
-4. Metroの起動方法とアプリの起動コマンドを案内して終了
+2. `scripts/build-native.sh`（指定したプラットフォームのみ）。ビルドと端末へのインストールはここで行われる
+3. Metroの起動方法とアプリの起動コマンドを案内して終了
+
+**インストール処理は `build-native.sh` が持ちます。** `verify.sh` は静的チェックと案内に専念し、ビルド・インストールは委譲します。同じ処理を二つのスクリプトに持たせると、片方だけ直したときに挙動がずれるためです。`--no-install` はそのまま `build-native.sh` へ渡ります。
 
 **Metro（`expo start`）はスクリプトに含めません。** 対話的に操作したい場面が多いため、`npm run dev:mobile` は各自で実行します。
 
@@ -825,8 +835,8 @@ npm run verify:ios -- --skip-checks --skip-build
 # 1. Metroを起動
 npm run dev:mobile
 
-# 2. アプリを起動（Metro起動後。UDIDはverifyの出力に表示される）
-xcrun simctl launch <UDID> com.sikakou.cliptap --initialUrl http://localhost:8081
+# 2. アプリを起動（Metro起動後）
+xcrun simctl launch booted com.sikakou.cliptap --initialUrl http://localhost:8081
 ```
 
 iOSは `expo-dev-launcher` の `--initialUrl` 起動引数でMetroへ自動接続します。`xcrun simctl openurl` によるディープリンクは「"ClipTap" で開きますか？」の確認ダイアログが出てタップが必要になるため使いません。Androidは `adb reverse` でエミュレータ内の `localhost:8081` をホストへ転送済みなので、VIEWインテントでそのまま接続できます。
