@@ -278,7 +278,6 @@ class KeyboardViewController: UIInputViewController {
         let button = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         button.setImage(UIImage(systemName: "keyboard", withConfiguration: config), for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
         button.tintColor = .label
         button.backgroundColor = .clear
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -1686,20 +1685,41 @@ class KeyboardViewController: UIInputViewController {
      */
     private func updateKeyboardModeButton() {
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        keyboardModeButton.setImage(keyboardModeImage(for: nextKeyboardMode, applying: config), for: .normal)
         switch nextKeyboardMode {
         case .snippets:
-            keyboardModeButton.setTitle(nil, for: .normal)
-            keyboardModeButton.setImage(UIImage(systemName: "list.bullet", withConfiguration: config), for: .normal)
             keyboardModeButton.accessibilityLabel = L10n.Accessibility.snippetListButton
         case .english:
-            keyboardModeButton.setImage(nil, for: .normal)
-            keyboardModeButton.setTitle("ABC", for: .normal)
             keyboardModeButton.accessibilityLabel = L10n.Accessibility.switchToEnglish
         case .japanese:
-            keyboardModeButton.setImage(nil, for: .normal)
-            keyboardModeButton.setTitle("あ", for: .normal)
             keyboardModeButton.accessibilityLabel = L10n.Accessibility.switchToJapanese
         }
+    }
+
+    /**
+     * モードを表すアイコンを返す
+     *
+     * 「textformat.abc」は端末のロケールで字形が置き換わる（日本語では「あいう」）。
+     * 行き先が伝わらなくなるため、英字はラテン文字の字形をロケール指定で固定し、
+     * 日本語はどのOS版でも存在する「あ」の字形（character.ja、iOS 14以上）を使う。
+     */
+    private func keyboardModeImage(
+        for mode: KeyboardMode,
+        applying config: UIImage.SymbolConfiguration? = nil
+    ) -> UIImage? {
+        let symbolName: String
+        var resolved = config
+        switch mode {
+        case .snippets:
+            symbolName = "list.bullet"
+        case .english:
+            symbolName = "textformat.abc"
+            let latin = UIImage.SymbolConfiguration(locale: Locale(identifier: "en"))
+            resolved = resolved?.applying(latin) ?? latin
+        case .japanese:
+            symbolName = "character.ja"
+        }
+        return UIImage(systemName: symbolName, withConfiguration: resolved)
     }
 
     /**
@@ -1719,7 +1739,11 @@ class KeyboardViewController: UIInputViewController {
             (.japanese, L10n.Mode.japanese)
         ]
         return entries.map { mode, title in
-            UIAction(title: title, state: currentKeyboardMode == mode ? .on : .off) { [weak self] _ in
+            UIAction(
+                title: title,
+                image: keyboardModeImage(for: mode),
+                state: currentKeyboardMode == mode ? .on : .off
+            ) { [weak self] _ in
                 self?.switchKeyboardMode(to: mode)
             }
         }
