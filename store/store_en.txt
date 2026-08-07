@@ -8,13 +8,30 @@ Save time with text templates
 Insert saved text into any app with the ClipTap keyboard – emails, hashtags, AI prompts. Variables fill in dates and names, now in 94 formats.
 
 [What's New]
-Title and body into separate fields – free for everyone
+Highlights of version 1.3.0
 
-• The keyboard extension now has a dedicated insert button for the title, so you can insert the title and body one after another
-• In the app, tapping a title in the list copies just that title
+Choose how dates and times are displayed (new, free)
+• Set a display format for each of the 7 system variables such as {{today}}, picked from presets (94 in total)
+• 2026/08/04, 2026-08-04, 08/04/2026 (US), 04/08/2026 (Europe) and more – pick the one you prefer
+• Preview it with the real date and time while you choose, and the format applies to every template using that variable straight away
+• You get the same format in the app, the keyboard extension and the web version
+
+Insert the title and body into separate fields (free)
+• The keyboard extension now has a dedicated insert button for the title, so you can fill the subject field and the body field one after another
+• In the app, tapping the title area in the list copies just the title
 • The keyboard's bottom insert button now inserts the body only (use the button above for the title)
 
-Also fixed a list/copy mismatch and a category filter reset, plus more reliable modals and pickers
+Start with the web version, even without the app
+• Download the starter file with sample data from “Getting started” and begin right away
+• Template cards now match the app layout for a consistent feel
+
+Keyboard improvements
+• iOS: removed the “Count usage” setting – whether usage is recorded is now determined automatically by the Full Access permission
+• Sort by usage can be selected even without Full Access
+• Adjusted the look to match the system keyboard more closely, and improved list scrolling
+
+Other improvements
+• General UI and internal improvements
 
 [Description]
 
