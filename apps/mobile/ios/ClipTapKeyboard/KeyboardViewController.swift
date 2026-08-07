@@ -725,6 +725,9 @@ class KeyboardViewController: UIInputViewController {
 
         applyHostKeyboardAppearance()
 
+        /* 地球儀キーの要否は表示のたびに確定する（viewDidLoad時点では未確定のことがある） */
+        inputSession.needsInputModeSwitch = needsInputModeSwitchKey
+
         // キーボードが表示される度に全データをリフレッシュ
         // これにより、メインアプリでの変更がキーボードにも即座に反映されます
         KeyboardLog.debug("🔄 [KeyboardViewController] viewWillAppear - Refreshing all data...")
@@ -1657,6 +1660,9 @@ class KeyboardViewController: UIInputViewController {
             self?.updateKeyboardModeButton()
             self?.saveKeyboardMode()
         }
+
+        /* Face ID機種ではOSが地球儀キーを提供するため、キー側の地球儀は出さない */
+        inputSession.needsInputModeSwitch = needsInputModeSwitchKey
 
         /* エンジンが無い・辞書が読めない場合、セッションは直接入力へ縮退する */
         inputSession.engine = kanaKanjiEngine

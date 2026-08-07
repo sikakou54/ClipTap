@@ -57,6 +57,21 @@ public enum KeyAction: Equatable, Sendable {
 }
 
 /**
+ * キーの表示条件
+ *
+ * Appleはホームボタン機種で「次のキーボードへ」キーを必須とする一方、
+ * Face ID機種ではOSが地球儀キーを提供して重複する。条件で出し分ける。
+ */
+public enum KeyVisibility: String, Sendable {
+    /** 常に表示する */
+    case always
+    /** 「次のキーボードへ」キーが必要な機種でだけ表示する */
+    case needsInputModeSwitch
+    /** 「次のキーボードへ」キーが不要な機種でだけ表示する */
+    case noInputModeSwitch
+}
+
+/**
  * 1つのキー
  */
 public struct KeyDefinition: Equatable, Sendable {
@@ -85,6 +100,9 @@ public struct KeyDefinition: Equatable, Sendable {
     /** 読み上げラベルのキー。省略時はlabelを読む */
     public let accessibilityLabelKey: String?
 
+    /** 表示条件 */
+    public let visibility: KeyVisibility
+
     /** フリック入力の割り当て。12キー配列でのみ使う */
     public let flick: [FlickDirection: KeyAction]
 
@@ -97,6 +115,7 @@ public struct KeyDefinition: Equatable, Sendable {
         widthUnit: Double,
         isFunction: Bool,
         accessibilityLabelKey: String?,
+        visibility: KeyVisibility = .always,
         flick: [FlickDirection: KeyAction] = [:]
     ) {
         self.id = id
@@ -107,6 +126,7 @@ public struct KeyDefinition: Equatable, Sendable {
         self.widthUnit = widthUnit
         self.isFunction = isFunction
         self.accessibilityLabelKey = accessibilityLabelKey
+        self.visibility = visibility
         self.flick = flick
     }
 
@@ -172,5 +192,24 @@ public struct KeyLayout: Equatable, Sendable {
     public init(id: LayoutId, rows: [KeyRow]) {
         self.id = id
         self.rows = rows
+    }
+
+    /**
+     * 端末の条件でキーを出し分けた配列を返す
+     *
+     * - Parameter needsInputModeSwitch: 「次のキーボードへ」キーが必要か。
+     *   Face ID機種ではOSが地球儀キーを提供するため不要になる
+     */
+    public func resolved(needsInputModeSwitch: Bool) -> KeyLayout {
+        let filteredRows = rows.map { row in
+            KeyRow(keys: row.keys.filter { key in
+                switch key.visibility {
+                case .always: return true
+                case .needsInputModeSwitch: return needsInputModeSwitch
+                case .noInputModeSwitch: return !needsInputModeSwitch
+                }
+            })
+        }
+        return KeyLayout(id: id, rows: filteredRows)
     }
 }

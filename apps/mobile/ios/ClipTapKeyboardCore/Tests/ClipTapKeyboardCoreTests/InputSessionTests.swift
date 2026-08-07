@@ -142,6 +142,22 @@ struct InputSessionTests {
         #expect(requested)
         #expect(host.operations.isEmpty, "入力欄は変更しない")
     }
+
+    @Test("地球儀キーが不要な機種では配列から消える")
+    func nextKeyboardKeyHiddenWhenNotNeeded() {
+        let (session, _) = makeSession()
+        let hasGlobe = { (session: InputSession) in
+            session.layout.rows.flatMap(\.keys).contains { $0.id == "next_keyboard" }
+        }
+        #expect(hasGlobe(session), "既定では表示する（ホームボタン機種で必須のため）")
+
+        session.needsInputModeSwitch = false
+        #expect(!hasGlobe(session))
+
+        /* 配列を切り替えても条件は引き継がれる */
+        session.handle(key("switch_numbers", in: session.layout))
+        #expect(!hasGlobe(session))
+    }
 }
 
 /**
@@ -248,6 +264,26 @@ struct FlickInputSessionTests {
         session.handle(key("flick_dakuten", in: session.layout))
         #expect(host.text.isEmpty)
         #expect(host.operations.isEmpty, "入力欄には触れない")
+    }
+
+    @Test("地球儀キーが不要な機種では句読点キーに置き換わる")
+    func punctuationReplacesGlobeWhenNotNeeded() {
+        let (session, host) = makeSession()
+        session.needsInputModeSwitch = false
+
+        #expect(
+            !session.layout.rows.flatMap(\.keys).contains { $0.id == "next_keyboard" },
+            "地球儀キーは消える"
+        )
+
+        /* 空いたセルにはOS標準と同じ句読点キーが入る */
+        let punct = key("flick_punct", in: session.layout)
+        session.handle(punct)
+        session.handle(punct, flickDirection: .left)
+        session.handle(punct, flickDirection: .up)
+        session.handle(punct, flickDirection: .right)
+        session.handle(punct, flickDirection: .down)
+        #expect(host.text == "、。？！…")
     }
 
     @Test("かなの各行が正しく割り当てられている")

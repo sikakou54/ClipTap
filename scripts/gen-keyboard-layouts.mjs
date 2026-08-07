@@ -106,6 +106,7 @@ function swiftKey(key) {
     `widthUnit: ${key.width?.unit ?? 1}`,
     `isFunction: ${key.isFunction === true}`,
     `accessibilityLabelKey: ${swiftOptional(key.accessibilityLabelKey, swiftString)}`,
+    `visibility: .${key.visibility ?? 'always'}`,
     `flick: ${swiftFlick(key.flick)}`,
   ];
   return `                    KeyDefinition(${parts.join(', ')})`;

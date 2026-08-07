@@ -30,10 +30,10 @@ public final class KeyboardAreaView: UIView {
     /**
      * 表示中の配列
      *
-     * 配列の切替はこの識別子の比較で検出する。キー数の比較では、
-     * 数字面と記号面のようにキー数が同じ配列の切替を見逃す。
+     * 配列の変更は内容全体の比較で検出する。識別子の比較では、
+     * 同じ配列のまま表示条件（地球儀キーの有無）だけが変わる場合を見逃す。
      */
-    private var renderedLayoutId: LayoutId?
+    private var renderedLayout: KeyLayout?
 
     /** 現在指が乗っているキー */
     private var pressedKey: KeyCapView?
@@ -98,7 +98,7 @@ public final class KeyboardAreaView: UIView {
                 keyViews[key.id] = keyView
             }
         }
-        renderedLayoutId = session.layout.id
+        renderedLayout = session.layout
         applyState()
         setNeedsLayout()
     }
@@ -137,7 +137,7 @@ public final class KeyboardAreaView: UIView {
      * 状態を見た目へ反映する
      */
     private func applyState() {
-        if renderedLayoutId != session.layout.id {
+        if renderedLayout != session.layout {
             /* 配列が変わっている。作り直す */
             rebuild()
             return

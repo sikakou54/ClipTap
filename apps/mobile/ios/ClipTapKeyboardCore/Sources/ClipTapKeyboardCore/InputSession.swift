@@ -85,9 +85,25 @@ public final class InputSession {
     /** 改行の要求。入力欄が確定動作を求める場合に拡張側で処理を分ける */
     public var onEnter: (() -> Void)?
 
+    /**
+     * 「次のキーボードへ」キーが必要か
+     *
+     * Face ID機種ではOSが地球儀キーを提供するため不要になる。
+     * 変更すると現在の配列へ即座に反映される。
+     */
+    public var needsInputModeSwitch = true {
+        didSet {
+            guard needsInputModeSwitch != oldValue else {
+                return
+            }
+            layout = KeyLayouts.layout(for: layout.id).resolved(needsInputModeSwitch: needsInputModeSwitch)
+            notifyStateChanged()
+        }
+    }
+
     public init(host: HostTextBridge, layout: KeyLayout = KeyLayouts.qwerty) {
         self.host = host
-        self.layout = layout
+        self.layout = layout.resolved(needsInputModeSwitch: true)
     }
 
     /** 大文字を入力する状態か */
@@ -175,7 +191,7 @@ public final class InputSession {
      */
     public func switchLayout(to layoutId: LayoutId) {
         flushComposition()
-        layout = KeyLayouts.layout(for: layoutId)
+        layout = KeyLayouts.layout(for: layoutId).resolved(needsInputModeSwitch: needsInputModeSwitch)
         /* 配列を変えたらシフトは持ち越さない。記号面での大文字指定は意味を持たない */
         shiftState = .off
         notifyStateChanged()

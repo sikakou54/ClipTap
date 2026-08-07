@@ -80,6 +80,13 @@ export interface Key {
   readonly isFunction?: boolean;
   /** 読み上げラベル。省略時はlabelを読む */
   readonly accessibilityLabelKey?: string;
+  /**
+   * キーの表示条件。省略時は常に表示
+   *
+   * Appleはホームボタン機種で「次のキーボードへ」キーを必須とする一方、
+   * Face ID機種ではOSが地球儀キーを提供して重複する。条件で出し分ける。
+   */
+  readonly visibility?: 'needsInputModeSwitch' | 'noInputModeSwitch';
 }
 
 /** キーの行 */
@@ -138,7 +145,7 @@ export const QWERTY_LAYOUT: KeyLayout = {
     {
       keys: [
         fn('switch_numbers', '123', { type: 'switchLayout', layoutId: 'numbers' }, 1.5),
-        fn('next_keyboard', '🌐', { type: 'nextKeyboard' }, 1),
+        { ...fn('next_keyboard', '🌐', { type: 'nextKeyboard' }, 1), visibility: 'needsInputModeSwitch' },
         fn('switch_flick', 'あ', { type: 'switchLayout', layoutId: 'flick' }, 1.5),
         fn('space', ' ', { type: 'space' }, 3.5),
         fn('enter', '⏎', { type: 'enter' }, 1.5),
@@ -165,7 +172,7 @@ export const NUMBERS_LAYOUT: KeyLayout = {
     {
       keys: [
         fn('switch_qwerty', 'ABC', { type: 'switchLayout', layoutId: 'qwerty' }, 1.5),
-        fn('next_keyboard', '🌐', { type: 'nextKeyboard' }, 1),
+        { ...fn('next_keyboard', '🌐', { type: 'nextKeyboard' }, 1), visibility: 'needsInputModeSwitch' },
         fn('space', ' ', { type: 'space' }, 5),
         fn('enter', '⏎', { type: 'enter' }, 1.5),
       ],
@@ -191,7 +198,7 @@ export const SYMBOLS_LAYOUT: KeyLayout = {
     {
       keys: [
         fn('switch_qwerty', 'ABC', { type: 'switchLayout', layoutId: 'qwerty' }, 1.5),
-        fn('next_keyboard', '🌐', { type: 'nextKeyboard' }, 1),
+        { ...fn('next_keyboard', '🌐', { type: 'nextKeyboard' }, 1), visibility: 'needsInputModeSwitch' },
         fn('space', ' ', { type: 'space' }, 5),
         fn('enter', '⏎', { type: 'enter' }, 1.5),
       ],
@@ -271,7 +278,20 @@ export const FLICK_LAYOUT: KeyLayout = {
           action: { type: 'kanaVariant' },
           accessibilityLabelKey: 'accessibility.key.flick_dakuten',
         },
-        fn('next_keyboard', '🌐', { type: 'nextKeyboard' }, 1),
+        { ...fn('next_keyboard', '🌐', { type: 'nextKeyboard' }, 1), visibility: 'needsInputModeSwitch' },
+        {
+          /* 地球儀キーが不要な機種では、OS標準と同じ句読点キーを置く */
+          id: 'flick_punct',
+          label: '、。?!',
+          action: { type: 'input', text: '、' },
+          flick: {
+            left: { type: 'input', text: '。' },
+            up: { type: 'input', text: '？' },
+            right: { type: 'input', text: '！' },
+            down: { type: 'input', text: '…' },
+          },
+          visibility: 'noInputModeSwitch',
+        },
       ],
     },
   ],

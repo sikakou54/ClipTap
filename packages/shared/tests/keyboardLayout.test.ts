@@ -155,6 +155,28 @@ describe('キー配列の正本', () => {
     expect(hasVariantKey).toBe(true);
   });
 
+  it.each(ALL_LAYOUTS.map((layout) => [layout.id, layout] as const))(
+    '%s: 地球儀キーは必要な機種でだけ表示される',
+    (_id, layout) => {
+      /*
+       * Face ID機種ではOSが地球儀を提供して重複するため、キー側の地球儀は
+       * ホームボタン機種（切替キー必須）でだけ表示する。
+       */
+      for (const key of allKeys(layout)) {
+        if (key.action.type === 'nextKeyboard') {
+          expect(key.visibility).toBe('needsInputModeSwitch');
+        }
+      }
+    }
+  );
+
+  it('12キーフリックは地球儀キーの代わりの句読点キーを持つ', () => {
+    /* 地球儀が消えた機種でも4列の格子が崩れないよう、同じセルに句読点を置く */
+    const punct = allKeys(FLICK_LAYOUT).find((key) => key.visibility === 'noInputModeSwitch');
+    expect(punct).toBeDefined();
+    expect(punct!.action).toEqual({ type: 'input', text: '、' });
+  });
+
   it('QWERTYの文字キーはシフトで大文字になる', () => {
     for (const key of allKeys(QWERTY_LAYOUT)) {
       if (key.action.type !== 'input' || key.isFunction) {
