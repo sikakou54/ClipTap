@@ -1,35 +1,187 @@
 {
   "ja": {
     "categories": [
-      { "key": "business", "name": "ビジネス", "color": "#3B82F6" }
+      { "key": "ai", "name": "AIチャット", "color": "#8B5CF6" },
+      { "key": "sns", "name": "SNS", "color": "#10B981" },
+      { "key": "mail", "name": "メール", "color": "#3B82F6" },
+      { "key": "work", "name": "仕事", "color": "#F59E0B" }
     ],
     "variables": [
-      { "name": "department", "label": "部署", "icon": "business-outline", "value": "開発部" },
-      { "name": "my_name", "label": "氏名", "icon": "person-outline", "value": "山田 太郎" }
+      { "name": "company", "label": "会社名", "icon": "business-outline", "value": "株式会社サンプル" },
+      { "name": "client_name", "label": "担当者名", "icon": "person-outline", "value": "ご担当者様" },
+      { "name": "signature", "label": "署名", "icon": "create-outline", "value": "--------------------\n山田 太郎\nyamada@example.com\n--------------------" }
     ],
     "snippets": [
       {
+        "key": "research_prompt",
+        "categoryKey": "ai",
+        "title": "調査プロンプト",
+        "content": "あなたは調査を担当するリサーチャーです。\n以下のテーマについて、{{today}} 時点で分かっている事実を整理してください。\n\n【テーマ】\n・\n\n【出力形式】\n1. 結論（3行以内）\n2. 根拠となる事実（箇条書き）\n3. まだ分かっていないこと\n4. 次に調べるべきこと\n\n推測が含まれる場合は「推測」と明記してください。"
+      },
+      {
+        "key": "meeting_summary_prompt",
+        "categoryKey": "ai",
+        "title": "議事メモの要約プロンプト",
+        "content": "以下の議事メモを要約してください。\n\n【条件】\n・「決定事項」「宿題」「次回までのアクション」に分けて整理する\n・担当者と期限が分かるものは併記する\n・原文にない情報は補わない\n\n【議事メモ】\n"
+      },
+      {
+        "key": "proofread_prompt",
+        "categoryKey": "ai",
+        "title": "文章の推敲プロンプト",
+        "content": "以下の文章を、意味を変えずに読みやすく整えてください。\n\n【条件】\n・敬体（です・ます）で統一する\n・1文は60文字以内を目安にする\n・冗長な表現を削る\n・変更した箇所は最後にまとめて示す\n\n【文章】\n"
+      },
+      {
+        "key": "daily_progress",
+        "categoryKey": "sns",
+        "title": "今日の積み上げ",
+        "content": "{{today}}（{{weekday}}）の積み上げ📚\n\n・\n・\n・\n\n今日もおつかれさまでした。\n\n#今日の積み上げ #学習記録 #継続は力なり"
+      },
+      {
+        "key": "dev_log",
+        "categoryKey": "sns",
+        "title": "開発ログ",
+        "content": "今日の開発ログ🛠\n\n【やったこと】\n・\n\n【つまずいたこと】\n・\n\n【明日やること】\n・\n\n#個人開発 #開発ログ #駆け出しエンジニアと繋がりたい"
+      },
+      {
+        "key": "study_hashtags",
+        "categoryKey": "sns",
+        "title": "勉強系ハッシュタグ",
+        "content": "#今日の積み上げ #学習記録 #アウトプット #継続は力なり #勉強垢さんと繋がりたい"
+      },
+      {
+        "key": "greeting",
+        "categoryKey": "mail",
+        "title": "あいさつ文",
+        "content": "{{company}}\n{{client_name}}\n\nいつもお世話になっております。\n"
+      },
+      {
+        "key": "schedule_reply",
+        "categoryKey": "mail",
+        "title": "日程調整の返信",
+        "content": "{{company}}\n{{client_name}}\n\nいつもお世話になっております。\n\nお打ち合わせの件、以下の日程でご都合はいかがでしょうか。\n\n・\n・\n・\n\nいずれもご都合が合わない場合は、\n候補日をお知らせいただけますと幸いです。\n\n{{signature}}"
+      },
+      {
+        "key": "meeting_thanks",
+        "categoryKey": "mail",
+        "title": "打ち合わせのお礼",
+        "content": "{{company}}\n{{client_name}}\n\n本日はお時間をいただき、ありがとうございました。\n\n【本日の決定事項】\n・\n\n【次回までの宿題】\n・\n\n引き続きよろしくお願いいたします。\n\n{{signature}}"
+      },
+      {
+        "key": "signature_only",
+        "categoryKey": "mail",
+        "title": "署名",
+        "content": "{{signature}}"
+      },
+      {
+        "key": "work_start",
+        "categoryKey": "work",
+        "title": "業務開始報告",
+        "content": "おつかれさまです。\n{{today}}（{{weekday}}）の業務を開始します。\n\n【本日の予定】\n・\n・\n・\n\nよろしくお願いします。"
+      },
+      {
         "key": "daily_report",
-        "categoryKey": "business",
-        "title": "日報テンプレート",
-        "content": "【日報】{{今日}}（{{曜日}}）\n{{department}} {{my_name}}\n\n■ 本日の作業\n・\n\n■ 明日の予定\n・\n\n■ 連絡事項\n・"
+        "categoryKey": "work",
+        "title": "日報",
+        "content": "【日報】{{today}}（{{weekday}}）\n\n■ 本日やったこと\n・\n\n■ 明日やること\n・\n\n■ 共有事項\n・"
+      },
+      {
+        "key": "progress_share",
+        "categoryKey": "work",
+        "title": "進捗共有",
+        "content": "おつかれさまです。\n{{today}} 時点の進捗を共有します。\n\n【完了】\n・\n\n【進行中】\n・\n\n【相談したいこと】\n・"
       }
     ]
   },
   "en": {
     "categories": [
-      { "key": "business", "name": "Business", "color": "#3B82F6" }
+      { "key": "ai", "name": "AI chat", "color": "#8B5CF6" },
+      { "key": "sns", "name": "Social media", "color": "#10B981" },
+      { "key": "mail", "name": "Email", "color": "#3B82F6" },
+      { "key": "work", "name": "Work", "color": "#F59E0B" }
     ],
     "variables": [
-      { "name": "department", "label": "Department", "icon": "business-outline", "value": "Engineering" },
-      { "name": "my_name", "label": "Your name", "icon": "person-outline", "value": "Taylor Smith" }
+      { "name": "company", "label": "Company", "icon": "business-outline", "value": "Acme Inc." },
+      { "name": "client_name", "label": "Contact", "icon": "person-outline", "value": "Alex" },
+      { "name": "signature", "label": "Signature", "icon": "create-outline", "value": "--------------------\nTaylor Smith\ntaylor@example.com\n--------------------" }
     ],
     "snippets": [
       {
+        "key": "research_prompt",
+        "categoryKey": "ai",
+        "title": "Research prompt",
+        "content": "You are a research assistant.\nSummarise what is known about the topic below as of {{today}}.\n\n[Topic]\n- \n\n[Output format]\n1. Conclusion (3 lines max)\n2. Supporting facts (bullet points)\n3. What is still unknown\n4. What to look into next\n\nMark anything speculative as \"speculation\"."
+      },
+      {
+        "key": "meeting_summary_prompt",
+        "categoryKey": "ai",
+        "title": "Meeting notes summary prompt",
+        "content": "Summarise the meeting notes below.\n\n[Rules]\n- Split them into \"Decisions\", \"Open items\" and \"Next actions\"\n- Include the owner and the due date where known\n- Do not add anything that is not in the notes\n\n[Notes]\n"
+      },
+      {
+        "key": "proofread_prompt",
+        "categoryKey": "ai",
+        "title": "Proofreading prompt",
+        "content": "Rewrite the text below so it reads more clearly, without changing its meaning.\n\n[Rules]\n- Keep a polite, professional tone\n- Aim for one idea per sentence\n- Cut redundant wording\n- List the changes you made at the end\n\n[Text]\n"
+      },
+      {
+        "key": "daily_progress",
+        "categoryKey": "sns",
+        "title": "Daily progress post",
+        "content": "{{today}} ({{weekday}}) progress 📚\n\n- \n- \n- \n\nAnother day done.\n\n#100DaysOfCode #learninpublic #buildinpublic"
+      },
+      {
+        "key": "dev_log",
+        "categoryKey": "sns",
+        "title": "Dev log",
+        "content": "Today's dev log 🛠\n\n[Shipped]\n- \n\n[Got stuck on]\n- \n\n[Tomorrow]\n- \n\n#100DaysOfCode #indiedev #buildinpublic"
+      },
+      {
+        "key": "study_hashtags",
+        "categoryKey": "sns",
+        "title": "Study hashtags",
+        "content": "#100DaysOfCode #learninpublic #buildinpublic #devcommunity"
+      },
+      {
+        "key": "greeting",
+        "categoryKey": "mail",
+        "title": "Greeting",
+        "content": "Hi {{client_name}},\n\nHope things are going well at {{company}}.\n"
+      },
+      {
+        "key": "schedule_reply",
+        "categoryKey": "mail",
+        "title": "Scheduling reply",
+        "content": "Hi {{client_name}},\n\nThanks for getting back to me.\n\nWould any of the following work for our next call?\n\n- \n- \n- \n\nIf none of these suit you, just send over a few times that do.\n\n{{signature}}"
+      },
+      {
+        "key": "meeting_thanks",
+        "categoryKey": "mail",
+        "title": "Thanks after a meeting",
+        "content": "Hi {{client_name}},\n\nThank you for your time today.\n\n[Decisions]\n- \n\n[Before our next call]\n- \n\nLooking forward to the next step.\n\n{{signature}}"
+      },
+      {
+        "key": "signature_only",
+        "categoryKey": "mail",
+        "title": "Signature",
+        "content": "{{signature}}"
+      },
+      {
+        "key": "work_start",
+        "categoryKey": "work",
+        "title": "Start of day",
+        "content": "Morning — starting my day, {{today}} ({{weekday}}).\n\n[Plan for today]\n- \n- \n- \n\nPing me if anything comes up."
+      },
+      {
         "key": "daily_report",
-        "categoryKey": "business",
+        "categoryKey": "work",
         "title": "Daily report",
-        "content": "[Daily report] {{today}} ({{weekday}})\n{{department}} / {{my_name}}\n\n# Done today\n- \n\n# Plan for tomorrow\n- \n\n# Notes\n- "
+        "content": "[Daily report] {{today}} ({{weekday}})\n\n# Done today\n- \n\n# Plan for tomorrow\n- \n\n# Notes\n- "
+      },
+      {
+        "key": "progress_share",
+        "categoryKey": "work",
+        "title": "Progress update",
+        "content": "Progress update as of {{today}}.\n\n[Done]\n- \n\n[In progress]\n- \n\n[Need input on]\n- "
       }
     ]
   }

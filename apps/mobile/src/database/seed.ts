@@ -14,11 +14,11 @@
  * - アプリ初回起動時
  * - データベースリセット後
  *
- * データ構成:
- * - カテゴリ: 4種類（メール、営業、サポート、プライベート）
- * - スニペット: 11種類（ビジネステンプレート）
- * - プロファイル: 4種類（取引先別）
- * - カスタム変数: 10種類（取引先情報、署名など）
+ * データ構成（LPの掲載内容に沿った構成）:
+ * - カテゴリ: 4種類（AIチャット、SNS、メール、仕事）
+ * - スニペット: 13種類（LPの「使う場面」に対応するテンプレート）
+ * - プロファイル: 2種類（取引先別。デフォルトの「Main」と合わせて無料プラン上限の3件）
+ * - カスタム変数: 3種類（会社名、担当者名、署名）
  *
  * @see dummy.json - テストデータの定義ファイル
  * @see DatabaseManager - データベース初期化
@@ -132,7 +132,7 @@ async function seedCategories(): Promise<Map<string, string>> {
       /* CategoryMapperを使ってカテゴリを作成 */
       /* 名前と色を設定（IDとタイムスタンプは自動生成される） */
       const category = CategoryMapper.create({
-        name: categoryData.name,      // カテゴリ名（例: "メール"）
+        name: categoryData.name,      // カテゴリ名（例: "AIチャット"）
         color: categoryData.color,    // カテゴリの色（例: "#FF5733"）
       });
       /* 作成したカテゴリの名前とIDをMapに追加 */
@@ -204,7 +204,7 @@ async function seedProfiles(): Promise<Map<string, string>> {
       /* ProfileMapperを使ってプロファイルを作成 */
       /* IDとタイムスタンプは自動生成される */
       const profile = ProfileMapper.create({
-        name: profileData.name,    // プロファイル名（例: "取引先A"）
+        name: profileData.name,    // プロファイル名（例: "A社向け"）
       });
       /* 作成したプロファイルの名前とIDをMapに追加 */
       profileMap.set(profileData.name, profile.id);
@@ -254,9 +254,9 @@ async function seedVariables(profileMap: Map<string, string>): Promise<void> {
       /* VariableMapperを使って変数メタデータを作成 */
       /* 変数の値はprofile_variablesテーブルに別途格納される */
       const variable = VariableMapper.create({
-        name: variableData.name,      // 変数名（例: "company_name"）
+        name: variableData.name,      // 変数名（例: "company"）
         label: variableData.label,    // 表示ラベル（例: "会社名"）
-        icon: variableData.icon,      // アイコン名（例: "building"）
+        icon: variableData.icon,      // アイコン名（例: "business-outline"）
         type: 'custom',               // 変数タイプ（カスタム変数として作成）
       });
 
@@ -325,9 +325,9 @@ async function seedVariables(profileMap: Map<string, string>): Promise<void> {
  * 生成されるデータ:
  * 1. デフォルトプロファイル「Main」（全環境）
  * 2. カテゴリ 4種類（開発のみ）
- * 3. スニペット 11種類（開発のみ）
- * 4. プロファイル 4種類（開発のみ）
- * 5. カスタム変数 10種類 + 各プロファイル別の値（開発のみ）
+ * 3. スニペット 13種類（開発のみ）
+ * 4. プロファイル 2種類（開発のみ。「Main」と合わせて計3件）
+ * 5. カスタム変数 3種類 + 各プロファイル別の値（開発のみ）
  *
  * @throws {Error} シード処理に失敗した場合（エラーログに記録）
  */

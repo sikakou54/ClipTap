@@ -8,8 +8,8 @@
     <meta name="keywords" content="定型文アプリ,拡張キーボード,定型文入力,テキスト展開,メール定型文,ChatGPTプロンプト,クリップボード,業務効率化,iOS,Android" />
     <meta name="author" content="ClipTap" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <meta name="theme-color" content="#0A0F1C" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#212b3c" />
+    <meta name="color-scheme" content="light" />
 
     <link rel="canonical" href="https://cliptap.net/" />
     <link rel="alternate" hreflang="ja" href="https://cliptap.net/" />
@@ -35,11 +35,11 @@
     <meta name="twitter:image:alt" content="ClipTap — どのアプリにも定型文をワンタップ" />
 
     <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="icon" type="image/png" href="/image/icon.png" />
-    <link rel="apple-touch-icon" href="/image/icon.png" />
+    <link rel="icon" type="image/png" href="/image/app-icon.png" />
+    <link rel="apple-touch-icon" href="/image/app-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&amp;family=Noto+Sans+JP:wght@400;500;700;800&amp;display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./lp/lp.css" />
 
     <script type="application/ld+json">
@@ -74,9 +74,9 @@
           ".cliptapファイルによる入出力"
         ],
         "screenshot": [
-          "https://cliptap.net/image/keyborad.png",
-          "https://cliptap.net/image/top.png",
-          "https://cliptap.net/image/variables-setting.png"
+          "https://cliptap.net/image/05-howto-2-keyboard.png",
+          "https://cliptap.net/image/01-hero-left-home.png",
+          "https://cliptap.net/image/03-variables-left-list.png"
         ]
       }
     </script>
@@ -92,7 +92,7 @@
           "name": "ClipTap",
           "logo": {
             "@type": "ImageObject",
-            "url": "https://cliptap.net/image/icon.png"
+            "url": "https://cliptap.net/image/app-icon.png"
           }
         }
       }
@@ -155,333 +155,254 @@
     </script>
   </head>
   <body>
-    <!-- LPは検索エンジンが初期HTMLから全文を読めるよう、言語別の静的HTML自体をi18n機構とする。 -->
     <a class="skip-link" href="#main">本文へ移動</a>
-    <div class="header-sentinel" data-header-sentinel aria-hidden="true"></div>
 
-    <header class="site-header glass" data-header>
-      <div class="header-inner container">
-        <a class="brand" href="#top" aria-label="ClipTap ホーム">
-          <img src="/image/icon.png" width="40" height="40" alt="" />
-          <span>ClipTap</span>
-        </a>
-        <nav class="nav" aria-label="メインナビゲーション">
-          <a href="#keyboard">キーボード</a>
-          <a href="#variables">変数</a>
-          <a href="#pricing">料金</a>
-          <a href="#faq">FAQ</a>
-        </nav>
-        <div class="header-actions">
-          <div class="lang-switch" role="group" aria-label="言語を選択">
-            <a href="./" lang="ja" aria-current="page">JA</a>
-            <a href="en/" lang="en">EN</a>
-          </div>
-          <a class="button button--compact header-cta" href="app.html">Web版</a>
-          <button class="nav-toggle" type="button" data-nav-open aria-haspopup="dialog" aria-controls="mobile-nav" aria-label="メニューを開く">
-            <span></span><span></span><span></span>
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <dialog class="mobile-nav glass" id="mobile-nav" data-mobile-nav aria-label="モバイルナビゲーション">
-      <div class="mobile-nav__head">
-        <span class="brand"><img src="/image/icon.png" width="36" height="36" alt="" /><span>ClipTap</span></span>
-        <button type="button" data-nav-close aria-label="メニューを閉じる">×</button>
-      </div>
-      <nav aria-label="モバイルメニュー">
-        <a href="#keyboard">キーボード</a>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="ClipTap ホーム"><img src="/image/app-icon.png" width="28" height="28" alt="" /><span>ClipTap</span></a>
+      <nav class="header-nav" aria-label="メインナビゲーション">
+        <a href="#scenes">使う場面</a>
         <a href="#variables">変数</a>
         <a href="#pricing">料金</a>
         <a href="#faq">FAQ</a>
-        <a href="app.html">Web版を開く</a>
+        <span class="lang-switch" role="group" aria-label="言語を選択">
+          <a href="./" lang="ja" aria-current="page">JA</a>
+          <a href="en/" lang="en">EN</a>
+        </span>
+        <a class="btn btn-primary" href="app.html">Web版を開く</a>
       </nav>
-      <div class="lang-switch" role="group" aria-label="言語を選択">
-        <a href="./" lang="ja" aria-current="page">日本語</a>
-        <a href="en/" lang="en">English</a>
-      </div>
-    </dialog>
+    </header>
 
     <main id="main">
-      <!-- ヒーロー: 「何ができるか」を1画面で伝える。 -->
-      <section class="hero section" id="top">
-        <div class="hero-grid container">
-          <div class="hero-copy reveal">
-            <p class="tag"><span class="tag-dot"></span> KEYBOARD</p>
-            <h1>アプリを切り替えずに、<br /><strong>定型文をワンタップ。</strong></h1>
+      <div class="container">
+
+        <section class="hero" id="top">
+          <div>
+            <h1><span>何度も打つ文章は、</span><span class="accent">もう打たない。</span></h1>
             <p class="hero-lead">Gmail、Slack、LINE、ChatGPT。文字を打てるアプリなら、ClipTapのキーボードからいつもの文章をそのまま入力できます。</p>
-            <div class="hero-actions" id="download">
-              <a class="store-badge" href="https://apps.apple.com/app/id6754281185" target="_blank" rel="noopener noreferrer"><img src="/image/ios-badge.svg" width="109" height="40" alt="App Storeからダウンロード" /></a>
-              <a class="store-badge" href="https://play.google.com/store/apps/details?id=com.sikakou.cliptap&amp;hl=ja" target="_blank" rel="noopener noreferrer"><img src="/image/android-badge.svg" width="135" height="40" alt="Google Playで手に入れよう" /></a>
-              <a class="button button--secondary" href="app.html">Web版を開く <span aria-hidden="true">↗</span></a>
+            <div class="actions" id="download">
+              <a href="https://apps.apple.com/app/id6754281185" target="_blank" rel="noopener noreferrer"><img src="/image/badge-appstore.svg" width="120" height="44" alt="App Storeからダウンロード" /></a>
+          <a href="https://play.google.com/store/apps/details?id=com.sikakou.cliptap&amp;hl=ja" target="_blank" rel="noopener noreferrer"><img src="/image/badge-googleplay.svg" width="148" height="44" alt="Google Playで手に入れよう" /></a>
+              <a class="btn btn-ghost" href="app.html">Web版を開く</a>
             </div>
-            <p class="hero-note">無料・登録不要。定型文とカテゴリは無制限。</p>
-            <ul class="trust-chips" aria-label="ClipTapの特長">
-              <li><span aria-hidden="true">●</span> オフラインで動作</li>
-              <li><span aria-hidden="true">●</span> データは端末内に保存</li>
-              <li><span aria-hidden="true">●</span> iOS 15.1+ · Android 7.0+ · Web</li>
-            </ul>
+            <p class="hero-note">無料・登録不要。データは端末内に保存、オフラインで動作。iOS 15.1+ / Android 7.0+ / Web。</p>
           </div>
-
-          <!-- 左が定型文の一覧、右がその定型文を他アプリへ入力した実機画面。 -->
-          <div class="hero-visual reveal" style="--i: 2">
-            <div class="phone-pair">
-              <div class="phone phone--shot">
-                <div class="phone-inner">
-                  <div class="dynamic-island" aria-hidden="true"></div>
-                  <img src="/image/hero-cliptap.png" width="1170" height="2532" alt="ClipTapのホーム画面。「今日の積み上げ」「調査プロンプト」「業務開始報告」の定型文が一覧表示されている" />
-                </div>
-              </div>
-              <div class="phone phone--shot">
-                <div class="phone-inner">
-                  <div class="dynamic-island" aria-hidden="true"></div>
-                  <img src="/image/hero-insert.png" width="1170" height="2532" alt="ChatGPTの入力欄に、ClipTapの「調査プロンプト」がそのまま入力された画面" />
-                </div>
-              </div>
+          <div class="hero-shots">
+            <div class="phone">
+            <div class="phone-inner">
+              <img src="/image/01-hero-left-home.png" width="1170" height="2532" alt="ClipTapのホーム画面。定型文が一覧表示されている" />
             </div>
           </div>
-        </div>
+            <div class="phone">
+            <div class="phone-inner">
+              <img src="/image/01-hero-right-insert.png" width="1170" height="2532" alt="ChatGPTの入力欄に定型文がそのまま入力された画面" />
+            </div>
+          </div>
+          </div>
+        </section>
 
-        <div class="supported-apps reveal">
-          <p>iOS・Android・Web に対応。キーボードからの入力は、文字を打てるアプリならどこでも</p>
-          <ul class="app-list" aria-label="対応アプリの例">
-            <li>Gmail</li><li>Slack</li><li>LINE</li><li>X</li><li>Instagram</li><li>ChatGPT</li><li>Claude</li><li>ブラウザ</li>
-          </ul>
-        </div>
-      </section>
+        <hr class="rule" />
 
-      <!-- 01 キーボード: AIチャット・SNS・メールの3つの利用シーンを画面付きで示す。 -->
-      <section class="section section--keyboard" id="keyboard">
-        <div class="container">
-          <header class="section-head reveal">
-            <p class="eyebrow">KEYBOARD</p>
-            <h2>何度も打つ文章は、<br />もう打たない。</h2>
-            <p class="lead">入力欄でClipTapキーボードに切り替えて、タップするだけ。AIチャットも、SNSも、メールも、文字が打てるアプリならどこでも直接入力できます。</p>
-          </header>
+        <section class="stats" aria-label="ClipTapの数字">
+          <div><p class="stat-num">無制限</p><p class="stat-label">定型文とカテゴリ。無料のまま</p></div>
+          <div><p class="stat-num">7 + 94</p><p class="stat-label">システム変数7種と書式プリセット94種</p></div>
+          <div><p class="stat-num">0円</p><p class="stat-label">基本機能はずっと無料</p></div>
+          <div><p class="stat-num">端末内</p><p class="stat-label">データはクラウドに送らない</p></div>
+        </section>
 
-          <ul class="usecase-grid">
-            <li class="usecase-item reveal" style="--i: 0">
-              <div class="phone phone--shot">
-                <div class="phone-inner">
-                  <div class="dynamic-island" aria-hidden="true"></div>
-                  <img src="/image/usecase-ai.png" width="1170" height="2532" loading="lazy" decoding="async" alt="AIチャットの入力欄に、ClipTapの定型文プロンプトを入力した画面" />
-                </div>
-              </div>
+        <hr class="rule" />
+
+        <section class="scenes" id="scenes">
+          <span class="kicker">SCENES — 使う場面</span>
+          <h2 class="section-title">朝の報告、毎日のタグ、いつもの返信。<br>打っていた時間が、タップになる。</h2>
+          <div class="scene">
+            <div>
               <h3>AIチャット</h3>
-              <p>使い回すプロンプトを登録しておけば、ChatGPTやClaudeにワンタップで入力できます。</p>
-            </li>
-            <li class="usecase-item reveal" style="--i: 1">
-              <div class="phone phone--shot">
-                <div class="phone-inner">
-                  <div class="dynamic-island" aria-hidden="true"></div>
-                  <img src="/image/usecase-sns.png" width="1170" height="2532" loading="lazy" decoding="async" alt="SNSの投稿欄に「今日の積み上げ」の定型文を入力した画面" />
-                </div>
-              </div>
+              <p>朝いちばん、昨日と同じ調査プロンプト。使い回すプロンプトを登録しておけば、ChatGPTやClaudeの入力欄にワンタップで入ります。長文ほど、差が出ます。</p>
+            </div>
+            <div class="phone phone--sm">
+            <div class="phone-inner">
+              <img src="/image/02-scene-1-ai.png" width="1170" height="2532" loading="lazy" decoding="async" alt="AIチャットの入力欄に、ClipTapの定型文プロンプトを入力した画面" />
+            </div>
+          </div>
+          </div>
+          <div class="scene scene--reverse">
+            <div>
               <h3>SNS</h3>
               <p>毎日の「#今日の積み上げ」も、定型文をタップするだけ。ハッシュタグごと、そのまま投稿欄に入ります。</p>
-            </li>
-            <li class="usecase-item reveal" style="--i: 2">
-              <div class="phone phone--shot">
-                <div class="phone-inner">
-                  <div class="dynamic-island" aria-hidden="true"></div>
-                  <img src="/image/usecase-mail.png" width="1170" height="2532" loading="lazy" decoding="async" alt="メールの本文に、ClipTapの定型文を挿入した画面" />
-                </div>
-              </div>
+            </div>
+            <div class="phone phone--sm">
+            <div class="phone-inner">
+              <img src="/image/02-scene-2-sns.png" width="1170" height="2532" loading="lazy" decoding="async" alt="SNSの投稿欄に「今日の積み上げ」の定型文を入力した画面" />
+            </div>
+          </div>
+          </div>
+          <div class="scene">
+            <div>
               <h3>メール</h3>
-              <p>あいさつ文・署名・よく送る返信を、Gmailなどの本文にそのまま挿入できます。</p>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <!-- 02 システム変数: 日付・時刻・曜日が入力の瞬間に自動で入ることを、動く例と画面で示す。 -->
-      <section class="section section--variables" id="variables">
-        <div class="container">
-          <div class="media-split reveal">
-            <div class="media-split__copy">
-              <header class="section-head">
-                <p class="eyebrow">SYSTEM VARIABLES</p>
-                <h2>日付や時刻は、<br />自動で入ります。</h2>
-                <p class="lead">毎回変わるところはシステム変数にしておくだけ。入力したその瞬間の日付・時刻・曜日に置き換わります。</p>
-              </header>
-
-              <div class="stats">
-                <article class="stat"><strong>7</strong><span>システム変数</span><small>日付・時刻・曜日など</small></article>
-                <article class="stat"><strong>94</strong><span>書式プリセット</span><small>選ぶだけで表記が変わる</small></article>
-              </div>
+              <p>あいさつ文・署名・よく送る返信を、Gmailなどの本文にそのまま挿入。書き出しで手が止まる時間がなくなります。</p>
             </div>
-
-            <figure class="media-shot">
-              <div class="phone-pair">
-                <div class="phone phone--shot">
-                  <div class="phone-inner">
-                    <div class="dynamic-island" aria-hidden="true"></div>
-                    <img src="/image/system-variables-list.png" width="1170" height="2532" loading="lazy" decoding="async" alt="システム変数の一覧画面" />
-                  </div>
-                </div>
-                <div class="phone phone--shot">
-                  <div class="phone-inner">
-                    <div class="dynamic-island" aria-hidden="true"></div>
-                    <img src="/image/system-variables-format.png" width="1170" height="2532" loading="lazy" decoding="async" alt="日付や時刻の書式を一覧から選択する画面" />
-                  </div>
-                </div>
-              </div>
-              <figcaption>変数は一覧から選んで、書式もその場で変更</figcaption>
-            </figure>
-          </div>
-        </div>
-      </section>
-
-      <!-- 03 カスタム変数: 会社名・担当者をプロファイル単位で切り替えられることを示す。 -->
-      <section class="section section--profiles" id="profiles">
-        <div class="container">
-          <div class="media-split media-split--reverse reveal">
-            <div class="media-split__copy">
-              <header class="section-head">
-                <p class="eyebrow">CUSTOM VARIABLES</p>
-                <h2>会社名や宛名も、<br />自動で入ります。</h2>
-                <p class="lead">会社名・担当者名・署名などは、一度登録しておくだけ。相手や仕事ごとに「プロファイル」を切り替えれば、同じ定型文がそのまま別の相手向けになります。</p>
-              </header>
+            <div class="phone phone--sm">
+            <div class="phone-inner">
+              <img src="/image/02-scene-3-mail.png" width="1170" height="2532" loading="lazy" decoding="async" alt="メールの本文に、ClipTapの定型文を挿入した画面" />
             </div>
-
-            <figure class="media-shot">
-              <div class="phone-pair">
-                <div class="phone phone--shot">
-                  <div class="phone-inner">
-                    <div class="dynamic-island" aria-hidden="true"></div>
-                    <img src="/image/custom-variable-edit.png" width="1170" height="2532" loading="lazy" decoding="async" alt="カスタム変数の編集画面" />
-                  </div>
-                </div>
-                <div class="phone phone--shot">
-                  <div class="phone-inner">
-                    <div class="dynamic-island" aria-hidden="true"></div>
-                    <img src="/image/custom-variable-snippet.png" width="1170" height="2532" loading="lazy" decoding="async" alt="カスタム変数を使った定型文の画面" />
-                  </div>
-                </div>
-              </div>
-              <figcaption>登録した会社名や宛名が、定型文にそのまま入ります</figcaption>
-            </figure>
           </div>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      <!-- 04 使い方: 登録 → キーボードで挿入、の2ステップを画面付きで示す。 -->
-      <section class="section section--flow" id="flow">
-        <div class="container">
-          <header class="section-head reveal">
-            <p class="eyebrow">HOW IT WORKS</p>
-            <h2>登録して、<br />使うだけ。</h2>
-            <p class="lead">定型文を一度登録すれば、あとはどのアプリからでも呼び出すだけです。</p>
-          </header>
+        <hr class="rule" />
 
-          <ol class="flow-grid">
-            <li class="flow-item reveal" style="--i: 0">
-              <span class="flow-item__num" aria-hidden="true">1</span>
-              <div class="phone phone--shot">
-                <div class="phone-inner">
-                  <div class="dynamic-island" aria-hidden="true"></div>
-                  <img src="/image/flow-register.png" width="1170" height="2532" loading="lazy" decoding="async" alt="定型文の登録画面" />
-                </div>
+        <section class="split" id="variables">
+          <div>
+            <span class="kicker">SYSTEM VARIABLES</span>
+            <h2>日付や時刻は、<br>自動で入る。</h2>
+            <p class="lead">毎回変わるところはシステム変数にしておくだけ。入力したその瞬間の日付・時刻・曜日に置き換わります。変数は7種、書式は94種から選べます。</p>
+          </div>
+          <div class="split-shots">
+            <div class="phone">
+            <div class="phone-inner">
+              <img src="/image/03-variables-left-list.png" width="1170" height="2532" loading="lazy" decoding="async" alt="システム変数の一覧画面" />
+            </div>
+          </div>
+            <div class="phone">
+            <div class="phone-inner">
+              <img src="/image/03-variables-right-format.png" width="1170" height="2532" loading="lazy" decoding="async" alt="日付や時刻の書式を一覧から選択する画面" />
+            </div>
+          </div>
+          </div>
+        </section>
+
+        <hr class="rule" />
+
+        <section class="split split--reverse" id="profiles">
+          <div class="split-shots">
+            <div class="phone">
+            <div class="phone-inner">
+              <img src="/image/04-profile-left-edit.png" width="1170" height="2532" loading="lazy" decoding="async" alt="カスタム変数の編集画面" />
+            </div>
+          </div>
+            <div class="phone">
+            <div class="phone-inner">
+              <img src="/image/04-profile-right-snippet.png" width="1170" height="2532" loading="lazy" decoding="async" alt="カスタム変数を使った定型文の画面" />
+            </div>
+          </div>
+          </div>
+          <div>
+            <span class="kicker">CUSTOM VARIABLES</span>
+            <h2>会社名や宛名も、<br>一度登録するだけ。</h2>
+            <p class="lead">会社名・担当者名・署名はカスタム変数に。相手や仕事ごとに「プロファイル」を切り替えれば、同じ定型文がそのまま別の相手向けになります。</p>
+          </div>
+        </section>
+
+        <hr class="rule" />
+
+        <section class="howto" id="flow">
+          <span class="kicker">HOW IT WORKS</span>
+          <h2 class="section-title">登録して、使うだけ。</h2>
+          <ol class="howto-grid">
+            <li class="howto-step">
+              <div>
+                <p class="num">1</p>
+                <h3>定型文を登録</h3>
+                <p>タイトルと本文を入力して保存。日付や会社名は、変数としてワンタップで挿入できます。</p>
               </div>
-              <h3>定型文を登録</h3>
-              <p>タイトルと本文を入力して保存。日付や会社名は、変数としてワンタップで挿入できます。</p>
+              <div class="phone phone--xs">
+            <div class="phone-inner">
+              <img src="/image/05-howto-1-register.png" width="1170" height="2532" loading="lazy" decoding="async" alt="定型文の登録画面" />
+            </div>
+          </div>
             </li>
-            <li class="flow-item reveal" style="--i: 1">
-              <span class="flow-item__num" aria-hidden="true">2</span>
-              <div class="phone phone--shot">
-                <div class="phone-inner">
-                  <div class="dynamic-island" aria-hidden="true"></div>
-                  <img src="/image/flow-keyboard.png" width="1170" height="2532" loading="lazy" decoding="async" alt="拡張キーボードで定型文を挿入する画面" />
-                </div>
+            <li class="howto-step">
+              <div>
+                <p class="num">2</p>
+                <h3>キーボードで挿入</h3>
+                <p>他のアプリでClipTapキーボードに切り替えて、定型文をタップするだけです。</p>
               </div>
-              <h3>キーボードで挿入</h3>
-              <p>他のアプリでClipTapキーボードに切り替えて、定型文をタップするだけです。</p>
+              <div class="phone phone--xs">
+            <div class="phone-inner">
+              <img src="/image/05-howto-2-keyboard.png" width="1170" height="2532" loading="lazy" decoding="async" alt="拡張キーボードで定型文を挿入する画面" />
+            </div>
+          </div>
             </li>
           </ol>
-        </div>
-      </section>
+        </section>
 
-      <!-- 05 料金: 機能比較表を主役にし、価格は表の下で文章として控えめに示す。 -->
-      <section class="section section--pricing" id="pricing">
-        <div class="container">
-          <header class="section-head reveal">
-            <p class="eyebrow">PRICING</p>
-            <h2>ほとんどの機能は、<br />無料のままで。</h2>
-            <p class="lead">定型文・カテゴリ・拡張キーボード・7変数と94書式は、すべて無料プランに含まれます。</p>
-          </header>
+        <hr class="rule" />
 
-          <div class="plan-table-wrap reveal">
-            <table class="plan-table">
-              <caption class="sr-only">FreeプランとProプランの機能比較</caption>
-              <thead>
-                <tr>
-                  <th scope="col">機能</th>
-                  <th scope="col">Free</th>
-                  <th scope="col" class="plan-table__pro">Pro</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><th scope="row">定型文・カテゴリ</th><td>無制限</td><td class="plan-table__pro">無制限</td></tr>
-                <tr><th scope="row">プロファイル</th><td>3件まで</td><td class="plan-table__pro">無制限</td></tr>
-                <tr><th scope="row">カスタム変数</th><td>5件まで</td><td class="plan-table__pro">無制限</td></tr>
-                <tr><th scope="row">広告</th><td>あり</td><td class="plan-table__pro">なし</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <p class="plan-price reveal">Freeはずっと0円。Proは日本円で月額250円（年額3,000円）です。</p>
-
-          <ul class="pricing-notes reveal">
+        <section class="pricing" id="pricing">
+          <span class="kicker">PRICING</span>
+          <h2 class="section-title">ほとんどの機能は、無料のままで。</h2>
+          <p class="lead">定型文・カテゴリ・拡張キーボード・7変数と94書式は、すべて無料プランに含まれます。</p>
+          <table class="plan-table">
+            <caption class="sr-only">FreeプランとProプランの機能比較</caption>
+            <thead><tr><th scope="col">機能</th><th scope="col">Free</th><th scope="col" class="pro">Pro</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">定型文・カテゴリ</th><td>無制限</td><td class="pro">無制限</td></tr>
+              <tr><th scope="row">プロファイル</th><td>3件まで</td><td class="pro">無制限</td></tr>
+              <tr><th scope="row">カスタム変数</th><td>5件まで</td><td class="pro">無制限</td></tr>
+              <tr><th scope="row">広告</th><td>あり</td><td class="pro">なし</td></tr>
+            </tbody>
+          </table>
+          <p class="plan-price">Freeはずっと0円。Proは月額250円（年額3,000円）。</p>
+          <ul class="pricing-notes">
             <li>表示価格は基準価格です。実際の価格・通貨は、各国のApp Store / Google Playの表示が優先されます。</li>
             <li>購入・購入復元・解約はモバイルアプリから行います。Web版では購入できません。</li>
           </ul>
-        </div>
-      </section>
+        </section>
 
-      <!-- 06 FAQ: 購入前に必ず聞かれる6問だけを残す（JSON-LDと同一）。 -->
-      <section class="section section--faq" id="faq">
-        <div class="container">
-          <header class="section-head reveal">
-            <p class="eyebrow">FAQ</p>
-            <h2>よくある質問。</h2>
-          </header>
-          <div class="faq-list reveal">
-            <details><summary>無料でどこまで使えますか？</summary><div><p>定型文とカテゴリは無制限、拡張キーボードは件数上限なし、システム変数7種と94書式もすべて無料です。プロファイルは3件、カスタム変数は5件まで無料で使えます。</p></div></details>
-            <details><summary>データはどこに保存されますか？</summary><div><p>定型文・カテゴリ・プロファイル・変数はすべて端末内に保存されます。クラウドには保存されず、定型文の中身が外部へ送られることもありません。</p></div></details>
-            <details><summary>オフラインでも使えますか？</summary><div><p>定型文の作成・検索・変数展開・コピー・キーボード入力はオフラインで完結します。アカウント連携・Pro権利の確認・広告・ストア遷移だけネットワークが必要です。</p></div></details>
-            <details><summary>iPhoneで使うには設定が必要ですか？</summary><div><p>「設定」からClipTapキーボードの追加が必要です。使用回数の記録にはフルアクセスの許可が必要ですが、定型文の入力そのものはフルアクセスなしでも行えます。</p></div></details>
-            <details><summary>機種変更のときデータを移せますか？</summary><div><p>.cliptapファイルで書き出して、新しい端末で読み込めます。パスワードの一致確認とチェックサム検証を行いますが、ファイルの内容は暗号化されません。</p></div></details>
-            <details><summary>Proを解約するとどうなりますか？</summary><div><p>契約期間の終わりまでProを使えます。上限を超えたプロファイル・カスタム変数は削除されず無効になるだけで、Proに戻せば再び使えます。</p></div></details>
+        <hr class="rule" />
+
+        <section class="faq" id="faq">
+          <span class="kicker">FAQ</span>
+          <h2 class="section-title">よくある質問。</h2>
+          <div class="faq-list">
+            <details><summary>無料でどこまで使えますか？</summary><p>定型文とカテゴリは無制限、拡張キーボードは件数上限なし、システム変数7種と94書式もすべて無料です。プロファイルは3件、カスタム変数は5件まで無料で使えます。</p></details>
+            <details><summary>データはどこに保存されますか？</summary><p>定型文・カテゴリ・プロファイル・変数はすべて端末内に保存されます。クラウドには保存されず、定型文の中身が外部へ送られることもありません。</p></details>
+            <details><summary>オフラインでも使えますか？</summary><p>定型文の作成・検索・変数展開・コピー・キーボード入力はオフラインで完結します。アカウント連携・Pro権利の確認・広告・ストア遷移だけネットワークが必要です。</p></details>
+            <details><summary>iPhoneで使うには設定が必要ですか？</summary><p>「設定」からClipTapキーボードの追加が必要です。使用回数の記録にはフルアクセスの許可が必要ですが、定型文の入力そのものはフルアクセスなしでも行えます。</p></details>
+            <details><summary>機種変更のときデータを移せますか？</summary><p>.cliptapファイルで書き出して、新しい端末で読み込めます。パスワードの一致確認とチェックサム検証を行いますが、ファイルの内容は暗号化されません。</p></details>
+            <details><summary>Proを解約するとどうなりますか？</summary><p>契約期間の終わりまでProを使えます。上限を超えたプロファイル・カスタム変数は削除されず無効になるだけで、Proに戻せば再び使えます。</p></details>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
-      <section class="section final-cta" id="cta">
+      <section class="close" id="cta">
         <div class="container">
-          <div class="final-cta__panel glass reveal">
-            <p class="tag"><span class="tag-dot"></span> START FREE</p>
-            <h2>今日から、同じ文章を<br />打つのをやめる。</h2>
-            <p>無料・登録不要。まずは、いちばんよく使う一文から。</p>
-            <div class="hero-actions">
-              <a class="store-badge" href="https://apps.apple.com/app/id6754281185" target="_blank" rel="noopener noreferrer"><img src="/image/ios-badge.svg" width="109" height="40" loading="lazy" alt="App Storeからダウンロード" /></a>
-              <a class="store-badge" href="https://play.google.com/store/apps/details?id=com.sikakou.cliptap&amp;hl=ja" target="_blank" rel="noopener noreferrer"><img src="/image/android-badge.svg" width="135" height="40" loading="lazy" alt="Google Playで手に入れよう" /></a>
-              <a class="button button--secondary" href="app.html">Web版を開く</a>
-            </div>
+          <h2><span>今日から、同じ文章を</span><span>打つのをやめる。</span></h2>
+          <p>無料・登録不要。まずは、いちばんよく使う一文から。</p>
+          <div class="actions">
+            <a href="https://apps.apple.com/app/id6754281185" target="_blank" rel="noopener noreferrer"><img src="/image/badge-appstore.svg" width="120" height="44" alt="App Storeからダウンロード" /></a>
+          <a href="https://play.google.com/store/apps/details?id=com.sikakou.cliptap&amp;hl=ja" target="_blank" rel="noopener noreferrer"><img src="/image/badge-googleplay.svg" width="148" height="44" alt="Google Playで手に入れよう" /></a>
+            <a class="btn btn-ghost" href="app.html">Web版を開く</a>
           </div>
         </div>
       </section>
     </main>
 
-    <footer class="footer">
-      <div class="container footer-grid">
-        <div class="footer-brand"><a class="brand" href="#top"><img src="/image/icon.png" width="40" height="40" loading="lazy" alt="" /><span>ClipTap</span></a><p>いつもの文章を、必要な場所へ。<br />ローカルファーストの定型文アプリ。</p></div>
-        <div><h2>プロダクト</h2><ul><li><a href="#keyboard">拡張キーボード</a></li><li><a href="#variables">システム変数</a></li><li><a href="#profiles">カスタム変数とプロファイル</a></li><li><a href="#flow">使い方</a></li><li><a href="#pricing">料金</a></li><li><a href="app.html">Web版</a></li></ul></div>
-        <div><h2>サポート</h2><ul><li><a href="#faq">よくある質問</a></li><li><a href="terms.html">利用規約</a></li><li><a href="privacy.html">プライバシーポリシー</a></li><li><a href="mailto:cliptap.developer@gmail.com">お問い合わせ</a></li></ul></div>
-        <div><h2>ダウンロード</h2><ul><li><a href="https://apps.apple.com/app/id6754281185" target="_blank" rel="noopener noreferrer">App Store <span aria-hidden="true">↗</span></a></li><li><a href="https://play.google.com/store/apps/details?id=com.sikakou.cliptap&amp;hl=ja" target="_blank" rel="noopener noreferrer">Google Play <span aria-hidden="true">↗</span></a></li><li><a href="en/" lang="en">English</a></li></ul></div>
+    <footer>
+      <div class="container">
+        <div class="footer">
+          <div>
+            <a class="brand" href="#top"><img src="/image/app-icon.png" width="28" height="28" alt="" /><span>ClipTap</span></a>
+            <p class="footer-about">いつもの文章を、必要な場所へ。<br>ローカルファーストの定型文アプリ。</p>
+          </div>
+          <div>
+            <p class="footer-head">プロダクト</p>
+            <ul><li><a href="#scenes">使う場面</a></li><li><a href="#variables">システム変数</a></li><li><a href="#profiles">カスタム変数</a></li><li><a href="#pricing">料金</a></li><li><a href="app.html">Web版</a></li></ul>
+          </div>
+          <div>
+            <p class="footer-head">サポート</p>
+            <ul><li><a href="#faq">よくある質問</a></li><li><a href="terms.html">利用規約</a></li><li><a href="privacy.html">プライバシーポリシー</a></li><li><a href="mailto:cliptap.developer@gmail.com">お問い合わせ</a></li></ul>
+          </div>
+          <div>
+            <p class="footer-head">ダウンロード</p>
+            <ul><li><a href="https://apps.apple.com/app/id6754281185" target="_blank" rel="noopener noreferrer">App Store ↗</a></li><li><a href="https://play.google.com/store/apps/details?id=com.sikakou.cliptap&amp;hl=ja" target="_blank" rel="noopener noreferrer">Google Play ↗</a></li><li><a href="en/">English</a></li></ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>© 2026 ClipTap</p>
+          <p>記載の製品名は各社の商標です。ClipTapは各社と提携していません。</p>
+        </div>
       </div>
-      <div class="container footer-bottom"><p>© 2026 ClipTap</p><p>記載の製品名は各社の商標です。ClipTapは各社と提携していません。</p></div>
     </footer>
-
-    <script type="module" src="./lp/lp.js"></script>
   </body>
 </html>
