@@ -11,6 +11,9 @@
       { "name": "client_name", "label": "担当者名", "icon": "person-outline", "value": "ご担当者様" },
       { "name": "signature", "label": "署名", "icon": "create-outline", "value": "--------------------\n山田 太郎\nyamada@example.com\n--------------------" }
     ],
+    "systemVariableFormats": {
+      "month": "M"
+    },
     "snippets": [
       {
         "key": "research_prompt",
@@ -89,6 +92,31 @@
         "categoryKey": "work",
         "title": "進捗共有",
         "content": "おつかれさまです。\n{{today}} 時点の進捗を共有します。\n\n【完了】\n・\n\n【進行中】\n・\n\n【相談したいこと】\n・"
+      },
+      {
+        "key": "invoice_mail",
+        "categoryKey": "mail",
+        "title": "{{month}}月分 請求書送付のご案内",
+        "content": "{{company}}\n{{client_name}}\n\nいつもお世話になっております。\n\n{{month}}月分の請求書を添付にてお送りいたします。\nご査収のほど、よろしくお願いいたします。\n\n・請求書番号：\n・お支払期限：\n\nご不明な点がございましたら、本メールへご返信ください。\n\n{{signature}}"
+      },
+      {
+        "key": "reminder_mail",
+        "categoryKey": "mail",
+        "title": "{{client_name}}宛 リマインド",
+        "content": "{{company}}\n{{client_name}}\n\nいつもお世話になっております。\n\n先日ご連絡いたしました件につきまして、\nその後のご状況はいかがでしょうか。\n\n・対象：\n・ご回答期限：\n\n行き違いでご対応いただいておりましたら、\n何卒ご容赦ください。\n\n{{signature}}"
+      },
+      {
+        "key": "meeting_minutes",
+        "categoryKey": "work",
+        "title": "【議事録】{{company}} {{today}}",
+        "content": "【日時】{{today}}（{{weekday}}）{{time}}〜\n\n【出席者】\n・\n\n【決定事項】\n・\n\n【ToDo】\n・（担当／期限）\n\n【次回】\n・\n\n記載内容に相違がありましたら、ご返信にてお知らせください。"
+      },
+      {
+        "key": "day_off",
+        "categoryKey": "work",
+        "title": "{{今日}} 休暇連絡",
+        "content": "おつかれさまです。\n本日（{{曜日}}）は休暇をいただきます。\n\n・急ぎの用件：チャットでメンションをお願いします\n・対応可能：翌営業日以降\n\nご迷惑をおかけしますが、よろしくお願いします。",
+        "copyWithTitle": true
       }
     ]
   },
@@ -182,6 +210,31 @@
         "categoryKey": "work",
         "title": "Progress update",
         "content": "Progress update as of {{today}}.\n\n[Done]\n- \n\n[In progress]\n- \n\n[Need input on]\n- "
+      },
+      {
+        "key": "invoice_mail",
+        "categoryKey": "mail",
+        "title": "Invoice {{year}}-{{month}}",
+        "content": "Hi {{client_name}},\n\nPlease find attached the invoice for {{year}}-{{month}}.\n\n- Invoice number: \n- Due date: \n\nLet me know if anything needs correcting and I will resend it.\n\n{{signature}}"
+      },
+      {
+        "key": "reminder_mail",
+        "categoryKey": "mail",
+        "title": "{{client_name}} follow-up",
+        "content": "Hi {{client_name}},\n\nJust following up on my previous message.\n\n- Topic: \n- Needed by: \n\nIf you have already replied, please ignore this note.\n\n{{signature}}"
+      },
+      {
+        "key": "meeting_minutes",
+        "categoryKey": "work",
+        "title": "Notes: {{company}} {{today}}",
+        "content": "[When] {{today}} ({{weekday}}) {{time}}\n\n[Attendees]\n- \n\n[Decisions]\n- \n\n[Action items]\n- (owner / due)\n\n[Next meeting]\n- \n\nLet me know if I noted anything incorrectly."
+      },
+      {
+        "key": "day_off",
+        "categoryKey": "work",
+        "title": "{{today}} out of office",
+        "content": "Morning — I am off today ({{weekday}}).\n\n- Urgent: mention me here and I will pick it up\n- Back: next working day\n\nThanks for covering.",
+        "copyWithTitle": true
       }
     ]
   }

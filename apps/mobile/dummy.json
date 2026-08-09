@@ -9,6 +9,9 @@
     { "name": "A社向け" },
     { "name": "B社向け" }
   ],
+  "system_variable_formats": {
+    "month": "M"
+  },
   "custom_variables": [
     {
       "name": "company",
@@ -132,6 +135,34 @@
       "title": "進捗共有",
       "body": "おつかれさまです。\n{{today}} 時点の進捗を共有します。\n\n【完了】\n・\n\n【進行中】\n・\n\n【相談したいこと】\n・",
       "copyWithTitle": false
+    },
+    {
+      "id": "tpl_014",
+      "category": "メール",
+      "title": "{{month}}月分 請求書送付のご案内",
+      "body": "{{company}}\n{{client_name}}\n\nいつもお世話になっております。\n\n{{month}}月分の請求書を添付にてお送りいたします。\nご査収のほど、よろしくお願いいたします。\n\n・請求書番号：\n・お支払期限：\n\nご不明な点がございましたら、本メールへご返信ください。\n\n{{signature}}",
+      "copyWithTitle": false
+    },
+    {
+      "id": "tpl_015",
+      "category": "メール",
+      "title": "{{client_name}}宛 リマインド",
+      "body": "{{company}}\n{{client_name}}\n\nいつもお世話になっております。\n\n先日ご連絡いたしました件につきまして、\nその後のご状況はいかがでしょうか。\n\n・対象：\n・ご回答期限：\n\n行き違いでご対応いただいておりましたら、\n何卒ご容赦ください。\n\n{{signature}}",
+      "copyWithTitle": false
+    },
+    {
+      "id": "tpl_016",
+      "category": "仕事",
+      "title": "【議事録】{{company}} {{today}}",
+      "body": "【日時】{{today}}（{{weekday}}）{{time}}〜\n\n【出席者】\n・\n\n【決定事項】\n・\n\n【ToDo】\n・（担当／期限）\n\n【次回】\n・\n\n記載内容に相違がありましたら、ご返信にてお知らせください。",
+      "copyWithTitle": false
+    },
+    {
+      "id": "tpl_017",
+      "category": "仕事",
+      "title": "{{今日}} 休暇連絡",
+      "body": "おつかれさまです。\n本日（{{曜日}}）は休暇をいただきます。\n\n・急ぎの用件：チャットでメンションをお願いします\n・対応可能：翌営業日以降\n\nご迷惑をおかけしますが、よろしくお願いします。",
+      "copyWithTitle": true
     }
   ]
 }

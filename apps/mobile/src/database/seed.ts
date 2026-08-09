@@ -16,20 +16,34 @@
  *
  * データ構成（LPの掲載内容に沿った構成）:
  * - カテゴリ: 4種類（AIチャット、SNS、メール、仕事）
- * - スニペット: 13種類（LPの「使う場面」に対応するテンプレート）
+ * - スニペット: 17種類（LPの「使う場面」に対応する13種類 + タイトルに変数を含む4種類）
  * - プロファイル: 2種類（取引先別。デフォルトの「Main」と合わせて無料プラン上限の3件）
  * - カスタム変数: 3種類（会社名、担当者名、署名）
+ * - システム変数の書式: 1種類（月を `M` とし「8月分」と展開させる）
+ *
+ * タイトルに変数を含むスニペット（tpl_014〜tpl_017）:
+ * タイトルは本文と同様に変数展開の対象（一覧表示・コピー時の双方）のため、
+ * 実際の運用で変数入りタイトルが使われる3つの形を再現している。
+ * - メール件名として使い、タイトルのみコピーで件名欄へ貼る
+ *   - tpl_014: システム変数のみ（{{month}}。「〇月分請求書送付のご案内」の慣習に対応）
+ *   - tpl_016: システム変数とカスタム変数の混在（「【議事録】〇〇 定例（日付）」の慣習に対応）
+ * - 一覧の識別ラベルとして使い、環境切替で宛先が変わることを一覧で示す
+ *   - tpl_015: カスタム変数のみ（{{client_name}}）
+ * - 投稿の1行目として使い、タイトルごとコピーする
+ *   - tpl_017: システム変数の日本語エイリアス（{{今日}}、copyWithTitle: true）
  *
  * @see dummy.json - テストデータの定義ファイル
  * @see DatabaseManager - データベース初期化
  */
 
 import {
-  SnippetMapper,            // スニペット（定型文）データ操作
-  CategoryMapper,           // カテゴリデータ操作
-  VariableMapper,           // カスタム変数データ操作
-  ProfileMapper,            // プロファイル（環境）データ操作
-  ProfileVariableMapper,    // プロファイル別変数値データ操作
+  SnippetMapper,               // スニペット（定型文）データ操作
+  CategoryMapper,              // カテゴリデータ操作
+  VariableMapper,              // カスタム変数データ操作
+  ProfileMapper,               // プロファイル（環境）データ操作
+  ProfileVariableMapper,       // プロファイル別変数値データ操作
+  SystemVariableFormatMapper,  // システム変数の書式設定データ操作
+  isSystemVariableKey,         // システム変数キーの判定
 } from '@cliptap/shared';
 import { Logger } from '@cliptap/shared';
 
@@ -77,6 +91,12 @@ const TEST_PROFILES = dummyTemplates.profiles;
  * 変数メタデータと標準値、プロファイル別の値を含む
  */
 const TEST_VARIABLES = dummyTemplates.custom_variables;
+
+/**
+ * システム変数の書式設定テストデータ
+ * 既定値以外の書式を使う運用を再現するための定義（変数キー → 書式）
+ */
+const TEST_SYSTEM_VARIABLE_FORMATS = dummyTemplates.system_variable_formats;
 
 /* ======================================== */
 /* ヘルパー関数 */
@@ -310,6 +330,38 @@ async function seedVariables(profileMap: Map<string, string>): Promise<void> {
 }
 
 /**
+ * システム変数の書式をシード
+ *
+ * 既定の書式は `MM`（ゼロ埋め）のため、`{{month}}月分` は「08月分」と展開される。
+ * 実際の運用では利用者が書式を自分の表記へ変更するため、
+ * 請求書テンプレートが「8月分」となるようダミーでも書式を設定する。
+ *
+ * @remarks
+ * `SystemVariableFormatMapper.upsert()` は書き込み後にレジストリを再読込するため、
+ * シード直後のコピー・一覧表示にも設定が反映される。
+ */
+async function seedSystemVariableFormats(): Promise<void> {
+  /* 変数キーと書式のペアを順番に処理 */
+  for (const [variableKey, pattern] of Object.entries(TEST_SYSTEM_VARIABLE_FORMATS)) {
+    /* システム変数キーでない定義は無視する（JSONの記載ミス対策） */
+    if (!isSystemVariableKey(variableKey)) {
+      Logger.error(`[Seed] Unknown system variable key: ${variableKey}`);
+      continue;
+    }
+
+    try {
+      /* 書式を保存（プリセット外の書式はMapper側でエラーになる） */
+      SystemVariableFormatMapper.upsert(variableKey, pattern);
+      /* 設定完了ログを出力 */
+      Logger.info(`[Seed] Set system variable format: ${variableKey} = ${pattern}`);
+    } catch (error) {
+      /* 書式設定に失敗した場合はエラーログを出力（処理は継続） */
+      Logger.error(`[Seed] Failed to set system variable format ${variableKey}:`, error);
+    }
+  }
+}
+
+/**
  * データをシード
  *
  * アプリ初回起動時にテストデータとデフォルトプロファイルを作成します。
@@ -325,9 +377,10 @@ async function seedVariables(profileMap: Map<string, string>): Promise<void> {
  * 生成されるデータ:
  * 1. デフォルトプロファイル「Main」（全環境）
  * 2. カテゴリ 4種類（開発のみ）
- * 3. スニペット 13種類（開発のみ）
+ * 3. スニペット 17種類（開発のみ。うち4種類はタイトルに変数を含む）
  * 4. プロファイル 2種類（開発のみ。「Main」と合わせて計3件）
  * 5. カスタム変数 3種類 + 各プロファイル別の値（開発のみ）
+ * 6. システム変数の書式 1種類（開発のみ。月をゼロ埋めしない `M`）
  *
  * @throws {Error} シード処理に失敗した場合（エラーログに記録）
  */
@@ -365,6 +418,9 @@ export async function runSeed(): Promise<void> {
 
     /* 4. カスタム変数を作成し、各プロファイル別の値も設定 */
     await seedVariables(profileMap);
+
+    /* 5. システム変数の書式を設定（既定と異なる表記で運用する場合の再現） */
+    await seedSystemVariableFormats();
 
     /* シード処理完了ログを出力 */
     Logger.info('[Seed] Test data seeding completed successfully!');

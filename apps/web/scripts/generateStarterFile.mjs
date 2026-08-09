@@ -148,7 +148,16 @@ function buildDatabase(SQL, schema, dataset) {
       );
     });
 
-    /* 5. 定型文を作成（snippet_profilesへ登録しないことで全プロファイルに表示） */
+    /* 5. システム変数の書式を設定（既定と異なる表記で使う場合のみ定義される） */
+    for (const [variableKey, pattern] of Object.entries(dataset.systemVariableFormats ?? {})) {
+      db.run(
+        `INSERT INTO system_variable_formats (variableKey, pattern, updatedAt) VALUES (?, ?, ?)`,
+        [variableKey, pattern, FIXED_TIMESTAMP]
+      );
+    }
+
+    /* 6. 定型文を作成（snippet_profilesへ登録しないことで全プロファイルに表示） */
+    /* copyWithTitleは定義側の任意項目。省略時はタイトルを結合しない（0）とする */
     const baseTime = new Date(FIXED_TIMESTAMP).getTime();
     dataset.snippets.forEach((snippet, index) => {
       const createdAt = new Date(baseTime + index * SNIPPET_TIMESTAMP_STEP_MS).toISOString();
@@ -160,7 +169,7 @@ function buildDatabase(SQL, schema, dataset) {
           snippet.title,
           snippet.content,
           categoryIds.get(snippet.categoryKey) ?? null,
-          0,
+          snippet.copyWithTitle ? 1 : 0,
           0,
           createdAt,
           createdAt,
@@ -246,6 +255,7 @@ function verifyExportJson(SQL, json, schema, exportUtils, password, dataset) {
       profile_variables: dataset.variables.length,
       snippets: dataset.snippets.length,
       snippet_profiles: 0,
+      system_variable_formats: Object.keys(dataset.systemVariableFormats ?? {}).length,
     };
     for (const [table, count] of Object.entries(expected)) {
       const actual = countOf(table);
