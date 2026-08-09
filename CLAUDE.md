@@ -389,11 +389,14 @@ npm run build:native:ios -- --no-install  # ネイティブ（iOS拡張キーボ
 
 ```bash
 npm run verify:ios                  # 型チェック→テスト→Lint→ネイティブビルド→シミュレータへインストール
+npm run verify:ios:device           # 同上。インストール先を接続中の実機にする
 npm run verify:android
 npm run verify:ios -- --no-install  # インストールせず検証だけ（コミット前の確認向け）
 ```
 
 Metro（`expo start`）はスクリプトに含めない。`npm run dev:mobile` で別途起動する。
+
+**実機で確かめるべきものは実機で確かめる。** 拡張キーボードのフルアクセス許可ダイアログ、ハプティクス、実際のキーボード切り替えはシミュレータでは再現しない。`npm run verify:ios:device` を使う（Androidは `verify:android` が `adb devices` の端末へそのまま入るため、実機を繋いでいればそれで足りる）。実機の署名チームIDは `project.pbxproj` へ書かず、ビルド時にコマンドラインから渡す。
 
 **iOSビルドで `CODE_SIGNING_ALLOWED=NO` を使わないこと。** エンタイトルメントが付かずApp Group（`group.com.sikakou.cliptap`）が無効になり、アプリと拡張キーボードの共有SQLiteを開けなくなる（動作確認に使えないビルドになる）。
 

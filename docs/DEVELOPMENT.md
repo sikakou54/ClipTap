@@ -350,10 +350,12 @@ npm run android
 
 #### 実機でテスト
 
-1. 開発ビルドを実機にインストール（`npm run ios`または`npm run android`）
+1. 開発ビルドを実機にインストール（`npm run verify:ios:device` または `npm run android`）
 2. Expo Goアプリではなく、開発ビルドアプリを使用
 3. 同じWi-Fiネットワークに接続
 4. QRコードをスキャン、またはURLを直接入力
+
+拡張キーボードを実機で確認する場合は `npm run verify:ios:device` を使ってください（[4. ネイティブビルドとインストール](#4-ネイティブビルドとインストール)を参照）。`npm run ios` は毎回シミュレータへ入ります。
 
 リリース前の実機確認:
 
@@ -776,8 +778,9 @@ iOS拡張キーボード（Swift）とAndroid IME（Kotlin・レイアウト・�
 npm run build:native
 
 # 片方だけ実行する場合
-npm run build:native:ios       # iOS（ClipTapスキーム）→ シミュレータへインストール
-npm run build:native:android   # Android（:app:assembleDebug）→ エミュレータへインストール
+npm run build:native:ios          # iOS（ClipTapスキーム）→ シミュレータへインストール
+npm run build:native:ios:device   # iOS（ClipTapスキーム）→ 接続中の実機へインストール
+npm run build:native:android      # Android（:app:assembleDebug）→ adbが見ている端末へインストール
 
 # ビルドだけ行い、端末を触らない場合
 npm run build:native:ios -- --no-install
@@ -791,32 +794,72 @@ npm run build:native:ios -- --no-install
 
 | プラットフォーム | 生成物 | インストール先 | 備考 |
 |---|---|---|---|
-| iOS | `ClipTap.app` ＋ `PlugIns/ClipTapKeyboard.appex` | シミュレータ（`IOS_SIMULATOR` で指定可） | `ClipTap` スキームでビルドする。`ClipTapKeyboard` はターゲット依存として一緒にビルドされ、`Embed App Extensions` フェーズで `PlugIns/` へ埋め込まれる |
-| Android | `app-debug.apk` | エミュレータ（`ANDROID_AVD` で指定可） | 拡張キーボード（IME）はアプリ本体と同じ `app` モジュールに含まれる |
+| iOS（既定） | `ClipTap.app` ＋ `PlugIns/ClipTapKeyboard.appex` | シミュレータ（`IOS_SIMULATOR` で指定可） | `ClipTap` スキームでビルドする。`ClipTapKeyboard` はターゲット依存として一緒にビルドされ、`Embed App Extensions` フェーズで `PlugIns/` へ埋め込まれる |
+| iOS（`--device`） | 同上（`Debug-iphoneos`） | 接続中の実機（`IOS_DEVICE` で指定可） | 開発者証明書で署名し、`xcrun devicectl` でインストールする |
+| Android | `app-debug.apk` | `adb devices` が見ている端末。無ければAVDを起動（`ANDROID_AVD` で指定可） | 拡張キーボード（IME）はアプリ本体と同じ `app` モジュールに含まれる |
 
 **注意**:
 
 - `ClipTapKeyboard` スキームは指定できません。Xcodeがローカルに自動生成するユーザースキーム（`xcuserdata/` 配下・gitignore対象）で、リポジトリには含まれないためです。
 - ビルド成功後に `ClipTap.app/PlugIns/ClipTapKeyboard.appex` の存在を検査します。ClipTapKeyboardターゲットが `project.pbxproj` から失われても `ClipTap.app` のビルド自体は成功してしまい、実行時にだけキーボードが選べなくなる（静かに壊れる）ためです。
-- iOSは上書きインストールの前に一度アンインストールします。`.appex` はアプリ本体と別バンドルのため、上書きだけでは古い拡張キーボードが残ることがあるためです。
+- iOSのシミュレータは上書きインストールの前に一度アンインストールします。`.appex` はアプリ本体と別バンドルのため、上書きだけでは古い拡張キーボードが残ることがあるためです。
 - インストール後、iOSは端末上の `.appex` の存在とApp Groupの有効性を、Androidは `adb shell ime list` でIMEが入力方式として認識されているかを確認します。
 - このスクリプトは `expo prebuild --clean` を実行しません。`ios/` が再生成されるとClipTapKeyboardターゲットの手動設定が失われるためです。
 - iOSビルドで `CODE_SIGNING_ALLOWED=NO` を使ってはいけません。エンタイトルメントが埋め込まれず、App Group（`group.com.sikakou.cliptap`）が無効になります。アプリと拡張キーボードは共有SQLiteをApp Group経由で読むため、署名を切るとDB初期化に失敗し（`App Group container not found`）、動作確認に使えないビルドになります。シミュレータ向けはアドホック署名（`CODE_SIGN_IDENTITY = -`）で足りるため、開発者アカウントは不要です。
 
+##### iOS実機（`--device`）
+
+拡張キーボードはシミュレータでは再現しない挙動があります（フルアクセスの許可ダイアログ、ハプティクス、実際のキーボード切り替え）。これらは実機で確認してください。
+
+```bash
+npm run build:native:ios:device            # ビルド → 実機へインストール
+IOS_DEVICE="iPhone 15" npm run build:native:ios:device   # 端末を名前かUDIDで指定
+DEVELOPMENT_TEAM=XXXXXXXXXX npm run build:native:ios:device  # 署名チームを明示
+```
+
+シミュレータとの違いは次のとおりです。
+
+| 項目 | シミュレータ | 実機（`--device`） |
+|---|---|---|
+| 署名 | アドホック（開発者アカウント不要） | 開発者証明書とプロビジョニングプロファイルが必須 |
+| 出力先 | `Debug-iphonesimulator` | `Debug-iphoneos` |
+| インストール | `xcrun simctl install` | `xcrun devicectl device install app` |
+| 事前アンインストール | する | **しない** |
+
+**チームIDは `project.pbxproj` に書きません。** 個人のチームIDをリポジトリへ残さないため、ビルド時に `DEVELOPMENT_TEAM=` としてコマンドラインから渡します。未指定の場合は開発用証明書（`Apple Development`）のOUから自動で求めます。複数チームに所属している場合は決められないため、`DEVELOPMENT_TEAM` で明示してください。
+
+**実機ではアンインストールしません。** アプリを消すと「設定 > 一般 > キーボード」の登録も外れ、毎回キーボードを追加し直すことになるためです。実機のインストールはバンドルごと置き換わるので、シミュレータのように古い `.appex` が残る問題は起きません。
+
+**インストール前に署名のエンタイトルメントを検査します。** プロビジョニングプロファイルにApp Groupが含まれていないと、ビルドもインストールも成功したうえで共有SQLiteを開くところだけが壊れます。`ClipTap.app` と `ClipTapKeyboard.appex` の両方に `group.com.sikakou.cliptap` が入っているかを `codesign -d --entitlements` で確認してから端末へ入れます。
+
+`devicectl device info apps` はApp Extensionを列挙しない（コンテナアプリしか出ない）ため、実機では拡張キーボードの存在をビルド成果物側（`PlugIns/ClipTapKeyboard.appex`）と署名で確認します。シミュレータのように端末上のバンドルを直接見ることはできません。
+
+**端末の解決**: `xcrun devicectl` が挙げるペアリング済み端末のうち、iOSの実機だけに絞ります。複数ある場合は直近に接続したものを選びます。`IOS_DEVICE` に端末名またはUDIDを指定すれば固定できます。ビルド前に疎通を確認するため、端末が見つからない・通信できない場合は長いビルドを始める前に止まります。
+
+**端末が無い場所で実機向けビルドだけ確認したい場合**は `--no-install` を付けます。`-destination generic/platform=iOS` に切り替わり、署名まで通ることだけを確かめます。
+
+```bash
+npm run build:native:ios:device -- --no-install
+```
+
 #### 5. 動作確認
 
-チェックからシミュレータへのインストールまでを1コマンドで通す場合は `npm run verify:ios` / `npm run verify:android` を使います。
+チェックから端末へのインストールまでを1コマンドで通す場合は `npm run verify:ios` / `npm run verify:android` を使います。
 
 ```bash
 # 型チェック → テスト → Lint → ネイティブビルド → シミュレータ起動 → インストール
 npm run verify:ios
 npm run verify:android
 
+# 実機へインストールする場合（iOSのみ。Androidは verify:android がadbの端末へそのまま入る）
+npm run verify:ios:device
+
 # インストールせず検証だけ行う場合（コミット前の確認向け）
 npm run verify:ios -- --no-install
 
 # 検証を飛ばしてインストールだけしたい場合
 npm run verify:ios -- --skip-checks --skip-build
+npm run verify:ios:device -- --skip-checks --skip-build
 ```
 
 **iOSとAndroidは必ず分けて実行します。** プラットフォーム引数は必須で、同時指定はエラーになります。片方の環境不備（エミュレータのディスク不足など）でもう片方の確認が止まらないようにするためです。
@@ -841,11 +884,20 @@ xcrun simctl launch booted com.sikakou.cliptap --initialUrl http://localhost:808
 
 iOSは `expo-dev-launcher` の `--initialUrl` 起動引数でMetroへ自動接続します。`xcrun simctl openurl` によるディープリンクは「"ClipTap" で開きますか？」の確認ダイアログが出てタップが必要になるため使いません。Androidは `adb reverse` でエミュレータ内の `localhost:8081` をホストへ転送済みなので、VIEWインテントでそのまま接続できます。
 
+実機（`--device`）の場合は `localhost` がMac自身を指さないため、案内にはMacのIPアドレスを埋めて表示します。Macと同じネットワークに端末を繋いでください。
+
+```bash
+# 2. アプリを起動（実機。UDIDとIPは verify.sh が実際の値を埋めて案内します）
+xcrun devicectl device process launch --device <UDID> -- com.sikakou.cliptap --initialUrl http://<MacのIP>:8081
+```
+
 環境変数で対象を切り替えられます。
 
 | 変数 | 既定値 | 用途 |
 |---|---|---|
 | `IOS_SIMULATOR` | 起動中のもの、なければ利用可能な最初のiPhone | 使用するシミュレータ名 |
+| `IOS_DEVICE` | 直近に接続した実機 | `--device` で使う実機の名前またはUDID |
+| `DEVELOPMENT_TEAM` | 開発用証明書のOUから自動解決 | `--device` の署名チームID |
 | `ANDROID_AVD` | `emulator -list-avds` の先頭 | 使用するAVD名 |
 | `METRO_PORT` | `8081` | 案内に表示するMetroのポート |
 

@@ -12,16 +12,25 @@
 # ビルドの成果物を端末へ入れるところまでをこのスクリプトの責務とする。
 #
 # 【使い方】
-#   ./scripts/build-native.sh                  # iOS + Android の両方
-#   ./scripts/build-native.sh ios              # iOSのみ
-#   ./scripts/build-native.sh android          # Androidのみ
-#   ./scripts/build-native.sh ios --no-install # ビルドだけ（端末を触らない）
+#   ./scripts/build-native.sh                   # iOS + Android の両方
+#   ./scripts/build-native.sh ios               # iOSのみ（シミュレータ）
+#   ./scripts/build-native.sh ios --device      # iOSのみ（接続中の実機）
+#   ./scripts/build-native.sh android           # Androidのみ
+#   ./scripts/build-native.sh ios --no-install  # ビルドだけ（端末を触らない）
 #   ./scripts/build-native.sh ios --skip-build  # インストールだけ（前回の成果物を使う）
 #
 # 【環境変数】
-#   IOS_SIMULATOR   使用するiOSシミュレータ名（既定: 起動中のもの、なければ利用可能な最初のiPhone）
-#   ANDROID_AVD     使用するAVD名（既定: `emulator -list-avds` の先頭）
-#   METRO_PORT      adb reverse で転送するMetroのポート（既定: 8081）
+#   IOS_SIMULATOR     使用するiOSシミュレータ名（既定: 起動中のもの、なければ利用可能な最初のiPhone）
+#   IOS_DEVICE        --device で使う実機の名前またはUDID（既定: 直近に接続した実機）
+#   DEVELOPMENT_TEAM  --device の署名チームID（既定: 開発用証明書から自動解決）
+#   ANDROID_AVD       使用するAVD名（既定: `emulator -list-avds` の先頭）
+#   METRO_PORT        adb reverse で転送するMetroのポート（既定: 8081）
+#
+# 【iOSのシミュレータと実機の違い】
+# シミュレータはアドホック署名で足りるが、実機は開発者証明書とプロビジョニング
+# プロファイルによる署名が要る。チームIDは project.pbxproj に書かず、
+# ビルド時にコマンドラインから渡す（個人のチームIDをリポジトリに残さないため）。
+# Androidに --device は不要で、adb が見ている端末（実機・エミュレータ）へそのまま入る。
 #
 # 【ビルド範囲】
 # どちらのプラットフォームもアプリ本体ごとビルドする。
@@ -50,6 +59,18 @@ readonly LOG_DIR="${REPO_ROOT}/.build-logs"
 # アプリ識別子（apps/mobile/app.json と一致させること）
 readonly IOS_BUNDLE_ID="com.sikakou.cliptap"
 
+# アプリと拡張キーボードが共有SQLiteを開くためのApp Group
+# （ios/ClipTap/ClipTap.entitlements と一致させること）
+readonly IOS_APP_GROUP="group.com.sikakou.cliptap"
+
+# 解決した実機のUDIDの受け渡し先
+# verify.sh がインストール後の起動コマンドを案内するために読む。
+# 端末の解決はこのスクリプトの責務なので、あちらでは解決し直さない。
+readonly IOS_DEVICE_UDID_FILE="${LOG_DIR}/ios-device-udid.txt"
+
+# devicectl の端末一覧の出力先（JSON出力はファイル経由しか用意されていない）
+readonly DEVICECTL_DEVICES_JSON="${LOG_DIR}/devicectl-devices.json"
+
 readonly ANDROID_SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-${HOME}/Library/Android/sdk}}"
 readonly ADB="${ANDROID_SDK}/platform-tools/adb"
 readonly EMULATOR="${ANDROID_SDK}/emulator/emulator"
@@ -61,26 +82,46 @@ TARGET="all"
 DO_BUILD=1
 DO_INSTALL=1
 
-# 起動したiOSシミュレータのUDID（インストール後に案内で使う）
-IOS_UDID=""
+# iOSの導入先（simulator / device）
+IOS_TARGET="simulator"
+
+# 起動したiOSシミュレータのUDID
+IOS_SIM_UDID=""
+
+# --device で解決する実機の情報と署名チーム
+IOS_DEVICE_UDID=""
+IOS_DEVICE_NAME=""
+IOS_TEAM_ID=""
+
+# xcodebuild に渡す -destination（実機のときだけ使う）
+IOS_DESTINATION=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
     ios|android|all) TARGET="$1" ;;
     --skip-build)    DO_BUILD=0 ;;
     --no-install)    DO_INSTALL=0 ;;
+    --device)        IOS_TARGET="device" ;;
+    --simulator)     IOS_TARGET="simulator" ;;
     -h|--help)
-      sed -n '2,37p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      # 先頭のコメントブロックをそのまま使い方として出す
+      # （行番号で切り出すとヘッダーを直したときに黙ってずれるため）
+      awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "${BASH_SOURCE[0]}"
       exit 0
       ;;
     *)
       printf '不明な引数: %s\n' "$1" >&2
-      printf '使い方: %s [all|ios|android] [--skip-build] [--no-install]\n' "$0" >&2
+      printf '使い方: %s [all|ios|android] [--device] [--skip-build] [--no-install]\n' "$0" >&2
       exit 2
       ;;
   esac
   shift
 done
+
+if [ "${IOS_TARGET}" = "device" ] && [ "${TARGET}" = "android" ]; then
+  printf '\033[31m--device はiOS向けの指定です。Androidは adb が見ている端末へそのまま入ります\033[0m\n' >&2
+  exit 2
+fi
 
 mkdir -p "${LOG_DIR}"
 
@@ -133,6 +174,31 @@ check_free_space() {
   return 1
 }
 
+# 導入先に対応するSDK名を返す
+ios_sdk() {
+  if [ "${IOS_TARGET}" = "device" ]; then
+    printf 'iphoneos'
+  else
+    printf 'iphonesimulator'
+  fi
+}
+
+# ビルド成果物の出力先（BUILT_PRODUCTS_DIR）を返す
+#
+# 実機とシミュレータで出力先が分かれる（Debug-iphoneos / Debug-iphonesimulator）ため、
+# パスを組み立てず必ずxcodebuildに聞く。
+#
+# $1: xcodebuildのscheme名
+ios_built_products_dir() {
+  xcodebuild \
+    -workspace "${IOS_DIR}/ClipTap.xcworkspace" \
+    -scheme "$1" \
+    -sdk "$(ios_sdk)" \
+    -configuration Debug \
+    -showBuildSettings 2>/dev/null \
+    | grep -m1 -E '^[[:space:]]+BUILT_PRODUCTS_DIR = ' | sed 's/.*= //'
+}
+
 # 拡張キーボードがアプリへ埋め込まれたかを確かめる
 #
 # ClipTapKeyboardターゲットがプロジェクトから失われても、ClipTap.appのビルド自体は
@@ -145,14 +211,7 @@ verify_appex_embedded() {
   local scheme="$1"
   local products_dir appex_path
 
-  products_dir="$(xcodebuild \
-    -workspace "${IOS_DIR}/ClipTap.xcworkspace" \
-    -scheme "${scheme}" \
-    -sdk iphonesimulator \
-    -configuration Debug \
-    -showBuildSettings 2>/dev/null \
-    | grep -m1 -E '^[[:space:]]+BUILT_PRODUCTS_DIR = ' | sed 's/.*= //')"
-
+  products_dir="$(ios_built_products_dir "${scheme}")"
   appex_path="${products_dir}/ClipTap.app/PlugIns/ClipTapKeyboard.appex"
 
   if [ -d "${appex_path}" ]; then
@@ -175,19 +234,32 @@ build_ios() {
     return 1
   fi
 
-  print_header "iOS: ${scheme} をビルド中（ログ: ${log_file}）"
-
   # 署名は無効化しない。CODE_SIGNING_ALLOWED=NO にするとエンタイトルメントが
   # 埋め込まれず、App Group（group.com.sikakou.cliptap）が使えなくなる。
   # アプリと拡張キーボードは共有SQLiteをApp Group経由で読むため、
   # 署名を切るとDB初期化に失敗し、動作確認に使えないビルドになる。
   # シミュレータ向けはアドホック署名で足りるため、開発者アカウントは不要。
-  if xcodebuild \
-    -workspace "${IOS_DIR}/ClipTap.xcworkspace" \
-    -scheme "${scheme}" \
-    -sdk iphonesimulator \
-    -configuration Debug \
-    build >"${log_file}" 2>&1; then
+  local -a build_args=(
+    -workspace "${IOS_DIR}/ClipTap.xcworkspace"
+    -scheme "${scheme}"
+    -configuration Debug
+  )
+
+  if [ "${IOS_TARGET}" = "device" ]; then
+    # 実機は開発者証明書での署名が要る。プロファイルが未取得・端末未登録でも
+    # -allowProvisioningUpdates があればXcodeが取得と登録まで行う。
+    build_args+=(
+      -destination "${IOS_DESTINATION}"
+      -allowProvisioningUpdates
+      "DEVELOPMENT_TEAM=${IOS_TEAM_ID}"
+    )
+    print_header "iOS: ${scheme} を実機向けにビルド中（ログ: ${log_file}）"
+  else
+    build_args+=(-sdk iphonesimulator)
+    print_header "iOS: ${scheme} をビルド中（ログ: ${log_file}）"
+  fi
+
+  if xcodebuild "${build_args[@]}" build >"${log_file}" 2>&1; then
     verify_appex_embedded "${scheme}" || return 1
     printf '\033[32m✅ iOS (%s) ビルド成功\033[0m\n' "${scheme}"
     return 0
@@ -256,32 +328,26 @@ resolve_ios_udid() {
 # ビルド済みのClipTap.appのパスを解決する
 resolve_ios_app_path() {
   local products_dir
-  products_dir="$(xcodebuild \
-    -workspace "${IOS_DIR}/ClipTap.xcworkspace" \
-    -scheme ClipTap \
-    -sdk iphonesimulator \
-    -configuration Debug \
-    -showBuildSettings 2>/dev/null \
-    | grep -m1 -E '^[[:space:]]+BUILT_PRODUCTS_DIR = ' | sed 's/.*= //')"
+  products_dir="$(ios_built_products_dir ClipTap)"
 
   if [ -z "${products_dir}" ] || [ ! -d "${products_dir}/ClipTap.app" ]; then
-    print_ng "ClipTap.app が見つかりません（--no-install を外してビルドから実行してください）"
+    print_ng "ClipTap.app が見つかりません（--no-install を外してビルドから実行してください）: ${products_dir}"
     return 1
   fi
   printf '%s' "${products_dir}/ClipTap.app"
 }
 
 # iOSシミュレータを起動し、アプリをインストールする
-install_ios() {
+install_ios_simulator() {
   print_header "iOSシミュレータを起動中"
 
-  IOS_UDID="$(resolve_ios_udid)" || return 1
+  IOS_SIM_UDID="$(resolve_ios_udid)" || return 1
 
   # 起動済みなら boot は失敗するため、失敗を許容して bootstatus で待つ
-  xcrun simctl boot "${IOS_UDID}" 2>/dev/null || true
+  xcrun simctl boot "${IOS_SIM_UDID}" 2>/dev/null || true
   open -a Simulator 2>/dev/null || true
-  xcrun simctl bootstatus "${IOS_UDID}" -b >/dev/null 2>&1 || true
-  print_ok "シミュレータ起動: ${IOS_UDID}"
+  xcrun simctl bootstatus "${IOS_SIM_UDID}" -b >/dev/null 2>&1 || true
+  print_ok "シミュレータ起動: ${IOS_SIM_UDID}"
 
   local app_path
   app_path="$(resolve_ios_app_path)" || return 1
@@ -290,13 +356,13 @@ install_ios() {
 
   # 拡張キーボードはアプリ本体と別バンドルのため、上書きインストールだけでは
   # 古い .appex が残ることがある。一度消してから入れて、確実に入れ替える。
-  xcrun simctl uninstall "${IOS_UDID}" "${IOS_BUNDLE_ID}" >/dev/null 2>&1 || true
-  xcrun simctl install "${IOS_UDID}" "${app_path}"
+  xcrun simctl uninstall "${IOS_SIM_UDID}" "${IOS_BUNDLE_ID}" >/dev/null 2>&1 || true
+  xcrun simctl install "${IOS_SIM_UDID}" "${app_path}"
   print_ok "インストール完了: $(basename "${app_path}")"
 
   # 入れ替わったのが本当に今回のビルドかを、端末側の成果物で確かめる
   local installed
-  installed="$(xcrun simctl get_app_container "${IOS_UDID}" "${IOS_BUNDLE_ID}" 2>/dev/null || true)"
+  installed="$(xcrun simctl get_app_container "${IOS_SIM_UDID}" "${IOS_BUNDLE_ID}" 2>/dev/null || true)"
   if [ -n "${installed}" ] && [ -d "${installed}/PlugIns/ClipTapKeyboard.appex" ]; then
     print_ok "拡張キーボードを確認: $(stat -f '%Sm' "${installed}/PlugIns/ClipTapKeyboard.appex" 2>/dev/null)"
   else
@@ -306,10 +372,215 @@ install_ios() {
 
   # App Groupが効いていないと共有SQLiteを開けず、拡張キーボードも動かない。
   # 署名を無効化したビルドを掴んでいないか、ここで気付けるようにする
-  if xcrun simctl get_app_container "${IOS_UDID}" "${IOS_BUNDLE_ID}" groups >/dev/null 2>&1; then
+  if xcrun simctl get_app_container "${IOS_SIM_UDID}" "${IOS_BUNDLE_ID}" groups >/dev/null 2>&1; then
     print_ok "App Group 有効（共有DBを利用できます）"
   else
     print_warn "App Group が無効です。共有DBを開けないため拡張キーボードが動きません"
+  fi
+}
+
+# --- iOS実機へのインストール ------------------------------------------------
+
+# 署名に使うDevelopment Team IDを解決する
+#
+# 実機ビルドはチームIDが決まらないと「requires a development team」で止まる。
+# project.pbxproj には書かず、開発用証明書のOU（＝チームID）から求める。
+# 複数チームに所属している場合は判断できないため、DEVELOPMENT_TEAM で指定してもらう。
+resolve_team_id() {
+  if [ -n "${DEVELOPMENT_TEAM:-}" ]; then
+    printf '%s' "${DEVELOPMENT_TEAM}"
+    return 0
+  fi
+
+  # 証明書のOU（Organizational Unit）がチームID。
+  # find-identity が括弧内に出すのは証明書のIDでチームIDではないため、証明書本体から取る。
+  local teams team_count
+  teams="$(security find-identity -v -p codesigning 2>/dev/null \
+    | sed -n 's/.*"\(Apple Development: .*\)".*/\1/p' \
+    | while IFS= read -r common_name; do
+        security find-certificate -c "${common_name}" -p 2>/dev/null \
+          | openssl x509 -noout -subject 2>/dev/null \
+          | sed -n 's/.*OU *= *\([A-Za-z0-9]*\).*/\1/p'
+      done | sort -u)"
+  team_count="$(printf '%s' "${teams}" | grep -c . || true)"
+
+  case "${team_count}" in
+    1)
+      printf '%s' "${teams}"
+      ;;
+    0)
+      print_ng "開発用証明書（Apple Development）が見つかりません"
+      printf 'Xcode > Settings > Accounts でApple IDを追加してください。\n' >&2
+      printf 'すでに追加済みなら DEVELOPMENT_TEAM=<チームID> を指定してください。\n' >&2
+      return 1
+      ;;
+    *)
+      print_ng "所属チームが複数あるため決められません"
+      printf '%s\n' "${teams}" >&2
+      printf 'DEVELOPMENT_TEAM=<チームID> を指定してください。\n' >&2
+      return 1
+      ;;
+  esac
+}
+
+# devicectl のJSONから端末1台分の項目を取り出す
+# $1: 端末の添字 / $2: キーのパス（例: hardwareProperties.udid）
+device_field() {
+  plutil -extract "result.devices.$1.$2" raw -o - "${DEVICECTL_DEVICES_JSON}" 2>/dev/null || true
+}
+
+# 接続中の実機を解決して IOS_DEVICE_UDID / IOS_DEVICE_NAME に入れる
+#
+# devicectl はペアリング済みの端末をすべて挙げるため、iOSの実機だけに絞る。
+# 複数ある場合は直近に接続したものを選ぶ（IOS_DEVICE で明示指定できる）。
+resolve_ios_device() {
+  if ! xcrun devicectl list devices --quiet \
+    --json-output "${DEVICECTL_DEVICES_JSON}" >/dev/null 2>&1; then
+    print_ng "devicectl で端末一覧を取得できません（Xcodeのインストールを確認してください）"
+    return 1
+  fi
+
+  local index=0
+  local udid name connected_at
+  local best_udid="" best_name="" best_at=""
+  local listing=""
+
+  while udid="$(device_field "${index}" hardwareProperties.udid)" && [ -n "${udid}" ]; do
+    # ペアリング済みのMacやApple Watch、シミュレータを除く
+    if [ "$(device_field "${index}" hardwareProperties.platform)" = "iOS" ] \
+      && [ "$(device_field "${index}" hardwareProperties.reality)" = "physical" ]; then
+      name="$(device_field "${index}" deviceProperties.name)"
+      connected_at="$(device_field "${index}" connectionProperties.lastConnectionDate)"
+      listing="${listing}  ${name} (${udid})"$'\n'
+
+      # 名前でもUDIDでも指定できるようにする
+      if [ -z "${IOS_DEVICE:-}" ] || [ "${IOS_DEVICE}" = "${name}" ] || [ "${IOS_DEVICE}" = "${udid}" ]; then
+        # ISO8601は文字列のまま比べても新しい方が大きい
+        if [ -z "${best_at}" ] || [[ "${connected_at}" > "${best_at}" ]]; then
+          best_udid="${udid}"
+          best_name="${name}"
+          best_at="${connected_at}"
+        fi
+      fi
+    fi
+
+    index=$((index + 1))
+  done
+
+  if [ -z "${best_udid}" ]; then
+    if [ -n "${IOS_DEVICE:-}" ]; then
+      print_ng "指定の実機が見つかりません: ${IOS_DEVICE}"
+    else
+      print_ng "iOSの実機が見つかりません"
+    fi
+    if [ -n "${listing}" ]; then
+      printf 'ペアリング済みの実機:\n%s' "${listing}" >&2
+    else
+      printf 'Macに接続し、端末側で「このコンピュータを信頼」を選んでください。\n' >&2
+    fi
+    return 1
+  fi
+
+  # 一覧に出ていても電源断・未接続なら通信できない。長いビルドの前に確かめる
+  if ! xcrun devicectl device info details --device "${best_udid}" --quiet >/dev/null 2>&1; then
+    print_ng "実機と通信できません: ${best_name} (${best_udid})"
+    printf 'ケーブル接続・画面ロック解除・デベロッパモード有効を確認してください。\n' >&2
+    return 1
+  fi
+
+  IOS_DEVICE_UDID="${best_udid}"
+  IOS_DEVICE_NAME="${best_name}"
+  return 0
+}
+
+# 実機ビルドに必要な署名情報と端末を先に揃える
+#
+# xcodebuild の -destination で端末を指すため、ビルド前に解決しておく。
+# 10分近いビルドが終わってから端末がないと分かる、を避ける狙いもある。
+prepare_ios_device() {
+  print_header "実機の準備"
+
+  IOS_TEAM_ID="$(resolve_team_id)" || return 1
+  print_ok "署名チーム: ${IOS_TEAM_ID}"
+
+  if resolve_ios_device; then
+    IOS_DESTINATION="id=${IOS_DEVICE_UDID}"
+    printf '%s' "${IOS_DEVICE_UDID}" >"${IOS_DEVICE_UDID_FILE}"
+    print_ok "実機: ${IOS_DEVICE_NAME} (${IOS_DEVICE_UDID})"
+    return 0
+  fi
+
+  # インストールしないなら端末は無くてよい。署名まで通ることだけ確かめる
+  if [ "${DO_INSTALL}" -eq 0 ]; then
+    print_warn "端末なしで実機向けビルドだけ行います"
+    IOS_DESTINATION="generic/platform=iOS"
+    rm -f "${IOS_DEVICE_UDID_FILE}"
+    return 0
+  fi
+
+  return 1
+}
+
+# App Groupのエンタイトルメントが署名に含まれているかを確かめる
+#
+# 実機ではプロファイルにApp Groupが無いとエンタイトルメントが落ちる。
+# アプリは起動できてしまい、共有SQLiteを開くところで初めて壊れるため、
+# 端末へ入れる前に成果物の署名を直接見る。
+#
+# $1: ClipTap.app のパス
+verify_ios_entitlements() {
+  local app_path="$1"
+  local target
+
+  for target in "${app_path}" "${app_path}/PlugIns/ClipTapKeyboard.appex"; do
+    if ! codesign -d --entitlements - "${target}" 2>&1 | grep -q "${IOS_APP_GROUP}"; then
+      print_ng "App Group（${IOS_APP_GROUP}）が署名に含まれていません: $(basename "${target}")"
+      printf 'プロビジョニングプロファイルにApp Groupが含まれているか確認してください。\n' >&2
+      return 1
+    fi
+  done
+
+  print_ok "App Group 有効（共有DBを利用できます）"
+}
+
+# 実機へアプリをインストールする
+install_ios_device() {
+  local app_path
+  app_path="$(resolve_ios_app_path)" || return 1
+
+  print_header "署名を確認中"
+  verify_ios_entitlements "${app_path}" || return 1
+
+  print_header "実機へインストール中（${IOS_DEVICE_NAME}）"
+
+  # 実機ではアンインストールしない。アプリを消すと「設定 > 一般 > キーボード」の
+  # 登録も外れ、毎回キーボードを追加し直すことになるため。
+  # 実機のインストールはバンドルごと置き換わるので、古い .appex は残らない。
+  if ! xcrun devicectl device install app --device "${IOS_DEVICE_UDID}" "${app_path}" \
+    >"${LOG_DIR}/devicectl-install.log" 2>&1; then
+    print_ng "実機へのインストールに失敗しました"
+    tail -20 "${LOG_DIR}/devicectl-install.log" >&2
+    return 1
+  fi
+  print_ok "インストール完了: $(basename "${app_path}")"
+
+  # 端末側から見えているかを確かめる。署名は通ってもインストールが
+  # 途中で失われることがあるため、入った事実を端末に聞いて確定させる
+  if xcrun devicectl device info apps --device "${IOS_DEVICE_UDID}" --quiet \
+    --json-output "${LOG_DIR}/devicectl-apps.json" >/dev/null 2>&1 \
+    && grep -q "\"${IOS_BUNDLE_ID}\"" "${LOG_DIR}/devicectl-apps.json"; then
+    print_ok "端末上のアプリを確認: ${IOS_BUNDLE_ID}"
+  else
+    print_warn "端末上のアプリ一覧を確認できませんでした"
+  fi
+}
+
+# iOSの導入先に応じてインストールする
+install_ios() {
+  if [ "${IOS_TARGET}" = "device" ]; then
+    install_ios_device
+  else
+    install_ios_simulator
   fi
 }
 
@@ -400,6 +671,9 @@ install_android() {
 run_platform() {
   case "$1" in
     ios)
+      if [ "${IOS_TARGET}" = "device" ]; then
+        prepare_ios_device || return 1
+      fi
       [ "${DO_BUILD}" -eq 0 ] || build_ios ClipTap || return 1
       [ "${DO_INSTALL}" -eq 1 ] || return 0
       install_ios

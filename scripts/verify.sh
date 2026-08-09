@@ -3,7 +3,8 @@
 # 検証スクリプト（静的チェック → ネイティブビルドとインストール）
 #
 # 【目的】
-# コミット前の静的チェックから、シミュレータ/エミュレータにアプリを入れるまでを1コマンドで通す。
+# コミット前の静的チェックから、端末（シミュレータ・エミュレータ・実機）に
+# アプリを入れるまでを1コマンドで通す。
 # 「型チェックは通ったが実機で壊れていた」を防ぐため、静的チェックと実際のビルドを地続きにする。
 #
 # 【build-native.sh との分担】
@@ -23,19 +24,25 @@
 #   1. npm run type-check   型エラー0件を確認
 #   2. npm test             回帰テスト
 #   3. npm run lint         ESLint
-#   4. build-native.sh      ネイティブビルド＋シミュレータ/エミュレータへのインストール
+#   4. build-native.sh      ネイティブビルド＋端末へのインストール
 #
 # 【使い方】
-#   ./scripts/verify.sh ios                    # iOS
+#   ./scripts/verify.sh ios                    # iOS（シミュレータ）
+#   ./scripts/verify.sh ios --device           # iOS（接続中の実機）
 #   ./scripts/verify.sh android                # Android
-#   ./scripts/verify.sh ios --no-install       # 検証だけ（シミュレータを触らない）
+#   ./scripts/verify.sh ios --no-install       # 検証だけ（端末を触らない）
 #   ./scripts/verify.sh ios --skip-checks      # 1〜3を飛ばす
 #   ./scripts/verify.sh android --skip-build   # 4を飛ばす（前回の生成物を使う）
 #
 # 【環境変数】
-#   IOS_SIMULATOR   使用するiOSシミュレータ名（既定: 起動中のもの、なければ利用可能な最初のiPhone）
-#   ANDROID_AVD     使用するAVD名（既定: `emulator -list-avds` の先頭）
-#   METRO_PORT      案内に表示するMetroのポート（既定: 8081）
+#   IOS_SIMULATOR     使用するiOSシミュレータ名（既定: 起動中のもの、なければ利用可能な最初のiPhone）
+#   IOS_DEVICE        --device で使う実機の名前またはUDID（既定: 直近に接続した実機）
+#   DEVELOPMENT_TEAM  --device の署名チームID（既定: 開発用証明書から自動解決）
+#   ANDROID_AVD       使用するAVD名（既定: `emulator -list-avds` の先頭）
+#   METRO_PORT        案内に表示するMetroのポート（既定: 8081）
+#
+# 【Androidの実機】
+# Androidに --device は不要。adb が見ている端末（実機・エミュレータ）へそのまま入る。
 #
 # 【注意】
 # `expo prebuild --clean` は実行しない。ios/ が再生成されると
@@ -56,11 +63,18 @@ readonly ADB="${ANDROID_SDK}/platform-tools/adb"
 
 readonly METRO_PORT="${METRO_PORT:-8081}"
 
+# build-native.sh が解決した実機のUDIDを受け取る場所
+# 端末の解決はあちらの責務なので、ここでは解決し直さず結果だけ読む。
+readonly IOS_DEVICE_UDID_FILE="${LOG_DIR}/ios-device-udid.txt"
+
 # 対象プラットフォーム（ios / android）。引数で必ず指定する
 PLATFORM=""
 DO_CHECKS=1
 DO_BUILD=1
 DO_INSTALL=1
+
+# iOSの導入先（simulator / device）
+IOS_TARGET="simulator"
 
 mkdir -p "${LOG_DIR}"
 
@@ -92,7 +106,7 @@ print_ng() {
 
 # 使い方を表示する
 print_usage() {
-  printf '使い方: %s <ios|android> [--skip-checks] [--skip-build] [--no-install]\n' "$0" >&2
+  printf '使い方: %s <ios|android> [--device] [--skip-checks] [--skip-build] [--no-install]\n' "$0" >&2
 }
 
 # --- 引数解析 -------------------------------------------------------------
@@ -109,8 +123,12 @@ while [ $# -gt 0 ]; do
     --skip-checks)  DO_CHECKS=0 ;;
     --skip-build)   DO_BUILD=0 ;;
     --no-install)   DO_INSTALL=0 ;;
+    --device)       IOS_TARGET="device" ;;
+    --simulator)    IOS_TARGET="simulator" ;;
     -h|--help)
-      sed -n '2,39p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      # 先頭のコメントブロックをそのまま使い方として出す
+      # （行番号で切り出すとヘッダーを直したときに黙ってずれるため）
+      awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "${BASH_SOURCE[0]}"
       exit 0
       ;;
     *)
@@ -125,6 +143,11 @@ done
 if [ -z "${PLATFORM}" ]; then
   print_ng "プラットフォームを指定してください（ios または android）"
   print_usage
+  exit 2
+fi
+
+if [ "${IOS_TARGET}" = "device" ] && [ "${PLATFORM}" != "ios" ]; then
+  print_ng "--device はiOS向けの指定です。Androidは adb が見ている端末へそのまま入ります"
   exit 2
 fi
 
@@ -159,9 +182,14 @@ run_checks() {
 # インストールまで build-native.sh に任せているのは、
 # 「ビルドしたのに端末が古いまま」を防ぐ責務をあちらに一本化しているため。
 run_native_build() {
-  print_step "ネイティブビルドとインストール（${PLATFORM}）"
+  if [ "${PLATFORM}" = "ios" ] && [ "${IOS_TARGET}" = "device" ]; then
+    print_step "ネイティブビルドとインストール（ios / 実機）"
+  else
+    print_step "ネイティブビルドとインストール（${PLATFORM}）"
+  fi
 
   local build_args=("${PLATFORM}")
+  [ "${IOS_TARGET}" != "device" ] || build_args+=(--device)
   [ "${DO_BUILD}" -eq 1 ]   || build_args+=(--skip-build)
   [ "${DO_INSTALL}" -eq 1 ] || build_args+=(--no-install)
 
@@ -170,14 +198,42 @@ run_native_build() {
 
 # --- 起動手順の案内 -------------------------------------------------------
 
+# 実機からMacのMetroへ届くIPアドレスを返す
+#
+# 実機は localhost ではMacに届かないため、案内には実アドレスが要る。
+# 有線・無線でインターフェース名が変わるので、順に見て最初に見つかったものを使う。
+resolve_host_ip() {
+  local iface ip
+  for iface in en0 en1 en2; do
+    ip="$(ipconfig getifaddr "${iface}" 2>/dev/null || true)"
+    if [ -n "${ip}" ]; then
+      printf '%s' "${ip}"
+      return 0
+    fi
+  done
+  return 1
+}
+
 # Metroの起動とアプリの起動方法を表示する
 print_next_steps() {
+  local udid host_ip
+
   printf '\n\033[1m次の手順\033[0m\n\n'
   printf '  1. Metroを起動する\n'
   printf '     \033[36mnpm run dev:mobile\033[0m\n\n'
   printf '  2. アプリを起動する（Metro起動後）\n'
 
-  if [ "${PLATFORM}" = "ios" ]; then
+  if [ "${PLATFORM}" = "ios" ] && [ "${IOS_TARGET}" = "device" ]; then
+    udid="$(cat "${IOS_DEVICE_UDID_FILE}" 2>/dev/null || true)"
+    host_ip="$(resolve_host_ip || true)"
+
+    printf '     \033[36mxcrun devicectl device process launch --device %s -- %s --initialUrl http://%s:%s\033[0m\n\n' \
+      "${udid:-<端末のUDID>}" "${IOS_BUNDLE_ID}" "${host_ip:-<MacのIPアドレス>}" "${METRO_PORT}"
+    printf '  \033[2m※ 実機は localhost ではMacに届きません。Macと同じネットワークに繋いだうえで\n'
+    printf '     MacのIPアドレスを指定してください。\n'
+    printf '     端末のホーム画面から直接起動した場合はDev Launcher画面が開くので、\n'
+    printf '     一覧のURLをタップするか手入力してください。\033[0m\n'
+  elif [ "${PLATFORM}" = "ios" ]; then
     printf '     \033[36mxcrun simctl launch booted %s --initialUrl http://localhost:%s\033[0m\n\n' \
       "${IOS_BUNDLE_ID}" "${METRO_PORT}"
     printf '  \033[2m※ --initialUrl を付けるとMetroへ自動接続します。\n'
