@@ -1,168 +1,76 @@
 {
   "categories": [
-    { "name": "AIチャット", "color": "#8B5CF6" },
+    { "name": "仕事", "color": "#3B82F6" },
     { "name": "SNS", "color": "#10B981" },
-    { "name": "メール", "color": "#3B82F6" },
-    { "name": "仕事", "color": "#F59E0B" }
+    { "name": "プロンプト", "color": "#3B82F6" }
   ],
   "profiles": [
-    { "name": "A社向け" },
-    { "name": "B社向け" }
+    { "name": "A社用" },
+    { "name": "B社用" }
   ],
-  "system_variable_formats": {
-    "month": "M"
-  },
   "custom_variables": [
     {
-      "name": "company",
-      "label": "会社名",
-      "icon": "business-outline",
-      "standardValue": "株式会社サンプル",
-      "profileValues": {
-        "A社向け": "株式会社アルファ",
-        "B社向け": "株式会社ベータ"
-      }
-    },
-    {
       "name": "client_name",
-      "label": "担当者名",
+      "label": "取引先担当者名",
       "icon": "person-outline",
       "standardValue": "ご担当者様",
       "profileValues": {
-        "A社向け": "田中様",
-        "B社向け": "鈴木様"
+        "A社用": "株式会社A\n田中様",
+        "B社用": "株式会社B\n鈴木様"
       }
     },
     {
-      "name": "signature",
-      "label": "署名",
-      "icon": "create-outline",
-      "standardValue": "--------------------\n山田 太郎\nyamada@example.com\n--------------------",
+      "name": "company",
+      "label": "自社名",
+      "icon": "business-outline",
+      "standardValue": "株式会社サンプル",
       "profileValues": {
-        "A社向け": "--------------------\n営業部 山田 太郎\n090-0000-0000\n--------------------",
-        "B社向け": "--------------------\n開発部 山田 太郎\nyamada@example.com\n--------------------"
+        "A社用": "株式会社A商事",
+        "B社用": "株式会社B商事"
       }
+    },
+    {
+      "name": "sender_name",
+      "label": "送信者名",
+      "icon": "person-circle-outline",
+      "standardValue": "山田"
     }
   ],
   "snippets": [
     {
       "id": "tpl_001",
-      "category": "AIチャット",
-      "title": "調査プロンプト",
-      "body": "あなたは調査を担当するリサーチャーです。\n以下のテーマについて、{{today}} 時点で分かっている事実を整理してください。\n\n【テーマ】\n・\n\n【出力形式】\n1. 結論（3行以内）\n2. 根拠となる事実（箇条書き）\n3. まだ分かっていないこと\n4. 次に調べるべきこと\n\n推測が含まれる場合は「推測」と明記してください。",
-      "copyWithTitle": false
+      "category": "仕事",
+      "title": "業務開始報告（{{today}}）",
+      "body": "お疲れ様です。\n{{today}} の業務を開始します。\n\n本日の予定：\n・\n・\n・\n\n以上、よろしくお願いいたします。",
+      "copyWithTitle": true
     },
     {
       "id": "tpl_002",
-      "category": "AIチャット",
-      "title": "議事メモの要約プロンプト",
-      "body": "以下の議事メモを要約してください。\n\n【条件】\n・「決定事項」「宿題」「次回までのアクション」に分けて整理する\n・担当者と期限が分かるものは併記する\n・原文にない情報は補わない\n\n【議事メモ】\n",
+      "category": "仕事",
+      "title": "進捗報告（{{today}}）",
+      "body": "{{client_name}}\nいつもお世話になっております。\n{{company}} の {{sender_name}} です。\n\n担当案件の進捗をご報告いたします。\n\n【本日の実施内容】\n・\n・\n\n【次回予定】\n・\n・\n\n以上です。ご不明点などありましたらお知らせください。",
       "copyWithTitle": false
     },
     {
       "id": "tpl_003",
-      "category": "AIチャット",
-      "title": "文章の推敲プロンプト",
-      "body": "以下の文章を、意味を変えずに読みやすく整えてください。\n\n【条件】\n・敬体（です・ます）で統一する\n・1文は60文字以内を目安にする\n・冗長な表現を削る\n・変更した箇所は最後にまとめて示す\n\n【文章】\n",
+      "category": "SNS",
+      "title": "今日の積み上げ",
+      "body": "# 今日の積み上げ\n\n## 🎯 今日やること\n- [ ]\n- [ ]\n- [ ]",
       "copyWithTitle": false
     },
     {
       "id": "tpl_004",
-      "category": "SNS",
-      "title": "今日の積み上げ",
-      "body": "{{today}}（{{weekday}}）の積み上げ📚\n\n・\n・\n・\n\n今日もおつかれさまでした。\n\n#今日の積み上げ #学習記録 #継続は力なり",
+      "category": "プロンプト",
+      "title": "調査プロンプト",
+      "body": "以下について調査してください。\n\n# 調査対象\n- \n\n# 調査目的\n- \n\n# 調査項目\n- \n\n# 出力条件\n- 初心者にも分かるように説明する\n- 必要に応じて表で比較する\n- 出典となるURLを添える",
       "copyWithTitle": false
     },
     {
       "id": "tpl_005",
-      "category": "SNS",
-      "title": "開発ログ",
-      "body": "今日の開発ログ🛠\n\n【やったこと】\n・\n\n【つまずいたこと】\n・\n\n【明日やること】\n・\n\n#個人開発 #開発ログ #駆け出しエンジニアと繋がりたい",
+      "category": "プロンプト",
+      "title": "要約プロンプト",
+      "body": "以下を要約してください。\n\n# 対象\n- \n\n# 出力条件\n- 結論から先に書く\n- 箇条書きで3点以内にまとめる\n- 原文にない情報は補わない",
       "copyWithTitle": false
-    },
-    {
-      "id": "tpl_006",
-      "category": "SNS",
-      "title": "勉強系ハッシュタグ",
-      "body": "#今日の積み上げ #学習記録 #アウトプット #継続は力なり #勉強垢さんと繋がりたい",
-      "copyWithTitle": false
-    },
-    {
-      "id": "tpl_007",
-      "category": "メール",
-      "title": "あいさつ文",
-      "body": "{{company}}\n{{client_name}}\n\nいつもお世話になっております。\n",
-      "copyWithTitle": false
-    },
-    {
-      "id": "tpl_008",
-      "category": "メール",
-      "title": "日程調整の返信",
-      "body": "{{company}}\n{{client_name}}\n\nいつもお世話になっております。\n\nお打ち合わせの件、以下の日程でご都合はいかがでしょうか。\n\n・\n・\n・\n\nいずれもご都合が合わない場合は、\n候補日をお知らせいただけますと幸いです。\n\n{{signature}}",
-      "copyWithTitle": false
-    },
-    {
-      "id": "tpl_009",
-      "category": "メール",
-      "title": "打ち合わせのお礼",
-      "body": "{{company}}\n{{client_name}}\n\n本日はお時間をいただき、ありがとうございました。\n\n【本日の決定事項】\n・\n\n【次回までの宿題】\n・\n\n引き続きよろしくお願いいたします。\n\n{{signature}}",
-      "copyWithTitle": false
-    },
-    {
-      "id": "tpl_010",
-      "category": "メール",
-      "title": "署名",
-      "body": "{{signature}}",
-      "copyWithTitle": false
-    },
-    {
-      "id": "tpl_011",
-      "category": "仕事",
-      "title": "業務開始報告",
-      "body": "おつかれさまです。\n{{today}}（{{weekday}}）の業務を開始します。\n\n【本日の予定】\n・\n・\n・\n\nよろしくお願いします。",
-      "copyWithTitle": true
-    },
-    {
-      "id": "tpl_012",
-      "category": "仕事",
-      "title": "日報",
-      "body": "【日報】{{today}}（{{weekday}}）\n\n■ 本日やったこと\n・\n\n■ 明日やること\n・\n\n■ 共有事項\n・",
-      "copyWithTitle": false
-    },
-    {
-      "id": "tpl_013",
-      "category": "仕事",
-      "title": "進捗共有",
-      "body": "おつかれさまです。\n{{today}} 時点の進捗を共有します。\n\n【完了】\n・\n\n【進行中】\n・\n\n【相談したいこと】\n・",
-      "copyWithTitle": false
-    },
-    {
-      "id": "tpl_014",
-      "category": "メール",
-      "title": "{{month}}月分 請求書送付のご案内",
-      "body": "{{company}}\n{{client_name}}\n\nいつもお世話になっております。\n\n{{month}}月分の請求書を添付にてお送りいたします。\nご査収のほど、よろしくお願いいたします。\n\n・請求書番号：\n・お支払期限：\n\nご不明な点がございましたら、本メールへご返信ください。\n\n{{signature}}",
-      "copyWithTitle": false
-    },
-    {
-      "id": "tpl_015",
-      "category": "メール",
-      "title": "{{client_name}}宛 リマインド",
-      "body": "{{company}}\n{{client_name}}\n\nいつもお世話になっております。\n\n先日ご連絡いたしました件につきまして、\nその後のご状況はいかがでしょうか。\n\n・対象：\n・ご回答期限：\n\n行き違いでご対応いただいておりましたら、\n何卒ご容赦ください。\n\n{{signature}}",
-      "copyWithTitle": false
-    },
-    {
-      "id": "tpl_016",
-      "category": "仕事",
-      "title": "【議事録】{{company}} {{today}}",
-      "body": "【日時】{{today}}（{{weekday}}）{{time}}〜\n\n【出席者】\n・\n\n【決定事項】\n・\n\n【ToDo】\n・（担当／期限）\n\n【次回】\n・\n\n記載内容に相違がありましたら、ご返信にてお知らせください。",
-      "copyWithTitle": false
-    },
-    {
-      "id": "tpl_017",
-      "category": "仕事",
-      "title": "{{今日}} 休暇連絡",
-      "body": "おつかれさまです。\n本日（{{曜日}}）は休暇をいただきます。\n\n・急ぎの用件：チャットでメンションをお願いします\n・対応可能：翌営業日以降\n\nご迷惑をおかけしますが、よろしくお願いします。",
-      "copyWithTitle": true
     }
   ]
 }
