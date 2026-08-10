@@ -182,6 +182,35 @@ class Database {
     return this.restoredFromCache;
   }
 
+  /**
+   * 読み込んだ`.cliptap`のデータでmainDB・systemDBを開き直す
+   *
+   * @param dbBytes - `.cliptap`から取り出したSQLiteのバイト列
+   * @returns 開かれたmainDBアダプター
+   *
+   * @remarks
+   * 「ファイルを閉じる」の reset() はmainDB・systemDBの両方を閉じるが、
+   * init() は useAppInitialization により初回マウント時の1回しか実行されない。
+   * そのためファイル読み込み側で両方を開き直す必要がある。
+   * systemDBを開き忘れると finalizeInitialLoad() が失敗し、
+   * キャッシュへsystemDBが保存されずスキーマ版も見失う。
+   */
+  async openImportedDatabase(dbBytes: Uint8Array): Promise<WebDatabaseAdapter> {
+    const fileIO = getFileIOAdapter() as WebFileIOAdapter;
+    await fileIO.writeBytes(getMainDatabasePath(), dbBytes);
+
+    const mainDbAdapter = getMainDbAdapter() as WebDatabaseAdapter;
+    await mainDbAdapter.open(getMainDatabasePath());
+
+    const systemDbAdapter = getSystemDbAdapter() as WebDatabaseAdapter;
+    await systemDbAdapter.open(getSystemDatabasePath());
+
+    /* DBが開かれた状態に戻るため、reset()で落ちた初期化フラグを立て直す */
+    this.isInitialized = true;
+
+    return mainDbAdapter;
+  }
+
   /** 初回ファイル読込後のプロファイル状態とスキーマ版を確定する */
   async finalizeInitialLoad(): Promise<void> {
     ProfileService.ensureDefaultAndActive();

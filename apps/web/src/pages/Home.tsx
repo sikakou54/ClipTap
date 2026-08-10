@@ -22,19 +22,14 @@ import {
   SubscriptionService as SharedSubscriptionService,
   ImportParserService as ImportParserServiceClass,
   ClipTapError,
-  getMainDbAdapter,
-  getFileIOAdapter,
   migrateImportTempDb,
   SystemVariableFormatMapper,
   SCHEMA_VERSION,
-  toOpfsPath,
 } from '@cliptap/shared';
 import { SQLiteWasm } from '@src/mappers/sqliteWasm';
 import { useDatabase } from '@cliptap/shared';
 import { subscriptionService } from '@services/SubscriptionService';
 import { webDbCacheManager } from '@adapters/WebDbCacheManager';
-import type { WebDatabaseAdapter } from '@adapters/WebDatabaseAdapter';
-import type { WebFileIOAdapter } from '@adapters/WebFileIOAdapter';
 
 import { useAuth, useTranslation } from '@cliptap/shared';
 import { WebPageModal } from '@components/common/WebPageModal';
@@ -125,12 +120,8 @@ export function Home() {
 
       const { dbBytes, exportData } = await importParserService.parseAndValidate(jsonText, password);
 
-      const mainDbPath = toOpfsPath('main.db');
-      const fileIO = getFileIOAdapter() as WebFileIOAdapter;
-      await fileIO.writeBytes(mainDbPath, dbBytes);
-
-      const mainDbAdapter = getMainDbAdapter() as WebDatabaseAdapter;
-      await mainDbAdapter.open(mainDbPath);
+      /* mainDB・systemDBの両方を開き直す（「ファイルを閉じる」後の再読み込みに対応） */
+      const mainDbAdapter = await database.openImportedDatabase(dbBytes);
 
       if (exportData.s < SCHEMA_VERSION) {
         await migrateImportTempDb(mainDbAdapter, exportData.s);

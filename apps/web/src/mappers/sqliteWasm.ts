@@ -13,6 +13,14 @@
  */
 import initSqlJs from 'sql.js';
 import type { Database, SqlJsStatic } from 'sql.js';
+/*
+ * WASM本体はインストール済みのsql.jsから直接読み込む。
+ * public/へ手動コピーすると、sql.js更新時にglue側が要求するファイル名や中身と
+ * ずれても気付けず、実行時に静かに壊れるため（実際に1.13→1.14で
+ * sql-wasm.wasm → sql-wasm-browser.wasm へ改名され読み込み不能になった）。
+ * ブラウザ向けエントリ（package.jsonのbrowser条件）が読むファイルを明示的に指定する。
+ */
+import sqlWasmUrl from 'sql.js/dist/sql-wasm-browser.wasm?url';
 
 /**
  * SQLite WebAssemblyラッパークラス
@@ -38,8 +46,8 @@ export class SQLiteWasm {
 
     /* sql.jsを初期化（WASMファイルをロード） */
     SQLiteWasm.SQL = await initSqlJs({
-      /* WASMファイルのパスを指定（publicディレクトリから） */
-      locateFile: (file) => `./${file}`,
+      /* バンドラが出力したWASMのURLを渡す（ドキュメントのパス階層に依存しない） */
+      locateFile: () => sqlWasmUrl,
     });
   }
 
