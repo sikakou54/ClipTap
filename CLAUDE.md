@@ -347,7 +347,10 @@ clipTap/
 
 #### App Store/Google Play 提出前
 - プライバシーポリシー最新版（クリップボード使用、AdMob広告、サブスクリプション）
-- スクリーンショット最新版（iOS: 6.7"と5.5"、Android: 複数サイズ）
+- スクリーンショット最新版（`store/screen/` を編集 → `node store/screen/build.mjs` → html-to-png で `store/out/` を再生成）
+  - App Store: iPhone 6.9" `1290×2796` と iPad 13" `2064×2752`（`app.json` の `supportsTablet: true` によりiPad用が必須）
+  - Google Play: 縦横比9:16が上限のため App Store 用は流用できない（未対応。canvas定義の追加が必要）
+  - OGP `apps/web/public/ogp/og-{ja,en}.png` も同じパイプラインで再生成される
 - アプリ説明文のキーワード最適化
 
 ---

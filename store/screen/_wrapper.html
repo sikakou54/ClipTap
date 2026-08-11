@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8" />
+<meta name="color-scheme" content="light" />
+<title>ClipTap {{SLIDE}} — {{CANVAS}} / {{LANG}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=Noto+Sans+JP:wght@400;500;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../_shared.css" />
+</head>
+<body>
+<section class="canvas" data-canvas="{{CANVAS}}" data-slide="{{SLIDE}}" data-tone="{{TONE}}">
+  <!-- 見出しと端末 -->
+  {{SLIDE_MARKUP}}
+
+  <!-- OGP のみ表示されるタグライン（lp.css のフッターから逐語） -->
+  <p class="tagline">
+    <span class="ja">いつもの文章を、必要な場所へ。</span>
+    <span class="en">Your usual text, wherever you need it.</span>
+  </p>
+</section>
+
+<script>
+/**
+ * ビルド時アサーション。
+ *
+ * nowrap のあふれ・フォント未ロード・画像デコード失敗・中央配置の退行は、
+ * これがないと「壊れたまま出荷できてしまう」種類の失敗になる。1つでも
+ * 引っかかったら #ff00ff のパネルを .canvas いっぱいに描き、
+ * レンダリング結果を見た瞬間に分かるようにする（PNG 全体が塗り潰される）。
+ */
+(async function () {
+  const fails = [];
+
+  try {
+    await document.fonts.ready;
+  } catch (e) {
+    fails.push('document.fonts.ready rejected: ' + e);
+  }
+
+  const canvas = document.querySelector('.canvas');
+  if (!canvas) {
+    fails.push('.canvas が存在しない');
+  } else {
+    const cr = canvas.getBoundingClientRect();
+
+    /* 1. canvas の実寸が整数であること（PNG の寸法が丸めでずれないこと） */
+    if (Math.abs(cr.width - Math.round(cr.width)) > 0.01 || Math.abs(cr.height - Math.round(cr.height)) > 0.01) {
+      fails.push('canvas の実寸が非整数: ' + cr.width + ' x ' + cr.height);
+    }
+
+    /* 2. 書体がロードされていること（フォールバックのまま焼き付けない）。
+       document.fonts.check() は既定の判定文字列がラテン文字のため、
+       Google Fonts が unicode-range で分割配信する Noto Sans JP では
+       CJK サブセットがロード済みでも false を返す。実際に読み込まれた
+       FontFace を数えるほうが確実。 */
+    const loadedFamilies = new Set();
+    document.fonts.forEach(function (face) {
+      if (face.status === 'loaded') {
+        loadedFamilies.add(face.family.replace(/^["']|["']$/g, ''));
+      }
+    });
+    if (!loadedFamilies.has('Archivo')) {
+      fails.push('Archivo が未ロード');
+    }
+    /* 英語面は和文グリフを使わないため、サブセットが降ってこなくて当然 */
+    if (document.documentElement.lang === 'ja' && !loadedFamilies.has('Noto Sans JP')) {
+      fails.push('Noto Sans JP が未ロード');
+    }
+
+    /* 3. 画像がデコードされていること（高さ0の紺色の細片を防ぐ） */
+    canvas.querySelectorAll('img').forEach(function (img) {
+      if (img.offsetParent === null && getComputedStyle(img).position !== 'fixed') return;
+      if (!img.naturalWidth) {
+        fails.push('画像がデコードされていない: ' + img.getAttribute('src'));
+      }
+    });
+
+    /* 4. 折り返さない前提のテキストが横にあふれていないこと */
+    const isVisible = function (el) {
+      return el.offsetWidth > 0 || el.offsetHeight > 0;
+    };
+    canvas.querySelectorAll('.head h1 .line, .cap, .stat-num, .stat-label').forEach(function (el) {
+      if (!isVisible(el)) return;
+      if (el.scrollWidth > el.clientWidth + 1) {
+        fails.push('横あふれ: "' + el.textContent.trim() + '" (' + el.scrollWidth + ' > ' + el.clientWidth + ')');
+      }
+    });
+
+    /* 5. 見出し帯と端末の帯が canvas に収まっていること。
+       .head / .stage は自然高になったため「与えた箱からのあふれ」はもう起きない。
+       代わりに、内容が増えて面そのものからはみ出していないかを直接見る。 */
+    ['.head', '.stage'].forEach(function (sel) {
+      const el = canvas.querySelector(sel);
+      if (!el || !isVisible(el)) return;
+      const r = el.getBoundingClientRect();
+      if (r.top < cr.top - 0.5 || r.bottom > cr.bottom + 0.5 || r.left < cr.left - 0.5 || r.right > cr.right + 0.5) {
+        fails.push(
+          sel + ' が canvas をはみ出している: ' +
+          [r.left - cr.left, r.top - cr.top, r.right - cr.right, r.bottom - cr.bottom]
+            .map(function (n) { return n.toFixed(1); }).join(' / ')
+        );
+      }
+    });
+
+    /* 6. 端末が「見出しの下に残った余白」の中央にあること（ストア面のみ）。
+       濃紺ポスターと OGP はこの機構を使わないので対象外。
+       これは中央配置の機構そのものの退行を守る検査で、たとえば .stage の
+       margin: auto 0 を 0 に戻すとここだけが発火する（(5)(7) は通過する）。
+       「内容が重すぎる」経路は (5)(7) でも捕まるので、そちらは冗長。 */
+    if (canvas.dataset.tone !== 'poster' && canvas.dataset.canvas !== 'og') {
+      const head = canvas.querySelector('.head');
+      const stage = canvas.querySelector('.stage');
+      if (!head || !stage) {
+        fails.push('.head か .stage が見つからない');
+      } else {
+        const hr = head.getBoundingClientRect();
+        const sr = stage.getBoundingClientRect();
+        const above = sr.top - hr.bottom;
+        const below = cr.bottom - sr.bottom;
+        if (above < -0.5) {
+          fails.push('見出し帯と端末が重なっている (' + above.toFixed(1) + ')');
+        } else if (Math.abs(above - below) > 1) {
+          fails.push('端末が余白の中央にない: 上 ' + above.toFixed(1) + ' / 下 ' + below.toFixed(1));
+        }
+      }
+    }
+
+    /* 7. 端末フレームが canvas からはみ出していないこと（キャプチャを切らない） */
+    canvas.querySelectorAll('.phone').forEach(function (el, i) {
+      const r = el.getBoundingClientRect();
+      if (r.left < cr.left - 0.5 || r.right > cr.right + 0.5 || r.top < cr.top - 0.5 || r.bottom > cr.bottom + 0.5) {
+        fails.push(
+          '端末 ' + (i + 1) + ' が canvas をはみ出している: ' +
+          [r.left - cr.left, r.top - cr.top, r.right - cr.right, r.bottom - cr.bottom]
+            .map(function (n) { return n.toFixed(1); }).join(' / ')
+        );
+      }
+    });
+
+    /* 8. 見出し帯が自分の内容を収めきっていること。
+       .head は自然高なので通常はこれが発火することはない（正規面では
+       scrollHeight == clientHeight）。ただし .head に min-height: 0 や
+       overflow: hidden が足されると内容ベースの最小サイズの床が外れ、
+       見出しが黙って圧縮されてリードが端末を貫通する。その状態は
+       (5)(6)(7) をすり抜けるため、比較1回ぶんの保険としてここで受ける。 */
+    const head = canvas.querySelector('.head');
+    if (head && head.scrollHeight > head.clientHeight + 1) {
+      fails.push('.head があふれている (' + head.scrollHeight + ' > ' + head.clientHeight + ')');
+    }
+  }
+
+  document.documentElement.dataset.assert = fails.length ? 'fail' : 'ok';
+  if (!fails.length) return;
+
+  /* パネルは .canvas の中に absolute で置く。.canvas は position: relative なので
+     そのまま包含ブロックになり、面の高さ（2796）を確実に覆いきる。
+     position: fixed + body 直下だと覆えるのはビューポート（約900）だけで、
+     要素スクリーンショットでは面の上から約3割しか塗られず、
+     画像の下側だけを見る確認手順で失敗を見落とす。 */
+  const panel = document.createElement('div');
+  panel.setAttribute('style', [
+    canvas ? 'position:absolute' : 'position:fixed',
+    'inset:0', 'z-index:99999', 'background:#ff00ff', 'color:#000',
+    'font:700 20px/1.6 monospace', 'padding:40px', 'white-space:pre-wrap', 'overflow:hidden'
+  ].join(';'));
+  panel.textContent = 'ASSERTION FAILED — {{SLIDE}} / {{CANVAS}} / {{LANG}}\n\n' + fails.join('\n');
+  (canvas || document.body).appendChild(panel);
+})();
+</script>
+</body>
+</html>
