@@ -13,6 +13,24 @@
  */
 import initSqlJs from 'sql.js';
 import type { Database, SqlJsStatic } from 'sql.js';
+/*
+ * WASM本体はインストール済みのsql.jsから直接読み込み、バンドラに解決させる。
+ * public/へ手動コピーすると、sql.js更新時にglueが要求するファイル名とずれても
+ * 気付けず、ビルドは成功したまま実行時に静かに壊れるため。
+ *
+ * 実際に1.13→1.14で以下が起き、WASMが404になった:
+ * - dist/sql-wasm-browser.js と dist/sql-wasm-browser.wasm が新規追加された
+ * - package.jsonにexportsが新設され、browser条件がsql-wasm-browser.jsを指すようになった
+ * - Viteはbrowser条件で解決するためglueがbrowser版に切り替わり、
+ *   既定のWASM名がsql-wasm-browser.wasmへ変わった（public/にあるのは旧名のみ）
+ *
+ * 参照先をsql-wasm.wasmにするのは、1.13と1.14のどちらでも解決できる唯一の指定だから。
+ * sql-wasm-browser.wasmは1.13に存在せず、ロックが1.13を指す状態でビルドが落ちる。
+ * 1.14ではsql-wasm.wasmとsql-wasm-browser.wasmはバイト同一のため、
+ * browser版のglueに渡しても問題ない（locateFileの戻り値は再解決されないため
+ * ファイル名がglueの既定名と異なっていてもよい）。
+ */
+import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 
 /**
  * SQLite WebAssemblyラッパークラス
@@ -38,8 +56,8 @@ export class SQLiteWasm {
 
     /* sql.jsを初期化（WASMファイルをロード） */
     SQLiteWasm.SQL = await initSqlJs({
-      /* WASMファイルのパスを指定（publicディレクトリから） */
-      locateFile: (file) => `./${file}`,
+      /* バンドラが出力したWASMのURLを渡す（ドキュメントのパス階層に依存しない） */
+      locateFile: () => sqlWasmUrl,
     });
   }
 
