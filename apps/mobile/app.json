@@ -8,7 +8,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.sikakou.cliptap",
-      "buildNumber": "57",
+      "buildNumber": "58",
       "requireFullScreen": false,
       "googleServicesFile": "./GoogleService-Info.plist",
       "entitlements": {
@@ -42,7 +42,7 @@
         "android.permission.VIBRATE"
       ],
       "package": "com.sikakou.cliptap",
-      "versionCode": 38,
+      "versionCode": 39,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
