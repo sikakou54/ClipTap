@@ -30,10 +30,12 @@ import {
 /* ======================================== */
 
 const ProfileQueries = {
-  /* 全プロファイルを取得（sortOrder順） */
-  SELECT_ALL: 'SELECT * FROM profiles ORDER BY sortOrder ASC',
+  /* 全プロファイルを取得（標準優先→表示順）
+     有効判定がSET_VALID_BY_LIMITと同じ並びになるため、
+     一覧の上からN件が有効なプロファイルと一致し、無効は末尾へ集まる */
+  SELECT_ALL: 'SELECT * FROM profiles ORDER BY isDefault DESC, sortOrder ASC',
   /* 有効なプロファイルのみ取得（Proプランの制限に応じてvalidフラグで絞り込み） */
-  SELECT_VALID: 'SELECT * FROM profiles WHERE valid = 1 ORDER BY sortOrder ASC',
+  SELECT_VALID: 'SELECT * FROM profiles WHERE valid = 1 ORDER BY isDefault DESC, sortOrder ASC',
   /* IDでプロファイルを取得 */
   SELECT_BY_ID: 'SELECT * FROM profiles WHERE id = ?',
   /* 名前でプロファイルを取得（重複チェック用） */
@@ -178,7 +180,7 @@ export class ProfileMapper {
 
   /**
    * 有効な全プロファイルを取得
-   * @returns 有効なプロファイル一覧（デフォルト優先→名前順）
+   * @returns 有効なプロファイル一覧（標準優先→表示順）
    */
   static getAll(): Profile[] {
     const db = getMainDbAdapter();
@@ -188,7 +190,7 @@ export class ProfileMapper {
 
   /**
    * 無効なものも含む全プロファイルを取得
-   * @returns 全プロファイル（デフォルト優先→名前順）
+   * @returns 全プロファイル（標準優先→表示順）
    */
   static getAllIncludingInvalid(): Profile[] {
     const db = getMainDbAdapter();

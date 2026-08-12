@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { setMainDbAdapter } from '../../src/adapters/DbAdapter';
 import type { SubscriptionAdapter } from '../../src/adapters/SubscriptionAdapter';
@@ -78,6 +80,58 @@ describe('ProfileService.setDefault', () => {
     db
       ?.all<{ id: string }>('SELECT id FROM profiles WHERE valid = 1 ORDER BY sortOrder ASC')
       .map((row) => row.id) ?? [];
+
+  /**
+   * 一覧は標準を先頭に置き、その後は表示順にする。
+   * 有効判定がSET_VALID_BY_LIMITで同じ並びを使うため、上からN件が有効と一致する。
+   */
+  it('lists the default profile first, then the sort order', () => {
+    insertProfile('a', 0);
+    insertProfile('b', 1);
+    insertProfile('c', 2, { valid: false });
+    insertProfile('d', 3, { isDefault: true, isActive: true });
+
+    expect(ProfileService.getAllIncludingInvalid().map((p) => p.id)).toEqual([
+      'd',
+      'a',
+      'b',
+      'c',
+    ]);
+    expect(ProfileService.getAll().map((p) => p.id)).toEqual(['d', 'a', 'b']);
+  });
+
+  /**
+   * キーボードは共有SQLiteを別実装で読むため、並び順の指定が独立している。
+   * 揃えないとアプリとキーボードでプロファイルの並びが食い違う。
+   */
+  it('uses the same ordering in both native keyboard implementations', () => {
+    const root = resolve(import.meta.dirname, '../../../..');
+    const sources = [
+      'apps/mobile/ios/ClipTapKeyboard/Mappers/ProfileMapper.swift',
+      'apps/mobile/android/app/src/main/java/com/sikakou/cliptap/mappers/ProfileMapper.kt',
+    ].map((path) => readFileSync(resolve(root, path), 'utf8'));
+
+    for (const source of sources) {
+      expect(source).toContain('ORDER BY isDefault DESC, sortOrder ASC');
+      /* 表示順だけで並べる指定が残っていないこと */
+      expect(source).not.toMatch(/ORDER BY sortOrder ASC/);
+    }
+  });
+
+  /** 標準を切り替えると一覧の先頭も入れ替わる */
+  it('moves the switched profile to the top of the list', () => {
+    insertProfile('a', 0, { isDefault: true, isActive: true });
+    insertProfile('b', 1);
+    insertProfile('c', 2);
+
+    ProfileService.setDefault('c');
+
+    expect(ProfileService.getAllIncludingInvalid().map((p) => p.id)).toEqual([
+      'c',
+      'a',
+      'b',
+    ]);
+  });
 
   it('moves the default flag to the target and leaves exactly one default', () => {
     insertProfile('a', 0, { isDefault: true, isActive: true });

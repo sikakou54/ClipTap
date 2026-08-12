@@ -26,7 +26,7 @@ class ProfileMapper private constructor(context: Context) : BaseMapper(context) 
     }
 
     /**
-     * 全プロファイルを取得（valid=1のみ）
+     * 全プロファイルを取得（valid=1のみ、標準優先→表示順）
      */
     fun getAll(): List<Profile> {
         val profiles = mutableListOf<Profile>()
@@ -35,7 +35,7 @@ class ProfileMapper private constructor(context: Context) : BaseMapper(context) 
             SELECT id, name, isActive, isDefault, valid, sortOrder, createdAt, updatedAt
             FROM profiles
             WHERE valid = 1
-            ORDER BY sortOrder ASC
+            ORDER BY isDefault DESC, sortOrder ASC
         """
 
         val cursor = executeQuery(query)

@@ -23,13 +23,13 @@ class ProfileMapper: BaseMapper {
 
     // MARK: - Read Operations
 
-    /// 全プロファイルを取得（valid=1のみ）
+    /// 全プロファイルを取得（valid=1のみ、標準優先→表示順）
     func getAll() -> [Profile] {
         let query = """
             SELECT id, name, isActive, isDefault, valid, sortOrder, createdAt, updatedAt
             FROM \(tableName)
             WHERE valid = 1
-            ORDER BY sortOrder ASC
+            ORDER BY isDefault DESC, sortOrder ASC
         """
 
         return executeQuery(query) { statement in
@@ -37,12 +37,12 @@ class ProfileMapper: BaseMapper {
         }
     }
 
-    /// 全プロファイルを取得（無効なものも含む）
+    /// 全プロファイルを取得（無効なものも含む、標準優先→表示順）
     func getAllIncludingInvalid() -> [Profile] {
         let query = """
             SELECT id, name, isActive, isDefault, valid, sortOrder, createdAt, updatedAt
             FROM \(tableName)
-            ORDER BY sortOrder ASC
+            ORDER BY isDefault DESC, sortOrder ASC
         """
 
         return executeQuery(query) { statement in
