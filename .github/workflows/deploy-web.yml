@@ -27,10 +27,11 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      # package-lock.json を削除して npm install すると、依存がビルド実行時の
+      # レジストリ状態に対して再解決される。コミット内容を変えていなくても
+      # 出荷物が変わるため、npm ci でロックを唯一の制御点にする。
       - name: Install dependencies
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install
+        run: npm ci
 
       - name: Build web app
         run: npm run build:web
