@@ -13,6 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | ドキュメント | 内容 | いつ読むか |
 |-------------|------|-----------|
 | [docs/機能仕様書.md](docs/機能仕様書.md) | 機能、画面、外部IF、DB、非機能、未確定事項の正本 | 最初に必ず。仕様変更前 |
+| `cliptap-market/docs/マーケット機能仕様書.md`（別リポジトリ） | ClipTap Market（定型文セットの売買・アプリへの取込）の正本。**未実装機能の仕様** | マーケット関連の検討・実装時 |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | 環境構築・トラブルシューティング | セットアップ時・エラー時 |
 | [docs/MARKETING_STRATEGY.md](docs/MARKETING_STRATEGY.md) | グロース・マーケティング戦略 | マーケティング施策の検討時 |
 
