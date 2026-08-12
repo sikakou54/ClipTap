@@ -39,6 +39,7 @@ export default function ProfileManagementScreen() {
     handleCreateProfile,
     handleEditProfile,
     handleDeleteProfile,
+    handleSetDefaultProfile,
     isProfileEnabled,
   } = useProfilesScreen();
 
@@ -96,19 +97,39 @@ export default function ProfileManagementScreen() {
               </View>
             </View>
 
-            {/* 削除ボタン（デフォルトプロファイル以外） */}
-            {!item.isDefault && (
-              <TouchableOpacity
-                onPress={(e) => {
-                  e.stopPropagation();
-                  handleDeleteProfile(item);
-                }}
-                hitSlop={UI_CONSTANTS.HIT_SLOP.DEFAULT}
-                style={commonStyles.actionButton}
-              >
-                <Ionicons name="trash-outline" size={20} color={colors.error} />
-              </TouchableOpacity>
-            )}
+            {/* 行アクション（標準にする・削除） */}
+            <View style={styles.rowActions}>
+              {/* 標準にするボタン（標準以外かつ有効なプロファイルのみ） */}
+              {!item.isDefault && enabled && (
+                <TouchableOpacity
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleSetDefaultProfile(item);
+                  }}
+                  hitSlop={UI_CONSTANTS.HIT_SLOP.DEFAULT}
+                  style={commonStyles.actionButton}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('profile.set_default_action')}
+                >
+                  <Ionicons name="star-outline" size={20} color={colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+              {/* 削除ボタン（デフォルトプロファイル以外） */}
+              {!item.isDefault && (
+                <TouchableOpacity
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleDeleteProfile(item);
+                  }}
+                  hitSlop={UI_CONSTANTS.HIT_SLOP.DEFAULT}
+                  style={commonStyles.actionButton}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.delete')}
+                >
+                  <Ionicons name="trash-outline" size={20} color={colors.error} />
+                </TouchableOpacity>
+              )}
+            </View>
           </TouchableOpacity>
           {/* セパレーター（最後のアイテム以外） */}
           {index < allProfiles.length - 1 && (
@@ -117,7 +138,7 @@ export default function ProfileManagementScreen() {
         </>
       );
     },
-    [allProfiles.length, colors, responsiveFontSizes, responsiveLineHeights, t, isProfileEnabled, handleEditProfile, handleDeleteProfile]
+    [allProfiles.length, colors, responsiveFontSizes, responsiveLineHeights, t, isProfileEnabled, handleEditProfile, handleDeleteProfile, handleSetDefaultProfile]
   );
 
   const headerRightAction = (
@@ -169,6 +190,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  /* 行アクションの並び。hitSlopが左右10dpずつ広がるため、隣接ボタンと重ならない間隔を取る */
+  rowActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: UI_CONSTANTS.GAP.XL,
   },
   profileName: {
     fontWeight: '500',

@@ -370,6 +370,10 @@ export class ProfileMapper {
     }
 
     /* 全プロファイルのisDefaultをリセット後、指定プロファイルのみデフォルト化 */
+    /* ここでトランザクションを張らないこと。インポートの全復元・選択インポートが
+       トランザクション内からsetDefaultを呼ぶため入れ子になり、
+       SAVEPOINT非対応のアダプターで取込全体が失敗する。
+       不可分性が必要な呼び出し側（ProfileProvider）でトランザクションを張る */
     db.run(ProfileQueries.RESET_DEFAULT);
     db.run(ProfileQueries.SET_DEFAULT, [id]);
   }

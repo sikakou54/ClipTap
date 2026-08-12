@@ -22,6 +22,7 @@ import {
   FREE_PROFILES_LIMIT,
   useProfiles,
   Logger,
+  translateError,
   type Profile,
 } from '@cliptap/shared';
 import { useSubscription } from '@providers/SubscriptionProvider';
@@ -39,6 +40,7 @@ export interface UseProfilesScreenReturn {
   handleCreateProfile: () => void;
   handleEditProfile: (profile: Profile, enabled: boolean) => void;
   handleDeleteProfile: (profile: Profile) => void;
+  handleSetDefaultProfile: (profile: Profile) => void;
 
   /* ヘルパー */
   isProfileEnabled: (profile: Profile) => boolean;
@@ -53,7 +55,7 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const { refresh } = useProfiles();
+  const { refresh, setDefaultProfile, deleteProfile } = useProfiles();
   const { canAddProfile } = useSubscription();
 
   /* ======================================== */
@@ -106,12 +108,14 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
 
   /**
    * 新規プロファイル作成
-   * 無料プランの場合は有効なプロファイル数を制限（3つまで）
+   *
+   * @remarks
+   * 判定は無効なものも含む保存済み総数で行う。有効数で判定すると、上限超過で無効になった
+   * プロファイルを抱えたまま追加を許してしまい、編集画面の保存時に総数で拒否されて
+   * 入力が無駄になる。Web・編集画面・変数管理と同じ基準に揃える。
    */
   const handleCreateProfile = useCallback(() => {
-    const validProfilesCount = allProfiles.filter((p) => p.valid).length;
-
-    if (!canAddProfile(validProfilesCount)) {
+    if (!canAddProfile(allProfiles.length)) {
       showConfirm(
         t('profile.limit_message', { limit: FREE_PROFILES_LIMIT }),
         () => router.push('/subscription/paywall'),
@@ -150,7 +154,11 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
 
   /**
    * プロファイル削除処理
-   * アクティブなプロファイルを削除時は自動的にデフォルトプロファイルに切り替え
+   *
+   * @remarks
+   * Provider側でアクティブの振替、削除、有効フラグ再計算をトランザクションにまとめている。
+   * この画面はContext依存の無限ループを避けるためローカルstateを別に持つので、
+   * Provider経由の更新に加えてローカルstateも読み直す。
    */
   const handleDeleteProfile = useCallback(
     (profile: Profile) => {
@@ -161,20 +169,49 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
 
       showConfirm(
         t('profile.delete_confirm', { name: profile.name }),
-        async () => {
+        () => {
           try {
-            ProfileService.deleteWithAutoSwitch(profile.id);
-            refresh();
+            deleteProfile(profile.id);
             setAllProfiles(ProfileService.getAllIncludingInvalid());
           } catch (error) {
             Logger.error('[ProfileManagement] Failed to delete profile:', error);
+            showErrorAlert(translateError(error));
           }
         },
         undefined,
         'danger'
       );
     },
-    [refresh, t]
+    [deleteProfile, t]
+  );
+
+  /**
+   * 標準プロファイル切替処理
+   *
+   * @remarks
+   * 標準は変数の既定値の参照先であり、無効プロファイル指定時の振替先でもあるため確認を挟む。
+   * Provider側で切替と有効フラグ再計算をトランザクションにまとめている。
+   * この画面はContext依存の無限ループを避けるためローカルstateを別に持つので、
+   * Provider経由のrefreshに加えてローカルstateも読み直す。
+   */
+  const handleSetDefaultProfile = useCallback(
+    (profile: Profile) => {
+      showConfirm(
+        t('profile.set_default_confirm', { name: profile.name }),
+        () => {
+          try {
+            setDefaultProfile(profile.id);
+            setAllProfiles(ProfileService.getAllIncludingInvalid());
+          } catch (error) {
+            Logger.error('[ProfileManagement] Failed to set default profile:', error);
+            showErrorAlert(translateError(error));
+          }
+        },
+        undefined,
+        'warning'
+      );
+    },
+    [setDefaultProfile, t]
   );
 
   /* ======================================== */
@@ -189,6 +226,7 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
     handleCreateProfile,
     handleEditProfile,
     handleDeleteProfile,
+    handleSetDefaultProfile,
 
     /* ヘルパー */
     isProfileEnabled,

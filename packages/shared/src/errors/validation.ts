@@ -97,6 +97,20 @@ export class DefaultProfileDeleteError extends ValidationError {
 }
 
 /**
+ * 無効プロファイルの標準化エラー
+ *
+ * 無効なプロファイルを標準に設定しようとした場合にスローされます。
+ * 無効なプロファイルは変数値のフォールバック先にも、無効プロファイル指定時の
+ * 振替先にもできないため、標準にはできません。
+ */
+export class InvalidProfileDefaultError extends ValidationError {
+  constructor(message: string = 'A disabled profile cannot be set as the default') {
+    super(message, 'error.cannot_set_invalid_profile_as_default');
+    this.name = 'InvalidProfileDefaultError';
+  }
+}
+
+/**
  * 変数名必須エラー
  *
  * 変数名が空の場合にスローされます。

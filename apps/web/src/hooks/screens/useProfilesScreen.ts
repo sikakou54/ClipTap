@@ -15,7 +15,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from '@cliptap/shared';
-import { useProfiles, FREE_PROFILES_LIMIT, type Profile } from '@cliptap/shared';
+import { useProfiles, FREE_PROFILES_LIMIT, translateError, type Profile } from '@cliptap/shared';
 import { useSubscription } from '@services/SubscriptionService';
 import { useUnsavedChangesWarning } from '@hooks/useUnsavedChangesWarning';
 import { useBodyScrollLock } from '@hooks/useBodyScrollLock';
@@ -50,6 +50,7 @@ export interface UseProfilesScreenReturn {
   handleCloseModal: () => void;
   handleSubmit: () => Promise<void>;
   handleDelete: (id: string) => Promise<void>;
+  handleSetDefault: (id: string) => Promise<void>;
 }
 
 /**
@@ -59,8 +60,8 @@ export interface UseProfilesScreenReturn {
  */
 export function useProfilesScreen(): UseProfilesScreenReturn {
   const { t } = useTranslation();
-  const { profiles, createProfile, updateProfile, deleteProfile } = useProfiles();
-  const { isSubscribed } = useSubscription();
+  const { profiles, createProfile, updateProfile, deleteProfile, setDefaultProfile } = useProfiles();
+  const { isSubscribed, canAddProfile: canAddProfileForCount } = useSubscription();
 
   /* ======================================== */
   /* モーダル状態 */
@@ -80,8 +81,8 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
   /* 派生状態 */
   /* ======================================== */
 
-  /* 環境追加可否を判定（Proプランまたは3環境未満） */
-  const canAddProfile = isSubscribed || profiles.length < FREE_PROFILES_LIMIT;
+  /* 環境追加可否を判定（無効なものも含む保存済み総数で判定する） */
+  const canAddProfile = canAddProfileForCount(profiles.length);
 
   /* 変更があるかどうかを判定 */
   const hasChanges = useMemo(() => {
@@ -187,14 +188,46 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
 
     const { showConfirmMessage } = await import('@utils/alerts');
     const message = t('profile.delete_confirm', { name: profile?.name || '' });
-    showConfirmMessage(message, async () => {
+    showConfirmMessage(message, () => {
       try {
-        await deleteProfile(id);
+        deleteProfile(id);
+        setError('');
       } catch (err) {
         console.error('Failed to delete profile:', err);
+        setError(translateError(err));
       }
     });
   }, [profiles, deleteProfile, t]);
+
+  /**
+   * 標準環境を切り替え
+   *
+   * 標準は変数の既定値の参照先であり、無効環境を指定したときの振替先でもあるため確認を挟む。
+   * Provider側で切替と有効フラグ再計算をトランザクションにまとめている。
+   */
+  const handleSetDefault = useCallback(async (id: string) => {
+    const profile = profiles.find(p => p.id === id);
+    if (!profile || profile.isDefault) return;
+
+    /* 無効な環境は標準にできない（一覧に操作を出さないため通常は到達しない） */
+    if (!profile.valid) {
+      setError(t('profile.disabled_message'));
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+
+    const { showConfirmMessage } = await import('@utils/alerts');
+    const message = t('profile.set_default_confirm', { name: profile.name });
+    showConfirmMessage(message, () => {
+      try {
+        setDefaultProfile(id);
+        setError('');
+      } catch (err) {
+        console.error('Failed to set default profile:', err);
+        setError(translateError(err));
+      }
+    });
+  }, [profiles, setDefaultProfile, t]);
 
   /* ======================================== */
   /* 戻り値 */
@@ -226,5 +259,6 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
     handleCloseModal,
     handleSubmit,
     handleDelete,
+    handleSetDefault,
   };
 }

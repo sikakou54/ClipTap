@@ -19,11 +19,13 @@ interface ProfileListProps {
   onEdit: (profile: Profile) => void;
   /** 削除ボタンクリック時のコールバック（プロファイルIDを渡す） */
   onDelete: (id: string) => void;
+  /** 標準にするボタンクリック時のコールバック（プロファイルIDを渡す） */
+  onSetDefault: (id: string) => void;
   /** 新規作成ボタンクリック時のコールバック（空状態時に使用、省略可） */
   onCreate?: () => void;
 }
 
-export function ProfileList({ profiles, onEdit, onDelete, onCreate }: ProfileListProps) {
+export function ProfileList({ profiles, onEdit, onDelete, onSetDefault, onCreate }: ProfileListProps) {
   {/* プロファイルが0件の場合は空状態を表示 */}
   if (profiles.length === 0) {
     return <EmptyProfileList onCreate={onCreate || (() => {})} />;
@@ -39,6 +41,7 @@ export function ProfileList({ profiles, onEdit, onDelete, onCreate }: ProfileLis
           isLast={index === profiles.length - 1}
           onEdit={onEdit}
           onDelete={onDelete}
+          onSetDefault={onSetDefault}
         />
       ))}
     </div>

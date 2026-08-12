@@ -162,6 +162,8 @@
     "default_badge": "Default",
     "environment": "Profile",
     "switch_environment": "Switch Profile",
+    "set_default_action": "Set as default",
+    "set_default_confirm": "Set \"{{name}}\" as the default profile?\n\nDefault variable values will switch to this profile's values.",
     "delete_default_error": "Cannot delete default profile",
     "limit_message": "Free plan allows up to {{limit}} profiles. Upgrade to Pro for unlimited profiles.",
     "disabled_message": "This profile is not available in the free plan. Upgrade to Pro to use unlimited profiles."
@@ -210,6 +212,7 @@
     "environment": "This feature is unavailable in the current environment",
     "cannot_delete_system_variable": "System variables cannot be deleted",
     "cannot_delete_default_profile": "The default profile cannot be deleted",
+    "cannot_set_invalid_profile_as_default": "A disabled profile cannot be set as the default",
     "variable_value_required": "Please enter a variable value",
     "invalid_rgb_values": "RGB values must be between 0 and 255",
     "account_auth_failed_title": "Account Authentication Failed",

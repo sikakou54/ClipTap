@@ -162,6 +162,8 @@
     "default_badge": "標準",
     "environment": "プロファイル",
     "switch_environment": "プロファイルを切り替える",
+    "set_default_action": "標準にする",
+    "set_default_confirm": "プロファイル「{{name}}」を標準にしますか？\n\n変数の既定値がこのプロファイルの値に切り替わります。",
     "delete_default_error": "標準のプロファイルは削除できません",
     "limit_message": "無料版では{{limit}}個までプロファイルを登録できます。無制限に登録するにはProプランにアップグレードしてください。",
     "disabled_message": "このプロファイルは無料版では使用できません。Proプランにアップグレードすると、すべてのプロファイルを無制限に使用できます。"
@@ -210,6 +212,7 @@
     "environment": "現在の環境ではこの機能を利用できません",
     "cannot_delete_system_variable": "システム変数は削除できません",
     "cannot_delete_default_profile": "標準プロファイルは削除できません",
+    "cannot_set_invalid_profile_as_default": "無効なプロファイルは標準にできません",
     "variable_value_required": "変数の値を入力してください",
     "invalid_rgb_values": "RGB値は0から255の範囲で入力してください",
     "account_auth_failed_title": "アカウント認証失敗",

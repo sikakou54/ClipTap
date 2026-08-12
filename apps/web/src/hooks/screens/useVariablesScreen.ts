@@ -67,7 +67,7 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
   const { t } = useTranslation();
   const { profiles, profileVariables } = useProfiles();
   const { variables, deleteVariable } = useVariables();
-  const { isSubscribed } = useSubscription();
+  const { isSubscribed, canAddCustomVariable } = useSubscription();
 
   /* ======================================== */
   /* 状態 */
@@ -87,8 +87,8 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
     [variables]
   );
 
-  /* 変数追加可否を判定 */
-  const canAddVariable = isSubscribed || customVariables.length < FREE_VARIABLES_LIMIT;
+  /* 変数追加可否を判定（保存済みのカスタム変数総数で判定する） */
+  const canAddVariable = canAddCustomVariable(customVariables.length);
 
   /* システム変数 */
   const systemVariables = UI_SYSTEM_VARIABLES;

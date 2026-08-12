@@ -43,6 +43,7 @@ export {
   NotFoundError,
   SystemVariableDeleteError,
   DefaultProfileDeleteError,
+  InvalidProfileDefaultError,
   VariableNameRequiredError,
   VariableNameInvalidError,
   VariableNameReservedError,

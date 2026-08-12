@@ -15,7 +15,13 @@ import type {
   CreateProfileInput,
   UpdateProfileInput,
 } from '../schema';
-import { NotFoundError, DefaultProfileDeleteError, DuplicateNameError, EmptyContentError } from '../errors';
+import {
+  NotFoundError,
+  DefaultProfileDeleteError,
+  DuplicateNameError,
+  EmptyContentError,
+  InvalidProfileDefaultError,
+} from '../errors';
 import { Logger } from '../utils/logger';
 
 /**
@@ -215,8 +221,16 @@ export class ProfileService {
 
   /**
    * デフォルトプロファイルを設定
+   *
+   * @remarks
+   * 標準にできるのは有効なプロファイルだけとする。
+   * 標準は変数値のフォールバック先であり、無効プロファイルをアクティブ指定した際の
+   * 振替先でもあるため、無効なものを標準にすると両方の解決先が失われる。
+   * setActiveと違い振替先が存在しないため、フォールバックせずエラーとする。
+   *
    * @param id - デフォルトにするプロファイルID
    * @throws {NotFoundError} プロファイルが存在しない場合
+   * @throws {InvalidProfileDefaultError} プロファイルが無効な場合
    */
   static setDefault(id: string): void {
     /* デフォルトにするプロファイルが存在するか確認 */
@@ -225,18 +239,36 @@ export class ProfileService {
       throw new NotFoundError('profile', id);
     }
 
+    /* 無効なプロファイルはフォールバック先・振替先にできないため標準にしない */
+    if (!profile.valid) {
+      throw new InvalidProfileDefaultError();
+    }
+
     /* Mapper層に処理を委譲（全プロファイルのisDefaultをリセット後、指定プロファイルのみデフォルト化） */
     ProfileMapper.setDefault(id);
   }
 
-  /** 標準・アクティブプロファイルが欠けている場合に同じ対象で補完する */
+  /**
+   * 標準・アクティブプロファイルが欠けている場合に同じ対象で補完する
+   *
+   * @remarks
+   * 補完先は有効なプロファイルに限る。標準は値フォールバック先、アクティブは展開と
+   * 絞り込みの基準であり、無効なものを指定すると解決先が失われるため。
+   * getAll()は有効なもののみを返すので、取込元の標準が無効だった場合はそちらへ退避する。
+   * 有効なプロファイルが1件もない場合は補完しない。
+   */
   static ensureDefaultAndActive(importedDefaultProfileId: string | null = null): void {
     const defaultProfile = this.getDefault();
     const activeProfile = this.getActive();
     if (defaultProfile && activeProfile) return;
 
-    const targetProfileId = importedDefaultProfileId ?? this.getAll()[0]?.id;
-    if (!targetProfileId || !this.getById(targetProfileId)) {
+    const importedProfile = importedDefaultProfileId
+      ? this.getById(importedDefaultProfileId)
+      : null;
+    const targetProfileId = importedProfile?.valid
+      ? importedProfile.id
+      : this.getAll()[0]?.id;
+    if (!targetProfileId) {
       Logger.warn('[ProfileService] No profile available for default/active state');
       return;
     }
@@ -333,17 +365,22 @@ export class ProfileService {
 
   /**
    * プロファイルを削除（アクティブなプロファイルの自動切り替え付き）
+   *
    * @param id - 削除するプロファイルのID
-   * @param onAfterDelete - 削除後のコールバック（validフラグ更新等に使用）
-   * @returns 削除に成功した場合はtrue
    *
    * @remarks
    * - 削除対象がアクティブな場合、デフォルト（標準）プロファイルにアクティブを切り替える
    * - デフォルトプロファイルは削除不可なので、必ず切り替え先が存在する
+   * - 有効フラグの再計算は呼び出し側（ProfileProvider）がトランザクション内で行う
+   *
+   * @throws {NotFoundError} プロファイルが存在しない場合
+   * @throws {DefaultProfileDeleteError} デフォルトプロファイルを削除しようとした場合
    */
-  static deleteWithAutoSwitch(id: string, onAfterDelete?: () => void): boolean {
+  static deleteWithAutoSwitch(id: string): void {
     const profile = this.getById(id);
-    if (!profile) return false;
+    if (!profile) {
+      throw new NotFoundError('profile', id);
+    }
 
     /* アクティブなプロファイルを削除する場合は、デフォルトプロファイルに切り替え */
     if (profile.isActive) {
@@ -354,12 +391,6 @@ export class ProfileService {
     }
 
     this.delete(id);
-
-    if (onAfterDelete) {
-      onAfterDelete();
-    }
-
-    return true;
   }
 
   /**

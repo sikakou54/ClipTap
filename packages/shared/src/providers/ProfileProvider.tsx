@@ -11,6 +11,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { ProfileService } from '../services/ProfileService';
 import { SubscriptionService } from '../services/SubscriptionService';
+import { getMainDbAdapter } from '../adapters/DbAdapter';
 import { Logger } from '../utils/logger';
 import { useDatabase } from './DatabaseProvider';
 import type { Profile, ProfileVariable, CreateProfileInput, UpdateProfileInput } from '../schema';
@@ -47,6 +48,8 @@ export interface ProfileContextValue {
   deleteProfile: (id: string) => void;
   /** アクティブプロファイルを設定 */
   setActiveProfile: (id: string) => void;
+  /** 標準プロファイルを設定 */
+  setDefaultProfile: (id: string) => void;
   /** 変数値を一括設定 */
   setVariableValuesForVariable: (
     variableId: string,
@@ -167,12 +170,18 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
 
   /**
    * プロファイル削除
+   *
+   * @remarks
+   * アクティブの振替、削除、有効フラグ再計算を1つのトランザクションにまとめる。
+   * 削除で件数が減るとFreeの上限に空きが出るため、無効→有効への昇格を即時反映する。
+   * ここを唯一の削除経路とし、モバイルとWebで挙動を揃える。
    */
   const deleteProfile = useCallback(
     (id: string): void => {
-      ProfileService.delete(id);
-      /* 削除後にvalidフラグを即時更新（無効→有効への昇格に対応） */
-      SubscriptionService.updateValidFlags();
+      getMainDbAdapter().transaction(() => {
+        ProfileService.deleteWithAutoSwitch(id);
+        SubscriptionService.updateValidFlags();
+      });
       loadProfiles();
     },
     [loadProfiles]
@@ -184,6 +193,28 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
   const setActiveProfile = useCallback(
     (id: string): void => {
       ProfileService.setActive(id);
+      loadProfiles();
+    },
+    [loadProfiles]
+  );
+
+  /**
+   * 標準プロファイルを設定
+   *
+   * @remarks
+   * 標準の切替と有効フラグ再計算を1つのトランザクションにまとめる。
+   * 標準の切替は「isDefaultの一括リセット」と「対象のみ有効化」の2文で構成されるため、
+   * 途中で失敗すると標準0件になり変数値のフォールバック先が失われる。
+   * また有効判定は標準を最優先に表示順で行うため、切替でFreeの有効な集合が変わりうる。
+   * Mapper側でトランザクションを張らないのは、インポートの全復元・選択インポートが
+   * 既にトランザクション内からsetDefaultを呼んでおり、アダプタがネストに対応しないため。
+   */
+  const setDefaultProfile = useCallback(
+    (id: string): void => {
+      getMainDbAdapter().transaction(() => {
+        ProfileService.setDefault(id);
+        SubscriptionService.updateValidFlags();
+      });
       loadProfiles();
     },
     [loadProfiles]
@@ -225,6 +256,7 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       updateProfile,
       deleteProfile,
       setActiveProfile,
+      setDefaultProfile,
       setVariableValuesForVariable,
     }),
     [
@@ -240,6 +272,7 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       updateProfile,
       deleteProfile,
       setActiveProfile,
+      setDefaultProfile,
       setVariableValuesForVariable,
     ]
   );
