@@ -99,7 +99,7 @@ export default function ProfileManagementScreen() {
 
             {/* 行アクション（標準にする・削除） */}
             <View style={styles.rowActions}>
-              {/* 標準にするボタン（標準以外かつ有効なプロファイルのみ） */}
+              {/* 標準にするバッジ（標準以外かつ有効なプロファイルのみ） */}
               {!item.isDefault && enabled && (
                 <TouchableOpacity
                   onPress={(e) => {
@@ -107,11 +107,18 @@ export default function ProfileManagementScreen() {
                     handleSetDefaultProfile(item);
                   }}
                   hitSlop={UI_CONSTANTS.HIT_SLOP.DEFAULT}
-                  style={commonStyles.actionButton}
+                  style={[styles.setDefaultBadge, { borderColor: colors.border }]}
                   accessibilityRole="button"
                   accessibilityLabel={t('profile.set_default_action')}
                 >
-                  <Ionicons name="star-outline" size={20} color={colors.textSecondary} />
+                  <Text
+                    style={[
+                      styles.setDefaultBadgeText,
+                      { color: colors.textSecondary, fontSize: responsiveFontSizes.xs, lineHeight: responsiveLineHeights.xs },
+                    ]}
+                  >
+                    {t('profile.set_default_action')}
+                  </Text>
                 </TouchableOpacity>
               )}
               {/* 削除ボタン（デフォルトプロファイル以外） */}
@@ -191,11 +198,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  /* 行アクションの並び。hitSlopが左右10dpずつ広がるため、隣接ボタンと重ならない間隔を取る */
+  /* 行アクションの並び。両ボタンのhitSlopが左右10dpずつ広がるため、
+     間隔を20dp取って隣接ボタンとタップ領域が重ならないようにする。
+     長い名前で操作が潰れないよう縮小もしない */
   rowActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: UI_CONSTANTS.GAP.XL,
+    flexShrink: 0,
+  },
+  /* 標準にする操作のバッジ。状態表示の標準バッジと同形だが、枠線で操作であることを示す。
+     文字高18dpに上下padding4dpで26dp、hitSlopの上下10dpを足して46dpのタップ領域を確保する */
+  setDefaultBadge: {
+    paddingHorizontal: UI_CONSTANTS.GAP.MD,
+    paddingVertical: UI_CONSTANTS.GAP.XS,
+    borderRadius: UI_CONSTANTS.BORDER_RADIUS.XS,
+    borderWidth: 1,
+  },
+  setDefaultBadgeText: {
+    fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,
   },
   profileName: {
     fontWeight: '500',
