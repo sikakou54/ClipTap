@@ -248,20 +248,20 @@ export class VariableService {
    * @throws {VariableNameInvalidError} 変数名の形式が無効な場合
    * @throws {VariableNameReservedError} システム変数名と衝突する場合
    * @throws {DuplicateNameError} 同名の変数が既に存在する場合（自分以外）
+   * @remarks
+   * 既存変数の表示順は変更しない。無料プランの有効判定は表示順で行うため、
+   * 同名変数の更新で表示順を末尾へ動かすと、それまで有効だった変数が
+   * 上限超過分と入れ替わって無効になる。これを防ぐため表示順を引数に取らない。
    */
-  static upsert(data: CreateVariableInput & { sortOrder?: number }): Variable {
+  static upsert(data: Omit<CreateVariableInput, 'sortOrder'>): Variable {
     const existing = VariableMapper.getByName(data.name);
     if (existing) {
-      /* 既存変数を更新（sortOrderが指定されている場合のみ更新） */
-      const updateData: UpdateVariableInput = {
+      /* 既存変数を更新（表示順は据え置く） */
+      return this.update(existing.id, {
         name: data.name,
         label: data.label,
         icon: data.icon,
-      };
-      if (data.sortOrder !== undefined) {
-        updateData.sortOrder = data.sortOrder;
-      }
-      return this.update(existing.id, updateData);
+      });
     } else {
       /* 新規作成（sortOrderは自動採番） */
       return this.create({

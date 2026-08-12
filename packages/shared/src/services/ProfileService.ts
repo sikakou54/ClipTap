@@ -369,8 +369,12 @@ export class ProfileService {
    * @returns 作成/更新されたプロファイル
    * @throws {EmptyContentError} プロファイル名が空の場合
    * @throws {DuplicateNameError} 同名のプロファイルが既に存在する場合（自分以外）
+   * @remarks
+   * 既存プロファイルの表示順は変更しない。無料プランの有効判定は標準優先かつ表示順で
+   * 行うため、同名プロファイルの更新で表示順を末尾へ動かすと、それまで有効だった
+   * プロファイルが上限超過分と入れ替わって無効になる。これを防ぐため表示順を引数に取らない。
    */
-  static upsert(data: CreateProfileInput): Profile {
+  static upsert(data: Omit<CreateProfileInput, 'sortOrder'>): Profile {
     const trimmedName = data.name.trim();
     if (!trimmedName) {
       throw new EmptyContentError();
@@ -378,14 +382,10 @@ export class ProfileService {
 
     const existing = ProfileMapper.getByName(trimmedName);
     if (existing) {
-      /* 既存プロファイルを更新（sortOrderが指定されている場合のみ更新） */
-      const updateData: UpdateProfileInput = {
+      /* 既存プロファイルを更新（表示順は据え置く） */
+      return this.update(existing.id, {
         name: trimmedName,
-      };
-      if (data.sortOrder !== undefined) {
-        updateData.sortOrder = data.sortOrder;
-      }
-      return this.update(existing.id, updateData);
+      });
     } else {
       /* 新規作成（sortOrderは自動採番） */
       return this.create({

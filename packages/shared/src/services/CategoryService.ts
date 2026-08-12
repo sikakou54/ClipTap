@@ -154,8 +154,11 @@ export class CategoryService {
    * @returns 作成/更新されたカテゴリ
    * @throws {EmptyContentError} カテゴリ名が空の場合
    * @throws {DuplicateNameError} 同名のカテゴリが既に存在する場合（自分以外）
+   * @remarks
+   * 既存カテゴリの表示順は変更しない。表示順は利用者が決めたものであり、
+   * インポートなどの外部由来の操作で並びが入れ替わらないようにする。
    */
-  static upsert(data: CreateCategoryInput & { sortOrder?: number }): Category {
+  static upsert(data: CreateCategoryInput): Category {
     const trimmedName = data.name.trim();
     if (!trimmedName) {
       throw new EmptyContentError();
@@ -163,16 +166,12 @@ export class CategoryService {
 
     const existing = CategoryMapper.getByName(trimmedName);
     if (existing) {
-      /* 既存カテゴリを更新（sortOrderが指定されている場合のみ更新） */
-      const updateData: UpdateCategoryInput = {
+      /* 既存カテゴリを更新（表示順は据え置く） */
+      return this.update({
         id: existing.id,
         name: trimmedName,
         color: data.color,
-      };
-      if (data.sortOrder !== undefined) {
-        updateData.sortOrder = data.sortOrder;
-      }
-      return this.update(updateData);
+      });
     } else {
       /* 新規作成（sortOrderは自動採番） */
       return this.create({

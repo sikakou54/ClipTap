@@ -12,6 +12,12 @@
  * 4. 変数値のインポート（プロファイル×変数）
  * 5. スニペットのインポート（カテゴリ・プロファイルIDを解決）
  *
+ * 表示順の扱い:
+ * 新規に作成するカテゴリ・変数・プロファイルは自動採番で末尾に置き、既存と同名のものは
+ * 表示順を据え置く。無料プランの有効判定は表示順で行うため、既存項目を末尾へ動かすと
+ * それまで有効だった項目が上限超過分と入れ替わって無効になるためである。
+ * これによりインポートで既存の有効な項目が無効になることはない。
+ *
  * @module ImportService
  */
 
@@ -77,11 +83,10 @@ function importCategories(
   const categoriesToImport = importMapper.getCategories(selectedCategoryIds);
 
   for (const category of categoriesToImport) {
-    /* 既存があれば更新、なければ新規作成 */
+    /* 既存があれば更新、なければ新規作成（新規の表示順は自動採番で末尾） */
     const result = CategoryService.upsert({
       name: category.name,
       color: category.color || undefined,
-      sortOrder: CategoryMapper.getNextSortOrder()
     });
     categoryIdMap.set(category.id, result.id);
   }
@@ -106,13 +111,12 @@ function importVariables(
   const variablesToImport = importMapper.getVariables(selectedVariableIds);
 
   for (const v of variablesToImport) {
-    /* 既存があれば更新、なければ新規作成 */
+    /* 既存があれば更新、なければ新規作成（新規の表示順は自動採番で末尾） */
     const result = VariableService.upsert({
       name: v.name,
       type: 'custom',
       label: v.label ?? undefined,
       icon: v.icon ?? undefined,
-      sortOrder: VariableMapper.getNextSortOrder()
     });
     variableIdMap.set(v.id, result.id);
   }
@@ -154,10 +158,9 @@ function importProfiles(
   const profilesToImport = importMapper.getProfiles(selectedProfileIds);
 
   for (const p of profilesToImport) {
-    /* 既存があれば更新、なければ新規作成 */
+    /* 既存があれば更新、なければ新規作成（新規の表示順は自動採番で末尾） */
     const result = ProfileService.upsert({
       name: p.name,
-      sortOrder: ProfileMapper.getNextSortOrder()
     });
     profileIdMap.set(p.id, result.id);
 
@@ -325,6 +328,27 @@ export class ImportService {
   /* ======================================== */
 
   /**
+   * インポート前にサブスクリプション状態を同期する
+   *
+   * @remarks
+   * 有効フラグの再計算に最新の権利状態を使うための事前同期。
+   * 権利確認は外部通信のため失敗しうるが、失敗しても取込は中断せず、
+   * 既知の最後の権利状態で有効フラグを計算する。
+   * 取込はローカル業務機能であり、外部サービスの障害で壊さない。
+   */
+  private static async refreshSubscriptionForImport(): Promise<void> {
+    try {
+      if (!AuthService.getCurrentUser()) return;
+      await SubscriptionService.refreshCustomerInfo();
+    } catch (error) {
+      Logger.warn(
+        '[ImportService] Failed to refresh subscription state. Continuing with the last known state.',
+        error
+      );
+    }
+  }
+
+  /**
    * インポート用の一時データベースファイルを作成
    *
    * @param password - インポートファイルのパスワード
@@ -423,11 +447,7 @@ export class ImportService {
       Logger.info('[ImportService] Starting partial import...');
 
       /* インポート前にサブスクリプション状態を更新（updateValidFlagsで使用されるため） */
-      const currentUser = AuthService.getCurrentUser();
-      if (currentUser) {
-        /* RevenueCatから最新のサブスクリプション状態を取得して同期 */
-        await SubscriptionService.refreshCustomerInfo();
-      }
+      await this.refreshSubscriptionForImport();
 
       const mapper = new ImportMapper(tempDbAdapter);
       getMainDbAdapter().transaction(() => {
@@ -506,11 +526,7 @@ export class ImportService {
 
     try {
       /* インポート前にサブスクリプション状態を更新（updateValidFlagsで使用されるため） */
-      const currentUser = AuthService.getCurrentUser();
-      if (currentUser) {
-        /* RevenueCatから最新のサブスクリプション状態を取得して同期 */
-        await SubscriptionService.refreshCustomerInfo();
-      }
+      await this.refreshSubscriptionForImport();
 
       const mapper = new ImportMapper(tempDbAdapter);
       this.executeFullRestoreWithMapper(mapper);
