@@ -1,0 +1,5 @@
+FeatureID,Name,SpecRef,Platform,Scope
+F-02,定型文管理,§8.2,mobile;web,in-scope
+F-08,カテゴリ・プロファイル絞り込み,§8.8,mobile;web;keyboard,in-scope
+F-09,並べ替え,§8.9,mobile;web;keyboard,in-scope
+F-11,コピー・キーボード入力,§8.11,mobile;web;keyboard,in-scope

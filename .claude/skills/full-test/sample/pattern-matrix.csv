@@ -1,0 +1,6 @@
+FeatureID,ScreenID,ConditionID,Condition,PatternID,InputState,DataState,UserState,PermissionState,SystemState,ExpectedBehavior,RelatedRoute,Source,TestID,Covered,Reachability,UnreachableReason,SpecRef,CodeRef
+F-09,SC-HOME,C-F09-01,並べ替え=タイトル昇順,P-F09-001,なし,定型文4件,Free,なし,通常,一覧がAAA/BBB/CCC/DDDの順で並ぶ,/,FunctionalSpec;SourceCode,TC-S001,yes,REACHABLE,,§8.9,apps/mobile/src/hooks/screens
+F-11,SC-HOME,C-F11-01,タイトル行のタップ,P-F11-001,なし,タイトルありの定型文1件以上,Free,なし,通常,クリップボードがタイトル文字列だけになる,/,FunctionalSpec,TC-S002,yes,REACHABLE,,§8.11,apps/mobile/src/components/snippet/SnippetCard.tsx
+F-08,SC-HOME,C-F08-01,カテゴリチップ=仕事を選択,P-F08-001,なし,複数カテゴリの定型文,Free,なし,通常,仕事カテゴリ以外の定型文が一覧から消える,/,FunctionalSpec,TC-S003,yes,REACHABLE,,§8.8,apps/mobile/app/index.tsx
+F-02,SC-HOME,C-F02-02,DBに定型文5件,P-F02-001,なし,定型文5件,Free,なし,通常,一覧に保存済みの5件がすべて表示される,/,FunctionalSpec,TC-S004,yes,REACHABLE,,§8.2,packages/shared/src/mappers/snippetMapper.ts
+F-02,SC-HOME,C-F02-01,DBに定型文0件,P-F02-900,なし,完全な空DB,Free,なし,通常,初回起動の空一覧が表示される,/,SourceCode,,no,UNREACHABLE,__DEV__ビルドは定型文とカスタム変数が両方0件のときテストデータを再投入するため完全な空DBを作れない。Releaseビルドでのみ検証可能,§8.1,apps/mobile/src/database/seed.ts

@@ -1,0 +1,1 @@
+FeatureID,ScreenID,ConditionID,Condition,PatternID,InputState,DataState,UserState,PermissionState,SystemState,ExpectedBehavior,RelatedRoute,Source,TestID,Covered,Reachability,UnreachableReason,SpecRef,CodeRef
