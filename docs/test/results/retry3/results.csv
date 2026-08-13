@@ -1,0 +1,794 @@
+TestID,PatternID,StepNo,Action,Result,Expected,Actual,Evidence,ExecutedAt
+TC-0011,P-F02-011,1,TAP,PASS,ホームの追加アイコンのタップが受け付けられる,"tap 1623,187 hold=60ms",,2026-08-13T05:21:00.232Z
+TC-0011,P-F02-011,2,ASSERT_SCREEN,PASS,定型文作成画面が表示される,SC-SNIPPET-CREATE を確認,,2026-08-13T05:21:01.642Z
+TC-0011,P-F02-011,3,TAP,PASS,タイトル欄のタップが受け付けられる,"tap 1477,248 hold=60ms",,2026-08-13T05:21:03.439Z
+TC-0011,P-F02-011,4,ASSERT_SCREEN,PASS,タイトル入力画面が表示される,SC-SNIPPET-TITLE-INPUT を確認,,2026-08-13T05:21:04.860Z
+TC-0011,P-F02-011,5,PASTE_RAW,PASS,入力欄へ 改行本文 が入力される,pasted: 改行本文,,2026-08-13T05:21:06.515Z
+TC-0011,P-F02-011,6,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:21:08.354Z
+TC-0011,P-F02-011,7,TAP,PASS,本文欄のタップが受け付けられる,"tap 1477,318 hold=60ms",,2026-08-13T05:21:09.984Z
+TC-0011,P-F02-011,8,PASTE_RAW,PASS,入力欄へ 1行目 が入力される,pasted: 1行目,,2026-08-13T05:21:11.535Z
+TC-0011,P-F02-011,9,PRESS_KEY,PASS,改行が入力される,key: return,,2026-08-13T05:21:12.912Z
+TC-0011,P-F02-011,10,PASTE_RAW,PASS,入力欄へ 2行目 が入力される,pasted: 2行目,,2026-08-13T05:21:14.479Z
+TC-0011,P-F02-011,11,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:21:16.326Z
+TC-0011,P-F02-011,12,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:21:18.097Z
+TC-0011,P-F02-011,13,ASSERT_DB,FAIL,本文が改行で区切られた2行として保存される,"""1行目//2行目""",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0011-13-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0011-13-FAIL.txt,2026-08-13T05:21:20.141Z
+TC-0012,P-F02-012,1,TAP,PASS,ホームの追加アイコンのタップが受け付けられる,"tap 1623,187 hold=60ms",,2026-08-13T05:21:40.258Z
+TC-0012,P-F02-012,2,ASSERT_SCREEN,PASS,定型文作成画面が表示される,SC-SNIPPET-CREATE を確認,,2026-08-13T05:21:41.660Z
+TC-0012,P-F02-012,3,TAP,PASS,タイトル欄のタップが受け付けられる,"tap 1477,248 hold=60ms",,2026-08-13T05:21:43.291Z
+TC-0012,P-F02-012,4,PASTE_RAW,PASS,入力欄へ 前半 が入力される,pasted: 前半,,2026-08-13T05:21:44.997Z
+TC-0012,P-F02-012,5,PRESS_KEY,PASS,returnキーが送られる,key: return,,2026-08-13T05:21:46.368Z
+TC-0012,P-F02-012,6,PASTE_RAW,PASS,入力欄へ 後半 が入力される,pasted: 後半,,2026-08-13T05:21:47.969Z
+TC-0012,P-F02-012,7,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:21:49.807Z
+TC-0012,P-F02-012,8,TAP,PASS,本文欄のタップが受け付けられる,"tap 1477,318 hold=60ms",,2026-08-13T05:21:51.585Z
+TC-0012,P-F02-012,9,ASSERT_SCREEN,PASS,内容入力画面が表示される,SC-SNIPPET-CONTENT-INPUT を確認,,2026-08-13T05:21:53.004Z
+TC-0012,P-F02-012,10,PASTE_RAW,PASS,入力欄へ 改行なしタイトルの本文 が入力される,pasted: 改行なしタイトルの本文,,2026-08-13T05:21:54.596Z
+TC-0012,P-F02-012,11,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:21:56.351Z
+TC-0012,P-F02-012,12,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:21:58.159Z
+TC-0012,P-F02-012,13,ASSERT_DB,FAIL,タイトルに改行が含まれない,"""前半""",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0012-13-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0012-13-FAIL.txt,2026-08-13T05:22:00.226Z
+TC-0013,P-F02-013,1,TAP,PASS,ホームの追加アイコンのタップが受け付けられる,"tap 1623,187 hold=60ms",,2026-08-13T05:22:20.029Z
+TC-0013,P-F02-013,2,ASSERT_SCREEN,PASS,定型文作成画面が表示される,SC-SNIPPET-CREATE を確認,,2026-08-13T05:22:21.446Z
+TC-0013,P-F02-013,3,TAP,PASS,タイトル欄のタップが受け付けられる,"tap 1477,248 hold=60ms",,2026-08-13T05:22:23.239Z
+TC-0013,P-F02-013,4,ASSERT_SCREEN,PASS,タイトル入力画面が表示される,SC-SNIPPET-TITLE-INPUT を確認,,2026-08-13T05:22:24.544Z
+TC-0013,P-F02-013,5,PASTE_RAW,PASS,"入力欄へ 記号<>&"" が入力される","pasted: 記号<>&""",,2026-08-13T05:22:26.202Z
+TC-0013,P-F02-013,6,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:22:28.012Z
+TC-0013,P-F02-013,7,TAP,PASS,本文欄のタップが受け付けられる,"tap 1477,318 hold=60ms",,2026-08-13T05:22:29.823Z
+TC-0013,P-F02-013,8,ASSERT_SCREEN,PASS,内容入力画面が表示される,SC-SNIPPET-CONTENT-INPUT を確認,,2026-08-13T05:22:31.242Z
+TC-0013,P-F02-013,9,PASTE_RAW,PASS,入力欄へ 記号を含む本文 が入力される,pasted: 記号を含む本文,,2026-08-13T05:22:32.813Z
+TC-0013,P-F02-013,10,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:22:34.438Z
+TC-0013,P-F02-013,11,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:22:36.186Z
+TC-0013,P-F02-013,12,ASSERT_DB,PASS,タイトルが入力した記号列と完全一致する,"""記号<>&\""""",,2026-08-13T05:22:36.983Z
+TC-0013,P-F02-013,13,ASSERT_SCREEN_HAS,FAIL,"ホーム一覧に 記号<>&"" が表示される","画面内に見つからない（表示中: \uF48B, Main, \uF232 / \uF56C / \uF5B1 / \uF563 / \uF105 / \uF5B4 / すべて / 仕事 / SNS / プロンプト / 記号<>&\"" / 記号を含む本文）",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0013-13-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0013-13-FAIL.txt,2026-08-13T05:22:39.788Z
+TC-0016,P-F02-016,1,TAP,PASS,ホームの追加アイコンのタップが受け付けられる,"tap 1623,187 hold=60ms",,2026-08-13T05:22:59.904Z
+TC-0016,P-F02-016,2,ASSERT_SCREEN,PASS,定型文作成画面が表示される,SC-SNIPPET-CREATE を確認,,2026-08-13T05:23:01.326Z
+TC-0016,P-F02-016,3,TAP,PASS,タイトル欄のタップが受け付けられる,"tap 1477,248 hold=60ms",,2026-08-13T05:23:03.128Z
+TC-0016,P-F02-016,4,ASSERT_SCREEN,PASS,タイトル入力画面が表示される,SC-SNIPPET-TITLE-INPUT を確認,,2026-08-13T05:23:04.500Z
+TC-0016,P-F02-016,5,PASTE_RAW,PASS,入力欄へ 未分類定型文 が入力される,pasted: 未分類定型文,,2026-08-13T05:23:06.392Z
+TC-0016,P-F02-016,6,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:23:08.227Z
+TC-0016,P-F02-016,7,TAP,PASS,本文欄のタップが受け付けられる,"tap 1477,318 hold=60ms",,2026-08-13T05:23:09.938Z
+TC-0016,P-F02-016,8,ASSERT_SCREEN,PASS,内容入力画面が表示される,SC-SNIPPET-CONTENT-INPUT を確認,,2026-08-13T05:23:11.372Z
+TC-0016,P-F02-016,9,PASTE_RAW,PASS,入力欄へ 未分類本文 が入力される,pasted: 未分類本文,,2026-08-13T05:23:12.961Z
+TC-0016,P-F02-016,10,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:23:14.756Z
+TC-0016,P-F02-016,11,TAP,PASS,カテゴリ欄のタップが受け付けられる,"tap 1477,389 hold=60ms",,2026-08-13T05:23:16.517Z
+TC-0016,P-F02-016,12,TAP,FAIL,未分類のタップが受け付けられる,"要素が見つかりません: label=未分類&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=未分類&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0016-12-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0016-12-FAIL.txt,2026-08-13T05:23:19.087Z
+TC-0016,P-F02-016,13,TAP,SKIPPED,保存ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:23:19.693Z
+TC-0016,P-F02-016,14,ASSERT_DB,SKIPPED,categoryIdがNULLの行が1件ある,前のステップが失敗したため未実行,,2026-08-13T05:23:19.693Z
+TC-0019,P-F02-019,1,TAP,PASS,ホームの追加アイコンのタップが受け付けられる,"tap 1623,187 hold=60ms",,2026-08-13T05:23:39.928Z
+TC-0019,P-F02-019,2,ASSERT_SCREEN,PASS,定型文作成画面が表示される,SC-SNIPPET-CREATE を確認,,2026-08-13T05:23:41.350Z
+TC-0019,P-F02-019,3,TAP,PASS,タイトル欄のタップが受け付けられる,"tap 1477,248 hold=60ms",,2026-08-13T05:23:43.111Z
+TC-0019,P-F02-019,4,ASSERT_SCREEN,PASS,タイトル入力画面が表示される,SC-SNIPPET-TITLE-INPUT を確認,,2026-08-13T05:23:44.559Z
+TC-0019,P-F02-019,5,PASTE_RAW,PASS,入力欄へ A社限定 が入力される,pasted: A社限定,,2026-08-13T05:23:46.223Z
+TC-0019,P-F02-019,6,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:23:48.078Z
+TC-0019,P-F02-019,7,TAP,PASS,本文欄のタップが受け付けられる,"tap 1477,318 hold=60ms",,2026-08-13T05:23:49.837Z
+TC-0019,P-F02-019,8,ASSERT_SCREEN,PASS,内容入力画面が表示される,SC-SNIPPET-CONTENT-INPUT を確認,,2026-08-13T05:23:51.290Z
+TC-0019,P-F02-019,9,PASTE_RAW,PASS,入力欄へ A社限定本文 が入力される,pasted: A社限定本文,,2026-08-13T05:23:52.883Z
+TC-0019,P-F02-019,10,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:23:54.610Z
+TC-0019,P-F02-019,11,TAP,PASS,プロファイル欄のタップが受け付けられる,"tap 1477,445 hold=60ms",,2026-08-13T05:23:56.401Z
+TC-0019,P-F02-019,12,ASSERT_SCREEN,PASS,プロファイル選択画面が表示される,SC-SNIPPET-PROFILE-SELECT を確認,,2026-08-13T05:23:57.777Z
+TC-0019,P-F02-019,13,TAP,FAIL,A社用のタップが受け付けられる,"要素が見つかりません: label=A社用&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=A社用&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0019-13-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0019-13-FAIL.txt,2026-08-13T05:24:00.295Z
+TC-0019,P-F02-019,14,TAP,SKIPPED,保存ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:24:00.901Z
+TC-0019,P-F02-019,15,ASSERT_SCREEN_HAS,SKIPPED,作成画面に選択したプロファイル名が表示される,前のステップが失敗したため未実行,,2026-08-13T05:24:00.901Z
+TC-0019,P-F02-019,16,TAP,SKIPPED,保存ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:24:00.901Z
+TC-0019,P-F02-019,17,ASSERT_DB,SKIPPED,pf_aとの関連が1件ある,前のステップが失敗したため未実行,,2026-08-13T05:24:00.901Z
+TC-0019,P-F02-019,18,ASSERT_DB,SKIPPED,関連は1件だけである,前のステップが失敗したため未実行,,2026-08-13T05:24:00.901Z
+TC-0021,P-F02-021,1,TAP,PASS,ホームの追加アイコンのタップが受け付けられる,"tap 1623,187 hold=60ms",,2026-08-13T05:24:20.514Z
+TC-0021,P-F02-021,2,ASSERT_SCREEN,PASS,定型文作成画面が表示される,SC-SNIPPET-CREATE を確認,,2026-08-13T05:24:21.934Z
+TC-0021,P-F02-021,3,TAP,PASS,タイトル欄のタップが受け付けられる,"tap 1477,248 hold=60ms",,2026-08-13T05:24:23.741Z
+TC-0021,P-F02-021,4,ASSERT_SCREEN,PASS,タイトル入力画面が表示される,SC-SNIPPET-TITLE-INPUT を確認,,2026-08-13T05:24:25.086Z
+TC-0021,P-F02-021,5,PASTE_RAW,PASS,入力欄へ 複数プロファイル が入力される,pasted: 複数プロファイル,,2026-08-13T05:24:26.772Z
+TC-0021,P-F02-021,6,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:24:28.552Z
+TC-0021,P-F02-021,7,TAP,PASS,本文欄のタップが受け付けられる,"tap 1477,318 hold=60ms",,2026-08-13T05:24:30.312Z
+TC-0021,P-F02-021,8,ASSERT_SCREEN,PASS,内容入力画面が表示される,SC-SNIPPET-CONTENT-INPUT を確認,,2026-08-13T05:24:31.734Z
+TC-0021,P-F02-021,9,PASTE_RAW,PASS,入力欄へ 複数プロファイル本文 が入力される,pasted: 複数プロファイル本文,,2026-08-13T05:24:33.321Z
+TC-0021,P-F02-021,10,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:24:35.167Z
+TC-0021,P-F02-021,11,TAP,PASS,プロファイル欄のタップが受け付けられる,"tap 1477,445 hold=60ms",,2026-08-13T05:24:36.892Z
+TC-0021,P-F02-021,12,TAP,FAIL,A社用のタップが受け付けられる,"要素が見つかりません: label=A社用&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=A社用&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0021-12-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0021-12-FAIL.txt,2026-08-13T05:24:39.517Z
+TC-0021,P-F02-021,13,TAP,SKIPPED,B社用のタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:24:40.123Z
+TC-0021,P-F02-021,14,TAP,SKIPPED,保存ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:24:40.123Z
+TC-0021,P-F02-021,15,ASSERT_SCREEN_HAS,SKIPPED,作成画面に2個のプロファイルを選択中と表示される,前のステップが失敗したため未実行,,2026-08-13T05:24:40.123Z
+TC-0021,P-F02-021,16,TAP,SKIPPED,保存ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:24:40.123Z
+TC-0021,P-F02-021,17,ASSERT_DB,SKIPPED,関連が2件である,前のステップが失敗したため未実行,,2026-08-13T05:24:40.123Z
+TC-0022,P-F02-022,1,TAP,PASS,ホームの追加アイコンのタップが受け付けられる,"tap 1623,187 hold=60ms",,2026-08-13T05:24:59.574Z
+TC-0022,P-F02-022,2,ASSERT_SCREEN,PASS,定型文作成画面が表示される,SC-SNIPPET-CREATE を確認,,2026-08-13T05:25:00.961Z
+TC-0022,P-F02-022,3,TAP,PASS,タイトル欄のタップが受け付けられる,"tap 1477,248 hold=60ms",,2026-08-13T05:25:02.786Z
+TC-0022,P-F02-022,4,ASSERT_SCREEN,PASS,タイトル入力画面が表示される,SC-SNIPPET-TITLE-INPUT を確認,,2026-08-13T05:25:04.192Z
+TC-0022,P-F02-022,5,PASTE_RAW,PASS,入力欄へ 選択破棄 が入力される,pasted: 選択破棄,,2026-08-13T05:25:05.858Z
+TC-0022,P-F02-022,6,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:25:07.626Z
+TC-0022,P-F02-022,7,TAP,PASS,本文欄のタップが受け付けられる,"tap 1477,318 hold=60ms",,2026-08-13T05:25:09.395Z
+TC-0022,P-F02-022,8,ASSERT_SCREEN,PASS,内容入力画面が表示される,SC-SNIPPET-CONTENT-INPUT を確認,,2026-08-13T05:25:10.780Z
+TC-0022,P-F02-022,9,PASTE_RAW,PASS,入力欄へ 選択破棄本文 が入力される,pasted: 選択破棄本文,,2026-08-13T05:25:12.337Z
+TC-0022,P-F02-022,10,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:25:14.181Z
+TC-0022,P-F02-022,11,TAP,PASS,プロファイル欄のタップが受け付けられる,"tap 1477,445 hold=60ms",,2026-08-13T05:25:15.925Z
+TC-0022,P-F02-022,12,TAP,FAIL,A社用のタップが受け付けられる,"要素が見つかりません: label=A社用&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=A社用&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0022-12-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0022-12-FAIL.txt,2026-08-13T05:25:18.473Z
+TC-0022,P-F02-022,13,TAP,SKIPPED,閉じるボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:25:19.079Z
+TC-0022,P-F02-022,14,ASSERT_SCREEN_HAS,SKIPPED,プロファイル欄がプレースホルダーのままである,前のステップが失敗したため未実行,,2026-08-13T05:25:19.079Z
+TC-0022,P-F02-022,15,TAP,SKIPPED,保存ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:25:19.079Z
+TC-0022,P-F02-022,16,ASSERT_DB,SKIPPED,関連が0件である,前のステップが失敗したため未実行,,2026-08-13T05:25:19.079Z
+TC-0111,P-F03-012,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:25:38.103Z
+TC-0111,P-F03-012,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:25:39.515Z
+TC-0111,P-F03-012,3,TAP,PASS,設定のカテゴリ行のタップが受け付けられる,"tap 1477,394 hold=60ms",,2026-08-13T05:25:41.334Z
+TC-0111,P-F03-012,4,ASSERT_SCREEN,PASS,カテゴリ管理画面が表示される,SC-SETTINGS-CATEGORIES を確認,,2026-08-13T05:25:44.100Z
+TC-0111,P-F03-012,5,TAP,PASS,カテゴリ管理の追加ボタンのタップが受け付けられる,"tap 1625,179 hold=60ms",,2026-08-13T05:25:45.759Z
+TC-0111,P-F03-012,6,ASSERT_SCREEN,PASS,カテゴリ作成画面が表示される,SC-CATEGORY-EDIT を確認,,2026-08-13T05:25:47.208Z
+TC-0111,P-F03-012,7,PASTE_RAW,PASS,入力欄へ カスタム色 が入力される,pasted: カスタム色,,2026-08-13T05:25:48.872Z
+TC-0111,P-F03-012,8,TAP,PASS,カスタムRGBタブのタップが受け付けられる,"tap 1559,322 hold=60ms",,2026-08-13T05:25:50.685Z
+TC-0111,P-F03-012,9,CLEAR_TEXT,PASS,R入力欄が空になる,deleted x4,,2026-08-13T05:25:54.072Z
+TC-0111,P-F03-012,10,PASTE_RAW,PASS,R入力欄へ255が入力される,pasted: 255,,2026-08-13T05:25:55.652Z
+TC-0111,P-F03-012,11,CLEAR_TEXT,PASS,G入力欄が空になる,deleted x4,,2026-08-13T05:25:59.042Z
+TC-0111,P-F03-012,12,PASTE_RAW,PASS,G入力欄へ128が入力される,pasted: 128,,2026-08-13T05:26:00.619Z
+TC-0111,P-F03-012,13,CLEAR_TEXT,PASS,B入力欄が空になる,deleted x4,,2026-08-13T05:26:04.022Z
+TC-0111,P-F03-012,14,PASTE_RAW,PASS,B入力欄へ0が入力される,pasted: 0,,2026-08-13T05:26:05.602Z
+TC-0111,P-F03-012,15,ASSERT_SCREEN_HAS,FAIL,プレビューの16進値が#FF8000である,画面内に見つからない（表示中: \uF24A / カテゴリ作成 / 保存 / カテゴリ / 5/20 / カスタム色 / プリセット / カスタムRGB / 259 / R / 128 / G）,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0111-15-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0111-15-FAIL.txt,2026-08-13T05:26:08.116Z
+TC-0111,P-F03-012,16,TAP,SKIPPED,保存ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:26:08.722Z
+TC-0111,P-F03-012,17,ASSERT_DB,SKIPPED,大文字の#FF8000が保存される,前のステップが失敗したため未実行,,2026-08-13T05:26:08.722Z
+TC-0112,P-F03-013,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:26:27.692Z
+TC-0112,P-F03-013,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:26:29.126Z
+TC-0112,P-F03-013,3,TAP,PASS,設定のカテゴリ行のタップが受け付けられる,"tap 1477,394 hold=60ms",,2026-08-13T05:26:30.820Z
+TC-0112,P-F03-013,4,ASSERT_SCREEN,PASS,カテゴリ管理画面が表示される,SC-SETTINGS-CATEGORIES を確認,,2026-08-13T05:26:33.583Z
+TC-0112,P-F03-013,5,TAP,PASS,カテゴリ管理の追加ボタンのタップが受け付けられる,"tap 1625,179 hold=60ms",,2026-08-13T05:26:35.250Z
+TC-0112,P-F03-013,6,ASSERT_SCREEN,PASS,カテゴリ作成画面が表示される,SC-CATEGORY-EDIT を確認,,2026-08-13T05:26:36.702Z
+TC-0112,P-F03-013,7,PASTE_RAW,PASS,入力欄へ RGB空欄 が入力される,pasted: RGB空欄,,2026-08-13T05:26:38.367Z
+TC-0112,P-F03-013,8,TAP,PASS,カスタムRGBタブのタップが受け付けられる,"tap 1559,322 hold=60ms",,2026-08-13T05:26:40.012Z
+TC-0112,P-F03-013,9,CLEAR_TEXT,PASS,R入力欄が空になる,deleted x4,,2026-08-13T05:26:43.339Z
+TC-0112,P-F03-013,10,ASSERT_DISABLED,FAIL,保存ボタンが操作不能である,操作可能または不在,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0112-10-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0112-10-FAIL.txt,2026-08-13T05:26:45.871Z
+TC-0112,P-F03-013,11,ASSERT_DB,SKIPPED,categoriesテーブルは3件のままである,前のステップが失敗したため未実行,,2026-08-13T05:26:46.476Z
+TC-0114,P-F03-015,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:27:04.238Z
+TC-0114,P-F03-015,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:27:05.673Z
+TC-0114,P-F03-015,3,TAP,PASS,設定のカテゴリ行のタップが受け付けられる,"tap 1477,394 hold=60ms",,2026-08-13T05:27:07.435Z
+TC-0114,P-F03-015,4,ASSERT_SCREEN,PASS,カテゴリ管理画面が表示される,SC-SETTINGS-CATEGORIES を確認,,2026-08-13T05:27:10.149Z
+TC-0114,P-F03-015,5,TAP,PASS,カテゴリ管理の追加ボタンのタップが受け付けられる,"tap 1625,179 hold=60ms",,2026-08-13T05:27:11.668Z
+TC-0114,P-F03-015,6,ASSERT_SCREEN,PASS,カテゴリ作成画面が表示される,SC-CATEGORY-EDIT を確認,,2026-08-13T05:27:13.129Z
+TC-0114,P-F03-015,7,PASTE_RAW,PASS,入力欄へ RGB下限 が入力される,pasted: RGB下限,,2026-08-13T05:27:14.783Z
+TC-0114,P-F03-015,8,TAP,PASS,カスタムRGBタブのタップが受け付けられる,"tap 1559,322 hold=60ms",,2026-08-13T05:27:16.623Z
+TC-0114,P-F03-015,9,CLEAR_TEXT,PASS,R入力欄が空になる,deleted x4,,2026-08-13T05:27:19.997Z
+TC-0114,P-F03-015,10,PASTE_RAW,PASS,R入力欄へ0が入力される,pasted: 0,,2026-08-13T05:27:21.570Z
+TC-0114,P-F03-015,11,CLEAR_TEXT,PASS,G入力欄が空になる,deleted x4,,2026-08-13T05:27:24.961Z
+TC-0114,P-F03-015,12,PASTE_RAW,PASS,G入力欄へ0が入力される,pasted: 0,,2026-08-13T05:27:26.549Z
+TC-0114,P-F03-015,13,CLEAR_TEXT,PASS,B入力欄が空になる,deleted x4,,2026-08-13T05:27:29.925Z
+TC-0114,P-F03-015,14,PASTE_RAW,PASS,B入力欄へ0が入力される,pasted: 0,,2026-08-13T05:27:31.506Z
+TC-0114,P-F03-015,15,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:27:33.306Z
+TC-0114,P-F03-015,16,ASSERT_DB,FAIL,#000000が保存される,"""#3B00F6""",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0114-16-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0114-16-FAIL.txt,2026-08-13T05:27:35.132Z
+TC-0115,P-F03-016,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:27:54.847Z
+TC-0115,P-F03-016,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:27:56.285Z
+TC-0115,P-F03-016,3,TAP,PASS,設定のカテゴリ行のタップが受け付けられる,"tap 1477,394 hold=60ms",,2026-08-13T05:27:58.111Z
+TC-0115,P-F03-016,4,ASSERT_SCREEN,PASS,カテゴリ管理画面が表示される,SC-SETTINGS-CATEGORIES を確認,,2026-08-13T05:28:00.862Z
+TC-0115,P-F03-016,5,TAP,PASS,カテゴリ管理の追加ボタンのタップが受け付けられる,"tap 1625,179 hold=60ms",,2026-08-13T05:28:02.526Z
+TC-0115,P-F03-016,6,ASSERT_SCREEN,PASS,カテゴリ作成画面が表示される,SC-CATEGORY-EDIT を確認,,2026-08-13T05:28:03.975Z
+TC-0115,P-F03-016,7,PASTE_RAW,PASS,入力欄へ RGB上限 が入力される,pasted: RGB上限,,2026-08-13T05:28:05.642Z
+TC-0115,P-F03-016,8,TAP,PASS,カスタムRGBタブのタップが受け付けられる,"tap 1559,322 hold=60ms",,2026-08-13T05:28:07.460Z
+TC-0115,P-F03-016,9,CLEAR_TEXT,PASS,R入力欄が空になる,deleted x4,,2026-08-13T05:28:10.977Z
+TC-0115,P-F03-016,10,PASTE_RAW,PASS,R入力欄へ255が入力される,pasted: 255,,2026-08-13T05:28:12.555Z
+TC-0115,P-F03-016,11,CLEAR_TEXT,PASS,G入力欄が空になる,deleted x4,,2026-08-13T05:28:15.957Z
+TC-0115,P-F03-016,12,PASTE_RAW,PASS,G入力欄へ255が入力される,pasted: 255,,2026-08-13T05:28:17.534Z
+TC-0115,P-F03-016,13,CLEAR_TEXT,PASS,B入力欄が空になる,deleted x4,,2026-08-13T05:28:20.911Z
+TC-0115,P-F03-016,14,PASTE_RAW,PASS,B入力欄へ255が入力される,pasted: 255,,2026-08-13T05:28:22.499Z
+TC-0115,P-F03-016,15,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:28:24.284Z
+TC-0115,P-F03-016,16,ASSERT_DB,FAIL,#FFFFFFが保存される,"""""",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0115-16-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0115-16-FAIL.txt,2026-08-13T05:28:26.179Z
+TC-0116,P-F03-017,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:28:45.912Z
+TC-0116,P-F03-017,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:28:47.352Z
+TC-0116,P-F03-017,3,TAP,PASS,設定のカテゴリ行のタップが受け付けられる,"tap 1477,394 hold=60ms",,2026-08-13T05:28:49.255Z
+TC-0116,P-F03-017,4,ASSERT_SCREEN,PASS,カテゴリ管理画面が表示される,SC-SETTINGS-CATEGORIES を確認,,2026-08-13T05:28:51.906Z
+TC-0116,P-F03-017,5,TAP,PASS,カテゴリ管理の追加ボタンのタップが受け付けられる,"tap 1625,179 hold=60ms",,2026-08-13T05:28:53.588Z
+TC-0116,P-F03-017,6,ASSERT_SCREEN,PASS,カテゴリ作成画面が表示される,SC-CATEGORY-EDIT を確認,,2026-08-13T05:28:55.047Z
+TC-0116,P-F03-017,7,PASTE_RAW,PASS,入力欄へ RGB非数字 が入力される,pasted: RGB非数字,,2026-08-13T05:28:56.718Z
+TC-0116,P-F03-017,8,TAP,PASS,カスタムRGBタブのタップが受け付けられる,"tap 1559,322 hold=60ms",,2026-08-13T05:28:58.538Z
+TC-0116,P-F03-017,9,CLEAR_TEXT,PASS,R入力欄が空になる,deleted x4,,2026-08-13T05:29:01.906Z
+TC-0116,P-F03-017,10,PASTE_RAW,PASS,R入力欄へ 1a2 が入力される,pasted: 1a2,,2026-08-13T05:29:03.451Z
+TC-0116,P-F03-017,11,CLEAR_TEXT,PASS,G入力欄が空になる,deleted x4,,2026-08-13T05:29:07.338Z
+TC-0116,P-F03-017,12,PASTE_RAW,PASS,G入力欄へ0が入力される,pasted: 0,,2026-08-13T05:29:08.932Z
+TC-0116,P-F03-017,13,CLEAR_TEXT,PASS,B入力欄が空になる,deleted x4,,2026-08-13T05:29:12.227Z
+TC-0116,P-F03-017,14,PASTE_RAW,PASS,B入力欄へ0が入力される,pasted: 0,,2026-08-13T05:29:13.802Z
+TC-0116,P-F03-017,15,ASSERT_SCREEN_HAS,FAIL,プレビューの16進値が#0C0000である,画面内に見つからない（表示中: \uF24A / カテゴリ作成 / 保存 / カテゴリ / 6/20 / RGB非数字 / プリセット / カスタムRGB / 159 / R / 0 / G）,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0116-15-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0116-15-FAIL.txt,2026-08-13T05:29:16.302Z
+TC-0116,P-F03-017,16,TAP,SKIPPED,保存ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:29:16.908Z
+TC-0116,P-F03-017,17,ASSERT_DB,SKIPPED,#0C0000が保存される,前のステップが失敗したため未実行,,2026-08-13T05:29:16.908Z
+TC-0119,P-F03-020,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:29:35.958Z
+TC-0119,P-F03-020,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:29:37.400Z
+TC-0119,P-F03-020,3,TAP,PASS,設定のカテゴリ行のタップが受け付けられる,"tap 1477,394 hold=60ms",,2026-08-13T05:29:39.251Z
+TC-0119,P-F03-020,4,ASSERT_SCREEN,PASS,カテゴリ管理画面が表示される,SC-SETTINGS-CATEGORIES を確認,,2026-08-13T05:29:41.972Z
+TC-0119,P-F03-020,5,TAP,PASS,カテゴリ管理の追加ボタンのタップが受け付けられる,"tap 1625,179 hold=60ms",,2026-08-13T05:29:43.641Z
+TC-0119,P-F03-020,6,ASSERT_SCREEN,PASS,カテゴリ作成画面が表示される,SC-CATEGORY-EDIT を確認,,2026-08-13T05:29:45.024Z
+TC-0119,P-F03-020,7,PASTE_RAW,PASS,入力欄へ カスタム再表示 が入力される,pasted: カスタム再表示,,2026-08-13T05:29:46.688Z
+TC-0119,P-F03-020,8,TAP,PASS,カスタムRGBタブのタップが受け付けられる,"tap 1559,322 hold=60ms",,2026-08-13T05:29:48.539Z
+TC-0119,P-F03-020,9,CLEAR_TEXT,PASS,R入力欄が空になる,deleted x4,,2026-08-13T05:29:51.917Z
+TC-0119,P-F03-020,10,PASTE_RAW,PASS,R入力欄へ255が入力される,pasted: 255,,2026-08-13T05:29:53.509Z
+TC-0119,P-F03-020,11,CLEAR_TEXT,PASS,G入力欄が空になる,deleted x4,,2026-08-13T05:29:56.888Z
+TC-0119,P-F03-020,12,PASTE_RAW,PASS,G入力欄へ128が入力される,pasted: 128,,2026-08-13T05:29:58.460Z
+TC-0119,P-F03-020,13,CLEAR_TEXT,PASS,B入力欄が空になる,deleted x4,,2026-08-13T05:30:01.849Z
+TC-0119,P-F03-020,14,PASTE_RAW,PASS,B入力欄へ0が入力される,pasted: 0,,2026-08-13T05:30:03.430Z
+TC-0119,P-F03-020,15,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:30:05.234Z
+TC-0119,P-F03-020,16,TAP,FAIL,保存したカテゴリの行のタップが受け付けられる,"要素が見つかりません: label~=カスタム再表示&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label~=カスタム再表示&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0119-16-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0119-16-FAIL.txt,2026-08-13T05:30:07.902Z
+TC-0119,P-F03-020,17,ASSERT_SCREEN_HAS,SKIPPED,編集画面に保存済みの#FF8000が表示される,前のステップが失敗したため未実行,,2026-08-13T05:30:08.508Z
+TC-0127,P-F03-028,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:30:27.575Z
+TC-0127,P-F03-028,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:30:29.019Z
+TC-0127,P-F03-028,3,TAP,PASS,設定のカテゴリ行のタップが受け付けられる,"tap 1477,394 hold=60ms",,2026-08-13T05:30:30.790Z
+TC-0127,P-F03-028,4,ASSERT_SCREEN,PASS,カテゴリ管理画面が表示される,SC-SETTINGS-CATEGORIES を確認,,2026-08-13T05:30:33.565Z
+TC-0127,P-F03-028,5,TAP,PASS,カテゴリ管理の追加ボタンのタップが受け付けられる,"tap 1625,179 hold=60ms",,2026-08-13T05:30:35.218Z
+TC-0127,P-F03-028,6,ASSERT_SCREEN,PASS,カテゴリ作成画面が表示される,SC-CATEGORY-EDIT を確認,,2026-08-13T05:30:36.634Z
+TC-0127,P-F03-028,7,PASTE_RAW,PASS,"入力欄へ 記号<>&"" が入力される","pasted: 記号<>&""",,2026-08-13T05:30:38.298Z
+TC-0127,P-F03-028,8,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:30:39.968Z
+TC-0127,P-F03-028,9,ASSERT_DB,PASS,記号を含む名称が保存される,"""1""",,2026-08-13T05:30:40.746Z
+TC-0127,P-F03-028,10,ASSERT_SCREEN_HAS,FAIL,一覧に記号を含む名称が表示される,"画面内に見つからない（表示中: \uF127 / カテゴリ / \uF103 / 仕事, \uF5F6 / SNS, \uF5F6 / プロンプト, \uF5F6 / 記号<>&\"", \uF5F6）",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0127-10-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0127-10-FAIL.txt,2026-08-13T05:30:43.132Z
+TC-0128,P-F03-029,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:31:03.333Z
+TC-0128,P-F03-029,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:31:04.786Z
+TC-0128,P-F03-029,3,TAP,PASS,設定のカテゴリ行のタップが受け付けられる,"tap 1477,394 hold=60ms",,2026-08-13T05:31:06.649Z
+TC-0128,P-F03-029,4,ASSERT_SCREEN,PASS,カテゴリ管理画面が表示される,SC-SETTINGS-CATEGORIES を確認,,2026-08-13T05:31:09.403Z
+TC-0128,P-F03-029,5,TAP,PASS,カテゴリ 仕事 の行のタップが受け付けられる,"tap 1477,227 hold=60ms",,2026-08-13T05:31:11.039Z
+TC-0128,P-F03-029,6,CLEAR_TEXT,PASS,カテゴリ名入力欄が空になる,deleted x25,,2026-08-13T05:31:17.544Z
+TC-0128,P-F03-029,7,PASTE_RAW,PASS,入力欄へ 業務 が入力される,pasted: 業務,,2026-08-13T05:31:19.218Z
+TC-0128,P-F03-029,8,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:31:21.029Z
+TC-0128,P-F03-029,9,TAP,PASS,戻るボタンのタップが受け付けられる,"tap 1332,179 hold=60ms",,2026-08-13T05:31:22.738Z
+TC-0128,P-F03-029,10,TAP,PASS,戻るボタンのタップが受け付けられる,"tap 1332,179 hold=60ms",,2026-08-13T05:31:24.605Z
+TC-0128,P-F03-029,11,TAP,PASS,ホームの追加アイコンのタップが受け付けられる,"tap 1623,187 hold=60ms",,2026-08-13T05:31:26.598Z
+TC-0128,P-F03-029,12,TAP,PASS,カテゴリ欄のタップが受け付けられる,"tap 1477,389 hold=60ms",,2026-08-13T05:31:28.393Z
+TC-0128,P-F03-029,13,ASSERT_SCREEN_HAS,PASS,選択肢に 業務 が表示される,含む,,2026-08-13T05:31:29.744Z
+TC-0128,P-F03-029,14,ASSERT_SCREEN_LACKS,PASS,選択肢に 仕事 が表示されない,無い,,2026-08-13T05:31:31.079Z
+TC-0229,P-F04-030,1,TAP,PASS,プロファイル切替のタップが受け付けられる,"tap 1351,187 hold=60ms",,2026-08-13T05:31:50.821Z
+TC-0229,P-F04-030,2,TAP,FAIL,シート内のMainのタップが受け付けられる,"要素が見つかりません: label~=Main&visible=true[1] （一致件数 1）
+ERROR: 要素が見つかりません: label~=Main&visible=true[1]",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0229-2-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0229-2-FAIL.txt,2026-08-13T05:31:53.393Z
+TC-0229,P-F04-030,3,ASSERT_SCREEN_LACKS,SKIPPED,切替シートが閉じる,前のステップが失敗したため未実行,,2026-08-13T05:31:54.000Z
+TC-0229,P-F04-030,4,ASSERT_DB,SKIPPED,アクティブがpf_mainのままである,前のステップが失敗したため未実行,,2026-08-13T05:31:54.000Z
+TC-0239,P-F04-900,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:32:11.476Z
+TC-0239,P-F04-900,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:32:12.909Z
+TC-0239,P-F04-900,3,TAP,PASS,設定のプロファイル行のタップが受け付けられる,"tap 1477,242 hold=60ms",,2026-08-13T05:32:14.743Z
+TC-0239,P-F04-900,4,ASSERT_SCREEN,PASS,プロファイル管理画面が表示される,SC-SETTINGS-PROFILES を確認,,2026-08-13T05:32:17.568Z
+TC-0239,P-F04-900,5,ASSERT_DB,PASS,標準が表示順の最後のpf_stdである,"""pf_std""",,2026-08-13T05:32:18.419Z
+TC-0239,P-F04-900,6,ASSERT_DB,FAIL,切替前は5件すべてが有効である,"""3""",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0239-6-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0239-6-FAIL.txt,2026-08-13T05:32:20.201Z
+TC-0239,P-F04-900,7,TAP_IN,SKIPPED,P1の行の標準にするバッジが押される,前のステップが失敗したため未実行,,2026-08-13T05:32:20.807Z
+TC-0239,P-F04-900,8,ASSERT_SCREEN_HAS,SKIPPED,標準切替の確認メッセージが表示される,前のステップが失敗したため未実行,,2026-08-13T05:32:20.808Z
+TC-0239,P-F04-900,9,TAP,SKIPPED,OKのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:32:20.808Z
+TC-0239,P-F04-900,10,ASSERT_DB,SKIPPED,標準がpf_p1へ移る,前のステップが失敗したため未実行,,2026-08-13T05:32:20.808Z
+TC-0239,P-F04-900,11,ASSERT_DB,SKIPPED,有効なプロファイルがP1 P2 P3の3件になる,前のステップが失敗したため未実行,,2026-08-13T05:32:20.808Z
+TC-0239,P-F04-900,12,ASSERT_DB,SKIPPED,切替前に標準だったpf_stdが無効になる,前のステップが失敗したため未実行,,2026-08-13T05:32:20.808Z
+TC-0239,P-F04-900,13,ASSERT_DB,SKIPPED,pf_p4も上限超過で無効になる,前のステップが失敗したため未実行,,2026-08-13T05:32:20.808Z
+TC-0306,P-F05-007,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:32:40.077Z
+TC-0306,P-F05-007,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:32:41.514Z
+TC-0306,P-F05-007,3,TAP,PASS,設定のカスタム変数行のタップが受け付けられる,"tap 1477,293 hold=60ms",,2026-08-13T05:32:43.374Z
+TC-0306,P-F05-007,4,ASSERT_SCREEN,PASS,変数管理画面が表示される,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:32:44.745Z
+TC-0306,P-F05-007,5,TAP,PASS,変数管理の追加ボタンのタップが受け付けられる,"tap 1623,179 hold=60ms",,2026-08-13T05:32:46.475Z
+TC-0306,P-F05-007,6,ASSERT_SCREEN,PASS,変数作成画面が表示される,SC-VARIABLE-EDIT を確認,,2026-08-13T05:32:47.951Z
+TC-0306,P-F05-007,7,TYPE_PASTE,PASS,変数名入力欄へ半角空白3個が入力される,pasted:,,2026-08-13T05:32:51.262Z
+TC-0306,P-F05-007,8,ASSERT_SCREEN_HAS,PASS,文字数カウンターが3/30になり空白が入力されている,含む,,2026-08-13T05:32:52.743Z
+TC-0306,P-F05-007,9,ASSERT_SCREEN_LACKS,PASS,トリム後が空のため形式エラーは表示されない,無い,,2026-08-13T05:32:54.187Z
+TC-0306,P-F05-007,10,TAP,PASS,標準プロファイルの値セルのタップが受け付けられる,"tap 1553,525 hold=60ms",,2026-08-13T05:32:56.104Z
+TC-0306,P-F05-007,11,ASSERT_SCREEN,FAIL,プロファイル別変数値編集画面が表示される,SC-VARIABLE-PROFILE-VALUE-EDIT と判定できない: text~=値を入力してください が無い,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0306-11-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0306-11-FAIL.txt,2026-08-13T05:33:04.671Z
+TC-0306,P-F05-007,12,PASTE_RAW,SKIPPED,入力欄へ 値あり が入力される,前のステップが失敗したため未実行,,2026-08-13T05:33:05.277Z
+TC-0306,P-F05-007,13,TAP,SKIPPED,完了ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:33:05.277Z
+TC-0306,P-F05-007,14,ASSERT_DISABLED,SKIPPED,値が入力済みでも保存ボタンが操作不能である,前のステップが失敗したため未実行,,2026-08-13T05:33:05.277Z
+TC-0306,P-F05-007,15,TAP,SKIPPED,閉じるボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:33:05.277Z
+TC-0306,P-F05-007,16,ASSERT_DB,SKIPPED,variablesテーブルは3件のままである,前のステップが失敗したため未実行,,2026-08-13T05:33:05.277Z
+TC-0307,P-F05-008,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:33:23.051Z
+TC-0307,P-F05-008,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:33:24.489Z
+TC-0307,P-F05-008,3,TAP,PASS,設定のカスタム変数行のタップが受け付けられる,"tap 1477,293 hold=60ms",,2026-08-13T05:33:26.354Z
+TC-0307,P-F05-008,4,ASSERT_SCREEN,PASS,変数管理画面が表示される,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:33:27.708Z
+TC-0307,P-F05-008,5,TAP,PASS,変数管理の追加ボタンのタップが受け付けられる,"tap 1623,179 hold=60ms",,2026-08-13T05:33:29.431Z
+TC-0307,P-F05-008,6,ASSERT_SCREEN,PASS,変数作成画面が表示される,SC-VARIABLE-EDIT を確認,,2026-08-13T05:33:30.794Z
+TC-0307,P-F05-008,7,TYPE_PASTE,PASS,変数名入力欄へ today が入力される,pasted: today,,2026-08-13T05:33:34.353Z
+TC-0307,P-F05-008,8,ASSERT_SCREEN_HAS,PASS,予約名エラーメッセージが表示される,含む,,2026-08-13T05:33:35.814Z
+TC-0307,P-F05-008,9,ASSERT_DISABLED,PASS,保存ボタンが操作不能である,操作不能,,2026-08-13T05:33:37.263Z
+TC-0311,P-F05-012,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:33:56.080Z
+TC-0311,P-F05-012,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:33:57.525Z
+TC-0311,P-F05-012,3,TAP,PASS,設定のカスタム変数行のタップが受け付けられる,"tap 1477,293 hold=60ms",,2026-08-13T05:33:59.383Z
+TC-0311,P-F05-012,4,ASSERT_SCREEN,PASS,変数管理画面が表示される,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:34:00.745Z
+TC-0311,P-F05-012,5,TAP,PASS,変数管理の追加ボタンのタップが受け付けられる,"tap 1623,179 hold=60ms",,2026-08-13T05:34:02.486Z
+TC-0311,P-F05-012,6,ASSERT_SCREEN,PASS,変数作成画面が表示される,SC-VARIABLE-EDIT を確認,,2026-08-13T05:34:03.953Z
+TC-0311,P-F05-012,7,TYPE_PASTE,PASS,変数名入力欄へ Company が入力される,pasted: Company,,2026-08-13T05:34:07.282Z
+TC-0311,P-F05-012,8,ASSERT_SCREEN_LACKS,PASS,重複エラーメッセージが表示されない,無い,,2026-08-13T05:34:08.756Z
+TC-0311,P-F05-012,9,TAP,PASS,標準プロファイルの値セルのタップが受け付けられる,"tap 1553,525 hold=60ms",,2026-08-13T05:34:10.449Z
+TC-0311,P-F05-012,10,ASSERT_SCREEN,PASS,プロファイル別変数値編集画面が表示される,SC-VARIABLE-PROFILE-VALUE-EDIT を確認,,2026-08-13T05:34:11.712Z
+TC-0311,P-F05-012,11,PASTE_RAW,PASS,入力欄へ 大文字会社 が入力される,pasted: 大文字会社,,2026-08-13T05:34:13.286Z
+TC-0311,P-F05-012,12,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:34:14.916Z
+TC-0311,P-F05-012,13,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:34:16.783Z
+TC-0311,P-F05-012,14,ASSERT_DB,PASS,variablesテーブルが4件になる,"""4""",,2026-08-13T05:34:17.577Z
+TC-0311,P-F05-012,15,ASSERT_DB,PASS,Companyが1件保存される,"""1""",,2026-08-13T05:34:18.348Z
+TC-0311,P-F05-012,16,ASSERT_DB,PASS,既存のcompanyも残っている,"""1""",,2026-08-13T05:34:19.116Z
+TC-0313,P-F05-014,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:34:39.811Z
+TC-0313,P-F05-014,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:34:41.252Z
+TC-0313,P-F05-014,3,TAP,PASS,設定のカスタム変数行のタップが受け付けられる,"tap 1477,293 hold=60ms",,2026-08-13T05:34:42.965Z
+TC-0313,P-F05-014,4,ASSERT_SCREEN,PASS,変数管理画面が表示される,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:34:44.318Z
+TC-0313,P-F05-014,5,TAP,PASS,変数管理の追加ボタンのタップが受け付けられる,"tap 1623,179 hold=60ms",,2026-08-13T05:34:46.043Z
+TC-0313,P-F05-014,6,ASSERT_SCREEN,PASS,変数作成画面が表示される,SC-VARIABLE-EDIT を確認,,2026-08-13T05:34:47.512Z
+TC-0313,P-F05-014,7,TYPE_PASTE,PASS,変数名入力欄へ31文字を入力しようとする,pasted: a234567890123456789012345678901,,2026-08-13T05:34:50.851Z
+TC-0313,P-F05-014,8,ASSERT_SCREEN_HAS,PASS,文字数カウンターが30/30である,含む,,2026-08-13T05:34:52.296Z
+TC-0313,P-F05-014,9,TAP,PASS,標準プロファイルの値セルのタップが受け付けられる,"tap 1553,538 hold=60ms",,2026-08-13T05:34:54.180Z
+TC-0313,P-F05-014,10,ASSERT_SCREEN,PASS,プロファイル別変数値編集画面が表示される,SC-VARIABLE-PROFILE-VALUE-EDIT を確認,,2026-08-13T05:34:55.495Z
+TC-0313,P-F05-014,11,PASTE_RAW,PASS,入力欄へ 上限超過 が入力される,pasted: 上限超過,,2026-08-13T05:34:57.063Z
+TC-0313,P-F05-014,12,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:34:58.710Z
+TC-0313,P-F05-014,13,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:35:00.568Z
+TC-0313,P-F05-014,14,ASSERT_DB,PASS,保存された変数名の長さが30である,"""30""",,2026-08-13T05:35:01.364Z
+TC-0313,P-F05-014,15,ASSERT_DB,PASS,31文字の変数名は保存されていない,"""0""",,2026-08-13T05:35:02.129Z
+TC-0315,P-F05-016,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:35:21.809Z
+TC-0315,P-F05-016,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:35:23.245Z
+TC-0315,P-F05-016,3,TAP,PASS,設定のカスタム変数行のタップが受け付けられる,"tap 1477,293 hold=60ms",,2026-08-13T05:35:25.073Z
+TC-0315,P-F05-016,4,ASSERT_SCREEN,PASS,変数管理画面が表示される,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:35:26.438Z
+TC-0315,P-F05-016,5,TAP,PASS,変数管理の追加ボタンのタップが受け付けられる,"tap 1623,179 hold=60ms",,2026-08-13T05:35:28.148Z
+TC-0315,P-F05-016,6,ASSERT_SCREEN,PASS,変数作成画面が表示される,SC-VARIABLE-EDIT を確認,,2026-08-13T05:35:29.620Z
+TC-0315,P-F05-016,7,TYPE_PASTE,PASS,変数名入力欄へ label_max が入力される,pasted: label_max,,2026-08-13T05:35:32.985Z
+TC-0315,P-F05-016,8,TYPE_PASTE,PASS,表示ラベル入力欄へ30文字が入力される,pasted: abcdefghijabcdefghijabcdefghij,,2026-08-13T05:35:36.050Z
+TC-0315,P-F05-016,9,TAP,PASS,標準プロファイルの値セルのタップが受け付けられる,"tap 1553,525 hold=60ms",,2026-08-13T05:35:37.943Z
+TC-0315,P-F05-016,10,ASSERT_SCREEN,PASS,プロファイル別変数値編集画面が表示される,SC-VARIABLE-PROFILE-VALUE-EDIT を確認,,2026-08-13T05:35:39.264Z
+TC-0315,P-F05-016,11,PASTE_RAW,PASS,入力欄へ ラベル上限 が入力される,pasted: ラベル上限,,2026-08-13T05:35:40.820Z
+TC-0315,P-F05-016,12,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:35:42.435Z
+TC-0315,P-F05-016,13,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:35:44.186Z
+TC-0315,P-F05-016,14,ASSERT_DB,PASS,保存されたラベルの長さが30である,"""30""",,2026-08-13T05:35:44.982Z
+TC-0316,P-F05-017,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:36:04.629Z
+TC-0316,P-F05-017,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:36:06.069Z
+TC-0316,P-F05-017,3,TAP,PASS,設定のカスタム変数行のタップが受け付けられる,"tap 1477,293 hold=60ms",,2026-08-13T05:36:07.876Z
+TC-0316,P-F05-017,4,ASSERT_SCREEN,PASS,変数管理画面が表示される,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:36:09.245Z
+TC-0316,P-F05-017,5,TAP,PASS,変数管理の追加ボタンのタップが受け付けられる,"tap 1623,179 hold=60ms",,2026-08-13T05:36:10.951Z
+TC-0316,P-F05-017,6,ASSERT_SCREEN,PASS,変数作成画面が表示される,SC-VARIABLE-EDIT を確認,,2026-08-13T05:36:12.420Z
+TC-0316,P-F05-017,7,TYPE_PASTE,PASS,変数名入力欄へ label_over が入力される,pasted: label_over,,2026-08-13T05:36:15.773Z
+TC-0316,P-F05-017,8,TYPE_PASTE,PASS,表示ラベル入力欄へ31文字を入力しようとする,pasted: abcdefghijabcdefghijabcdefghijk,,2026-08-13T05:36:19.049Z
+TC-0316,P-F05-017,9,ASSERT_SCREEN_HAS,PASS,ラベルの文字数カウンターが30/30である,含む,,2026-08-13T05:36:20.493Z
+TC-0316,P-F05-017,10,TAP,PASS,標準プロファイルの値セルのタップが受け付けられる,"tap 1553,525 hold=60ms",,2026-08-13T05:36:22.375Z
+TC-0316,P-F05-017,11,ASSERT_SCREEN,PASS,プロファイル別変数値編集画面が表示される,SC-VARIABLE-PROFILE-VALUE-EDIT を確認,,2026-08-13T05:36:23.697Z
+TC-0316,P-F05-017,12,PASTE_RAW,PASS,入力欄へ ラベル超過 が入力される,pasted: ラベル超過,,2026-08-13T05:36:25.270Z
+TC-0316,P-F05-017,13,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:36:26.909Z
+TC-0316,P-F05-017,14,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:36:28.761Z
+TC-0316,P-F05-017,15,ASSERT_DB,PASS,保存されたラベルの長さが30である,"""30""",,2026-08-13T05:36:29.560Z
+TC-0319,P-F05-020,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:36:49.325Z
+TC-0319,P-F05-020,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:36:50.766Z
+TC-0319,P-F05-020,3,TAP,PASS,設定のカスタム変数行のタップが受け付けられる,"tap 1477,293 hold=60ms",,2026-08-13T05:36:52.599Z
+TC-0319,P-F05-020,4,ASSERT_SCREEN,PASS,変数管理画面が表示される,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:36:53.967Z
+TC-0319,P-F05-020,5,TAP,PASS,変数管理の追加ボタンのタップが受け付けられる,"tap 1623,179 hold=60ms",,2026-08-13T05:36:55.690Z
+TC-0319,P-F05-020,6,ASSERT_SCREEN,PASS,変数作成画面が表示される,SC-VARIABLE-EDIT を確認,,2026-08-13T05:36:57.168Z
+TC-0319,P-F05-020,7,TYPE_PASTE,PASS,変数名入力欄へ icon_var が入力される,pasted: icon_var,,2026-08-13T05:37:00.467Z
+TC-0319,P-F05-020,8,TAP,PASS,アイコン選択ボタン（既定のcode-outlineアイコン）のタップが受け付けられる,"tap 1330,373 hold=60ms",,2026-08-13T05:37:02.363Z
+TC-0319,P-F05-020,9,ASSERT_SCREEN_HAS,PASS,アイコン選択モーダルの見出しが表示される,含む,,2026-08-13T05:37:04.102Z
+TC-0319,P-F05-020,10,TAP,PASS,アイコン一覧のperson-outlineのタップが受け付けられる,"tap 1339,524 hold=60ms",,2026-08-13T05:37:06.432Z
+TC-0319,P-F05-020,11,TAP,PASS,標準プロファイルの値セルのタップが受け付けられる,"tap 1553,525 hold=60ms",,2026-08-13T05:37:08.331Z
+TC-0319,P-F05-020,12,ASSERT_SCREEN,PASS,プロファイル別変数値編集画面が表示される,SC-VARIABLE-PROFILE-VALUE-EDIT を確認,,2026-08-13T05:37:09.656Z
+TC-0319,P-F05-020,13,PASTE_RAW,PASS,入力欄へ アイコン付き が入力される,pasted: アイコン付き,,2026-08-13T05:37:11.208Z
+TC-0319,P-F05-020,14,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:37:12.791Z
+TC-0319,P-F05-020,15,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:37:14.629Z
+TC-0319,P-F05-020,16,ASSERT_DB,PASS,既定以外のアイコンが保存される,"""CHANGED""",,2026-08-13T05:37:15.432Z
+TC-0320,P-F05-021,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:37:35.001Z
+TC-0320,P-F05-021,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:37:36.454Z
+TC-0320,P-F05-021,3,TAP,PASS,設定のカスタム変数行のタップが受け付けられる,"tap 1477,293 hold=60ms",,2026-08-13T05:37:38.292Z
+TC-0320,P-F05-021,4,ASSERT_SCREEN,PASS,変数管理画面が表示される,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:37:39.674Z
+TC-0320,P-F05-021,5,TAP,PASS,変数管理の追加ボタンのタップが受け付けられる,"tap 1623,179 hold=60ms",,2026-08-13T05:37:41.372Z
+TC-0320,P-F05-021,6,ASSERT_SCREEN,PASS,変数作成画面が表示される,SC-VARIABLE-EDIT を確認,,2026-08-13T05:37:42.854Z
+TC-0320,P-F05-021,7,TYPE_PASTE,PASS,変数名入力欄へ noicon_var が入力される,pasted: noicon_var,,2026-08-13T05:37:46.192Z
+TC-0320,P-F05-021,8,TAP,PASS,標準プロファイルの値セルのタップが受け付けられる,"tap 1553,525 hold=60ms",,2026-08-13T05:37:48.020Z
+TC-0320,P-F05-021,9,ASSERT_SCREEN,PASS,プロファイル別変数値編集画面が表示される,SC-VARIABLE-PROFILE-VALUE-EDIT を確認,,2026-08-13T05:37:49.337Z
+TC-0320,P-F05-021,10,PASTE_RAW,PASS,入力欄へ アイコンなし が入力される,pasted: アイコンなし,,2026-08-13T05:37:50.905Z
+TC-0320,P-F05-021,11,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:37:52.532Z
+TC-0320,P-F05-021,12,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:37:54.441Z
+TC-0320,P-F05-021,13,ASSERT_DB,PASS,既定アイコンが保存される,"""code-outline""",,2026-08-13T05:37:55.273Z
+TC-0321,P-F05-022,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:38:15.415Z
+TC-0321,P-F05-022,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:38:16.856Z
+TC-0321,P-F05-022,3,TAP,PASS,設定のカスタム変数行のタップが受け付けられる,"tap 1477,293 hold=60ms",,2026-08-13T05:38:18.708Z
+TC-0321,P-F05-022,4,ASSERT_SCREEN,PASS,変数管理画面が表示される,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:38:20.080Z
+TC-0321,P-F05-022,5,TAP,PASS,変数管理の追加ボタンのタップが受け付けられる,"tap 1623,179 hold=60ms",,2026-08-13T05:38:21.794Z
+TC-0321,P-F05-022,6,ASSERT_SCREEN,PASS,変数作成画面が表示される,SC-VARIABLE-EDIT を確認,,2026-08-13T05:38:23.266Z
+TC-0321,P-F05-022,7,TYPE_PASTE,PASS,変数名入力欄へ std_only が入力される,pasted: std_only,,2026-08-13T05:38:26.420Z
+TC-0321,P-F05-022,8,TAP,PASS,標準プロファイルの値セルのタップが受け付けられる,"tap 1553,525 hold=60ms",,2026-08-13T05:38:28.134Z
+TC-0321,P-F05-022,9,ASSERT_SCREEN,PASS,プロファイル別変数値編集画面が表示される,SC-VARIABLE-PROFILE-VALUE-EDIT を確認,,2026-08-13T05:38:29.439Z
+TC-0321,P-F05-022,10,PASTE_RAW,PASS,入力欄へ 標準だけ が入力される,pasted: 標準だけ,,2026-08-13T05:38:30.989Z
+TC-0321,P-F05-022,11,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:38:32.576Z
+TC-0321,P-F05-022,12,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:38:34.444Z
+TC-0321,P-F05-022,13,ASSERT_SCREEN,PASS,確認なしで変数管理へ戻る,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:38:35.818Z
+TC-0321,P-F05-022,14,ASSERT_DB,PASS,標準プロファイルの値が保存される,"""標準だけ""",,2026-08-13T05:38:36.612Z
+TC-0321,P-F05-022,15,ASSERT_DB,PASS,全プロファイル分の行が作られる,"""3""",,2026-08-13T05:38:37.384Z
+TC-0324,P-F05-025,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:38:57.038Z
+TC-0324,P-F05-025,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:38:58.980Z
+TC-0324,P-F05-025,3,TAP,PASS,設定のカスタム変数行のタップが受け付けられる,"tap 1477,293 hold=60ms",,2026-08-13T05:39:00.822Z
+TC-0324,P-F05-025,4,ASSERT_SCREEN,PASS,変数管理画面が表示される,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:39:02.185Z
+TC-0324,P-F05-025,5,TAP,PASS,変数管理の追加ボタンのタップが受け付けられる,"tap 1623,179 hold=60ms",,2026-08-13T05:39:03.866Z
+TC-0324,P-F05-025,6,ASSERT_SCREEN,PASS,変数作成画面が表示される,SC-VARIABLE-EDIT を確認,,2026-08-13T05:39:05.333Z
+TC-0324,P-F05-025,7,TYPE_PASTE,PASS,変数名入力欄へ blank_value が入力される,pasted: blank_value,,2026-08-13T05:39:08.891Z
+TC-0324,P-F05-025,8,TAP,PASS,標準プロファイルの値セルのタップが受け付けられる,"tap 1553,525 hold=60ms",,2026-08-13T05:39:10.589Z
+TC-0324,P-F05-025,9,PRESS_KEY,PASS,入力欄へ改行だけが入力される,key: return,,2026-08-13T05:39:11.941Z
+TC-0324,P-F05-025,10,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:39:13.583Z
+TC-0324,P-F05-025,11,ASSERT_DISABLED,PASS,保存ボタンが操作不能である,操作不能,,2026-08-13T05:39:15.011Z
+TC-0324,P-F05-025,12,ASSERT_DB,PASS,variablesテーブルは3件のままである,"""3""",,2026-08-13T05:39:15.811Z
+TC-0326,P-F05-027,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:39:34.611Z
+TC-0326,P-F05-027,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:39:36.041Z
+TC-0326,P-F05-027,3,TAP,PASS,設定のカスタム変数行のタップが受け付けられる,"tap 1477,293 hold=60ms",,2026-08-13T05:39:37.631Z
+TC-0326,P-F05-027,4,ASSERT_SCREEN,PASS,変数管理画面が表示される,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:39:39.015Z
+TC-0326,P-F05-027,5,TAP,PASS,変数管理の追加ボタンのタップが受け付けられる,"tap 1623,179 hold=60ms",,2026-08-13T05:39:40.572Z
+TC-0326,P-F05-027,6,ASSERT_SCREEN,PASS,変数作成画面が表示される,SC-VARIABLE-EDIT を確認,,2026-08-13T05:39:42.036Z
+TC-0326,P-F05-027,7,TYPE_PASTE,PASS,変数名入力欄へ trim_std が入力される,pasted: trim_std,,2026-08-13T05:39:45.374Z
+TC-0326,P-F05-027,8,TAP,PASS,標準プロファイルの値セルのタップが受け付けられる,"tap 1553,525 hold=60ms",,2026-08-13T05:39:47.281Z
+TC-0326,P-F05-027,9,ASSERT_SCREEN,PASS,プロファイル別変数値編集画面が表示される,SC-VARIABLE-PROFILE-VALUE-EDIT を確認,,2026-08-13T05:39:48.617Z
+TC-0326,P-F05-027,10,PASTE_RAW,PASS,入力欄へ  標準値  が入力される,pasted:  標準値,,2026-08-13T05:39:50.198Z
+TC-0326,P-F05-027,11,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:39:51.827Z
+TC-0326,P-F05-027,12,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:39:53.688Z
+TC-0326,P-F05-027,13,ASSERT_DB,PASS,標準値の前後空白が除去される,"""[標準値]""",,2026-08-13T05:39:54.483Z
+TC-0331,P-F05-032,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:40:14.217Z
+TC-0331,P-F05-032,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:40:15.654Z
+TC-0331,P-F05-032,3,TAP,FAIL,設定のカスタム変数行のタップが受け付けられる,"デバイス画面(iOSContentGroup)を特定できません。Simulatorが起動しているか、システム設定 > プライバシーとセキュリティ > アクセシビリティ で、このセッションの親アプリ（Visual Studio Code / ターミナル）が許可されているかを確認してください。
+ERROR: 要素が見つかりません: label~=カスタム変数&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0331-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0331-3-FAIL.txt,2026-08-13T05:52:07.940Z
+TC-0331,P-F05-032,4,ASSERT_SCREEN,SKIPPED,変数管理画面が表示される,前のステップが失敗したため未実行,,2026-08-13T05:52:08.543Z
+TC-0331,P-F05-032,5,TAP,SKIPPED,変数管理の追加ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:52:08.543Z
+TC-0331,P-F05-032,6,ASSERT_SCREEN,SKIPPED,変数作成画面が表示される,前のステップが失敗したため未実行,,2026-08-13T05:52:08.543Z
+TC-0331,P-F05-032,7,TYPE_PASTE,SKIPPED,変数名入力欄へ multi_value が入力される,前のステップが失敗したため未実行,,2026-08-13T05:52:08.543Z
+TC-0331,P-F05-032,8,TAP,SKIPPED,標準プロファイルの値セルのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:52:08.543Z
+TC-0331,P-F05-032,9,PASTE_RAW,SKIPPED,入力欄へ 1行目 が入力される,前のステップが失敗したため未実行,,2026-08-13T05:52:08.543Z
+TC-0331,P-F05-032,10,PRESS_KEY,SKIPPED,改行が入力される,前のステップが失敗したため未実行,,2026-08-13T05:52:08.543Z
+TC-0331,P-F05-032,11,PASTE_RAW,SKIPPED,入力欄へ 2行目 が入力される,前のステップが失敗したため未実行,,2026-08-13T05:52:08.543Z
+TC-0331,P-F05-032,12,TAP,SKIPPED,完了ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:52:08.543Z
+TC-0331,P-F05-032,13,TAP,SKIPPED,保存ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:52:08.543Z
+TC-0331,P-F05-032,14,ASSERT_DB,SKIPPED,改行を含んだ値が保存される,前のステップが失敗したため未実行,,2026-08-13T05:52:08.543Z
+TC-0343,P-F05-044,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:52:30.094Z
+TC-0343,P-F05-044,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:52:31.551Z
+TC-0343,P-F05-044,3,TAP,PASS,設定のカスタム変数行のタップが受け付けられる,"tap 1477,293 hold=60ms",,2026-08-13T05:52:33.400Z
+TC-0343,P-F05-044,4,ASSERT_SCREEN,PASS,変数管理画面が表示される,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:52:34.643Z
+TC-0343,P-F05-044,5,TAP,PASS,client_nameの行のタップが受け付けられる,"tap 1477,295 hold=60ms",,2026-08-13T05:52:36.397Z
+TC-0343,P-F05-044,6,TYPE_PASTE,PASS,変数名入力欄の末尾へ 2 が入力される,pasted: 2,,2026-08-13T05:52:39.678Z
+TC-0343,P-F05-044,7,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:52:41.555Z
+TC-0343,P-F05-044,8,ASSERT_DB,FAIL,変数名が更新される,"""client_name""",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0343-8-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-0343-8-FAIL.txt,2026-08-13T05:52:43.506Z
+TC-0343,P-F05-044,9,ASSERT_DB,SKIPPED,定型文の本文のトークンが自動更新されない,前のステップが失敗したため未実行,,2026-08-13T05:52:44.112Z
+TC-0343,P-F05-044,10,ASSERT_DB,SKIPPED,新しい名前のトークンへ書き換えられていない,前のステップが失敗したため未実行,,2026-08-13T05:52:44.112Z
+TC-1001,P-F06-008,1,ASSERT_CLIPBOARD,PASS,クリップボードの初期値が CLIP-INIT である,"""CLIP-INIT""",,2026-08-13T05:53:03.225Z
+TC-1001,P-F06-008,2,ASSERT_ORDER,PASS,一覧の上から A 日付系 / B 時刻系 の順に並ぶ,A 日付系 / B 時刻系,,2026-08-13T05:53:04.806Z
+TC-1001,P-F06-008,3,TAP,PASS,1番目のカードのコピーボタンが押される,"tap 1615,380 hold=60ms",,2026-08-13T05:53:06.895Z
+TC-1001,P-F06-008,4,WAIT,PASS,コピー処理の完了を待つ,waited 800ms,,2026-08-13T05:53:08.306Z
+TC-1001,P-F06-008,5,ASSERT_CLIPBOARD,PASS,クリップボードの末尾の曜日が英名短縮 ${TODAY_EN:EEE} になる,"""2026/08/13|2026|08|13|Thu""",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-1001-5-clipboard.png,2026-08-13T05:53:09.503Z
+TC-1004,P-F06-010;P-F06-011;P-F06-012;P-F06-013,1,ASSERT_CLIPBOARD,PASS,クリップボードの初期値が CLIP-INIT である,"""CLIP-INIT""",,2026-08-13T05:53:28.649Z
+TC-1004,P-F06-010;P-F06-011;P-F06-012;P-F06-013,2,ASSERT_ORDER,PASS,一覧の上から C 和名 / D 表記ゆれ の順に並ぶ,C 和名 / D 表記ゆれ,,2026-08-13T05:53:30.182Z
+TC-1004,P-F06-010;P-F06-011;P-F06-012;P-F06-013,3,TAP,PASS,2番目のカードのコピーボタンが押される,"tap 1615,549 hold=60ms",,2026-08-13T05:53:32.252Z
+TC-1004,P-F06-010;P-F06-011;P-F06-012;P-F06-013,4,WAIT,PASS,コピー処理の完了を待つ,waited 800ms,,2026-08-13T05:53:33.662Z
+TC-1004,P-F06-010;P-F06-011;P-F06-012;P-F06-013,5,ASSERT_CLIPBOARD,PASS,4つのトークンすべてが ${TODAY:yyyy/MM/dd} へ展開され区切り「|」で連結される,"""2026/08/13|2026/08/13|2026/08/13|2026/08/13""",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-1004-5-clipboard.png,2026-08-13T05:53:34.869Z
+TC-1006,P-F06-023,1,ASSERT_CLIPBOARD,PASS,クリップボードの初期値が CLIP-INIT である,"""CLIP-INIT""",,2026-08-13T05:53:53.107Z
+TC-1006,P-F06-023,2,ASSERT_SCREEN_HAS,PASS,一覧のタイトルが F ${TODAY:yyyy/MM/dd}の記録 と展開表示される,含む,,2026-08-13T05:53:54.677Z
+TC-1006,P-F06-023,3,TAP,PASS,2番目のカードのコピーボタンが押される,"tap 1615,549 hold=60ms",,2026-08-13T05:53:56.820Z
+TC-1006,P-F06-023,4,WAIT,PASS,コピー処理の完了を待つ,waited 800ms,,2026-08-13T05:53:58.229Z
+TC-1006,P-F06-023,5,ASSERT_CLIPBOARD,PASS,展開済みタイトル+改行+展開済み本文と完全一致する,"""F 2026/08/13の記録\n木に実施""",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-1006-5-clipboard.png,2026-08-13T05:53:59.427Z
+TC-1116,P-F23-021,1,TAP,PASS,設定画面が開く,"tap 1498,187 hold=60ms",,2026-08-13T05:54:18.319Z
+TC-1116,P-F23-021,2,TAP,PASS,システム変数書式一覧が開く,"tap 1477,344 hold=60ms",,2026-08-13T05:54:20.171Z
+TC-1116,P-F23-021,3,ASSERT_SCREEN_HAS,PASS,英語の「Reset all to default」が表示される,含む,,2026-08-13T05:54:21.516Z
+TC-1116,P-F23-021,4,ASSERT_TEXT_CONTAINS,PASS,weekday の行のプレビューが英名短縮 ${TODAY_EN:EEE} である,", Weekday, {{weekday}}, Thu, ",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-1116-4-formats-list.png,2026-08-13T05:54:23.203Z
+TC-2008,P-F01-008,1,ASSERT_PREF,PASS,永続設定 @snippet_sort_preference の値が title である,"""title""",,2026-08-13T05:54:43.164Z
+TC-2008,P-F01-008,2,ASSERT_ORDER,FAIL,一覧が上からAAA/BBB/CCC/DDDの順で並ぶ,"0番目が不一致: 期待 ""AAA"" / 実際 ""Fitness""（一致件数 11）",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2008-2-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2008-2-FAIL.txt,2026-08-13T05:54:45.800Z
+TC-2009,P-F01-009,1,ASSERT_PREF,PASS,プラン上書きがtrueである,"""true""",,2026-08-13T05:55:04.613Z
+TC-2009,P-F01-009,2,ASSERT_SCREEN_HAS,FAIL,一覧に定型文「要約プロンプト」がある,画面内に見つからない（表示中: Fitness / Watch / 連絡先 / ファイル / プレビュー / ユーティリティフォルダ / 2個のアプリ / PinMark / Expo Go / ClipTap / 検索 / 全2ページ中の2ページ目）,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2009-2-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2009-2-FAIL.txt,2026-08-13T05:55:07.231Z
+TC-2014,P-F01-015,1,ASSERT_SCREEN,FAIL,ホーム画面が表示されている,SC-HOME と判定できない: label=すべて が無い,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2014-1-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2014-1-FAIL.txt,2026-08-13T05:55:26.481Z
+TC-2014,P-F01-015,2,ASSERT_SCREEN_HAS,SKIPPED,一覧に定型文「要約プロンプト」がある,前のステップが失敗したため未実行,,2026-08-13T05:55:27.084Z
+TC-2115,P-F07-016,1,ASSERT_SCREEN,PASS,ホーム画面が表示されている,SC-HOME を確認,,2026-08-13T05:55:45.482Z
+TC-2115,P-F07-016,2,TAP,PASS,ホームの検索アイコンがタップされる,"tap 1539,187 hold=60ms",,2026-08-13T05:55:47.630Z
+TC-2115,P-F07-016,3,ASSERT_SCREEN,FAIL,検索画面が開く,SC-SEARCH と判定できない: text~=定型文を検索 が無い,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2115-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2115-3-FAIL.txt,2026-08-13T05:55:56.242Z
+TC-2115,P-F07-016,4,TYPE,SKIPPED,検索欄に「<>」が入力される,前のステップが失敗したため未実行,,2026-08-13T05:55:56.848Z
+TC-2115,P-F07-016,5,WAIT,SKIPPED,デバウンス満了まで待つ,前のステップが失敗したため未実行,,2026-08-13T05:55:56.848Z
+TC-2115,P-F07-016,6,ASSERT_VISIBLE,SKIPPED,タイトルに<>を含む定型文が画面内にある,前のステップが失敗したため未実行,,2026-08-13T05:55:56.848Z
+TC-2115,P-F07-016,7,ASSERT_NOT_VISIBLE,SKIPPED,定型文「複数行本文」が画面から消える,前のステップが失敗したため未実行,,2026-08-13T05:55:56.848Z
+TC-2116,P-F07-017,1,ASSERT_SCREEN,PASS,ホーム画面が表示されている,SC-HOME を確認,,2026-08-13T05:56:14.423Z
+TC-2116,P-F07-017,2,TAP,PASS,ホームの検索アイコンがタップされる,"tap 1539,187 hold=60ms",,2026-08-13T05:56:16.638Z
+TC-2116,P-F07-017,3,ASSERT_SCREEN,FAIL,検索画面が開く,SC-SEARCH と判定できない: text~=定型文を検索 が無い,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2116-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2116-3-FAIL.txt,2026-08-13T05:56:25.205Z
+TC-2116,P-F07-017,4,TYPE,SKIPPED,検索欄に「記号」が入力される,前のステップが失敗したため未実行,,2026-08-13T05:56:25.808Z
+TC-2116,P-F07-017,5,WAIT,SKIPPED,デバウンス満了まで待つ,前のステップが失敗したため未実行,,2026-08-13T05:56:25.808Z
+TC-2116,P-F07-017,6,ASSERT_TEXT,SKIPPED,タイトルが絵文字と記号を含む文字列として完全一致する,前のステップが失敗したため未実行,,2026-08-13T05:56:25.808Z
+TC-2123,P-F07-027;P-F08-014,1,ASSERT_SCREEN,PASS,ホーム画面が表示されている,SC-HOME を確認,,2026-08-13T05:56:43.041Z
+TC-2123,P-F07-027;P-F08-014,2,TAP,PASS,ホームの検索アイコンがタップされる,"tap 1539,187 hold=60ms",,2026-08-13T05:56:44.819Z
+TC-2123,P-F07-027;P-F08-014,3,ASSERT_SCREEN,FAIL,検索画面が開く,SC-SEARCH と判定できない: text~=定型文を検索 が無い,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2123-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2123-3-FAIL.txt,2026-08-13T05:56:53.431Z
+TC-2123,P-F07-027;P-F08-014,4,ASSERT_SCREEN_HAS,SKIPPED,有効なA社用がチップに表示されている,前のステップが失敗したため未実行,,2026-08-13T05:56:54.037Z
+TC-2123,P-F07-027;P-F08-014,5,ASSERT_SCREEN_LACKS,SKIPPED,無効なC社用がチップに表示されない,前のステップが失敗したため未実行,,2026-08-13T05:56:54.037Z
+TC-2123,P-F07-027;P-F08-014,6,ASSERT_SCREEN_LACKS,SKIPPED,無効なD社用がチップに表示されない,前のステップが失敗したため未実行,,2026-08-13T05:56:54.037Z
+TC-2128,P-F07-032,1,ASSERT_SCREEN,PASS,ホーム画面が表示されている,SC-HOME を確認,,2026-08-13T05:57:12.249Z
+TC-2128,P-F07-032,2,TAP,PASS,ホームの検索アイコンがタップされる,"tap 1539,187 hold=60ms",,2026-08-13T05:57:14.473Z
+TC-2128,P-F07-032,3,ASSERT_SCREEN,FAIL,検索画面が開く,SC-SEARCH と判定できない: text~=定型文を検索 が無い,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2128-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2128-3-FAIL.txt,2026-08-13T05:57:23.070Z
+TC-2128,P-F07-032,4,TYPE,SKIPPED,検索欄に「定型文199」が入力される,前のステップが失敗したため未実行,,2026-08-13T05:57:23.676Z
+TC-2128,P-F07-032,5,WAIT,SKIPPED,デバウンス満了まで待つ,前のステップが失敗したため未実行,,2026-08-13T05:57:23.676Z
+TC-2128,P-F07-032,6,ASSERT_VISIBLE,SKIPPED,定型文199が画面内にある,前のステップが失敗したため未実行,,2026-08-13T05:57:23.676Z
+TC-2128,P-F07-032,7,ASSERT_NOT_VISIBLE,SKIPPED,定型文001が画面から消える,前のステップが失敗したため未実行,,2026-08-13T05:57:23.676Z
+TC-2131,P-F07-018,1,ASSERT_SCREEN,PASS,ホーム画面が表示されている,SC-HOME を確認,,2026-08-13T05:57:41.257Z
+TC-2131,P-F07-018,2,TAP,PASS,ホームの検索アイコンがタップされる,"tap 1539,187 hold=60ms",,2026-08-13T05:57:43.372Z
+TC-2131,P-F07-018,3,ASSERT_SCREEN,FAIL,検索画面が開く,SC-SEARCH と判定できない: text~=定型文を検索 が無い,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2131-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2131-3-FAIL.txt,2026-08-13T05:57:52.156Z
+TC-2131,P-F07-018,4,TYPE_PASTE,SKIPPED,検索欄へ絵文字🎯がクリップボード経由で貼り付けられる,前のステップが失敗したため未実行,,2026-08-13T05:57:52.762Z
+TC-2131,P-F07-018,5,ASSERT_TEXT,SKIPPED,入力欄の値が🎯である,前のステップが失敗したため未実行,,2026-08-13T05:57:52.762Z
+TC-2131,P-F07-018,6,WAIT,SKIPPED,デバウンス満了まで待つ,前のステップが失敗したため未実行,,2026-08-13T05:57:52.762Z
+TC-2131,P-F07-018,7,ASSERT_VISIBLE,SKIPPED,絵文字🎯を含むタイトルの定型文が画面内にある,前のステップが失敗したため未実行,,2026-08-13T05:57:52.762Z
+TC-2131,P-F07-018,8,ASSERT_NOT_VISIBLE,SKIPPED,定型文「複数行本文」が画面から消える,前のステップが失敗したため未実行,,2026-08-13T05:57:52.762Z
+TC-2210,P-F08-015,1,ASSERT_SCREEN_HAS,PASS,絞り込み前に定型文001が一覧にある,含む,,2026-08-13T05:58:10.867Z
+TC-2210,P-F08-015,2,TAP,FAIL,カテゴリチップ「カテゴリ05」がタップされる,"要素が見つかりません: label=カテゴリ05&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=カテゴリ05&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2210-2-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2210-2-FAIL.txt,2026-08-13T05:58:20.012Z
+TC-2210,P-F08-015,3,WAIT,SKIPPED,一覧の再描画を待つ,前のステップが失敗したため未実行,,2026-08-13T05:58:20.615Z
+TC-2210,P-F08-015,4,ASSERT_SCREEN_LACKS,SKIPPED,カテゴリ01の定型文001が一覧に無い,前のステップが失敗したため未実行,,2026-08-13T05:58:20.615Z
+TC-2210,P-F08-015,5,ASSERT_VISIBLE,SKIPPED,カテゴリ05の定型文005が画面内にある,前のステップが失敗したため未実行,,2026-08-13T05:58:20.615Z
+TC-2211,P-F08-016,1,TAP,FAIL,カテゴリチップ「カテゴリ05」がタップされる,"要素が見つかりません: label=カテゴリ05&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=カテゴリ05&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2211-1-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2211-1-FAIL.txt,2026-08-13T05:58:46.866Z
+TC-2211,P-F08-016,2,WAIT,SKIPPED,一覧の再描画を待つ,前のステップが失敗したため未実行,,2026-08-13T05:58:47.473Z
+TC-2211,P-F08-016,3,SCROLL_TO,SKIPPED,定型文105が画面内に入るまでスクロールする,前のステップが失敗したため未実行,,2026-08-13T05:58:47.473Z
+TC-2211,P-F08-016,4,ASSERT_VISIBLE,SKIPPED,カテゴリ05の定型文105が画面内にある,前のステップが失敗したため未実行,,2026-08-13T05:58:47.473Z
+TC-2211,P-F08-016,5,ASSERT_SCREEN_LACKS,SKIPPED,カテゴリ06の定型文106が画面に無い,前のステップが失敗したため未実行,,2026-08-13T05:58:47.473Z
+TC-2300,P-F09-001,1,ASSERT_SCREEN,PASS,ホーム画面が表示されている,SC-HOME を確認,,2026-08-13T05:59:05.003Z
+TC-2300,P-F09-001,2,ASSERT_PREF,PASS,永続設定 @snippet_sort_preference の値が created である,"""created""",,2026-08-13T05:59:07.295Z
+TC-2300,P-F09-001,3,ASSERT_ORDER,FAIL,一覧が上からDDD/CCC/BBB/AAAの順に並ぶ,"0番目が不一致: 期待 ""DDD"" / 実際 ""Fitness""（一致件数 11）",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2300-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2300-3-FAIL.txt,2026-08-13T05:59:09.895Z
+TC-2301,P-F09-002,1,ASSERT_SCREEN,PASS,ホーム画面が表示されている,SC-HOME を確認,,2026-08-13T05:59:28.215Z
+TC-2301,P-F09-002,2,ASSERT_PREF,PASS,永続設定 @snippet_sort_preference の値が updated である,"""updated""",,2026-08-13T05:59:30.493Z
+TC-2301,P-F09-002,3,ASSERT_ORDER,FAIL,一覧が上からBBB/AAA/DDD/CCCの順に並ぶ,"0番目が不一致: 期待 ""BBB"" / 実際 ""Fitness""（一致件数 11）",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2301-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2301-3-FAIL.txt,2026-08-13T05:59:33.099Z
+TC-2302,P-F09-003,1,ASSERT_SCREEN,PASS,ホーム画面が表示されている,SC-HOME を確認,,2026-08-13T05:59:51.160Z
+TC-2302,P-F09-003,2,ASSERT_PREF,PASS,永続設定 @snippet_sort_preference の値が title である,"""title""",,2026-08-13T05:59:53.419Z
+TC-2302,P-F09-003,3,ASSERT_ORDER,FAIL,一覧が上からAAA/BBB/CCC/DDDの順に並ぶ,"0番目が不一致: 期待 ""AAA"" / 実際 ""Fitness""（一致件数 11）",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2302-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2302-3-FAIL.txt,2026-08-13T05:59:55.987Z
+TC-2303,P-F09-004,1,ASSERT_SCREEN,PASS,ホーム画面が表示されている,SC-HOME を確認,,2026-08-13T06:00:14.618Z
+TC-2303,P-F09-004,2,ASSERT_PREF,PASS,永続設定 @snippet_sort_preference の値が usage である,"""usage""",,2026-08-13T06:00:16.857Z
+TC-2303,P-F09-004,3,ASSERT_ORDER,FAIL,一覧が上からCCC/DDD/AAA/BBBの順に並ぶ,"0番目が不一致: 期待 ""CCC"" / 実際 ""Fitness""（一致件数 11）",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2303-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2303-3-FAIL.txt,2026-08-13T06:00:19.479Z
+TC-2313,P-F09-015,1,ASSERT_ORDER,PASS,変更前は作成日時順で並ぶ,要約プロンプト / 今日の積み上げ / あいさつ,,2026-08-13T06:00:37.510Z
+TC-2313,P-F09-015,2,TAP,PASS,ソートボタンがタップされる,"tap 1334,230 hold=60ms",,2026-08-13T06:00:39.533Z
+TC-2313,P-F09-015,3,ASSERT_SCREEN_HAS,PASS,ソートメニューの見出し「並べ替え」が表示される,含む,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2313-3-sort-menu.png,2026-08-13T06:00:41.263Z
+TC-2313,P-F09-015,4,TAP,PASS,メニューの「使用頻度」がタップされる,"tap 1477,493 hold=60ms",,2026-08-13T06:00:42.833Z
+TC-2313,P-F09-015,5,WAIT,PASS,一覧の再描画を待つ,waited 800ms,,2026-08-13T06:00:44.243Z
+TC-2313,P-F09-015,6,ASSERT_ORDER,FAIL,一覧が使用回数の多い順に並ぶ,"0番目が不一致: 期待 ""今日の積み上げ"" / 実際 ""要約プロンプト""（一致件数 3）",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2313-6-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2313-6-FAIL.txt,2026-08-13T06:00:46.757Z
+TC-2313,P-F09-015,7,ASSERT_PREF,SKIPPED,永続設定 @snippet_sort_preference の値が usage である,前のステップが失敗したため未実行,,2026-08-13T06:00:47.361Z
+TC-2322,P-F09-026,1,ASSERT_SCREEN,PASS,ホーム画面が表示されている,SC-HOME を確認,,2026-08-13T06:01:05.997Z
+TC-2322,P-F09-026,2,ASSERT_ORDER,PASS,ホームでは作成日時の新しい順に並ぶ,要約プロンプト / 今日の積み上げ / あいさつ,,2026-08-13T06:01:07.344Z
+TC-2322,P-F09-026,3,TAP,PASS,ホームの検索アイコンがタップされる,"tap 1580,187 hold=60ms",,2026-08-13T06:01:09.339Z
+TC-2322,P-F09-026,4,ASSERT_SCREEN,PASS,検索画面が表示されている,SC-SEARCH を確認,,2026-08-13T06:01:10.871Z
+TC-2322,P-F09-026,5,TYPE,PASS,検索欄に「。」が入力される,pasted: 。,,2026-08-13T06:01:14.628Z
+TC-2322,P-F09-026,6,WAIT,PASS,デバウンス満了まで待つ,waited 900ms,,2026-08-13T06:01:16.139Z
+TC-2322,P-F09-026,7,ASSERT_ORDER,FAIL,検索結果も並べ替え設定どおり作成日時の新しい順で要約プロンプト/あいさつの順に並ぶ,"0番目が不一致: 期待 ""要約プロンプト"" / 実際 """"（一致件数 2）",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2322-7-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-2322-7-FAIL.txt,2026-08-13T06:01:18.691Z
+TC-3005,P-F13-007,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:01:36.471Z
+TC-3005,P-F13-007,2,ASSERT_VISIBLE,PASS,見出し「Import / Export」が画面内にある,見えている（1479 178）,,2026-08-13T06:01:37.787Z
+TC-3005,P-F13-007,3,ASSERT_SCREEN_HAS,PASS,エクスポート行の英語説明が画面内にある,含む,,2026-08-13T06:01:39.197Z
+TC-3005,P-F13-007,4,ASSERT_SCREEN_HAS,PASS,英語UIでもスキーマ版が「Version : 7」である,含む,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3005-4-export-import-en.png,2026-08-13T06:01:41.051Z
+TC-3034,P-F13-034,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:02:00.630Z
+TC-3034,P-F13-034,2,TAP,PASS,エクスポート行が押される,"tap 1477,407 hold=60ms",,2026-08-13T06:02:02.457Z
+TC-3034,P-F13-034,3,TAP,PASS,定型文「あいさつ」の候補行が押される,"tap 1495,748 hold=60ms",,2026-08-13T06:02:04.275Z
+TC-3034,P-F13-034,4,ASSERT_VISIBLE,FAIL,定型文タブの選択件数が(4)になる,見つからない,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3034-4-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3034-4-FAIL.txt,2026-08-13T06:02:12.945Z
+TC-3034,P-F13-034,5,TAP,SKIPPED,プロファイルタブが押される,前のステップが失敗したため未実行,,2026-08-13T06:02:13.551Z
+TC-3034,P-F13-034,6,TAP,SKIPPED,定型文タブが押される,前のステップが失敗したため未実行,,2026-08-13T06:02:13.551Z
+TC-3034,P-F13-034,7,ASSERT_VISIBLE,SKIPPED,定型文タブの選択件数が(4)のままである,前のステップが失敗したため未実行,,2026-08-13T06:02:13.551Z
+TC-3035,P-F13-035,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:02:32.212Z
+TC-3035,P-F13-035,2,TAP,PASS,エクスポート行が押される,"tap 1477,425 hold=60ms",,2026-08-13T06:02:34.054Z
+TC-3035,P-F13-035,3,ASSERT_VISIBLE,PASS,"定型文タブが「Snippets, (5)」になる",見えている（1344 237）,,2026-08-13T06:02:35.486Z
+TC-3035,P-F13-035,4,ASSERT_VISIBLE,PASS,"プロファイルタブが「Profiles, (3)」になる",見えている（1433 237）,,2026-08-13T06:02:36.892Z
+TC-3035,P-F13-035,5,ASSERT_VISIBLE,PASS,"変数タブが「Variables, (3)」になる",見えている（1522 237）,,2026-08-13T06:02:38.300Z
+TC-3035,P-F13-035,6,ASSERT_VISIBLE,PASS,"カテゴリタブが「Categories, (3)」になる",見えている（1610 237）,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3035-6-select-export-en.png,2026-08-13T06:02:40.150Z
+TC-3040,P-F13-040,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:02:59.872Z
+TC-3040,P-F13-040,2,TAP,PASS,エクスポート行が押される,"tap 1477,407 hold=60ms",,2026-08-13T06:03:01.684Z
+TC-3040,P-F13-040,3,TAP,PASS,定型文「あいさつ」の候補行が押される,"tap 1495,748 hold=60ms",,2026-08-13T06:03:03.487Z
+TC-3040,P-F13-040,4,ASSERT_VISIBLE,FAIL,定型文タブの選択件数が(4)になる,見つからない,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3040-4-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3040-4-FAIL.txt,2026-08-13T06:03:12.129Z
+TC-3046,P-F13-046,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:03:30.740Z
+TC-3046,P-F13-046,2,TAP,PASS,エクスポート行が押される,"tap 1477,407 hold=60ms",,2026-08-13T06:03:32.582Z
+TC-3046,P-F13-046,3,TAP,PASS,対象タブが押される,"tap 1522,237 hold=60ms",,2026-08-13T06:03:34.382Z
+TC-3046,P-F13-046,4,TAP,PASS,候補行「取引先担当者名」が押される,"tap 1495,295 hold=60ms",,2026-08-13T06:03:36.139Z
+TC-3046,P-F13-046,5,ASSERT_VISIBLE,FAIL,"タブの選択件数が「変数, (2)」になる",見つからない,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3046-5-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3046-5-FAIL.txt,2026-08-13T06:03:44.720Z
+TC-3041,P-F13-041,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:04:03.693Z
+TC-3041,P-F13-041,2,TAP,PASS,エクスポート行が押される,"tap 1477,407 hold=60ms",,2026-08-13T06:04:05.532Z
+TC-3041,P-F13-041,3,TAP,PASS,定型文「あいさつ」の候補行が押される,"tap 1495,748 hold=60ms",,2026-08-13T06:04:07.333Z
+TC-3041,P-F13-041,4,ASSERT_VISIBLE,FAIL,定型文タブの選択件数が(4)になる,見つからない,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3041-4-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3041-4-FAIL.txt,2026-08-13T06:04:15.927Z
+TC-3041,P-F13-041,5,TAP,SKIPPED,定型文「あいさつ」の候補行がもう一度押される,前のステップが失敗したため未実行,,2026-08-13T06:04:16.533Z
+TC-3041,P-F13-041,6,ASSERT_VISIBLE,SKIPPED,定型文タブの選択件数が(5)へ戻る,前のステップが失敗したため未実行,,2026-08-13T06:04:16.533Z
+TC-3042,P-F13-042,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:04:34.593Z
+TC-3042,P-F13-042,2,TAP,PASS,エクスポート行が押される,"tap 1477,407 hold=60ms",,2026-08-13T06:04:36.437Z
+TC-3042,P-F13-042,3,ASSERT_VISIBLE,PASS,初期状態で定型文タブの選択件数が(5)である,見えている（1344 237）,,2026-08-13T06:04:37.860Z
+TC-3042,P-F13-042,4,TAP,PASS,ヘッダ右のチェックボックスが押される,"tap 1628,189 hold=60ms",,2026-08-13T06:04:39.683Z
+TC-3042,P-F13-042,5,ASSERT_VISIBLE,PASS,定型文タブの選択件数が(0)になる,見えている（1344 237）,,2026-08-13T06:04:41.073Z
+TC-3043,P-F13-043,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:04:59.998Z
+TC-3043,P-F13-043,2,TAP,PASS,エクスポート行が押される,"tap 1477,407 hold=60ms",,2026-08-13T06:05:01.813Z
+TC-3043,P-F13-043,3,TAP,PASS,ヘッダ右のチェックボックスが押される,"tap 1628,189 hold=60ms",,2026-08-13T06:05:03.600Z
+TC-3043,P-F13-043,4,ASSERT_VISIBLE,PASS,定型文タブの選択件数が(0)になる,見えている（1344 237）,,2026-08-13T06:05:04.996Z
+TC-3043,P-F13-043,5,TAP,PASS,ヘッダ右の未選択チェックボックスが押される,"tap 1628,189 hold=60ms",,2026-08-13T06:05:06.806Z
+TC-3043,P-F13-043,6,ASSERT_VISIBLE,PASS,定型文タブの選択件数が(5)へ戻る,見えている（1344 237）,,2026-08-13T06:05:08.203Z
+TC-3051,P-F13-051,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:05:27.209Z
+TC-3051,P-F13-051,2,TAP,PASS,エクスポート行が押される,"tap 1477,407 hold=60ms",,2026-08-13T06:05:29.017Z
+TC-3051,P-F13-051,3,TAP,PASS,定型文タブを全解除する,"tap 1628,189 hold=60ms",,2026-08-13T06:05:30.826Z
+TC-3051,P-F13-051,4,TAP,PASS,プロファイルタブが押される,"tap 1433,237 hold=60ms",,2026-08-13T06:05:32.613Z
+TC-3051,P-F13-051,5,TAP,PASS,プロファイルタブを全解除する,"tap 1628,189 hold=60ms",,2026-08-13T06:05:34.303Z
+TC-3051,P-F13-051,6,TAP,PASS,変数タブが押される,"tap 1522,237 hold=60ms",,2026-08-13T06:05:36.013Z
+TC-3051,P-F13-051,7,TAP,PASS,変数タブを全解除する,"tap 1628,189 hold=60ms",,2026-08-13T06:05:37.754Z
+TC-3051,P-F13-051,8,TAP,PASS,カテゴリタブが押される,"tap 1610,237 hold=60ms",,2026-08-13T06:05:39.482Z
+TC-3051,P-F13-051,9,TAP,PASS,カテゴリタブを全解除する,"tap 1628,189 hold=60ms",,2026-08-13T06:05:41.196Z
+TC-3051,P-F13-051,10,ASSERT_VISIBLE,PASS,カテゴリタブの選択件数が(0)になる,見えている（1610 237）,,2026-08-13T06:05:42.549Z
+TC-3051,P-F13-051,11,ASSERT_DISABLED,PASS,フッターのエクスポートボタンが操作不能である,操作不能,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3051-11-select-export-none.png,2026-08-13T06:05:44.226Z
+TC-3060,P-F13-060,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:06:02.967Z
+TC-3060,P-F13-060,2,TAP,PASS,エクスポート行が押される,"tap 1477,407 hold=60ms",,2026-08-13T06:06:04.773Z
+TC-3060,P-F13-060,3,TAP,PASS,フッターのエクスポートボタンが押される,"tap 1477,843 hold=60ms",,2026-08-13T06:06:11.682Z
+TC-3060,P-F13-060,4,ASSERT_VISIBLE,FAIL,見出し「パスワードを設定」が画面内にある,見つからない,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3060-4-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3060-4-FAIL.txt,2026-08-13T06:06:20.248Z
+TC-3060,P-F13-060,5,ASSERT_SCREEN_HAS,SKIPPED,説明文が画面内にある,前のステップが失敗したため未実行,,2026-08-13T06:06:20.855Z
+TC-3060,P-F13-060,6,ASSERT_VISIBLE,SKIPPED,キャンセルボタンが画面内にある,前のステップが失敗したため未実行,,2026-08-13T06:06:20.855Z
+TC-3060,P-F13-060,7,ASSERT_VISIBLE,SKIPPED,OKボタンが画面内にある,前のステップが失敗したため未実行,,2026-08-13T06:06:20.855Z
+TC-3061,P-F13-061,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:06:38.581Z
+TC-3061,P-F13-061,2,TAP,PASS,エクスポート行が押される,"tap 1477,407 hold=60ms",,2026-08-13T06:06:40.423Z
+TC-3061,P-F13-061,3,TAP,PASS,フッターのエクスポートボタンが押される,"tap 1477,843 hold=60ms",,2026-08-13T06:06:47.331Z
+TC-3061,P-F13-061,4,TYPE,FAIL,パスワード入力欄へabcが入力される,"入力欄をタップできません: 要素が見つかりません: label=パスワード&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=パスワード&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3061-4-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3061-4-FAIL.txt,2026-08-13T06:06:49.821Z
+TC-3061,P-F13-061,5,TAP,SKIPPED,キャンセルボタンが押される,前のステップが失敗したため未実行,,2026-08-13T06:06:50.428Z
+TC-3061,P-F13-061,6,ASSERT_NOT_VISIBLE,SKIPPED,見出し「パスワードを設定」が画面から消える,前のステップが失敗したため未実行,,2026-08-13T06:06:50.428Z
+TC-3061,P-F13-061,7,ASSERT_VISIBLE,SKIPPED,定型文タブの選択件数が(5)のままである,前のステップが失敗したため未実行,,2026-08-13T06:06:50.428Z
+TC-3062,P-F13-062,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:07:08.377Z
+TC-3062,P-F13-062,2,TAP,PASS,エクスポート行が押される,"tap 1477,425 hold=60ms",,2026-08-13T06:07:10.204Z
+TC-3062,P-F13-062,3,TAP,PASS,フッターのExportボタンが押される,"tap 1477,843 hold=60ms",,2026-08-13T06:07:17.148Z
+TC-3062,P-F13-062,4,ASSERT_VISIBLE,FAIL,見出し「Set Password」が画面内にある,見つからない,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3062-4-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3062-4-FAIL.txt,2026-08-13T06:07:25.714Z
+TC-3062,P-F13-062,5,ASSERT_SCREEN_HAS,SKIPPED,英語の説明文が画面内にある,前のステップが失敗したため未実行,,2026-08-13T06:07:26.320Z
+TC-3070,P-F13-070,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:07:44.888Z
+TC-3070,P-F13-070,2,TAP,PASS,エクスポート行が押される,"tap 1477,407 hold=60ms",,2026-08-13T06:07:46.549Z
+TC-3070,P-F13-070,3,TAP,PASS,フッターのエクスポートボタンが押される,"tap 1477,843 hold=60ms",,2026-08-13T06:07:53.302Z
+TC-3070,P-F13-070,4,TAP,FAIL,パスワードを入力せずOKが押される,"要素が見つかりません: label=OK&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=OK&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3070-4-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3070-4-FAIL.txt,2026-08-13T06:07:55.713Z
+TC-3070,P-F13-070,5,ASSERT_SCREEN_HAS,SKIPPED,警告メッセージ「パスワードを入力してください」が画面内にある,前のステップが失敗したため未実行,,2026-08-13T06:07:56.319Z
+TC-3070,P-F13-070,6,ASSERT_SCREEN_HAS,SKIPPED,警告ダイアログのタイトル「警告」が画面内にある,前のステップが失敗したため未実行,,2026-08-13T06:07:56.319Z
+TC-3071,P-F13-071,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:08:14.479Z
+TC-3071,P-F13-071,2,TAP,PASS,エクスポート行が押される,"tap 1477,407 hold=60ms",,2026-08-13T06:08:16.305Z
+TC-3071,P-F13-071,3,TAP,PASS,フッターのエクスポートボタンが押される,"tap 1477,843 hold=60ms",,2026-08-13T06:08:23.035Z
+TC-3071,P-F13-071,4,TYPE,FAIL,パスワード入力欄へ半角空白3文字が入力される,"入力欄をタップできません: 要素が見つかりません: label=パスワード&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=パスワード&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3071-4-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3071-4-FAIL.txt,2026-08-13T06:08:25.500Z
+TC-3071,P-F13-071,5,TAP,SKIPPED,OKが押される,前のステップが失敗したため未実行,,2026-08-13T06:08:26.107Z
+TC-3071,P-F13-071,6,ASSERT_SCREEN_HAS,SKIPPED,警告メッセージ「パスワードを入力してください」が画面内にある,前のステップが失敗したため未実行,,2026-08-13T06:08:26.107Z
+TC-3102,P-F13-102,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:08:44.387Z
+TC-3102,P-F13-102,2,TAP,PASS,エクスポート行が押される,"tap 1477,407 hold=60ms",,2026-08-13T06:08:46.198Z
+TC-3102,P-F13-102,3,TAP,PASS,フッターのエクスポートボタンが押される,"tap 1477,843 hold=60ms",,2026-08-13T06:08:52.992Z
+TC-3102,P-F13-102,4,TYPE,FAIL,パスワード入力欄へabcが入力される,"入力欄をタップできません: 要素が見つかりません: label=パスワード&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=パスワード&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3102-4-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3102-4-FAIL.txt,2026-08-13T06:08:55.443Z
+TC-3102,P-F13-102,5,TAP,SKIPPED,キャンセルボタンが押される,前のステップが失敗したため未実行,,2026-08-13T06:08:56.049Z
+TC-3102,P-F13-102,6,ASSERT_DB,SKIPPED,snippetsが5件のままである,前のステップが失敗したため未実行,,2026-08-13T06:08:56.049Z
+TC-3102,P-F13-102,7,ASSERT_DB,SKIPPED,profilesが3件のままである,前のステップが失敗したため未実行,,2026-08-13T06:08:56.049Z
+TC-3201,P-F14-002,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:09:13.820Z
+TC-3201,P-F14-002,2,ASSERT_SCREEN_HAS,PASS,インポート行の英語説明が画面内にある,含む,,2026-08-13T06:09:15.247Z
+TC-3201,P-F14-002,3,ASSERT_VISIBLE,PASS,見出し「Import / Export」が画面内にある,見えている（1479 178）,,2026-08-13T06:09:16.638Z
+TC-3205,P-F14-006,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:09:34.919Z
+TC-3205,P-F14-006,2,ASSERT_VISIBLE,PASS,「Version : 7」が画面内にある,見えている（1392 242）,,2026-08-13T06:09:36.346Z
+TC-3205,P-F14-006,3,ASSERT_DB,FAIL,DBのuser_versionが7である,"""0""",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3205-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3205-3-FAIL.txt,2026-08-13T06:09:38.306Z
+TC-3304,P-F18-009,1,WAIT,PASS,起動時のプラン確定と有効フラグ再計算が終わるまで待つ,waited 2000ms,,2026-08-13T06:09:57.353Z
+TC-3304,P-F18-009,2,TAP,PASS,ホームヘッダの設定アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:09:59.137Z
+TC-3304,P-F18-009,3,TAP,PASS,設定の「カスタム変数」行が押される,"tap 1477,293 hold=60ms",,2026-08-13T06:10:00.985Z
+TC-3304,P-F18-009,4,ASSERT_DB,PASS,追加前はカスタム変数のupdatedAtが1種類である,"""1""",,2026-08-13T06:10:01.818Z
+TC-3304,P-F18-009,5,TAP,PASS,ヘッダ右の追加アイコンが押される,"tap 1623,179 hold=60ms",,2026-08-13T06:10:03.487Z
+TC-3304,P-F18-009,6,ASSERT_SCREEN,PASS,変数作成画面が表示されている,SC-VARIABLE-EDIT を確認,,2026-08-13T06:10:04.941Z
+TC-3304,P-F18-009,7,TYPE,FAIL,変数名入力欄へd1_addedが入力される,"入力欄をタップできません: 要素が見つかりません: label~=例: myname&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label~=例: myname&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3304-7-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3304-7-FAIL.txt,2026-08-13T06:10:07.724Z
+TC-3304,P-F18-009,8,TAP,SKIPPED,保存ボタンが押される,前のステップが失敗したため未実行,,2026-08-13T06:10:08.330Z
+TC-3304,P-F18-009,9,ASSERT_SCREEN_HAS,SKIPPED,標準値未入力の確認ダイアログが表示される,前のステップが失敗したため未実行,,2026-08-13T06:10:08.330Z
+TC-3304,P-F18-009,10,TAP,SKIPPED,確認ダイアログのOKが押される,前のステップが失敗したため未実行,,2026-08-13T06:10:08.330Z
+TC-3304,P-F18-009,11,ASSERT_DB,SKIPPED,カスタム変数が2件になる,前のステップが失敗したため未実行,,2026-08-13T06:10:08.330Z
+TC-3304,P-F18-009,12,ASSERT_DB,SKIPPED,追加した変数はvalid=1で作成される,前のステップが失敗したため未実行,,2026-08-13T06:10:08.330Z
+TC-3304,P-F18-009,13,ASSERT_DB,SKIPPED,カスタム変数のupdatedAtが2種類のままで、既存行が再計算で書き換わっていない,前のステップが失敗したため未実行,,2026-08-13T06:10:08.330Z
+TC-3403,P-F18-104,1,WAIT,PASS,起動時のプラン確定と有効フラグ再計算が終わるまで待つ,waited 2000ms,,2026-08-13T06:10:28.062Z
+TC-3403,P-F18-104,2,TAP,PASS,ホームヘッダの設定アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:10:29.822Z
+TC-3403,P-F18-104,3,TAP,PASS,設定の「カスタム変数」行が押される,"tap 1477,293 hold=60ms",,2026-08-13T06:10:31.680Z
+TC-3403,P-F18-104,4,ASSERT_SCREEN,PASS,変数管理画面が表示されている,SC-SETTINGS-VARIABLES を確認,,2026-08-13T06:10:33.105Z
+TC-3403,P-F18-104,5,ASSERT_TEXT_CONTAINS,PASS,var_sixの行に「無効」が含まれる,", 変数6, 無効, {{var_six}}, 無効側の値, ",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3403-5-variable-invalid-badge.png,2026-08-13T06:10:34.894Z
+TC-3403,P-F18-104,6,ASSERT_TEXT_CONTAINS,FAIL,var_eightの行に「無効」が含まれる,要素が見つからない: label~=var_eight,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3403-6-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3403-6-FAIL.txt,2026-08-13T06:10:37.416Z
+TC-3403,P-F18-104,7,ASSERT_COUNT,SKIPPED,「無効」を含む行が3件である,前のステップが失敗したため未実行,,2026-08-13T06:10:38.022Z
+TC-3407,P-F18-108,1,WAIT,PASS,起動時のプラン確定と有効フラグ再計算が終わるまで待つ,waited 2000ms,,2026-08-13T06:10:56.323Z
+TC-3407,P-F18-108,2,TAP,PASS,ホームヘッダの設定アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:10:58.067Z
+TC-3407,P-F18-108,3,TAP,PASS,設定の「カスタム変数」行が押される,"tap 1477,293 hold=60ms",,2026-08-13T06:10:59.933Z
+TC-3407,P-F18-108,4,ASSERT_SCREEN,PASS,変数管理画面が表示されている,SC-SETTINGS-VARIABLES を確認,,2026-08-13T06:11:01.339Z
+TC-3407,P-F18-108,5,ASSERT_SCREEN_LACKS,FAIL,画面内に「無効」が無い,"見つかってしまった: \uF4AC, 変数6, {{var_six}}, 無効側の値, \uF5F6",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3407-5-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3407-5-FAIL.txt,2026-08-13T06:11:03.968Z
+TC-3412,P-F18-112,1,WAIT,PASS,起動時のプラン確定と有効フラグ再計算が終わるまで待つ,waited 2000ms,,2026-08-13T06:11:24.933Z
+TC-3412,P-F18-112,2,TAP,PASS,ホームヘッダの設定アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:11:26.703Z
+TC-3412,P-F18-112,3,TAP,PASS,設定の「Profiles」行が押される,"tap 1477,242 hold=60ms",,2026-08-13T06:11:28.339Z
+TC-3412,P-F18-112,4,ASSERT_TEXT_CONTAINS,PASS,C社用の行に「Disabled」が含まれる,"C社用, Disabled, Delete",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3412-4-profile-invalid-en.png,2026-08-13T06:11:30.135Z
+TC-3412,P-F18-112,5,TAP,PASS,ヘッダ右の追加アイコンが押される,"tap 1625,179 hold=60ms",,2026-08-13T06:11:31.681Z
+TC-3412,P-F18-112,6,ASSERT_SCREEN_HAS,PASS,英語の上限案内が表示される,含む,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-3412-6-limit-dialog-en.png,2026-08-13T06:11:33.329Z
+TC-4001,P-F16-002,1,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:11:51.471Z
+TC-4001,P-F16-002,2,ASSERT_VISIBLE,PASS,ヘッダーが Settings と表示されている,見えている（1479 178）,,2026-08-13T06:11:52.835Z
+TC-4001,P-F16-002,3,SCROLL_TO,PASS,アカウント連携セクションが安全域に入る,safe after 0 scroll(s),,2026-08-13T06:11:54.260Z
+TC-4001,P-F16-002,4,ASSERT_VISIBLE,PASS,見出しが Account Link と表示されている,見えている（1470 730）,,2026-08-13T06:11:55.670Z
+TC-4001,P-F16-002,5,ASSERT_SCREEN_HAS,PASS,説明文が英語で表示されている,含む,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4001-5-account-en.png,2026-08-13T06:11:57.464Z
+TC-4005,P-F16-011,1,ASSERT_PREF,PASS,永続設定 @dev_subscription_override の値が true である,"""true""",,2026-08-13T06:12:15.812Z
+TC-4005,P-F16-011,2,TAP,FAIL,歯車アイコンが押される,"要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4005-2-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4005-2-FAIL.txt,2026-08-13T06:12:18.576Z
+TC-4005,P-F16-011,3,SCROLL_TO,SKIPPED,アカウント連携セクションが安全域に入る,前のステップが失敗したため未実行,,2026-08-13T06:12:19.182Z
+TC-4005,P-F16-011,4,ASSERT_VISIBLE,SKIPPED,Proでも認証ボタンが表示されている,前のステップが失敗したため未実行,,2026-08-13T06:12:19.182Z
+TC-4005,P-F16-011,5,ASSERT_SCREEN_LACKS,SKIPPED,「連携済」バッジが画面内に無い,前のステップが失敗したため未実行,,2026-08-13T06:12:19.182Z
+TC-4101,P-F17-002,1,ASSERT_PREF,PASS,永続設定 @dev_subscription_override の値が true である,"""true""",,2026-08-13T06:12:37.604Z
+TC-4101,P-F17-002,2,TAP,FAIL,歯車アイコンが押される,"要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4101-2-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4101-2-FAIL.txt,2026-08-13T06:12:40.391Z
+TC-4101,P-F17-002,3,SCROLL_TO,SKIPPED,サブスクリプションカードが安全域に入る,前のステップが失敗したため未実行,,2026-08-13T06:12:40.996Z
+TC-4101,P-F17-002,4,ASSERT_SCREEN_HAS,SKIPPED,カードに「Proプラン加入中」が表示されている,前のステップが失敗したため未実行,,2026-08-13T06:12:40.996Z
+TC-4101,P-F17-002,5,ASSERT_SCREEN_LACKS,SKIPPED,カードに「Proにアップグレード」が表示されない,前のステップが失敗したため未実行,,2026-08-13T06:12:40.996Z
+TC-4102,P-F17-003;P-F17-005,1,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:12:59.223Z
+TC-4102,P-F17-003;P-F17-005,2,ASSERT_SCREEN,PASS,設定画面が表示されている,SC-SETTINGS を確認,,2026-08-13T06:13:00.674Z
+TC-4102,P-F17-003;P-F17-005,3,TAP,PASS,サブスクリプションカードが押される,"tap 1477,642 hold=60ms",,2026-08-13T06:13:02.524Z
+TC-4102,P-F17-003;P-F17-005,4,WAIT_FOR,FAIL,Paywallの読み込みが終わり「購入を復元」が現れる,8000ms 以内に条件を満たしませんでした: waitfor label~=購入を復元&visible=true,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4102-4-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4102-4-FAIL.txt,2026-08-13T06:13:13.165Z
+TC-4102,P-F17-003;P-F17-005,5,ASSERT_SCREEN,SKIPPED,Paywallが表示されている,前のステップが失敗したため未実行,,2026-08-13T06:13:13.771Z
+TC-4102,P-F17-003;P-F17-005,6,ASSERT_VISIBLE,SKIPPED,見出し「Proプランの特典」が表示されている,前のステップが失敗したため未実行,,2026-08-13T06:13:13.771Z
+TC-4102,P-F17-003;P-F17-005,7,ASSERT_SCREEN_HAS,SKIPPED,特典に「広告なし」が表示されている,前のステップが失敗したため未実行,,2026-08-13T06:13:13.771Z
+TC-4102,P-F17-003;P-F17-005,8,ASSERT_ENABLED,SKIPPED,購入ボタンが操作可能である,前のステップが失敗したため未実行,,2026-08-13T06:13:13.771Z
+TC-4102,P-F17-003;P-F17-005,9,ASSERT_ENABLED,SKIPPED,復元ボタンが操作可能である,前のステップが失敗したため未実行,,2026-08-13T06:13:13.771Z
+TC-4108,P-F17-017,1,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:13:30.673Z
+TC-4108,P-F17-017,2,TAP,PASS,サブスクリプションカードが押される,"tap 1477,642 hold=60ms",,2026-08-13T06:13:32.521Z
+TC-4108,P-F17-017,3,WAIT_FOR,FAIL,Paywallの読み込みが終わる,8000ms 以内に条件を満たしませんでした: waitfor label~=購入を復元&visible=true,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4108-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4108-3-FAIL.txt,2026-08-13T06:13:43.041Z
+TC-4108,P-F17-017,4,ASSERT_SCREEN,SKIPPED,Paywallが表示されている,前のステップが失敗したため未実行,,2026-08-13T06:13:43.647Z
+TC-4108,P-F17-017,5,SCROLL_TO,SKIPPED,利用規約リンクが安全域に入る,前のステップが失敗したため未実行,,2026-08-13T06:13:43.647Z
+TC-4108,P-F17-017,6,TAP,SKIPPED,利用規約リンクが押される,前のステップが失敗したため未実行,,2026-08-13T06:13:43.647Z
+TC-4108,P-F17-017,7,ASSERT_SCREEN,SKIPPED,利用規約画面が表示されている,前のステップが失敗したため未実行,,2026-08-13T06:13:43.647Z
+TC-4108,P-F17-017,8,ASSERT_SCREEN_LACKS,SKIPPED,Paywallの復元ボタンが画面内に無い,前のステップが失敗したため未実行,,2026-08-13T06:13:43.647Z
+TC-4108,P-F17-017,9,TAP,SKIPPED,ヘッダー左端の戻るボタンが押される,前のステップが失敗したため未実行,,2026-08-13T06:13:43.647Z
+TC-4108,P-F17-017,10,ASSERT_SCREEN,SKIPPED,Paywallへ戻っている,前のステップが失敗したため未実行,,2026-08-13T06:13:43.647Z
+TC-4108,P-F17-017,11,ASSERT_VISIBLE,SKIPPED,Paywallの特典見出しが再び表示される,前のステップが失敗したため未実行,,2026-08-13T06:13:43.647Z
+TC-4109,P-F17-018,1,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:14:00.597Z
+TC-4109,P-F17-018,2,TAP,PASS,サブスクリプションカードが押される,"tap 1477,642 hold=60ms",,2026-08-13T06:14:02.439Z
+TC-4109,P-F17-018,3,WAIT_FOR,FAIL,Paywallの読み込みが終わる,8000ms 以内に条件を満たしませんでした: waitfor label~=購入を復元&visible=true,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4109-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4109-3-FAIL.txt,2026-08-13T06:14:13.054Z
+TC-4109,P-F17-018,4,ASSERT_SCREEN,SKIPPED,Paywallが表示されている,前のステップが失敗したため未実行,,2026-08-13T06:14:13.660Z
+TC-4109,P-F17-018,5,SCROLL_TO,SKIPPED,プライバシーポリシーリンクが安全域に入る,前のステップが失敗したため未実行,,2026-08-13T06:14:13.660Z
+TC-4109,P-F17-018,6,TAP,SKIPPED,プライバシーポリシーリンクが押される,前のステップが失敗したため未実行,,2026-08-13T06:14:13.660Z
+TC-4109,P-F17-018,7,ASSERT_SCREEN,SKIPPED,プライバシーポリシー画面が表示されている,前のステップが失敗したため未実行,,2026-08-13T06:14:13.660Z
+TC-4109,P-F17-018,8,ASSERT_SCREEN_LACKS,SKIPPED,Paywallの復元ボタンが画面内に無い,前のステップが失敗したため未実行,,2026-08-13T06:14:13.660Z
+TC-4109,P-F17-018,9,TAP,SKIPPED,ヘッダー左端の戻るボタンが押される,前のステップが失敗したため未実行,,2026-08-13T06:14:13.660Z
+TC-4109,P-F17-018,10,ASSERT_SCREEN,SKIPPED,Paywallへ戻っている,前のステップが失敗したため未実行,,2026-08-13T06:14:13.660Z
+TC-4110,P-F17-019,1,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:14:30.445Z
+TC-4110,P-F17-019,2,TAP,PASS,サブスクリプションカードが押される,"tap 1477,642 hold=60ms",,2026-08-13T06:14:32.314Z
+TC-4110,P-F17-019,3,WAIT_FOR,FAIL,Paywallの読み込みが終わる,8000ms 以内に条件を満たしませんでした: waitfor label~=購入を復元&visible=true,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4110-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4110-3-FAIL.txt,2026-08-13T06:14:42.907Z
+TC-4110,P-F17-019,4,ASSERT_SCREEN,SKIPPED,Paywallが表示されている,前のステップが失敗したため未実行,,2026-08-13T06:14:43.513Z
+TC-4110,P-F17-019,5,TAP,SKIPPED,ヘッダー左端の閉じるボタンが押される,前のステップが失敗したため未実行,,2026-08-13T06:14:43.513Z
+TC-4110,P-F17-019,6,ASSERT_SCREEN,SKIPPED,設定画面が表示されている,前のステップが失敗したため未実行,,2026-08-13T06:14:43.513Z
+TC-4110,P-F17-019,7,ASSERT_SCREEN_LACKS,SKIPPED,Paywallの要素が画面内に無い,前のステップが失敗したため未実行,,2026-08-13T06:14:43.513Z
+TC-4111,P-F17-006;P-F17-010,1,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:14:59.903Z
+TC-4111,P-F17-006;P-F17-010,2,TAP,PASS,サブスクリプションカードが押される,"tap 1477,642 hold=60ms",,2026-08-13T06:15:01.757Z
+TC-4111,P-F17-006;P-F17-010,3,WAIT_FOR,FAIL,Paywallの読み込みが終わる,8000ms 以内に条件を満たしませんでした: waitfor label~=購入を復元&visible=true,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4111-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4111-3-FAIL.txt,2026-08-13T06:15:12.342Z
+TC-4111,P-F17-006;P-F17-010,4,ASSERT_SCREEN,SKIPPED,Paywallが表示されている,前のステップが失敗したため未実行,,2026-08-13T06:15:12.948Z
+TC-4111,P-F17-006;P-F17-010,5,ASSERT_SCREEN_LACKS,SKIPPED,年額の価格表示が画面内に無い,前のステップが失敗したため未実行,,2026-08-13T06:15:12.948Z
+TC-4111,P-F17-006;P-F17-010,6,ASSERT_SCREEN_LACKS,SKIPPED,月額の価格表示が画面内に無い,前のステップが失敗したため未実行,,2026-08-13T06:15:12.948Z
+TC-4111,P-F17-006;P-F17-010,7,ASSERT_VISIBLE,SKIPPED,購入ボタンは表示されている,前のステップが失敗したため未実行,,2026-08-13T06:15:12.948Z
+TC-4111,P-F17-006;P-F17-010,8,ASSERT_VISIBLE,SKIPPED,利用規約リンクが表示されている,前のステップが失敗したため未実行,,2026-08-13T06:15:12.948Z
+TC-4111,P-F17-006;P-F17-010,9,ASSERT_VISIBLE,SKIPPED,プライバシーポリシーリンクが表示されている,前のステップが失敗したため未実行,,2026-08-13T06:15:12.948Z
+TC-4112,P-F17-011,1,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:15:29.658Z
+TC-4112,P-F17-011,2,TAP,PASS,サブスクリプションカードが押される,"tap 1477,642 hold=60ms",,2026-08-13T06:15:31.519Z
+TC-4112,P-F17-011,3,WAIT_FOR,FAIL,Paywallの読み込みが終わる,8000ms 以内に条件を満たしませんでした: waitfor label~=購入を復元&visible=true,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4112-3-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4112-3-FAIL.txt,2026-08-13T06:15:42.055Z
+TC-4112,P-F17-011,4,ASSERT_SCREEN,SKIPPED,Paywallが表示されている,前のステップが失敗したため未実行,,2026-08-13T06:15:42.656Z
+TC-4112,P-F17-011,5,ASSERT_ENABLED,SKIPPED,購入ボタンが操作可能である,前のステップが失敗したため未実行,,2026-08-13T06:15:42.656Z
+TC-4112,P-F17-011,6,TAP,SKIPPED,購入ボタンが押される,前のステップが失敗したため未実行,,2026-08-13T06:15:42.656Z
+TC-4112,P-F17-011,7,ASSERT_SCREEN_HAS,SKIPPED,汎用エラーのメッセージが表示される,前のステップが失敗したため未実行,,2026-08-13T06:15:42.656Z
+TC-4112,P-F17-011,8,TAP,SKIPPED,OKが押される,前のステップが失敗したため未実行,,2026-08-13T06:15:42.656Z
+TC-4112,P-F17-011,9,ASSERT_VISIBLE,SKIPPED,Paywallに留まっている,前のステップが失敗したため未実行,,2026-08-13T06:15:42.656Z
+TC-4113,P-F17-032,1,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:15:59.463Z
+TC-4113,P-F17-032,2,SCROLL_TO,PASS,サブスクリプションカードが安全域に入る,safe after 0 scroll(s),,2026-08-13T06:16:00.894Z
+TC-4113,P-F17-032,3,TAP_REPEAT,PASS,カードが3回連続で押される,"tapped 3 times at 1477,642",,2026-08-13T06:16:02.891Z
+TC-4113,P-F17-032,4,WAIT_FOR,FAIL,Paywallの読み込みが終わる,8000ms 以内に条件を満たしませんでした: waitfor label~=購入を復元&visible=true,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4113-4-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4113-4-FAIL.txt,2026-08-13T06:16:13.582Z
+TC-4113,P-F17-032,5,ASSERT_SCREEN,SKIPPED,Paywallが表示されている,前のステップが失敗したため未実行,,2026-08-13T06:16:14.189Z
+TC-4113,P-F17-032,6,ASSERT_COUNT,SKIPPED,復元ボタンが1件だけである,前のステップが失敗したため未実行,,2026-08-13T06:16:14.189Z
+TC-4113,P-F17-032,7,TAP,SKIPPED,閉じるボタンが押される,前のステップが失敗したため未実行,,2026-08-13T06:16:14.189Z
+TC-4113,P-F17-032,8,ASSERT_SCREEN,SKIPPED,1回閉じただけで設定画面へ戻る,前のステップが失敗したため未実行,,2026-08-13T06:16:14.189Z
+TC-4114,P-F17-033,1,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:16:31.422Z
+TC-4114,P-F17-033,2,ASSERT_VISIBLE,PASS,ヘッダーが Settings と表示されている,見えている（1479 178）,,2026-08-13T06:16:32.879Z
+TC-4114,P-F17-033,3,TAP,PASS,サブスクリプションカードが押される,"tap 1477,642 hold=60ms",,2026-08-13T06:16:34.753Z
+TC-4114,P-F17-033,4,WAIT_FOR,FAIL,Paywallの読み込みが終わる,8000ms 以内に条件を満たしませんでした: waitfor label~=Restore Purchase&visible=true,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4114-4-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4114-4-FAIL.txt,2026-08-13T06:16:45.246Z
+TC-4114,P-F17-033,5,ASSERT_VISIBLE,SKIPPED,見出しが Pro Features と表示されている,前のステップが失敗したため未実行,,2026-08-13T06:16:45.852Z
+TC-4114,P-F17-033,6,ASSERT_VISIBLE,SKIPPED,購入ボタンが Upgrade to Pro と表示されている,前のステップが失敗したため未実行,,2026-08-13T06:16:45.852Z
+TC-4114,P-F17-033,7,ASSERT_VISIBLE,SKIPPED,法的リンクが Terms of Use と表示されている,前のステップが失敗したため未実行,,2026-08-13T06:16:45.852Z
+TC-4115,P-F17-034,1,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:17:03.657Z
+TC-4115,P-F17-034,2,SCROLL_TO,PASS,サブスクリプションカードが安全域に入る,safe after 0 scroll(s),,2026-08-13T06:17:05.089Z
+TC-4115,P-F17-034,3,TAP,PASS,サブスクリプションカードが押される,"tap 1477,642 hold=60ms",,2026-08-13T06:17:06.967Z
+TC-4115,P-F17-034,4,WAIT_FOR,PASS,管理画面が表示される,1477 733,,2026-08-13T06:17:08.406Z
+TC-4115,P-F17-034,5,ASSERT_SCREEN_HAS,PASS,状態カードが Pro Plan Active と表示されている,含む,,2026-08-13T06:17:09.813Z
+TC-4115,P-F17-034,6,SCROLL_TO,PASS,解約方法の節が安全域に入る,safe after 1 scroll(s),,2026-08-13T06:17:13.833Z
+TC-4115,P-F17-034,7,ASSERT_SCREEN_HAS,PASS,iOS向けの解約手順が英語で表示されている,含む,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4115-7-manage-en.png,2026-08-13T06:17:15.626Z
+TC-4301,P-F19-002,1,ASSERT_PREF,PASS,永続設定 @dev_subscription_override の値が true である,"""true""",,2026-08-13T06:17:36.958Z
+TC-4301,P-F19-002,2,ASSERT_SCREEN,FAIL,ホーム画面が表示されている,SC-HOME と判定できない: label=すべて が無い,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4301-2-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4301-2-FAIL.txt,2026-08-13T06:17:45.826Z
+TC-4301,P-F19-002,3,WAIT,SKIPPED,Freeなら広告が出るだけの時間を待つ,前のステップが失敗したため未実行,,2026-08-13T06:17:46.431Z
+TC-4301,P-F19-002,4,ASSERT_SCREEN_LACKS,SKIPPED,広告が画面内のどこにも無い,前のステップが失敗したため未実行,,2026-08-13T06:17:46.431Z
+TC-4301,P-F19-002,5,ASSERT_SCREEN_HAS,SKIPPED,定型文一覧は表示されている,前のステップが失敗したため未実行,,2026-08-13T06:17:46.431Z
+TC-4401,P-F20-002,1,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:18:05.037Z
+TC-4401,P-F20-002,2,ASSERT_VISIBLE,PASS,ヘッダーが Settings と表示されている,見えている（1479 178）,,2026-08-13T06:18:06.958Z
+TC-4401,P-F20-002,3,ASSERT_VISIBLE,PASS,項目が Profiles と表示されている,見えている（1477 242）,,2026-08-13T06:18:08.398Z
+TC-4401,P-F20-002,4,ASSERT_VISIBLE,PASS,項目が Custom Variables と表示されている,見えている（1477 293）,,2026-08-13T06:18:09.821Z
+TC-4401,P-F20-002,5,ASSERT_VISIBLE,PASS,項目が System Variables と表示されている,見えている（1477 344）,,2026-08-13T06:18:11.154Z
+TC-4401,P-F20-002,6,ASSERT_VISIBLE,PASS,項目が Categories と表示されている,見えている（1477 394）,,2026-08-13T06:18:12.579Z
+TC-4401,P-F20-002,7,ASSERT_VISIBLE,PASS,項目が Keyboard Setup と表示されている,見えている（1477 445）,,2026-08-13T06:18:14.005Z
+TC-4401,P-F20-002,8,ASSERT_VISIBLE,PASS,項目が Terms of Use と表示されている,見えている（1477 496）,,2026-08-13T06:18:15.429Z
+TC-4401,P-F20-002,9,ASSERT_VISIBLE,PASS,項目が Privacy Policy と表示されている,見えている（1477 547）,,2026-08-13T06:18:16.854Z
+TC-4401,P-F20-002,10,ASSERT_SCREEN_LACKS,PASS,日本語の項目名が画面内に無い,無い,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4401-10-settings-en.png,2026-08-13T06:18:18.755Z
+TC-4402,P-F20-003,1,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:18:36.763Z
+TC-4402,P-F20-003,2,SCROLL_TO,PASS,アカウント連携セクションが安全域に入る,safe after 0 scroll(s),,2026-08-13T06:18:38.205Z
+TC-4402,P-F20-003,3,ASSERT_VISIBLE,PASS,Appleボタンが日本語のまま表示されている,見えている（1470 815）,,2026-08-13T06:18:39.640Z
+TC-4402,P-F20-003,4,ASSERT_VISIBLE,PASS,Googleボタンが日本語のまま表示されている,見えている（1470 866）,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4402-4-auth-button-ja-fixed.png,2026-08-13T06:18:41.512Z
+TC-4406,P-F20-004,1,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:19:00.014Z
+TC-4406,P-F20-004,2,TAP,PASS,項目 Terms of Use が押される,"tap 1477,496 hold=60ms",,2026-08-13T06:19:01.778Z
+TC-4406,P-F20-004,3,ASSERT_VISIBLE,PASS,ヘッダーが Terms of Use と表示されている,見えている（1479 178）,,2026-08-13T06:19:03.007Z
+TC-4406,P-F20-004,4,ASSERT_SCREEN_LACKS,PASS,設定画面の他項目が残っていない,無い,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4406-4-webview-header-en.png,2026-08-13T06:19:04.732Z
+TC-4503,P-F21-008,1,TAP,PASS,ヘッダーの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T06:19:23.289Z
+TC-4503,P-F21-008,2,ASSERT_VISIBLE,PASS,ヘッダーが Import / Export と表示されている,見えている（1479 178）,,2026-08-13T06:19:24.645Z
+TC-4503,P-F21-008,3,ASSERT_SCREEN_HAS,PASS,DBスキーマバージョンが Version : 7 と表示されている,含む,,2026-08-13T06:19:26.061Z
+TC-4503,P-F21-008,4,ASSERT_SCREEN_HAS,PASS,注意文が英語で表示されている,含む,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4503-4-export-version-en.png,2026-08-13T06:19:27.853Z
+TC-4601,P-F22-008;P-F22-014,1,ASSERT_DB,PASS,操作前のsnippets件数が5である,"""5""",,2026-08-13T06:19:44.696Z
+TC-4601,P-F22-008;P-F22-014,2,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:19:46.706Z
+TC-4601,P-F22-008;P-F22-014,3,TAP,PASS,項目「拡張キーボードの設定」が押される,"tap 1477,445 hold=60ms",,2026-08-13T06:19:48.564Z
+TC-4601,P-F22-008;P-F22-014,4,ASSERT_VISIBLE,PASS,モーダルのタイトルが表示されている,見えている（1477 335）,,2026-08-13T06:19:49.946Z
+TC-4601,P-F22-008;P-F22-014,5,TAP,PASS,OKが押される,"tap 1477,693 hold=60ms",,2026-08-13T06:19:51.687Z
+TC-4601,P-F22-008;P-F22-014,6,ASSERT_SCREEN_LACKS,PASS,モーダルが閉じている,無い,,2026-08-13T06:19:52.985Z
+TC-4601,P-F22-008;P-F22-014,7,TAP,PASS,同じ項目を再度押す,"tap 1477,445 hold=60ms",,2026-08-13T06:19:54.783Z
+TC-4601,P-F22-008;P-F22-014,8,ASSERT_VISIBLE,FAIL,2回目も手順1が表示されている,見つからない,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4601-8-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4601-8-FAIL.txt,2026-08-13T06:20:03.206Z
+TC-4601,P-F22-008;P-F22-014,9,TAP,SKIPPED,OKが押される,前のステップが失敗したため未実行,,2026-08-13T06:20:03.811Z
+TC-4601,P-F22-008;P-F22-014,10,ASSERT_DB,SKIPPED,操作後もsnippets件数が5のままである,前のステップが失敗したため未実行,,2026-08-13T06:20:03.811Z
+TC-4604,P-F22-010,1,TAP,PASS,歯車アイコンが押される,"tap 1498,187 hold=60ms",,2026-08-13T06:20:20.885Z
+TC-4604,P-F22-010,2,TAP,PASS,項目 Keyboard Setup が押される,"tap 1477,445 hold=60ms",,2026-08-13T06:20:22.728Z
+TC-4604,P-F22-010,3,ASSERT_VISIBLE,PASS,タイトルが Enable Keyboard Extension と表示されている,見えている（1477 342）,,2026-08-13T06:20:24.077Z
+TC-4604,P-F22-010,4,ASSERT_VISIBLE,PASS,手順1が英語で表示されている,見えている（1497 384）,,2026-08-13T06:20:25.448Z
+TC-4604,P-F22-010,5,ASSERT_SCREEN_HAS,PASS,フルアクセスの注記が英語で表示されている,含む,,2026-08-13T06:20:26.809Z
+TC-4604,P-F22-010,6,TAP,PASS,OKが押される,"tap 1477,686 hold=60ms",,2026-08-13T06:20:28.537Z
+TC-4604,P-F22-010,7,ASSERT_VISIBLE,PASS,設定画面に留まる,見えている（1479 178）,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/retry3/evidence/TC-4604-7-keyboard-guide-en.png,2026-08-13T06:20:30.328Z

@@ -1,0 +1,7 @@
+TestID,PatternID,Result,FailedStepNo,FailureClass,BugID,StartedAt,EndedAt,Device,OSVersion,Notes
+TC-0011,P-F02-011,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:16:00.972Z,2026-08-13T05:16:13.286Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの追加アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF105&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=&visible=true」"
+TC-0300,P-F05-001,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:16:13.286Z,2026-08-13T05:16:25.711Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=&visible=true」"
+TC-1116,P-F23-021,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:16:25.712Z,2026-08-13T05:16:37.693Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「設定画面が開く」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=&visible=true」"

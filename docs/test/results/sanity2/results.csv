@@ -1,0 +1,56 @@
+TestID,PatternID,StepNo,Action,Result,Expected,Actual,Evidence,ExecutedAt
+TC-0011,P-F02-011,1,TAP,PASS,ホームの追加アイコンのタップが受け付けられる,"tap 1623,187 hold=60ms",,2026-08-13T05:17:46.748Z
+TC-0011,P-F02-011,2,ASSERT_SCREEN,PASS,定型文作成画面が表示される,SC-SNIPPET-CREATE を確認,,2026-08-13T05:17:48.183Z
+TC-0011,P-F02-011,3,TAP,PASS,タイトル欄のタップが受け付けられる,"tap 1477,248 hold=60ms",,2026-08-13T05:17:49.978Z
+TC-0011,P-F02-011,4,ASSERT_SCREEN,PASS,タイトル入力画面が表示される,SC-SNIPPET-TITLE-INPUT を確認,,2026-08-13T05:17:51.869Z
+TC-0011,P-F02-011,5,PASTE_RAW,PASS,入力欄へ 改行本文 が入力される,pasted: 改行本文,,2026-08-13T05:17:53.825Z
+TC-0011,P-F02-011,6,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:17:55.628Z
+TC-0011,P-F02-011,7,TAP,PASS,本文欄のタップが受け付けられる,"tap 1477,318 hold=60ms",,2026-08-13T05:17:57.390Z
+TC-0011,P-F02-011,8,PASTE_RAW,PASS,入力欄へ 1行目 が入力される,pasted: 1行目,,2026-08-13T05:17:58.973Z
+TC-0011,P-F02-011,9,PRESS_KEY,PASS,改行が入力される,key: return,,2026-08-13T05:18:00.372Z
+TC-0011,P-F02-011,10,PASTE_RAW,PASS,入力欄へ 2行目 が入力される,pasted: 2行目,,2026-08-13T05:18:01.946Z
+TC-0011,P-F02-011,11,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:18:03.803Z
+TC-0011,P-F02-011,12,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:18:05.598Z
+TC-0011,P-F02-011,13,ASSERT_DB,FAIL,本文が改行で区切られた2行として保存される,"""1行目//2行目""",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/sanity2/evidence/TC-0011-13-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/sanity2/evidence/TC-0011-13-FAIL.txt,2026-08-13T05:18:07.671Z
+TC-0300,P-F05-001,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:18:27.394Z
+TC-0300,P-F05-001,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:18:28.816Z
+TC-0300,P-F05-001,3,TAP,PASS,設定のカスタム変数行のタップが受け付けられる,"tap 1477,293 hold=60ms",,2026-08-13T05:18:30.583Z
+TC-0300,P-F05-001,4,ASSERT_SCREEN,PASS,変数管理画面が表示される,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:18:31.949Z
+TC-0300,P-F05-001,5,ASSERT_DB,PASS,variablesテーブルが3件である,"""3""",,2026-08-13T05:18:32.824Z
+TC-0300,P-F05-001,6,TAP,PASS,変数管理の追加ボタンのタップが受け付けられる,"tap 1623,179 hold=60ms",,2026-08-13T05:18:34.556Z
+TC-0300,P-F05-001,7,ASSERT_SCREEN,PASS,変数作成画面が表示される,SC-VARIABLE-EDIT を確認,,2026-08-13T05:18:36.029Z
+TC-0300,P-F05-001,8,TYPE_PASTE,PASS,変数名入力欄へ test_var が入力される,pasted: test_var,,2026-08-13T05:18:39.294Z
+TC-0300,P-F05-001,9,TAP,PASS,標準プロファイルの値セルのタップが受け付けられる,"tap 1553,525 hold=60ms",,2026-08-13T05:18:41.134Z
+TC-0300,P-F05-001,10,ASSERT_SCREEN,PASS,プロファイル別変数値編集画面が表示される,SC-VARIABLE-PROFILE-VALUE-EDIT を確認,,2026-08-13T05:18:42.444Z
+TC-0300,P-F05-001,11,PASTE_RAW,PASS,入力欄へ テスト値 が入力される,pasted: テスト値,,2026-08-13T05:18:44.022Z
+TC-0300,P-F05-001,12,TAP,PASS,完了ボタンのタップが受け付けられる,"tap 1622,198 hold=60ms",,2026-08-13T05:18:45.647Z
+TC-0300,P-F05-001,13,TAP,PASS,保存ボタンのタップが受け付けられる,"tap 1622,189 hold=60ms",,2026-08-13T05:18:47.496Z
+TC-0300,P-F05-001,14,ASSERT_SCREEN,PASS,変数管理画面へ戻る,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:18:48.853Z
+TC-0300,P-F05-001,15,ASSERT_DB,PASS,variablesテーブルが4件になる,"""4""",,2026-08-13T05:18:49.636Z
+TC-0300,P-F05-001,16,ASSERT_DB,PASS,type=custom valid=1 sortOrder=3 で作られる,"""custom/1/3""",,2026-08-13T05:18:50.412Z
+TC-0300,P-F05-001,17,ASSERT_DB,PASS,標準プロファイルの値が保存される,"""テスト値""",,2026-08-13T05:18:51.185Z
+TC-0300,P-F05-001,18,ASSERT_SCREEN_HAS,PASS,一覧に変数トークンが表示される,含む,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/sanity2/evidence/TC-0300-18-created.png,2026-08-13T05:18:52.875Z
+TC-0306,P-F05-007,1,TAP,PASS,ホームの設定アイコンのタップが受け付けられる,"tap 1498,187 hold=60ms",,2026-08-13T05:19:12.611Z
+TC-0306,P-F05-007,2,ASSERT_SCREEN,PASS,設定画面が表示される,SC-SETTINGS を確認,,2026-08-13T05:19:14.056Z
+TC-0306,P-F05-007,3,TAP,PASS,設定のカスタム変数行のタップが受け付けられる,"tap 1477,293 hold=60ms",,2026-08-13T05:19:15.905Z
+TC-0306,P-F05-007,4,ASSERT_SCREEN,PASS,変数管理画面が表示される,SC-SETTINGS-VARIABLES を確認,,2026-08-13T05:19:17.293Z
+TC-0306,P-F05-007,5,TAP,PASS,変数管理の追加ボタンのタップが受け付けられる,"tap 1623,179 hold=60ms",,2026-08-13T05:19:19.019Z
+TC-0306,P-F05-007,6,ASSERT_SCREEN,PASS,変数作成画面が表示される,SC-VARIABLE-EDIT を確認,,2026-08-13T05:19:20.495Z
+TC-0306,P-F05-007,7,TYPE_PASTE,PASS,変数名入力欄へ半角空白3個が入力される,pasted:,,2026-08-13T05:19:23.870Z
+TC-0306,P-F05-007,8,ASSERT_SCREEN_HAS,PASS,文字数カウンターが3/30になり空白が入力されている,含む,,2026-08-13T05:19:25.328Z
+TC-0306,P-F05-007,9,ASSERT_SCREEN_LACKS,PASS,トリム後が空のため形式エラーは表示されない,無い,,2026-08-13T05:19:26.773Z
+TC-0306,P-F05-007,10,TAP,PASS,標準プロファイルの値セルのタップが受け付けられる,"tap 1553,525 hold=60ms",,2026-08-13T05:19:28.669Z
+TC-0306,P-F05-007,11,ASSERT_SCREEN,FAIL,プロファイル別変数値編集画面が表示される,SC-VARIABLE-PROFILE-VALUE-EDIT と判定できない: text~=値を入力してください が無い,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/sanity2/evidence/TC-0306-11-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/sanity2/evidence/TC-0306-11-FAIL.txt,2026-08-13T05:19:37.282Z
+TC-0306,P-F05-007,12,PASTE_RAW,SKIPPED,入力欄へ 値あり が入力される,前のステップが失敗したため未実行,,2026-08-13T05:19:37.885Z
+TC-0306,P-F05-007,13,TAP,SKIPPED,完了ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:19:37.885Z
+TC-0306,P-F05-007,14,ASSERT_DISABLED,SKIPPED,値が入力済みでも保存ボタンが操作不能である,前のステップが失敗したため未実行,,2026-08-13T05:19:37.885Z
+TC-0306,P-F05-007,15,TAP,SKIPPED,閉じるボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:19:37.885Z
+TC-0306,P-F05-007,16,ASSERT_DB,SKIPPED,variablesテーブルは3件のままである,前のステップが失敗したため未実行,,2026-08-13T05:19:37.885Z
+TC-1116,P-F23-021,1,TAP,PASS,設定画面が開く,"tap 1498,187 hold=60ms",,2026-08-13T05:19:55.630Z
+TC-1116,P-F23-021,2,TAP,PASS,システム変数書式一覧が開く,"tap 1477,344 hold=60ms",,2026-08-13T05:19:57.366Z
+TC-1116,P-F23-021,3,ASSERT_SCREEN_HAS,PASS,英語の「Reset all to default」が表示される,含む,,2026-08-13T05:19:58.736Z
+TC-1116,P-F23-021,4,ASSERT_TEXT_CONTAINS,PASS,weekday の行のプレビューが英名短縮 ${TODAY_EN:EEE} である,", Weekday, {{weekday}}, Thu, ",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/sanity2/evidence/TC-1116-4-formats-list.png,2026-08-13T05:20:00.560Z
+TC-3005,P-F13-007,1,TAP,PASS,ホームヘッダの入出力アイコンが押される,"tap 1539,187 hold=60ms",,2026-08-13T05:20:19.269Z
+TC-3005,P-F13-007,2,ASSERT_VISIBLE,PASS,見出し「Import / Export」が画面内にある,見えている（1479 178）,,2026-08-13T05:20:20.649Z
+TC-3005,P-F13-007,3,ASSERT_SCREEN_HAS,PASS,エクスポート行の英語説明が画面内にある,含む,,2026-08-13T05:20:21.928Z
+TC-3005,P-F13-007,4,ASSERT_SCREEN_HAS,PASS,英語UIでもスキーマ版が「Version : 7」である,含む,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/sanity2/evidence/TC-3005-4-export-import-en.png,2026-08-13T05:20:23.794Z

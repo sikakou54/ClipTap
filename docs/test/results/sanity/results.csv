@@ -1,0 +1,39 @@
+TestID,PatternID,StepNo,Action,Result,Expected,Actual,Evidence,ExecutedAt
+TC-0011,P-F02-011,1,TAP,FAIL,ホームの追加アイコンのタップが受け付けられる,"要素が見つかりません: label=\uF105&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/sanity/evidence/TC-0011-1-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/sanity/evidence/TC-0011-1-FAIL.txt,2026-08-13T05:16:11.206Z
+TC-0011,P-F02-011,2,ASSERT_SCREEN,SKIPPED,定型文作成画面が表示される,前のステップが失敗したため未実行,,2026-08-13T05:16:11.812Z
+TC-0011,P-F02-011,3,TAP,SKIPPED,タイトル欄のタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:16:11.812Z
+TC-0011,P-F02-011,4,ASSERT_SCREEN,SKIPPED,タイトル入力画面が表示される,前のステップが失敗したため未実行,,2026-08-13T05:16:11.812Z
+TC-0011,P-F02-011,5,PASTE_RAW,SKIPPED,入力欄へ 改行本文 が入力される,前のステップが失敗したため未実行,,2026-08-13T05:16:11.812Z
+TC-0011,P-F02-011,6,TAP,SKIPPED,完了ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:16:11.812Z
+TC-0011,P-F02-011,7,TAP,SKIPPED,本文欄のタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:16:11.812Z
+TC-0011,P-F02-011,8,PASTE_RAW,SKIPPED,入力欄へ 1行目 が入力される,前のステップが失敗したため未実行,,2026-08-13T05:16:11.812Z
+TC-0011,P-F02-011,9,PRESS_KEY,SKIPPED,改行が入力される,前のステップが失敗したため未実行,,2026-08-13T05:16:11.812Z
+TC-0011,P-F02-011,10,PASTE_RAW,SKIPPED,入力欄へ 2行目 が入力される,前のステップが失敗したため未実行,,2026-08-13T05:16:11.812Z
+TC-0011,P-F02-011,11,TAP,SKIPPED,完了ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:16:11.812Z
+TC-0011,P-F02-011,12,TAP,SKIPPED,保存ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:16:11.812Z
+TC-0011,P-F02-011,13,ASSERT_DB,SKIPPED,本文が改行で区切られた2行として保存される,前のステップが失敗したため未実行,,2026-08-13T05:16:11.812Z
+TC-0300,P-F05-001,1,TAP,FAIL,ホームの設定アイコンのタップが受け付けられる,"要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/sanity/evidence/TC-0300-1-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/sanity/evidence/TC-0300-1-FAIL.txt,2026-08-13T05:16:23.661Z
+TC-0300,P-F05-001,2,ASSERT_SCREEN,SKIPPED,設定画面が表示される,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,3,TAP,SKIPPED,設定のカスタム変数行のタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,4,ASSERT_SCREEN,SKIPPED,変数管理画面が表示される,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,5,ASSERT_DB,SKIPPED,variablesテーブルが3件である,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,6,TAP,SKIPPED,変数管理の追加ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,7,ASSERT_SCREEN,SKIPPED,変数作成画面が表示される,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,8,TYPE_PASTE,SKIPPED,変数名入力欄へ test_var が入力される,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,9,TAP,SKIPPED,標準プロファイルの値セルのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,10,ASSERT_SCREEN,SKIPPED,プロファイル別変数値編集画面が表示される,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,11,PASTE_RAW,SKIPPED,入力欄へ テスト値 が入力される,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,12,TAP,SKIPPED,完了ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,13,TAP,SKIPPED,保存ボタンのタップが受け付けられる,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,14,ASSERT_SCREEN,SKIPPED,変数管理画面へ戻る,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,15,ASSERT_DB,SKIPPED,variablesテーブルが4件になる,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,16,ASSERT_DB,SKIPPED,type=custom valid=1 sortOrder=3 で作られる,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,17,ASSERT_DB,SKIPPED,標準プロファイルの値が保存される,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-0300,P-F05-001,18,ASSERT_SCREEN_HAS,SKIPPED,一覧に変数トークンが表示される,前のステップが失敗したため未実行,,2026-08-13T05:16:24.266Z
+TC-1116,P-F23-021,1,TAP,FAIL,設定画面が開く,"要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+ERROR: 要素が見つかりません: label=&visible=true",/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/sanity/evidence/TC-1116-1-FAIL.png | /Users/sasakikouhei/trunk/project/cliptap/docs/test/results/sanity/evidence/TC-1116-1-FAIL.txt,2026-08-13T05:16:36.253Z
+TC-1116,P-F23-021,2,TAP,SKIPPED,システム変数書式一覧が開く,前のステップが失敗したため未実行,,2026-08-13T05:16:36.859Z
+TC-1116,P-F23-021,3,ASSERT_SCREEN_HAS,SKIPPED,英語の「Reset all to default」が表示される,前のステップが失敗したため未実行,,2026-08-13T05:16:36.859Z
+TC-1116,P-F23-021,4,ASSERT_TEXT_CONTAINS,SKIPPED,weekday の行のプレビューが英名短縮 ${TODAY_EN:EEE} である,前のステップが失敗したため未実行,,2026-08-13T05:16:36.859Z

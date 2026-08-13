@@ -1,0 +1,5 @@
+# 実行証跡（スクリーンショット・AXダンプ）は容量が大きいためコミットしない。
+# results.csv / results-tests.csv / report.md は残す。
+results/*/evidence/
+results/*/.work/
+results/*/run.log

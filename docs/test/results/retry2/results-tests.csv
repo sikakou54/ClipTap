@@ -1,0 +1,162 @@
+TestID,PatternID,Result,FailedStepNo,FailureClass,BugID,StartedAt,EndedAt,Device,OSVersion,Notes
+TC-0011,P-F02-011,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:55:18.323Z,2026-08-13T04:55:30.948Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの追加アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF105&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0012,P-F02-012,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:55:30.948Z,2026-08-13T04:55:43.357Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの追加アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF105&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0013,P-F02-013,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:55:43.358Z,2026-08-13T04:55:55.715Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの追加アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF105&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0016,P-F02-016,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:55:55.715Z,2026-08-13T04:56:08.014Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの追加アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF105&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0019,P-F02-019,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:56:08.015Z,2026-08-13T04:56:20.421Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの追加アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF105&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0021,P-F02-021,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:56:20.421Z,2026-08-13T04:56:32.790Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの追加アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF105&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0022,P-F02-022,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:56:32.790Z,2026-08-13T04:56:45.254Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの追加アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF105&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0111,P-F03-012,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:56:45.254Z,2026-08-13T04:56:57.650Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0112,P-F03-013,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:56:57.651Z,2026-08-13T04:57:08.557Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0114,P-F03-015,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:57:08.559Z,2026-08-13T04:57:21.035Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0115,P-F03-016,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:57:21.035Z,2026-08-13T04:57:33.431Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0116,P-F03-017,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:57:33.432Z,2026-08-13T04:57:45.759Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0119,P-F03-020,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:57:45.760Z,2026-08-13T04:57:58.211Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0127,P-F03-028,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:57:58.212Z,2026-08-13T04:58:10.688Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0128,P-F03-029,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:58:10.689Z,2026-08-13T04:58:23.105Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0229,P-F04-030,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:58:23.105Z,2026-08-13T04:58:34.105Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「プロファイル切替のタップが受け付けられる」／実際「要素が見つかりません: label~=Main&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0239,P-F04-900,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:58:34.108Z,2026-08-13T04:58:46.600Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0306,P-F05-007,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:58:46.600Z,2026-08-13T04:58:57.551Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0307,P-F05-008,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:58:57.555Z,2026-08-13T04:59:08.487Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0311,P-F05-012,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:59:08.490Z,2026-08-13T04:59:21.121Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0313,P-F05-014,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:59:21.122Z,2026-08-13T04:59:33.611Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0315,P-F05-016,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:59:33.612Z,2026-08-13T04:59:46.121Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0316,P-F05-017,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:59:46.123Z,2026-08-13T04:59:58.572Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0319,P-F05-020,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:59:58.573Z,2026-08-13T05:00:11.059Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0320,P-F05-021,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:00:11.060Z,2026-08-13T05:00:23.448Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0321,P-F05-022,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:00:23.449Z,2026-08-13T05:00:35.917Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0324,P-F05-025,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:00:35.918Z,2026-08-13T05:00:46.843Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0326,P-F05-027,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:00:46.847Z,2026-08-13T05:00:59.452Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0331,P-F05-032,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:00:59.453Z,2026-08-13T05:01:11.873Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0343,P-F05-044,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:01:11.874Z,2026-08-13T05:01:24.306Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームの設定アイコンのタップが受け付けられる」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-1001,P-F06-008,FAIL,2,REQUIRES_TRIAGE,,2026-08-13T05:01:24.307Z,2026-08-13T05:01:37.189Z,iPhone 17,iOS-26-5,"Step 2 ASSERT_ORDER: 期待「一覧の上から A 日付系 / B 時刻系 の順に並ぶ」／実際「0番目が不一致: 期待 ""A 日付系"" / 実際 undefined（一致件数 0）」"
+TC-1004,P-F06-010;P-F06-011;P-F06-012;P-F06-013,FAIL,2,REQUIRES_TRIAGE,,2026-08-13T05:01:37.191Z,2026-08-13T05:01:49.316Z,iPhone 17,iOS-26-5,"Step 2 ASSERT_ORDER: 期待「一覧の上から C 和名 / D 表記ゆれ の順に並ぶ」／実際「0番目が不一致: 期待 ""C 和名"" / 実際 undefined（一致件数 0）」"
+TC-1006,P-F06-023,FAIL,2,REQUIRES_TRIAGE,,2026-08-13T05:01:49.320Z,2026-08-13T05:02:01.592Z,iPhone 17,iOS-26-5,Step 2 ASSERT_SCREEN_HAS: 期待「一覧のタイトルが F ${TODAY:yyyy/MM/dd}の記録 と展開表示される」／実際「画面内に見つからない（表示中: ）」
+TC-1116,P-F23-021,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:02:01.593Z,2026-08-13T05:02:13.580Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「設定画面が開く」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-2008,P-F01-008,FAIL,2,REQUIRES_TRIAGE,,2026-08-13T05:02:13.583Z,2026-08-13T05:02:27.089Z,iPhone 17,iOS-26-5,"Step 2 ASSERT_ORDER: 期待「一覧が上からAAA/BBB/CCC/DDDの順で並ぶ」／実際「0番目が不一致: 期待 ""AAA"" / 実際 ""Fitness""（一致件数 11）」"
+TC-2009,P-F01-009,FAIL,2,REQUIRES_TRIAGE,,2026-08-13T05:02:27.094Z,2026-08-13T05:02:42.221Z,iPhone 17,iOS-26-5,Step 2 ASSERT_SCREEN_HAS: 期待「一覧に定型文「要約プロンプト」がある」／実際「画面内に見つからない（表示中: Fitness / Watch / 連絡先 / ファイル / プレビュー / ユーティリティフォルダ / 2個のアプリ / PinMark / Expo Go / ClipTap / 検索 / 全2ページ中の2ページ目）」
+TC-2014,P-F01-015,FAIL,1,REQUIRES_TRIAGE,,2026-08-13T05:02:42.222Z,2026-08-13T05:03:00.004Z,iPhone 17,iOS-26-5,Step 1 ASSERT_SCREEN: 期待「ホーム画面が表示されている」／実際「SC-HOME と判定できない: label=すべて が無い」
+TC-2115,P-F07-016,FAIL,1,REQUIRES_TRIAGE,,2026-08-13T05:03:00.006Z,2026-08-13T05:03:17.807Z,iPhone 17,iOS-26-5,Step 1 ASSERT_SCREEN: 期待「ホーム画面が表示されている」／実際「SC-HOME と判定できない: label=すべて が無い」
+TC-2116,P-F07-017,FAIL,1,REQUIRES_TRIAGE,,2026-08-13T05:03:17.810Z,2026-08-13T05:03:35.363Z,iPhone 17,iOS-26-5,Step 1 ASSERT_SCREEN: 期待「ホーム画面が表示されている」／実際「SC-HOME と判定できない: label=すべて が無い」
+TC-2123,P-F07-027;P-F08-014,FAIL,1,REQUIRES_TRIAGE,,2026-08-13T05:03:35.368Z,2026-08-13T05:03:53.031Z,iPhone 17,iOS-26-5,Step 1 ASSERT_SCREEN: 期待「ホーム画面が表示されている」／実際「SC-HOME と判定できない: label=すべて が無い」
+TC-2128,P-F07-032,FAIL,1,REQUIRES_TRIAGE,,2026-08-13T05:03:53.035Z,2026-08-13T05:04:10.594Z,iPhone 17,iOS-26-5,Step 1 ASSERT_SCREEN: 期待「ホーム画面が表示されている」／実際「SC-HOME と判定できない: label=すべて が無い」
+TC-2131,P-F07-018,FAIL,1,REQUIRES_TRIAGE,,2026-08-13T05:04:10.596Z,2026-08-13T05:04:27.919Z,iPhone 17,iOS-26-5,Step 1 ASSERT_SCREEN: 期待「ホーム画面が表示されている」／実際「SC-HOME と判定できない: label=すべて が無い」
+TC-2210,P-F08-015,FAIL,1,REQUIRES_TRIAGE,,2026-08-13T05:04:27.924Z,2026-08-13T05:04:38.929Z,iPhone 17,iOS-26-5,Step 1 ASSERT_SCREEN_HAS: 期待「絞り込み前に定型文001が一覧にある」／実際「画面内に見つからない（表示中: ）」
+TC-2211,P-F08-016,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:04:38.934Z,2026-08-13T05:04:49.949Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「カテゴリチップ「カテゴリ05」がタップされる」／実際「要素が見つかりません: label=カテゴリ05&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-2300,P-F09-001,FAIL,1,REQUIRES_TRIAGE,,2026-08-13T05:04:49.953Z,2026-08-13T05:05:07.444Z,iPhone 17,iOS-26-5,Step 1 ASSERT_SCREEN: 期待「ホーム画面が表示されている」／実際「SC-HOME と判定できない: label=すべて が無い」
+TC-2301,P-F09-002,FAIL,1,REQUIRES_TRIAGE,,2026-08-13T05:05:07.446Z,2026-08-13T05:05:24.989Z,iPhone 17,iOS-26-5,Step 1 ASSERT_SCREEN: 期待「ホーム画面が表示されている」／実際「SC-HOME と判定できない: label=すべて が無い」
+TC-2302,P-F09-003,FAIL,1,REQUIRES_TRIAGE,,2026-08-13T05:05:24.994Z,2026-08-13T05:05:42.553Z,iPhone 17,iOS-26-5,Step 1 ASSERT_SCREEN: 期待「ホーム画面が表示されている」／実際「SC-HOME と判定できない: label=すべて が無い」
+TC-2303,P-F09-004,FAIL,1,REQUIRES_TRIAGE,,2026-08-13T05:05:42.557Z,2026-08-13T05:06:00.127Z,iPhone 17,iOS-26-5,Step 1 ASSERT_SCREEN: 期待「ホーム画面が表示されている」／実際「SC-HOME と判定できない: label=すべて が無い」
+TC-2313,P-F09-015,FAIL,1,REQUIRES_TRIAGE,,2026-08-13T05:06:00.128Z,2026-08-13T05:06:12.737Z,iPhone 17,iOS-26-5,"Step 1 ASSERT_ORDER: 期待「変更前は作成日時順で並ぶ」／実際「0番目が不一致: 期待 ""要約プロンプト"" / 実際 undefined（一致件数 0）」"
+TC-2322,P-F09-026,FAIL,1,REQUIRES_TRIAGE,,2026-08-13T05:06:12.738Z,2026-08-13T05:06:30.605Z,iPhone 17,iOS-26-5,Step 1 ASSERT_SCREEN: 期待「ホーム画面が表示されている」／実際「SC-HOME と判定できない: label=すべて が無い」
+TC-3005,P-F13-007,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:06:30.609Z,2026-08-13T05:06:41.296Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3034,P-F13-034,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:06:41.299Z,2026-08-13T05:06:52.399Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3035,P-F13-035,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:06:52.403Z,2026-08-13T05:07:04.247Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3040,P-F13-040,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:07:04.250Z,2026-08-13T05:07:15.153Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3046,P-F13-046,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:07:15.158Z,2026-08-13T05:07:26.217Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3041,P-F13-041,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:07:26.222Z,2026-08-13T05:07:37.358Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3042,P-F13-042,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:07:37.362Z,2026-08-13T05:07:48.508Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3043,P-F13-043,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:07:48.514Z,2026-08-13T05:07:59.540Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3051,P-F13-051,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:07:59.545Z,2026-08-13T05:08:10.583Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3060,P-F13-060,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:08:10.586Z,2026-08-13T05:08:21.651Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3061,P-F13-061,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:08:21.656Z,2026-08-13T05:08:32.715Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3062,P-F13-062,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:08:32.721Z,2026-08-13T05:08:44.626Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3070,P-F13-070,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:08:44.628Z,2026-08-13T05:08:55.628Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3071,P-F13-071,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:08:55.633Z,2026-08-13T05:09:06.866Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3102,P-F13-102,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:09:06.871Z,2026-08-13T05:09:17.805Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3201,P-F14-002,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:09:17.809Z,2026-08-13T05:09:28.370Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3205,P-F14-006,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:09:28.373Z,2026-08-13T05:09:38.079Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3304,P-F18-009,FAIL,2,AUTOMATION_ERROR,,2026-08-13T05:09:38.084Z,2026-08-13T05:09:53.742Z,iPhone 17,iOS-26-5,"Step 2 TAP: 期待「ホームヘッダの設定アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3403,P-F18-104,FAIL,2,AUTOMATION_ERROR,,2026-08-13T05:09:53.743Z,2026-08-13T05:10:07.703Z,iPhone 17,iOS-26-5,"Step 2 TAP: 期待「ホームヘッダの設定アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3407,P-F18-108,FAIL,2,AUTOMATION_ERROR,,2026-08-13T05:10:07.706Z,2026-08-13T05:10:23.420Z,iPhone 17,iOS-26-5,"Step 2 TAP: 期待「ホームヘッダの設定アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3412,P-F18-112,FAIL,2,AUTOMATION_ERROR,,2026-08-13T05:10:23.421Z,2026-08-13T05:10:38.842Z,iPhone 17,iOS-26-5,"Step 2 TAP: 期待「ホームヘッダの設定アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4001,P-F16-002,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:10:38.846Z,2026-08-13T05:10:49.451Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4005,P-F16-011,FAIL,2,AUTOMATION_ERROR,,2026-08-13T05:10:49.454Z,2026-08-13T05:11:03.707Z,iPhone 17,iOS-26-5,"Step 2 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4101,P-F17-002,FAIL,2,AUTOMATION_ERROR,,2026-08-13T05:11:03.708Z,2026-08-13T05:11:17.662Z,iPhone 17,iOS-26-5,"Step 2 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4102,P-F17-003;P-F17-005,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:11:17.663Z,2026-08-13T05:11:27.264Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4108,P-F17-017,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:11:27.269Z,2026-08-13T05:11:37.049Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4109,P-F17-018,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:11:37.054Z,2026-08-13T05:11:46.833Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4110,P-F17-019,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:11:46.838Z,2026-08-13T05:11:56.607Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4111,P-F17-006;P-F17-010,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:11:56.613Z,2026-08-13T05:12:06.386Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4112,P-F17-011,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:12:06.389Z,2026-08-13T05:12:16.090Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4113,P-F17-032,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:12:16.094Z,2026-08-13T05:12:25.744Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4114,P-F17-033,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:12:25.749Z,2026-08-13T05:12:36.383Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4115,P-F17-034,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:12:36.386Z,2026-08-13T05:12:48.483Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4301,P-F19-002,FAIL,2,REQUIRES_TRIAGE,,2026-08-13T05:12:48.485Z,2026-08-13T05:13:10.173Z,iPhone 17,iOS-26-5,Step 2 ASSERT_SCREEN: 期待「ホーム画面が表示されている」／実際「SC-HOME と判定できない: label=すべて が無い」
+TC-4401,P-F20-002,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:13:10.174Z,2026-08-13T05:13:20.689Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4402,P-F20-003,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:13:20.693Z,2026-08-13T05:13:31.236Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4406,P-F20-004,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:13:31.239Z,2026-08-13T05:13:41.957Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4503,P-F21-008,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:13:41.961Z,2026-08-13T05:13:52.511Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ヘッダーの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4601,P-F22-008;P-F22-014,FAIL,2,AUTOMATION_ERROR,,2026-08-13T05:13:52.514Z,2026-08-13T05:14:02.969Z,iPhone 17,iOS-26-5,"Step 2 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4604,P-F22-010,FAIL,1,AUTOMATION_ERROR,,2026-08-13T05:14:02.975Z,2026-08-13T05:14:13.428Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
