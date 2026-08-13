@@ -165,7 +165,7 @@ export type ImportCandidates = z.infer<typeof ImportCandidatesSchema>;
  * - c: チェックサム（SHA-256、改竄検知）
  */
 export const ClipTapExportDataSchema = z.object({
-  s: z.number(),
+  s: z.number().int(),
   t: z.string(),
   h: z.string(),
   d: z.string(),

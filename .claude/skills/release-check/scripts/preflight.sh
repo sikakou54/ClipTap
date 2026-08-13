@@ -33,9 +33,7 @@ run "型チェック（全ワークスペース）" npm run type-check
 run "ユニットテスト（packages/shared）" npm test
 run "ESLint（apps/mobile / 0件必須）" npm run lint --workspace=@cliptap/mobile
 
-# apps/web は既知のエラーが残るため参考表示に留める（機能仕様書 §15 X-08）
-print "\n=== ESLint（apps/web / 参考） ==="
-npm run lint --workspace=@cliptap/web || print "NOTE: apps/web には既知の未解消エラーがあります（X-08）"
+run "ESLint（apps/web / 0件必須）" npm run lint --workspace=@cliptap/web
 
 if [[ "$1" != "quick" ]]; then
   run "Androidデバッグビルド" zsh -c "cd '$REPO_ROOT/apps/mobile/android' && ./gradlew assembleDebug"

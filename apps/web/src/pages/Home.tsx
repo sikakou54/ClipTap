@@ -16,22 +16,25 @@
  * - チェックサム検証
  * - スキーマバージョン互換性チェック
  */
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   SubscriptionService as SharedSubscriptionService,
   ImportParserService as ImportParserServiceClass,
+  ImportService,
   ClipTapError,
-  migrateImportTempDb,
+  Logger,
   SystemVariableFormatMapper,
-  SCHEMA_VERSION,
+  getFileIOAdapter,
+  toOpfsPath,
 } from '@cliptap/shared';
 import { SQLiteWasm } from '@src/mappers/sqliteWasm';
 import { useDatabase } from '@cliptap/shared';
-import { subscriptionService } from '@services/SubscriptionService';
 import { webDbCacheManager } from '@adapters/WebDbCacheManager';
+import type { WebFileIOAdapter } from '@adapters/WebFileIOAdapter';
+import { loadInitialImportDatabase } from '@services/InitialImportService';
 
-import { useAuth, useTranslation } from '@cliptap/shared';
+import { useTranslation } from '@cliptap/shared';
 import { WebPageModal } from '@components/common/WebPageModal';
 import {
   FileUploadArea,
@@ -48,6 +51,42 @@ import { database } from '@database/database';
 
 const importParserService = new ImportParserServiceClass();
 
+/**
+ * 初回読込の失敗を画面表示用の文言へ対応付ける
+ *
+ * @param error - 読込処理が送出したエラー
+ * @param t - 翻訳関数
+ * @returns 利用者へ表示する文言
+ *
+ * @remarks
+ * ClipTapErrorのcodeは翻訳キーを兼ねる。画面固有の言い回しがあるものはそれを使い、
+ * 残りはcodeの翻訳へ委ねる。内部Errorの英語メッセージは画面へ出さずログにだけ残す。
+ */
+function resolveLoadErrorMessage(
+  error: unknown,
+  t: (key: string, options?: Record<string, string>) => string
+): string {
+  if (!(error instanceof ClipTapError)) {
+    Logger.error('[Home] Failed to load file:', error);
+    return t('error.generic');
+  }
+
+  switch (error.code) {
+    case 'error.incorrect_password':
+      return t('settings.web_specific.error_password');
+    case 'error.checksum_mismatch':
+      return t('settings.web_specific.error_checksum');
+    case 'error.newer_version':
+      return t('settings.web_specific.error_version');
+    case 'error.invalid_file_format':
+      return t('settings.web_specific.error_invalid');
+    default:
+      /* 画面固有の言い回しが無いcodeは、その翻訳を読込失敗の文脈へ埋め込む */
+      Logger.error('[Home] Failed to load file:', error);
+      return t('settings.web_specific.error_generic', { message: t(error.code) });
+  }
+}
+
 export function Home() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -56,10 +95,11 @@ export function Home() {
   const [hasAgreedTerms, setHasAgreedTerms] = useState(false);
   const [hasAgreedPrivacy, setHasAgreedPrivacy] = useState(false);
   const [activeModal, setActiveModal] = useState<'terms' | 'privacy' | null>(null);
+  /* 初回読込の実行中フラグ（多重読込の防止） */
+  const isImportingRef = useRef(false);
 
   const navigate = useNavigate();
   const { isLoaded, setLoaded } = useDatabase();
-  const { user } = useAuth();
   const { t } = useTranslation();
 
 
@@ -109,67 +149,60 @@ export function Home() {
       return;
     }
 
+    /* 連打やEnterキーによる多重読込を防ぐ（描画前に判定するためstateではなくrefで持つ） */
+    if (isImportingRef.current) return;
+    isImportingRef.current = true;
+
     setIsLoading(true);
     setError('');
+
+    const fileIO = getFileIOAdapter() as WebFileIOAdapter;
+    let sourcePath: string | null = null;
 
     try {
       await SQLiteWasm.init();
 
-      const arrayBuffer = await selectedFile.arrayBuffer();
-      const jsonText = new TextDecoder().decode(arrayBuffer);
-
-      const { dbBytes, exportData } = await importParserService.parseAndValidate(jsonText, password);
-
-      /* mainDB・systemDBの両方を開き直す（「ファイルを閉じる」後の再読み込みに対応） */
-      const mainDbAdapter = await database.openImportedDatabase(dbBytes);
-
-      if (exportData.s < SCHEMA_VERSION) {
-        await migrateImportTempDb(mainDbAdapter, exportData.s);
-      }
-      SystemVariableFormatMapper.loadRegistry();
-      await database.finalizeInitialLoad();
-
-      /* サブスクリプション状態を確認（ログイン済みの場合のみ） */
-      if (user) {
-        await subscriptionService.checkSubscription(user.uid);
-      }
-
-      SharedSubscriptionService.updateValidFlags();
+      /* 通常インポートと同じ経路で、検証と一時DB上の移行を先に完了する */
+      sourcePath = toOpfsPath(`temp_initial_import_${crypto.randomUUID()}.json`);
+      await fileIO.writeFile(sourcePath, await selectedFile.text());
+      await loadInitialImportDatabase(password, sourcePath, {
+        prepareDatabase: (importPassword, importSourcePath) =>
+          ImportService.prepareImportDatabase(importPassword, importSourcePath),
+        readPreparedDatabase: (tempDbPath) => fileIO.readBytes(tempDbPath),
+        suspendAutoSave: () => webDbCacheManager.suspendAutoSave(),
+        openDatabase: async (dbBytes) => {
+          /* mainDB・systemDBの両方を開き直す（「ファイルを閉じる」後の再読み込みに対応） */
+          await database.openImportedDatabase(dbBytes);
+        },
+        finalizeDatabase: async () => {
+          await database.finalizeInitialLoad();
+          SystemVariableFormatMapper.loadRegistry();
+          /* 通常インポートと同じく、プラン上限に応じた有効フラグを反映する */
+          SharedSubscriptionService.updateValidFlags();
+        },
+        persistDatabase: () => webDbCacheManager.flushOrThrow(),
+        resetDatabase: () => database.reset(),
+        cleanupDatabase: (tempDbPath) => fileIO.deleteFile(tempDbPath),
+      });
 
       setLoaded(true);
-
-      await webDbCacheManager.flush();
 
       navigate('/dashboard');
 
     } catch (err) {
-      /* ClipTapErrorのcodeは翻訳キーを兼ねるため、これを画面固有の文言へ対応付ける */
-      const errorCode = err instanceof ClipTapError ? err.code : null;
-
-      switch (errorCode) {
-        case 'error.incorrect_password':
-          setError(t('settings.web_specific.error_password'));
-          break;
-        case 'error.checksum_mismatch':
-          setError(t('settings.web_specific.error_checksum'));
-          break;
-        case 'error.newer_version':
-          setError(t('settings.web_specific.error_version'));
-          break;
-        case 'error.invalid_file_format':
-          setError(t('settings.web_specific.error_invalid'));
-          break;
-        default:
-          setError(
-            t('settings.web_specific.error_generic', {
-              message: err instanceof Error ? err.message : t('error.generic'),
-            })
-          );
-      }
+      setError(resolveLoadErrorMessage(err, t));
     } finally {
+      if (sourcePath) {
+        try {
+          await fileIO.deleteFile(sourcePath);
+        } catch {
+          /* 入力用一時ファイルの削除失敗は読込結果へ影響させない */
+        }
+      }
       setIsLoading(false);
+      isImportingRef.current = false;
     }
-  }, [selectedFile, password, hasAgreedTerms, hasAgreedPrivacy, user, t, setLoaded, navigate]);
+  }, [selectedFile, password, hasAgreedTerms, hasAgreedPrivacy, t, setLoaded, navigate]);
 
   if (isLoaded) {
     return <div className="min-h-screen bg-gray-50 dark:bg-black" />;
@@ -200,6 +233,7 @@ export function Home() {
           onChange={setPassword}
           onEnter={handleLoadFile}
           selectedFile={selectedFile}
+          disabled={isLoading}
         />
 
         {/* エラー表示 */}

@@ -99,19 +99,30 @@ class Database {
       const fileIO = getFileIOAdapter() as WebFileIOAdapter;
       if (dbData && dbData.length > 0) {
         await fileIO.writeBytes(getMainDatabasePath(), dbData);
+        await this.assertFileExists(fileIO, getMainDatabasePath());
         Logger.info('[Database] mainDB cache written to OPFS');
       } else {
         /* キャッシュがない場合は空のDBファイルを削除（存在すれば） */
         const exists = await fileIO.exists(getMainDatabasePath());
         if (exists) {
           await fileIO.deleteFile(getMainDatabasePath());
+          await this.assertFileDeleted(fileIO, getMainDatabasePath());
         }
       }
 
       /* 3.5. systemDBキャッシュがあればOPFSに書き出し */
       if (systemDbData && systemDbData.length > 0) {
         await fileIO.writeBytes(getSystemDatabasePath(), systemDbData);
+        await this.assertFileExists(fileIO, getSystemDatabasePath());
         Logger.info('[Database] systemDB cache written to OPFS');
+      } else {
+        /** legacyキャッシュの版情報より古いOPFS systemDBを誤って優先しない */
+        const systemDbExists = await fileIO.exists(getSystemDatabasePath());
+        if (systemDbExists) {
+          await fileIO.deleteFile(getSystemDatabasePath());
+          await this.assertFileDeleted(fileIO, getSystemDatabasePath());
+          Logger.info('[Database] stale OPFS systemDB deleted');
+        }
       }
 
       /* 4. mainDbAdapterでDBを開く */
@@ -143,11 +154,17 @@ class Database {
         /*
          * バージョン確認・マイグレーション実行
          * 失敗した場合は中途半端なスキーマのまま起動させず、Mobile版と同様に呼び出し元へ送出する
+         * 移行中は自動保存を止め、途中失敗したDBがdebounce保存でキャッシュへ焼き付くのを防ぐ
          */
-        await runMigrations(mainDbAdapter, systemDbAdapter, schemaVersion);
+        const resumeAutoSave = await webDbCacheManager.suspendAutoSave();
+        try {
+          await runMigrations(mainDbAdapter, systemDbAdapter, schemaVersion);
 
-        /* マイグレーション結果はsql.jsのメモリ上にしか無いため、確実にIndexedDBへ書き戻す */
-        await webDbCacheManager.flush();
+          /* マイグレーション結果はsql.jsのメモリ上にしか無いため、確実にIndexedDBへ書き戻す */
+          await webDbCacheManager.flush();
+        } finally {
+          resumeAutoSave();
+        }
 
         Logger.info('[Database] Database restored from cache and migrations applied');
       } else {
@@ -198,17 +215,43 @@ class Database {
   async openImportedDatabase(dbBytes: Uint8Array): Promise<WebDatabaseAdapter> {
     const fileIO = getFileIOAdapter() as WebFileIOAdapter;
     await fileIO.writeBytes(getMainDatabasePath(), dbBytes);
+    await this.assertFileExists(fileIO, getMainDatabasePath());
 
     const mainDbAdapter = getMainDbAdapter() as WebDatabaseAdapter;
     await mainDbAdapter.open(getMainDatabasePath());
 
     const systemDbAdapter = getSystemDbAdapter() as WebDatabaseAdapter;
+    systemDbAdapter.close();
+    if (await fileIO.exists(getSystemDatabasePath())) {
+      await fileIO.deleteFile(getSystemDatabasePath());
+      await this.assertFileDeleted(fileIO, getSystemDatabasePath());
+    }
     await systemDbAdapter.open(getSystemDatabasePath());
 
     /* DBが開かれた状態に戻るため、reset()で落ちた初期化フラグを立て直す */
     this.isInitialized = true;
 
     return mainDbAdapter;
+  }
+
+  /** deleteFile実装が内部で例外を吸収しても、削除漏れを成功扱いしない */
+  private async assertFileDeleted(fileIO: WebFileIOAdapter, path: string): Promise<void> {
+    if (await fileIO.exists(path)) {
+      throw new Error(`Failed to delete database file: ${path}`);
+    }
+  }
+
+  /**
+   * 書き出したDBファイルが存在することを確認する
+   *
+   * @remarks
+   * open()はファイルが無い場合に無言で空のDBを作るため、書込漏れに気付けない。
+   * 空DBのまま自動保存が走るとキャッシュを上書きしてしまうので、open前に必ず確認する。
+   */
+  private async assertFileExists(fileIO: WebFileIOAdapter, path: string): Promise<void> {
+    if (!await fileIO.exists(path)) {
+      throw new Error(`Failed to write database file: ${path}`);
+    }
   }
 
   /** 初回ファイル読込後のプロファイル状態とスキーマ版を確定する */

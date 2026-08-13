@@ -14,10 +14,15 @@
  */
 
 import type { DbAdapter } from '../adapters/DbAdapter';
-import { VersionMismatchError } from '../errors';
+import { DatabaseError, NewerVersionError, VersionMismatchError } from '../errors';
 import { Logger } from '../utils/logger';
 import { generateUniqueId, getCurrentTimestamp } from '../utils/dateHelpers';
-import { CREATE_TABLES, CREATE_INDEXES, SCHEMA_VERSION } from './schema';
+import {
+  CREATE_TABLES,
+  CREATE_INDEXES,
+  MIN_SUPPORTED_SCHEMA_VERSION,
+  SCHEMA_VERSION,
+} from './schema';
 
 /* ======================================== */
 /* スキーマバージョン管理関数（Mobile/Web共通） */
@@ -75,6 +80,84 @@ export function tableExists(db: DbAdapter, tableName: string): boolean {
     Logger.error(`Failed to check if table ${tableName} exists:`, error);
     return false;
   }
+}
+
+/**
+ * マイグレーション開始バージョンが、呼び出し元のサポート範囲内か検証します。
+ *
+ * @param fromVersion - マイグレーション開始バージョン
+ * @param minimumVersion - 呼び出し元がサポートする最古のバージョン
+ */
+function assertSupportedMigrationVersion(
+  fromVersion: number,
+  minimumVersion: number
+): void {
+  if (!Number.isInteger(fromVersion) || fromVersion < minimumVersion) {
+    throw new VersionMismatchError(minimumVersion, fromVersion);
+  }
+
+  if (fromVersion > SCHEMA_VERSION) {
+    throw new NewerVersionError(SCHEMA_VERSION, fromVersion);
+  }
+}
+
+/** 導出済みの必須テーブル名（初回の検証時に一度だけ求める） */
+let latestTableNames: readonly string[] | null = null;
+
+/**
+ * 最新スキーマで存在が必須となるテーブル名を`CREATE_TABLES`のDDLから導出します。
+ *
+ * @returns 必須テーブル名の一覧
+ * @throws {DatabaseError} DDLからテーブル名を取り出せない場合
+ *
+ * @remarks
+ * スキーマ定義との二重管理を避けるため、一覧を手書きせずDDLから求めます。
+ * モジュール読込時ではなく検証時に評価し、DDLの記法変更でアプリ起動ごと落ちないようにしています。
+ */
+function getLatestTableNames(): readonly string[] {
+  if (latestTableNames) return latestTableNames;
+
+  latestTableNames = Object.values(CREATE_TABLES).map((sql) => {
+    const tableName = /CREATE TABLE IF NOT EXISTS\s+(\w+)/.exec(sql)?.[1];
+    if (!tableName) {
+      throw new DatabaseError(
+        `Failed to derive table name from schema definition: ${sql.trim().slice(0, 40)}`
+      );
+    }
+    return tableName;
+  });
+
+  return latestTableNames;
+}
+
+/**
+ * 最新スキーマの必須テーブルが揃っているか検証します。
+ *
+ * @remarks
+ * 移行段の選択は宣言バージョンだけで行うため、ここでは結果の形だけを確認します。
+ * テーブルが欠けたDBを取り込むと以降の全操作が生SQLiteエラーになるため、その手前で明示的に失敗させます。
+ * 列レベルの検証は行いません。派生indexが参照する列は `createIndexesWithDb` の作成時に検知されます。
+ */
+function assertLatestTables(db: DbAdapter): void {
+  const missingTables = getLatestTableNames().filter((table) => !tableExists(db, table));
+
+  if (missingTables.length > 0) {
+    throw new DatabaseError(
+      `Migration completed without required schema elements: ${missingTables.join(', ')}`
+    );
+  }
+}
+
+/**
+ * 移行完了後のDBが最新スキーマの形になっているか確認し、派生indexを補完します。
+ *
+ * @remarks
+ * 欠損テーブルを明示エラーにしてから、旧実装で作りそこねた派生indexだけを自己修復します。
+ * indexは `CREATE INDEX IF NOT EXISTS` の失敗自体が例外になるため、作成後の存在確認は行いません。
+ */
+async function finalizeLatestSchema(db: DbAdapter): Promise<void> {
+  assertLatestTables(db);
+  await createIndexesWithDb(db);
 }
 
 /* ======================================== */
@@ -540,10 +623,7 @@ export async function migrateV5ToV6(db: DbAdapter): Promise<void> {
       await db.exec(`ALTER TABLE snippets ADD COLUMN copyCount INTEGER DEFAULT 0;`);
 
       /* インデックスを作成 */
-      await db.exec(`
-        CREATE INDEX IF NOT EXISTS idx_snippets_copy_count
-        ON snippets(copyCount DESC);
-      `);
+      await db.exec(CREATE_INDEXES.snippetsCopyCount);
 
       Logger.success('[Migration V5→V6] copyCount column and index added successfully');
     }
@@ -670,6 +750,9 @@ export async function runMigrations(
   systemDB: DbAdapter,
   fromVersion: number
 ): Promise<void> {
+  /** Mobileの既存DBはV1以降をサポートするため、インポート用の下限は適用しない */
+  assertSupportedMigrationVersion(fromVersion, 1);
+
   let currentVersion = fromVersion;
 
   Logger.info(`[Migration] from: ${currentVersion}, to: ${SCHEMA_VERSION}`);
@@ -706,6 +789,9 @@ export async function runMigrations(
     Logger.info(`[Migration] Migrated to version ${nextVersion}`);
   }
 
+  /** 版番号を確定する前に、宣言どおりの形になっているかを必ず確認する */
+  await finalizeLatestSchema(mainDB);
+
   /* マイグレーション完了後にバージョンをsystemDBに保存 */
   await setSchemaVersionToDb(systemDB, SCHEMA_VERSION);
 }
@@ -713,13 +799,15 @@ export async function runMigrations(
 /**
  * インポート一時DBのマイグレーション
  *
- * V4以降のエクスポートファイルを現在のスキーマバージョンにマイグレーションします。
+ * V3以降のエクスポートファイルを現在のスキーマバージョンにマイグレーションします。
  * Mobile/Web共通で使用できる汎用関数です。
  *
  * @param db - 一時DBアダプター
  * @param fromVersion - エクスポートファイルのスキーマバージョン
  */
 export async function migrateImportTempDb(db: DbAdapter, fromVersion: number): Promise<void> {
+  assertSupportedMigrationVersion(fromVersion, MIN_SUPPORTED_SCHEMA_VERSION);
+
   let currentVersion = fromVersion;
 
   Logger.info(`[Import Migration] from: ${currentVersion}, to: ${SCHEMA_VERSION}`);
@@ -748,5 +836,7 @@ export async function migrateImportTempDb(db: DbAdapter, fromVersion: number): P
     currentVersion = nextVersion;
   }
 
+  /** 取込前に形の不整合を明示エラーへ変えるため、宣言版がV7でも必ず確認する */
+  await finalizeLatestSchema(db);
   Logger.success(`[Import Migration] Migration completed to V${SCHEMA_VERSION}`);
 }

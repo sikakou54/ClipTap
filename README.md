@@ -20,11 +20,11 @@ ClipTapは、定型文をローカルで管理し、変数を展開してクリ�
 
 | ワークスペース | 技術 | 役割 |
 |---|---|---|
-| `apps/mobile` | Expo SDK 54、React Native 0.81、SQLite | iOS / Androidアプリとネイティブキーボード |
+| `apps/mobile` | Expo SDK 57、React Native 0.86、SQLite | iOS / Androidアプリとネイティブキーボード |
 | `apps/web` | React 19、Vite 7、SQLite WASM | Webアプリとランディングページ |
 | `packages/shared` | TypeScript、Zod | 型、業務ロジック、DBスキーマ、日英翻訳の共有 |
 
-現行はアプリ版1.2.1、DBスキーマV6です。最低対応OSはiOS / iPadOS 15.1、Android 7.0（API 24）です。
+現行はアプリ版1.3.0、DBスキーマV7です。最低対応OSはiOS / iPadOS 17.0、Android 7.0（API 24）です。
 
 ## セットアップ
 
@@ -48,7 +48,7 @@ npm run build:web
 
 ## ドキュメント
 
-- [機能仕様書](docs/機能仕様書.md) — 機能、画面、外部IF、ファイル、DB、非機能、未確定事項の正本
+- [機能仕様書](docs/機能仕様書.md) — 機能、画面、外部IF、ファイル、DB、非機能の正本
 - [開発ガイド](docs/DEVELOPMENT.md) — セットアップ、開発、テスト、ビルド、配布
 - [マーケティング戦略](docs/MARKETING_STRATEGY.md) — ASO、広告、グロース施策
 - [開発ルール](CLAUDE.md) — リポジトリで守る実装・運用ルール

@@ -63,4 +63,13 @@ describe('ImportParserService.parseAndValidate', () => {
     await expect(new ImportParserService().parseAndValidate(fixture.json, fixture.password))
       .rejects.toBeInstanceOf(VersionMismatchError);
   });
+
+  it('rejects a fractional schema version as an invalid format', async () => {
+    const bytes = new Uint8Array(16);
+    bytes.set(Buffer.from('SQLite format 3\0', 'binary'));
+    const fixture = await buildExportData(bytes, 6.5);
+
+    await expect(new ImportParserService().parseAndValidate(fixture.json, fixture.password))
+      .rejects.toBeInstanceOf(InvalidFileFormatError);
+  });
 });

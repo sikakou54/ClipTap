@@ -27,6 +27,7 @@ import { getTempDbAdapter, hasTempDbAdapter, getMainDbAdapter, hasMainDbAdapter 
 import { getImportAdapter, hasImportAdapter } from '../adapters/ImportAdapter';
 import { ImportParserService } from './ImportParserService';
 import { Logger } from '../utils/logger';
+import { generateUniqueId } from '../utils/dateHelpers';
 import { uint8ArrayToBase64 } from '../utils/exportImportUtils';
 import { PartialImportError } from '../errors';
 import { CategoryService } from './CategoryService';
@@ -372,27 +373,42 @@ export class ImportService {
     const jsonContent = await adapter.readImportFile(fileUri);
     const { dbBytes, exportData } = await importParserService.parseAndValidate(jsonContent, password);
 
-    const tempDbName = `import_temp_${new Date().getTime()}.db`;
+    /** 同一ミリ秒の多重操作でも一時DBを共有しない */
+    const tempDbName = `import_temp_${generateUniqueId()}.db`;
     const dbBase64 = uint8ArrayToBase64(dbBytes);
 
     const tempDbPath = await adapter.writeTempDatabase(tempDbName, dbBase64);
 
-    /* 旧バージョンファイルの場合、一時DBに対してマイグレーションを実行 */
-    if (exportData.s < SCHEMA_VERSION) {
-      Logger.info(`[ImportService] Migrating temp DB from V${exportData.s} to V${SCHEMA_VERSION}...`);
+    try {
+      /** 一時DB上で、必要な移行と最新スキーマの後条件検証を完了する */
       const tempDbAdapter = getTempDbAdapter();
-      await tempDbAdapter.open?.(tempDbPath);
       try {
+        await tempDbAdapter.open?.(tempDbPath);
+
+        if (exportData.s < SCHEMA_VERSION) {
+          Logger.info(`[ImportService] Migrating temp DB from V${exportData.s} to V${SCHEMA_VERSION}...`);
+        }
+
         await migrateImportTempDb(tempDbAdapter, exportData.s);
-        /* メモリ上で動作する実装（Web）では書き戻さないとマイグレーション結果が失われる */
+
+        /** WebではV7の派生index補完も、close前に一時ファイルへ書き戻す必要がある */
         await tempDbAdapter.persist?.();
-        Logger.info('[ImportService] Temp DB migration completed');
+        if (exportData.s < SCHEMA_VERSION) {
+          Logger.info('[ImportService] Temp DB migration completed');
+        }
       } finally {
         tempDbAdapter.close?.();
       }
-    }
 
-    return tempDbPath;
+      return tempDbPath;
+    } catch (error) {
+      try {
+        await adapter.deleteFile(tempDbPath);
+      } catch (cleanupError) {
+        Logger.warn('[ImportService] Failed to cleanup invalid temp db:', cleanupError);
+      }
+      throw error;
+    }
   }
 
   /**

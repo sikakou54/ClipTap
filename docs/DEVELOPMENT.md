@@ -515,8 +515,8 @@ clipTap/
 React Native + Expoで構築されたモバイルアプリ。iOS/Android両対応。
 
 **主要技術**:
-- Expo SDK 54
-- React Native 0.81
+- Expo SDK 57
+- React Native 0.86.2
 - Expo Router（ファイルベースルーティング）
 - SQLite（expo-sqlite）
 - Firebase Authentication
@@ -963,13 +963,15 @@ apps/mobile/app/index.tsx:23:5 - error TS2322: Type 'string' is not assignable t
 
 ### ユニットテストの実行
 
-共有パッケージには変数パーサーのVitestテストがあります。現行package scriptsには `test` がないため、次のように対象を明示して実行します。
+共有パッケージ（`packages/shared`）にVitestの回帰テストがあります。ルートから実行できます。
 
 ```bash
-npx vitest run packages/shared/tests/parser.test.ts
+npm test                                             # ルート（内部で @cliptap/shared の vitest run を実行）
+npm test --workspace=@cliptap/shared                 # 共有パッケージを直接実行
+npx vitest run packages/shared/tests/parser.test.ts  # 単一ファイルだけ実行したいとき
 ```
 
-新機能では同じテスト基盤へ回帰ケースを追加し、標準の `test` スクリプトを整備する場合はルートと対象ワークスペースを同時に更新してください。
+新機能では同じテスト基盤へ回帰ケースを追加し、コミット前に `npm test` がすべて成功することを確認してください（CLAUDE.md「コミット前の必須チェック」およびCIと同じ）。
 
 ### デバッグのベストプラクティス
 
@@ -1550,7 +1552,7 @@ const expandedContent = variableParser.expand(snippet.content, profile);
 
 - 入力制約は [機能仕様書](./機能仕様書.md) を正とし、各画面へ同じ数値を重複定義しない
 - 共有の定数・検証処理を再利用し、モバイル、Web、インポートで同じ結果にする
-- タイトルは現行方針上必須・30文字、本文は必須、カテゴリは任意。ただし既知の実装差は機能仕様書の未確定事項に従って解消する
+- タイトルは現行方針上必須・30文字、本文は必須、カテゴリは任意。実装との差を見つけた場合は機能仕様書§1.1に従い、ソースコードを正として仕様書側を合わせる
 
 **2. SQLインジェクション対策**
 
@@ -1588,7 +1590,7 @@ await db.getAllAsync(
 ### プロジェクト内ドキュメント
 
 - **CLAUDE.md**: プロジェクト概要、アーキテクチャ、コーディング規約
-- **docs/機能仕様書.md**: 機能、画面、外部IF、ファイル、DB、非機能、未確定事項の正本
+- **docs/機能仕様書.md**: 機能、画面、外部IF、ファイル、DB、非機能の正本
 - **docs/DEVELOPMENT.md**: 開発セットアップガイド（このファイル）
 
 ### 外部ドキュメント

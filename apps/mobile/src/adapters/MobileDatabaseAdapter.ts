@@ -9,7 +9,7 @@
  */
 
 import * as SQLite from 'expo-sqlite';
-import { type DbAdapter, type DbRunResult, type FileIOAdapter, getFileName, getDirectoryPath } from '@cliptap/shared';
+import { type DbAdapter, type DbRunResult, type FileIOAdapter, getFileName, getDirectoryPath, Logger } from '@cliptap/shared';
 
 export interface MobileDatabaseAdapterOptions {
   fileIO: FileIOAdapter;
@@ -27,9 +27,7 @@ export class MobileDatabaseAdapter implements DbAdapter {
   async open(path: string): Promise<void> {
     /* 既に開いているデータベースがある場合は先に閉じる（複数DBの切り替え対応） */
     if (this.db) {
-      await this.db.closeAsync();
-      this.db = null;
-      this.currentPath = null;
+      this.close();
     }
 
     /* パスからファイル名とディレクトリパスを抽出 */
@@ -50,8 +48,16 @@ export class MobileDatabaseAdapter implements DbAdapter {
   }
 
   close(): void {
-    if (this.db) {
-      void this.db.closeAsync();
+    if (!this.db) return;
+
+    try {
+      /* DbAdapterの同期close契約を守り、直後の再openや一時ファイル削除との競合を防ぐ */
+      this.db.closeSync();
+    } catch (error) {
+      /* closeはfinallyから呼ばれるため、ここで送出すると本来のエラーを置き換えてしまう */
+      Logger.warn('[MobileDatabaseAdapter] Failed to close database:', error);
+    } finally {
+      /* close失敗でも参照を捨て、壊れたハンドルを以降のopenで触らせない */
       this.db = null;
       this.currentPath = null;
     }

@@ -12,9 +12,10 @@ interface PasswordInputProps {
   onChange: (password: string) => void;
   onEnter: () => void;
   selectedFile: File | null;
+  disabled?: boolean;
 }
 
-export function PasswordInput({ password, onChange, onEnter, selectedFile }: PasswordInputProps) {
+export function PasswordInput({ password, onChange, onEnter, selectedFile, disabled = false }: PasswordInputProps) {
   const { t } = useTranslation();
 
   /* パスワード入力フィールド（Enterキーでファイル読み込み実行） */
@@ -22,10 +23,11 @@ export function PasswordInput({ password, onChange, onEnter, selectedFile }: Pas
     <div className="mt-6">
       <input
         type="password"
+        disabled={disabled}
         value={password}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && selectedFile && password) {
+          if (e.key === 'Enter' && selectedFile && password && !disabled) {
             onEnter();
           }
         }}
@@ -35,4 +37,3 @@ export function PasswordInput({ password, onChange, onEnter, selectedFile }: Pas
     </div>
   );
 }
-
