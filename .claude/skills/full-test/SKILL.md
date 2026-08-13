@@ -105,12 +105,17 @@ node $R --run-id 20260812-1800                    # 全件
 node $R --tests TC-0001,TC-0002                   # 一部
 node $R --filter FeatureID=F-02                   # 機能単位
 node $R --dry-run                                 # 解釈だけ検証（操作しない）
+node $R --run-id 20260812-1800 --resume            # 既存結果を保持して中断位置から再開
+node $R --run-id 20260812-1800 --resume --retry-nonpass # FAIL/BLOCKEDだけ再実行
 ```
 
 ランナーが前提条件の構築・操作・検証・証跡取得・後始末まで行う。
 Claudeがステップごとに画面を見て判断する必要はない。
 
 初回は `--dry-run` で前提条件とActionの解釈を検証してから流す。
+`--dry-run` はシミュレータへ接続しない。実行中にシミュレータが失われた場合は
+後続を大量のBLOCKEDにせず即時中断するため、環境を復旧して
+`--resume --retry-nonpass` で再開する。
 
 ### ステップ11: 結果の検証と原因分類
 
@@ -216,7 +221,7 @@ $T snapshot before / restore before
 **テスト仕様書**
 
 - [ ] `validate.mjs` がエラー0件
-- [ ] `apps/mobile/app/**` の全ファイルが `screens.csv` にある
+- [ ] `_layout.tsx` を除く `apps/mobile/app/**` の全画面ルートファイルが `screens.csv` にある
 - [ ] `features.csv` が F-01〜F-23 を持つ
 - [ ] 全REACHABLEパターンに TestID が割り当たっている
 - [ ] 各機能に正常系・異常系・境界値がある

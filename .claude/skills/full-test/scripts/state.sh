@@ -27,6 +27,7 @@
 # 前提: 書き換えの前にアプリを終了していること（本スクリプトは自動で終了させる）。
 
 set -o pipefail
+set -o errexit
 
 SKILL_DIR="${0:A:h:h}"
 SCRIPTS="$SKILL_DIR/scripts"
@@ -39,7 +40,8 @@ export PATH
 
 [[ -f "$SKILL_DIR/config.env" ]] && source "$SKILL_DIR/config.env"
 if [[ -z "$BUNDLE_ID" ]]; then
-  BUNDLE_ID=$(grep -m1 '"bundleIdentifier"' "$REPO_ROOT/apps/mobile/app.json" | sed 's/.*: *"\(.*\)".*/\1/')
+  BUNDLE_ID=$(grep -m1 '"bundleIdentifier"' "$REPO_ROOT/apps/mobile/app.json" 2>/dev/null \
+    | sed 's/.*: *"\(.*\)".*/\1/' || true)
 fi
 : "${BUNDLE_ID:=com.sikakou.cliptap}"
 : "${APP_GROUP:=group.com.sikakou.cliptap}"
@@ -57,13 +59,17 @@ udid() {
 }
 
 data_container() {
-  xcrun simctl get_app_container "$(udid)" "$BUNDLE_ID" data 2>/dev/null \
+  local u
+  u=$(udid) || return 1
+  xcrun simctl get_app_container "$u" "$BUNDLE_ID" data 2>/dev/null \
     || die "アプリがインストールされていません（sim.sh install を先に実行してください）"
 }
 
 # App Groupのコンテナは毎回GUIDが変わるため、その都度実体を探す。
 shared_db() {
-  local base=~/Library/Developer/CoreSimulator/Devices/$(udid)/data/Containers/Shared/AppGroup
+  local u
+  u=$(udid) || return 1
+  local base=~/Library/Developer/CoreSimulator/Devices/$u/data/Containers/Shared/AppGroup
   local f=$(find "$base" -maxdepth 3 -name "$DB_FILE_NAME" -path "*databases*" 2>/dev/null | head -1)
   if [[ -z "$f" ]]; then
     # まだ作られていない場合は作成予定地を返す
@@ -74,13 +80,27 @@ shared_db() {
   fi
 }
 
-system_db()  { print "$(data_container)/Documents/SQLite/$DB_FILE_NAME" }
-prefs_dir()  { print "$(data_container)/Library/Application Support/$BUNDLE_ID/RCTAsyncLocalStorage_V1" }
+system_db()  {
+  local d
+  d=$(data_container) || return 1
+  print "$d/Documents/SQLite/$DB_FILE_NAME"
+}
+prefs_dir()  {
+  local d
+  d=$(data_container) || return 1
+  print "$d/Library/Application Support/$BUNDLE_ID/RCTAsyncLocalStorage_V1"
+}
 
-stop_app() { xcrun simctl terminate "$(udid)" "$BUNDLE_ID" >/dev/null 2>&1; sleep 1 }
+stop_app() {
+  local u
+  u=$(udid) || return 1
+  xcrun simctl terminate "$u" "$BUNDLE_ID" >/dev/null 2>&1 || true
+  sleep 1
+}
 
 require_db() {
-  local f=$(shared_db)
+  local f
+  f=$(shared_db) || return 1
   [[ -z "$f" || ! -f "$f" ]] && die "共有DBがまだありません。アプリを1度起動してください"
   print "$f"
 }

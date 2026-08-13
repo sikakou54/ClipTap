@@ -7,6 +7,8 @@
  *   node run.mjs --filter FeatureID=F-02        （列の値で絞り込み）
  *   node run.mjs --dry-run                      （前提と手順の解釈だけ検証し、操作はしない）
  *   node run.mjs --run-id <id> --resume         （同じrun-idの続きから。済みのTestIDを飛ばす）
+ *   node run.mjs --run-id <id> --resume --retry-nonpass
+ *                                                （同じrun-idの非PASSだけを再実行）
  *
  * 出力
  *   <RESULTS_DIR>/<runId>/results.csv        ステップ単位
@@ -35,7 +37,10 @@ const cfg = loadConfig();
 /* ======================================== */
 
 function parseArgs() {
-  const a = { spec: join(cfg.testDocDir, 'testspec.csv'), tests: null, filter: null, dryRun: false, runId: null };
+  const a = {
+    spec: null, tests: null, filter: null, dryRun: false, runId: null,
+    resume: false, retryNonpass: false, docDir: null,
+  };
   const argv = process.argv.slice(2);
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i];
@@ -46,12 +51,22 @@ function parseArgs() {
     else if (k === '--doc-dir') a.docDir = argv[++i];
     else if (k === '--dry-run') a.dryRun = true;
     else if (k === '--resume') a.resume = true;
+    else if (k === '--retry-nonpass') a.retryNonpass = true;
     else { console.error(`未知の引数: ${k}`); process.exit(2); }
   }
-  if (!isAbsolute(a.spec)) a.spec = join(REPO_ROOT, a.spec);
   if (a.docDir) {
     if (!isAbsolute(a.docDir)) a.docDir = join(REPO_ROOT, a.docDir);
     cfg.testDocDir = a.docDir;
+  }
+  if (!a.spec) a.spec = join(cfg.testDocDir, 'testspec.csv');
+  else if (!isAbsolute(a.spec)) a.spec = join(REPO_ROOT, a.spec);
+  if (a.retryNonpass && !a.resume) {
+    console.error('--retry-nonpass は --resume と一緒に指定してください');
+    process.exit(2);
+  }
+  if (a.resume && !a.runId) {
+    console.error('--resume には既存の --run-id を指定してください');
+    process.exit(2);
   }
   if (!a.runId) {
     /* 実行IDは呼び出し側から渡せるが、省略時はローカル時刻で作る */
@@ -63,6 +78,11 @@ function parseArgs() {
 }
 
 const args = parseArgs();
+
+if (!existsSync(args.spec)) {
+  console.error(`テスト仕様書がありません: ${args.spec}`);
+  process.exit(2);
+}
 
 /* ======================================== */
 /* 実行ログ */
@@ -108,8 +128,9 @@ let networkTurnedOff = false;
 function restoreNetwork() {
   if (!networkTurnedOff) return;
   networkTurnedOff = false;
-  sh('networksetup', ['-setairportpower', cfg.WIFI_DEVICE, 'on']);
-  console.log('Wi-Fiを元に戻しました');
+  const r = sh('networksetup', ['-setairportpower', cfg.WIFI_DEVICE, 'on']);
+  if (r.code === 0) console.log('Wi-Fiを元に戻しました');
+  else console.error(`Wi-Fiを元に戻せませんでした: ${r.err || r.out}`);
 }
 for (const ev of ['exit', 'SIGINT', 'SIGTERM', 'uncaughtException']) {
   process.on(ev, (e) => {
@@ -200,6 +221,20 @@ const screens = new Map();
 
 class Blocked extends Error {}
 
+/** 実行を続けても後続が同じ理由で全件BLOCKEDになる環境障害 */
+function isFatalEnvironmentFailure(message) {
+  return [
+    '起動中のシミュレータがありません',
+    'シミュレータを起動できません',
+    '利用可能なシミュレータが見つかりません',
+    'CoreSimulatorService',
+    'Simulatorが起動していません',
+    'アプリがインストールされていません',
+    'アプリを起動できません',
+    '共有DBがまだありません',
+  ].some((s) => String(message ?? '').includes(s));
+}
+
 function parseDirectives(text, where) {
   const out = {};
   if (!text || text.trim() === '' || text.trim() === 'none') return out;
@@ -279,7 +314,13 @@ function visibleLocator(loc) {
 }
 
 function uiTexts() {
-  return sim('texts').out.split('\n').filter(Boolean);
+  /* texts は診断表示用に引用符・改行をエスケープする。判定はJSONの実値を使う。 */
+  const r = sim('json');
+  if (r.code !== 0) throw new Blocked(`AXツリーを取得できません: ${r.err || r.out}`);
+  return JSON.parse(r.out)
+    .filter((n) => n.visible)
+    .flatMap((n) => [n.label, n.value])
+    .filter((v) => typeof v === 'string' && v.trim() !== '');
 }
 
 function screenSignature(screenId) {
@@ -565,11 +606,6 @@ function matchLocator(node, locator) {
 /* メイン */
 /* ======================================== */
 
-if (!existsSync(args.spec)) {
-  console.error(`テスト仕様書がありません: ${args.spec}`);
-  process.exit(2);
-}
-
 const { records } = readCsvObjects(readFileSync(args.spec, 'utf8'));
 
 /* TestIDごとにステップをまとめる。CSVの並び順は保持し、StepNoで昇順に整える */
@@ -588,20 +624,52 @@ for (const steps of tests.values()) {
   steps.sort((a, b) => Number(a.StepNo) - Number(b.StepNo));
 }
 
-log(`実行対象: ${tests.size} テスト / ${records.length} ステップ行`);
+if (tests.size === 0) {
+  console.error('指定条件に一致するテストがありません');
+  process.exit(2);
+}
+
+const selectedStepCount = [...tests.values()].reduce((sum, steps) => sum + steps.length, 0);
+log(`実行対象: ${tests.size} テスト / ${selectedStepCount} ステップ行`);
 log(`テスト仕様書: ${args.spec}`);
 log(`出力先: ${runDir}`);
 
-const device = sim('device').out.split('\t');
-const deviceName = device[1] ?? 'unknown';
-const osVersion = device[2] ?? 'unknown';
+let deviceName = 'dry-run';
+let osVersion = 'not-connected';
+if (!args.dryRun) {
+  const deviceResult = sim('device');
+  if (deviceResult.code !== 0 || !deviceResult.out) {
+    log(`実行中止: シミュレータを確認できません: ${deviceResult.err || deviceResult.out}`);
+    process.exit(2);
+  }
+  const device = deviceResult.out.split('\t');
+  deviceName = device[1] ?? 'unknown';
+  osVersion = device[2] ?? 'unknown';
+}
 log(`実行環境: ${deviceName} / ${osVersion}`);
-
-const stepResults = [];
-const testResults = [];
 
 const STEP_HDR = ['TestID', 'PatternID', 'StepNo', 'Action', 'Result', 'Expected', 'Actual', 'Evidence', 'ExecutedAt'];
 const TEST_HDR = ['TestID', 'PatternID', 'Result', 'FailedStepNo', 'FailureClass', 'BugID', 'StartedAt', 'EndedAt', 'Device', 'OSVersion', 'Notes'];
+
+/* --resume は既存結果を保持したまま追記する。 */
+let stepResults = [];
+let testResults = [];
+if (args.resume) {
+  const stepsFile = join(runDir, 'results.csv');
+  const testsFile = join(runDir, 'results-tests.csv');
+  if (existsSync(stepsFile)) stepResults = readCsvObjects(readFileSync(stepsFile, 'utf8')).records;
+  if (existsSync(testsFile)) testResults = readCsvObjects(readFileSync(testsFile, 'utf8')).records;
+
+  if (args.retryNonpass) {
+    const selectedTestIds = new Set(tests.keys());
+    const retryIds = new Set(testResults
+      .filter((r) => r.Result !== 'PASS' && selectedTestIds.has(r.TestID))
+      .map((r) => r.TestID));
+    stepResults = stepResults.filter((r) => !retryIds.has(r.TestID));
+    testResults = testResults.filter((r) => !retryIds.has(r.TestID));
+    if (retryIds.size) log(`--retry-nonpass: 非PASS ${retryIds.size} 件の旧結果を除いて再実行します`);
+  }
+}
 
 /*
  * 1テスト終わるごとに書き出す。
@@ -614,22 +682,23 @@ function flush() {
 
 /* --resume 用に、既に結果のあるTestIDを読み込む */
 const alreadyDone = new Set();
-if (args.resume && existsSync(join(runDir, 'results-tests.csv'))) {
-  for (const r of readCsvObjects(readFileSync(join(runDir, 'results-tests.csv'), 'utf8')).records) {
-    if (r.TestID) alreadyDone.add(r.TestID);
-  }
+if (args.resume) {
+  for (const r of testResults) if (r.TestID) alreadyDone.add(r.TestID);
   if (alreadyDone.size) log(`--resume: 済み ${alreadyDone.size} 件を飛ばします`);
 }
 
+let abortedByEnvironment = false;
 for (const [testId, steps] of tests) {
   const head = steps[0];
   const startedAt = new Date().toISOString();
-  log(`--- ${testId} (${head.FeatureID ?? ''}/${head.ScreenID ?? ''}) ${head.TestPurpose ?? ''}`);
 
   let verdict = 'PASS';
   let failedStep = '';
   let failureClass = '';
   let note = '';
+
+  if (alreadyDone.has(testId)) continue;
+  log(`--- ${testId} (${head.FeatureID ?? ''}/${head.ScreenID ?? ''}) ${head.TestPurpose ?? ''}`);
 
   if (args.dryRun) {
     try {
@@ -650,15 +719,16 @@ for (const [testId, steps] of tests) {
     continue;
   }
 
-  if (alreadyDone.has(testId)) continue;
-
   /* --- 前提条件 --- */
   try {
     const pre = parseDirectives(head.Precondition, `${testId} Precondition`);
     applyDirectives(pre);
   } catch (e) {
     verdict = 'BLOCKED';
-    failureClass = e instanceof Blocked ? 'PRECONDITION_ERROR' : 'TEST_SPEC_ERROR';
+    const fatalEnvironment = isFatalEnvironmentFailure(e.message);
+    failureClass = fatalEnvironment
+      ? 'ENVIRONMENT_ERROR'
+      : (e instanceof Blocked ? 'PRECONDITION_ERROR' : 'TEST_SPEC_ERROR');
     note = e.message;
     log(`  BLOCKED: ${note}`);
     for (const s of steps) {
@@ -666,6 +736,12 @@ for (const [testId, steps] of tests) {
     }
     testResults.push({ TestID: testId, PatternID: head.PatternID, Result: verdict, FailedStepNo: '', FailureClass: failureClass, BugID: '', StartedAt: startedAt, EndedAt: new Date().toISOString(), Device: deviceName, OSVersion: osVersion, Notes: note });
     flush();
+    restoreNetwork();
+    if (fatalEnvironment) {
+      abortedByEnvironment = true;
+      log('実行中止: 環境を復旧後、--resume --retry-nonpass で再開してください');
+      break;
+    }
     continue;
   }
 
@@ -688,10 +764,16 @@ for (const [testId, steps] of tests) {
       }
     }
 
+    const fatalEnvironment = !res.ok && isFatalEnvironmentFailure(res.actual);
+    if (fatalEnvironment) {
+      verdict = 'BLOCKED';
+      failureClass = 'ENVIRONMENT_ERROR';
+    }
+
     let evidence = res.evidence ?? '';
 
     /* 期待どおりでなければ、必ず証跡を残す */
-    if (!res.ok) {
+    if (!res.ok && !fatalEnvironment) {
       const shot = sim('shot', `${testId}-${s.StepNo}-FAIL`, evidenceDir);
       const dump = sim('dump');
       const dumpPath = join(evidenceDir, `${testId}-${s.StepNo}-FAIL.txt`);
@@ -724,6 +806,7 @@ for (const [testId, steps] of tests) {
       }
       note = `Step ${s.StepNo} ${s.Action}: 期待「${s.ExpectedResult}」／実際「${res.actual}」`;
       log(`  ${verdict} at step ${s.StepNo}: ${res.actual}`);
+      if (fatalEnvironment) abortedByEnvironment = true;
     }
 
     sleep(Number(cfg.STEP_INTERVAL_MS));
@@ -736,8 +819,18 @@ for (const [testId, steps] of tests) {
       applyDirectives(parseDirectives(cleanupText, `${testId} Cleanup`), { allowLaunch: false });
     } catch (e) {
       log(`  Cleanup失敗: ${e.message}`);
+      note = [note, `Cleanup失敗: ${e.message}`].filter(Boolean).join(' / ');
+      if (isFatalEnvironmentFailure(e.message)) {
+        verdict = 'BLOCKED';
+        failureClass = 'ENVIRONMENT_ERROR';
+        abortedByEnvironment = true;
+      } else if (verdict === 'PASS') {
+        verdict = 'BLOCKED';
+        failureClass = 'PRECONDITION_ERROR';
+      }
     }
   }
+  restoreNetwork();
 
   if (verdict === 'PASS') log(`  PASS`);
   testResults.push({
@@ -746,6 +839,10 @@ for (const [testId, steps] of tests) {
     Device: deviceName, OSVersion: osVersion, Notes: note,
   });
   flush();
+  if (abortedByEnvironment) {
+    log('実行中止: 環境を復旧後、--resume --retry-nonpass で再開してください');
+    break;
+  }
 }
 
 /* ======================================== */
@@ -763,3 +860,4 @@ if (args.dryRun) {
 log(`結果: ${join(runDir, 'results-tests.csv')}`);
 
 /* FAILがあっても異常終了はしない。判定と不具合登録は後段の工程で行う。 */
+if (abortedByEnvironment) process.exitCode = 2;

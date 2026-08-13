@@ -9,7 +9,7 @@
  * ここで機械的に落とす。エラーが1件でもあれば終了コード1。
  */
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
-import { join, isAbsolute } from 'node:path';
+import { basename, extname, join, isAbsolute, relative, sep } from 'node:path';
 import { readCsvObjects } from './lib/csv.mjs';
 import { ACTIONS, PRECONDITION_KEYS } from './lib/actions.mjs';
 import { loadConfig, REPO_ROOT, SCRIPTS_DIR } from './lib/config.mjs';
@@ -39,6 +39,17 @@ const VALID_PRIORITY = ['P1', 'P2', 'P3'];
 const VALID_SOURCE = ['FunctionalSpec', 'SourceCode', 'RouteDefinition', 'Validation', 'StateManagement', 'API', 'Database', 'Constant', 'Review'];
 const VALID_REACHABILITY = ['REACHABLE', 'UNREACHABLE'];
 const VALID_SCOPE = ['in-scope', 'manual-only', 'out-of-scope'];
+
+function walkFiles(dir) {
+  const files = [];
+  if (!existsSync(dir)) return files;
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) files.push(...walkFiles(p));
+    else if (e.isFile()) files.push(p);
+  }
+  return files;
+}
 
 function load(name, required = true) {
   const f = join(dir, name);
@@ -85,10 +96,17 @@ requireColumns('features.csv', features.header, ['FeatureID', 'Name', 'SpecRef',
     if (!r.FeatureID) { err(`features.csv:${r.__line}: FeatureIDが空です`); continue; }
     if (seen.has(r.FeatureID)) err(`features.csv:${r.__line}: FeatureIDが重複しています: ${r.FeatureID}`);
     seen.add(r.FeatureID);
+    if (!/^F-(?:0[1-9]|1\d|2[0-3])$/.test(r.FeatureID)) {
+      err(`features.csv:${r.__line}: FeatureIDは F-01〜F-23 の形式です: ${r.FeatureID}`);
+    }
     if (!r.SpecRef) err(`features.csv:${r.__line}: ${r.FeatureID} にSpecRef（機能仕様書の節番号）がありません`);
     if (!VALID_SCOPE.includes(r.Scope)) {
       err(`features.csv:${r.__line}: Scope は ${VALID_SCOPE.join(' / ')} のいずれかです: 「${r.Scope}」`);
     }
+  }
+  for (let i = 1; i <= 23; i++) {
+    const id = `F-${String(i).padStart(2, '0')}`;
+    if (!seen.has(id)) err(`features.csv: 必須機能 ${id} がありません`);
   }
 }
 
@@ -99,13 +117,34 @@ requireColumns('features.csv', features.header, ['FeatureID', 'Name', 'SpecRef',
 requireColumns('screens.csv', screensCsv.header, ['ScreenID', 'Name', 'Route', 'File', 'Presentation', 'Signature', 'SpecRef']);
 {
   const seen = new Set();
+  const registeredFiles = new Set();
   for (const r of screensCsv.records) {
     if (!r.ScreenID) { err(`screens.csv:${r.__line}: ScreenIDが空です`); continue; }
     if (seen.has(r.ScreenID)) err(`screens.csv:${r.__line}: ScreenIDが重複しています: ${r.ScreenID}`);
     seen.add(r.ScreenID);
+    if (!/^SC-[A-Z0-9-]+$/.test(r.ScreenID)) {
+      err(`screens.csv:${r.__line}: ScreenIDは SC- で始まる大文字識別子です: ${r.ScreenID}`);
+    }
+    if (!r.File) err(`screens.csv:${r.__line}: ${r.ScreenID} にFileがありません`);
+    else {
+      registeredFiles.add(r.File);
+      if (!existsSync(join(REPO_ROOT, r.File))) {
+        err(`screens.csv:${r.__line}: Fileが存在しません: ${r.File}`);
+      }
+    }
     if (!r.Signature) {
       err(`screens.csv:${r.__line}: ${r.ScreenID} にSignature（その画面を一意に識別するロケータ）がありません`);
     }
+  }
+
+  /* _layout はナビゲーション定義で画面ではない。同じファイルの表示差は複数行でよい。 */
+  const appDir = join(REPO_ROOT, 'apps/mobile/app');
+  const routeFiles = walkFiles(appDir)
+    .filter((f) => ['.js', '.jsx', '.ts', '.tsx'].includes(extname(f)))
+    .filter((f) => !basename(f).startsWith('_layout.'))
+    .map((f) => relative(REPO_ROOT, f).split(sep).join('/'));
+  for (const f of routeFiles) {
+    if (!registeredFiles.has(f)) err(`screens.csv: 画面ルートファイルが未登録です: ${f}`);
   }
 }
 
@@ -115,7 +154,14 @@ requireColumns('screens.csv', screensCsv.header, ['ScreenID', 'Name', 'Route', '
 
 requireColumns('routes.csv', routes.header,
   ['RouteID', 'Route', 'ScreenID', 'EntryPoint', 'TransitionCondition', 'RequiredState', 'RequiredPermission', 'PatternID', 'TestID', 'Tested']);
+const routeIds = new Set();
 for (const r of routes.records) {
+  if (!r.RouteID) err(`routes.csv:${r.__line}: RouteIDが空です`);
+  else {
+    if (!/^R-\d{3}$/.test(r.RouteID)) err(`routes.csv:${r.__line}: RouteIDは R-001 形式です: ${r.RouteID}`);
+    if (routeIds.has(r.RouteID)) err(`routes.csv:${r.__line}: RouteIDが重複しています: ${r.RouteID}`);
+    routeIds.add(r.RouteID);
+  }
   if (!r.Route) { err(`routes.csv:${r.__line}: Routeが空です`); continue; }
   if (r.ScreenID && !screenIds.has(r.ScreenID)) {
     err(`routes.csv:${r.__line}: screens.csv に無いScreenIDです: ${r.ScreenID}`);
@@ -144,6 +190,9 @@ requireColumns('pattern-matrix.csv', matrix.header, [
     if (!r.PatternID) { err(`${at}: PatternIDが空です`); continue; }
     if (seen.has(r.PatternID)) err(`${at}: PatternIDが重複しています: ${r.PatternID}`);
     seen.add(r.PatternID);
+    if (!/^P-F\d{2}-(?:\d{3}|[A-Z]\d{2})$/.test(r.PatternID)) {
+      err(`${at}: PatternIDは P-F02-001 または P-F02-E01 の形式です: ${r.PatternID}`);
+    }
 
     if (r.FeatureID && !featureIds.has(r.FeatureID)) err(`${at}: features.csv に無いFeatureIDです: ${r.FeatureID}`);
     if (r.ScreenID && !screenIds.has(r.ScreenID)) err(`${at}: screens.csv に無いScreenIDです: ${r.ScreenID}`);
@@ -236,6 +285,20 @@ for (const [testId, steps] of byTest) {
   const head = steps[0];
   const at0 = `testspec.csv:${head.__line} (${testId})`;
 
+  if (!/^TC-\d{4}$/.test(testId)) err(`${at0}: TestIDは TC-0001 形式です: ${testId}`);
+
+  const testLevelColumns = [
+    'PatternID', 'Category', 'FeatureID', 'ScreenID', 'TestPurpose', 'Precondition',
+    'InitialRoute', 'InitialState', 'TestData', 'Priority', 'Source',
+  ];
+  for (const s of steps.slice(1)) {
+    for (const c of testLevelColumns) {
+      if (s[c] !== head[c]) {
+        err(`testspec.csv:${s.__line} (${testId}): テスト単位の列 ${c} が先頭行と一致しません`);
+      }
+    }
+  }
+
   if (!head.PatternID) err(`${at0}: PatternIDがありません`);
   for (const p of (head.PatternID || '').split(/[;\s]+/).filter(Boolean)) {
     usedPatterns.add(p);
@@ -316,6 +379,13 @@ for (const p of patternIds) {
   const row = matrix.records.find((r) => r.PatternID === p);
   if (row?.Reachability === 'REACHABLE' && !usedPatterns.has(p)) {
     err(`pattern-matrix.csv: ${p} を参照するテストがtestspec.csvにありません（未テストPattern）`);
+  }
+}
+
+/* routes.csv のTestIDも実在するテストだけを参照する。 */
+for (const r of routes.records) {
+  for (const t of (r.TestID || '').split(/[;\s]+/).filter(Boolean)) {
+    if (!byTest.has(t)) err(`routes.csv:${r.__line}: testspec.csv に無いTestIDです: ${t}`);
   }
 }
 

@@ -36,7 +36,7 @@ const BUCKETS = [
     key: 'device',
     title: '実機で確認する',
     note: 'シミュレータに機能自体が無いもの。iPhone実機に開発ビルドを入れて確認する。',
-    match: (r) => /拡張キーボード|\.appex|フルアクセス|触覚|振動|Haptics/.test(r),
+    match: (r) => /実機|拡張キーボード|\.appex|フルアクセス|触覚|振動|Haptics|AXツリー/.test(r),
   },
   {
     key: 'sandbox',

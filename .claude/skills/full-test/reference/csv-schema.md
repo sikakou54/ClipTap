@@ -41,8 +41,8 @@ SC-HOME,ホーム,/,apps/mobile/app/index.tsx,stack,label=すべて,§9.1
 |---|---|
 | `ScreenID` | `SC-` 始まり |
 | `Route` | Expo Routerのパス |
-| `File` | 実装ファイル。`apps/mobile/app/**` の全ファイルが1行ずつ現れること |
-| `Presentation` | `stack` / `modal` / `transparentModal` / `fullScreenModal` / `card` |
+| `File` | 実装ファイル。`_layout.tsx` を除く `apps/mobile/app/**` の全画面ルートファイルが最低1行現れること。同じファイルが表示条件で別画面になる場合は複数行可 |
+| `Presentation` | `stack` / `modal` / `transparentModal` / `fullScreenModal` / `card`。端末条件で変わる場合は `modal\|card` のように併記 |
 | `Signature` | **その画面だけに存在する要素のロケータ**。`ASSERT_SCREEN` の判定に使う |
 | `SpecRef` | 機能仕様書の節 |
 

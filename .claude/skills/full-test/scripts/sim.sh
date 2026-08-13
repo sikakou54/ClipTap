@@ -211,7 +211,9 @@ case "$cmd" in
     ;;
 
   device)
-    u=$(ensure_booted)
+    # 状態確認は読み取り専用にする。起動は明示的な `sim.sh boot` だけが行う。
+    u=$(booted_udid)
+    [[ -z "$u" ]] && die "起動中のシミュレータがありません（sim.sh boot を先に実行してください）"
     xcrun simctl list devices booted -j 2>/dev/null \
       | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s);for(const[rt,ds]of Object.entries(j.devices))for(const d of ds)if(d.state==="Booted")console.log(`${d.udid}\t${d.name}\t${rt.split(".").pop()}`)})'
     ;;
@@ -320,6 +322,12 @@ case "$cmd" in
     # 座標を直に書くのと違い、要素を見つけてからの相対位置なので画面サイズに依存しない。
     activate
     g=$(need_gesture); u=$(need_ui)
+    # 行が画面外や広告バナーの下なら、矩形を取る前に安全域まで移動する。
+    "$u" safecheck "${1//&visible=true/}" >/dev/null 2>&1
+    case $? in
+      1) "$0" scrollto "$1" >/dev/null 2>&1
+         sleep 1.5 ;;
+    esac
     rect=$("$u" rect "$1") || die "要素が見つかりません: $1"
     read rx ry rw rh <<< "$rect"
     [[ -z "$rw" || "$rw" == "0" ]] && die "要素の矩形を取得できません: $1"
@@ -515,12 +523,20 @@ case "$cmd" in
       en) lang="en"; loc="en_US" ;;
       *) die "usage: sim.sh locale <ja|en>" ;;
     esac
+    current=$(xcrun simctl spawn "$u" defaults read -g AppleLanguages 2>/dev/null \
+      | grep -oE 'ja|en' | head -1)
+    if [[ "$current" == "$lang" ]]; then
+      print "locale: $lang（変更なし）"
+      exit 0
+    fi
     xcrun simctl spawn "$u" defaults write -g AppleLanguages -array "$lang" || die "言語設定に失敗しました"
     xcrun simctl spawn "$u" defaults write -g AppleLocale -string "$loc"
-    # 言語を切り替えるとSpringBoardが再起動し、起動済みのアプリが落ちる。
-    # 落ちたまま次のテストへ進むと、無関係なテストがホーム画面で失敗する。
-    sleep 3
-    print "locale: $lang（SpringBoardが再起動するため、この後に必ず起動し直すこと）"
+    # SpringBoard再起動とアプリ再起動が競合しないよう、端末を確実に再起動する。
+    xcrun simctl shutdown "$u" >/dev/null 2>&1 || die "言語切替後のシミュレータ停止に失敗しました"
+    xcrun simctl boot "$u" >/dev/null 2>&1 || die "言語切替後のシミュレータ起動に失敗しました"
+    xcrun simctl bootstatus "$u" -b >/dev/null 2>&1 || die "言語切替後の起動完了を確認できませんでした"
+    sleep 1
+    print "locale: $lang（再起動完了）"
     ;;
 
   home)

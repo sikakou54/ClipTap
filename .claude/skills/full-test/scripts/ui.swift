@@ -108,17 +108,22 @@ struct Node {
  * アプリ画面だけを対象にするためのアンカーとして使う。
  */
 func findContentGroup(_ app: AXUIElement) -> AXUIElement? {
-    var found: AXUIElement?
+    var found: [AXUIElement] = []
     func walk(_ e: AXUIElement, _ d: Int) {
-        if found != nil || d > 6 { return }
+        if d > 8 { return }
         if str(e, kAXSubroleAttribute) == "iOSContentGroup" {
-            found = e
+            found.append(e)
             return
         }
         for c in children(e) { walk(c, d + 1) }
     }
+    func score(_ e: AXUIElement, _ d: Int = 0) -> Int {
+        if d > 20 { return 0 }
+        return 1 + children(e).reduce(0) { $0 + score($1, d + 1) }
+    }
     walk(app, 0)
-    return found
+    /* 画面遷移後に空の古いContentGroupが残ることがあるため、要素数が最大のものを使う。 */
+    return found.max { score($0) < score($1) }
 }
 
 func collect(_ root: AXUIElement, maxDepth: Int) -> [Node] {
@@ -376,7 +381,13 @@ if cmd == "waitfor" || cmd == "waitgone" {
     let timeout = args.count >= 4 ? (Int(args[3]) ?? 5000) : 5000
     let deadline = Date().addingTimeInterval(Double(timeout) / 1000.0)
     repeat {
-        let hits = collect(content, maxDepth: 20).filter { loc.matches($0) }
+        /* モーダル再表示や画面遷移で iOSContentGroup 自体が差し替わるため毎回取り直す。 */
+        guard let current = findContentGroup(appEl) else {
+            usleep(250_000)
+            continue
+        }
+        screenRect = frame(current) ?? .zero
+        let hits = collect(current, maxDepth: 20).filter { loc.matches($0) }
         let present = hits.count > loc.index
         if (cmd == "waitfor" && present) || (cmd == "waitgone" && !present) {
             if cmd == "waitfor" {

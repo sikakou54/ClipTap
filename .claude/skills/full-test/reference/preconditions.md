@@ -133,3 +133,4 @@ Releaseビルドで検証する場合はDeveloper Menu（プラン上書き・DB
 
 **ホストのWi-Fiを切ったまま終わらせない。** 実行が途中で止まると復旧されないため、
 `network=off` を使うテストは連続させず、直後に `network=on` のCleanupを置く。
+ランナーも各テスト終了時と異常終了時にWi-Fiの復旧を試みるが、Cleanupは省略しない。
