@@ -4,12 +4,17 @@
  * Web版アラート表示ユーティリティ
  *
  * window.alert/window.confirmのラッパーとして実装。
- * Mobile版とAPI互換性を保つために、同じインターフェースを提供します。
  *
  * 主な機能:
  * - 確認ダイアログ（showConfirm）
  * - カスタムアラート（showAlert）
  * - エラーアラート（showErrorAlert）
+ *
+ * Mobile版（apps/mobile/src/utils/alerts.ts）とはシグネチャが共通化されていない。
+ * Web版は window.alert / window.confirm を使うため、ボタン文言やダイアログ種別を指定する引数を持たない:
+ * - showAlert の第3引数は、Webが onClose、Mobileが buttonText
+ * - showConfirm は Mobile に第4引数 type（'danger' で destructive 表示）があり、Webには無い
+ * - showConfirmMessage は Web にのみあり、showInfo / showWarningAlert は Mobile にのみある
  *
  * i18nextとの統合:
  * 翻訳キーを受け取る関数は、内部でI18nAdapterを使用して翻訳します。

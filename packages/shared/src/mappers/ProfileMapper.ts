@@ -15,7 +15,6 @@ import type {
   CreateProfileInput,
   UpdateProfileInput,
   CreateProfileVariableInput,
-  UpdateProfileVariableInput,
 } from '../schema';
 import { generateUniqueId, getCurrentTimestamp } from '../utils/dateHelpers';
 import {
@@ -48,8 +47,6 @@ const ProfileQueries = {
   INSERT: `INSERT INTO profiles (id, name, isDefault, isActive, valid, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
   /* 最大のsortOrderを取得（新規作成時に使用） */
   SELECT_MAX_SORT_ORDER: 'SELECT MAX(sortOrder) as maxOrder FROM profiles',
-  /* プロファイル名を更新 */
-  UPDATE_NAME: `UPDATE profiles SET name = ?, updatedAt = ? WHERE id = ?`,
   /* プロファイルを更新（名前、sortOrder） */
   UPDATE: `UPDATE profiles SET name = ?, sortOrder = ?, updatedAt = ? WHERE id = ?`,
   /* プロファイルを削除 */
@@ -82,8 +79,6 @@ const ProfileVariableQueries = {
   SELECT_ALL: 'SELECT * FROM profile_variables',
   /* プロファイルIDでプロファイル変数を取得 */
   SELECT_BY_PROFILE: 'SELECT * FROM profile_variables WHERE profileId = ?',
-  /* 変数IDでプロファイル変数を取得 */
-  SELECT_BY_VARIABLE: 'SELECT * FROM profile_variables WHERE variableId = ?',
   /* プロファイルIDと変数IDでプロファイル変数を取得（一意検索） */
   SELECT_BY_PROFILE_AND_VARIABLE: 'SELECT * FROM profile_variables WHERE profileId = ? AND variableId = ?',
   /* IDでプロファイル変数を取得 */
@@ -92,10 +87,6 @@ const ProfileVariableQueries = {
   INSERT: `INSERT INTO profile_variables (id, profileId, variableId, value, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)`,
   /* プロファイルIDと変数IDでプロファイル変数の値を更新 */
   UPDATE_BY_PROFILE_AND_VARIABLE: `UPDATE profile_variables SET value = ?, updatedAt = ? WHERE profileId = ? AND variableId = ?`,
-  /* IDでプロファイル変数の値を更新 */
-  UPDATE_BY_ID: `UPDATE profile_variables SET value = ?, updatedAt = ? WHERE id = ?`,
-  /* IDでプロファイル変数を削除 */
-  DELETE_BY_ID: 'DELETE FROM profile_variables WHERE id = ?',
   /* プロファイルIDに紐づく全プロファイル変数を削除 */
   DELETE_BY_PROFILE: 'DELETE FROM profile_variables WHERE profileId = ?',
   /* 変数IDに紐づく全プロファイル変数を削除 */
@@ -119,14 +110,14 @@ const ProfileVariableQueries = {
  * @returns Profile型のオブジェクト
  */
 const toProfileEntity = (row: any): Profile => ({
-  id: row.id, // プロファイルID
-  name: row.name, // プロファイル名
-  isDefault: Boolean(row.isDefault), // デフォルトプロファイルか（SQLiteでは0/1、JSではboolean）
-  isActive: Boolean(row.isActive), // アクティブプロファイルか（現在選択中の環境）
-  valid: row.valid !== undefined ? Boolean(row.valid) : true, // 有効かどうか（Proプラン制限）
-  sortOrder: row.sortOrder ?? 0, // 並び順
-  createdAt: row.createdAt, // 作成日時
-  updatedAt: row.updatedAt, // 最終更新日時
+  id: row.id, /* プロファイルID */
+  name: row.name, /* プロファイル名 */
+  isDefault: Boolean(row.isDefault), /* デフォルトプロファイルか（SQLiteでは0/1、JSではboolean） */
+  isActive: Boolean(row.isActive), /* アクティブプロファイルか（現在選択中の環境） */
+  valid: row.valid !== undefined ? Boolean(row.valid) : true, /* 有効かどうか（Proプラン制限） */
+  sortOrder: row.sortOrder ?? 0, /* 並び順 */
+  createdAt: row.createdAt, /* 作成日時 */
+  updatedAt: row.updatedAt, /* 最終更新日時 */
 });
 
 /**
@@ -142,12 +133,12 @@ const toProfileEntities = (rows: any[]): Profile[] => rows.map(toProfileEntity);
  * @returns ProfileVariable型のオブジェクト
  */
 const toPVEntity = (row: any): ProfileVariable => ({
-  id: row.id, // プロファイル変数ID
-  profileId: row.profileId, // プロファイルID
-  variableId: row.variableId, // 変数ID
-  value: row.value, // 変数値（このプロファイルでの値）
-  createdAt: row.createdAt, // 作成日時
-  updatedAt: row.updatedAt, // 最終更新日時
+  id: row.id, /* プロファイル変数ID */
+  profileId: row.profileId, /* プロファイルID */
+  variableId: row.variableId, /* 変数ID */
+  value: row.value, /* 変数値（このプロファイルでの値） */
+  createdAt: row.createdAt, /* 作成日時 */
+  updatedAt: row.updatedAt, /* 最終更新日時 */
 });
 
 /**
@@ -264,9 +255,9 @@ export class ProfileMapper {
     db.run(ProfileQueries.INSERT, [
       id,
       data.name,
-      isDefault ? 1 : 0, // isDefault（デフォルトプロファイルかどうか）
-      0, // isActive（初期値は非アクティブ）
-      1, // valid（初期値は有効）
+      isDefault ? 1 : 0, /* isDefault（デフォルトプロファイルかどうか） */
+      0, /* isActive（初期値は非アクティブ） */
+      1, /* valid（初期値は有効） */
       sortOrder,
       now,
       now,
@@ -337,9 +328,9 @@ export class ProfileMapper {
     }
 
     /* カスケード削除: 関連データを全て削除（参照整合性維持） */
-    db.run(ProfileVariableQueries.DELETE_BY_PROFILE, [id]); // プロファイル変数を削除
-    db.run(ProfileQueries.DELETE_SNIPPET_PROFILES, [id]); // スニペット関連を削除
-    db.run(ProfileQueries.DELETE, [id]); // プロファイルを削除
+    db.run(ProfileVariableQueries.DELETE_BY_PROFILE, [id]); /* プロファイル変数を削除 */
+    db.run(ProfileQueries.DELETE_SNIPPET_PROFILES, [id]); /* スニペット関連を削除 */
+    db.run(ProfileQueries.DELETE, [id]); /* プロファイルを削除 */
   }
 
   /**
@@ -418,18 +409,6 @@ export class ProfileMapper {
     );
     /* 最大値+1を返す（データがない場合は-1+1=0が返る） */
     return (result?.maxOrder ?? -1) + 1;
-  }
-
-  /**
-   * 複数プロファイルを一括作成
-   * @param profiles - 作成データ一覧
-   * @description
-   * インポート機能で使用。各プロファイルに対してcreate()を呼び出す。
-   */
-  static bulkCreate(profiles: CreateProfileInput[]): void {
-    for (const profile of profiles) {
-      this.create(profile);
-    }
   }
 }
 
@@ -528,34 +507,6 @@ export class ProfileVariableMapper {
   }
 
   /**
-   * プロファイル変数を更新
-   * @param id - プロファイル変数ID
-   * @param data - 更新データ
-   * @returns 更新されたプロファイル変数
-   */
-  static update(id: string, data: UpdateProfileVariableInput): ProfileVariable {
-    const db = getMainDbAdapter();
-    const now = getCurrentTimestamp();
-
-    db.run(ProfileVariableQueries.UPDATE_BY_ID, [data.value, now, id]);
-
-    const row = db.get<any>(ProfileVariableQueries.SELECT_BY_ID, [id]);
-    if (!row) {
-      throw new NotFoundError('profile_variable', id);
-    }
-    return toPVEntity(row);
-  }
-
-  /**
-   * プロファイル変数を削除
-   * @param id - プロファイル変数ID
-   */
-  static delete(id: string): void {
-    const db = getMainDbAdapter();
-    db.run(ProfileVariableQueries.DELETE_BY_ID, [id]);
-  }
-
-  /**
    * プロファイルIDに紐づく全変数を削除
    * @param profileId - プロファイルID
    * @description
@@ -585,18 +536,6 @@ export class ProfileVariableMapper {
     const db = getMainDbAdapter();
     const rows = db.all<any>(ProfileVariableQueries.SELECT_ALL);
     return toPVEntities(rows);
-  }
-
-  /**
-   * 複数プロファイル変数を一括作成
-   * @param profileVariables - プロファイル変数データ一覧
-   * @description
-   * インポート機能で使用。各プロファイル変数に対してupsert()を呼び出す。
-   */
-  static bulkCreate(profileVariables: CreateProfileVariableInput[]): void {
-    for (const pv of profileVariables) {
-      this.upsert(pv);
-    }
   }
 
   /**

@@ -47,7 +47,7 @@ export interface FullRestoreData {
 /**
  * SQLプレースホルダーを生成
  * @param count - プレースホルダーの数
- * @returns プレースホルダー文字列 (例: "?, ?, ?")
+ * @returns プレースホルダー文字列 (例: "?,?,?")
  */
 const placeholders = (count: number): string =>
   Array.from({ length: count }, () => '?').join(',');
@@ -67,6 +67,10 @@ export class ImportMapper {
     this.adapter = adapter;
   }
 
+  /**
+   * インポート選択画面に表示する候補を一時DBから組み立てる
+   * @returns スニペット・プロファイル・変数・カテゴリの候補一覧
+   */
   getAllCandidates(): ImportCandidates {
     /* 1. スニペットの取得（プロファイル紐付き情報は後で追加） */
     /* LEFT JOINで未分類スニペットも含む */
@@ -116,24 +120,7 @@ export class ImportMapper {
     `);
 
     /* 各変数のプロファイルごとの値を取得 */
-    const variables: ImportCandidateVariable[] = [];
-    for (const v of variablesRaw) {
-      /* LEFT JOINでプロファイルが削除されている場合も対応 */
-      const profileValues = this.adapter.all<ImportCandidateVariableProfileValue>(`
-        SELECT
-          pv.profileId,
-          pv.value,
-          p.name as profileName
-        FROM profile_variables pv
-        LEFT JOIN profiles p ON pv.profileId = p.id
-        WHERE pv.variableId = ?
-      `, [v.id]);
-
-      variables.push({
-        ...v,
-        profileValues,
-      });
-    }
+    const variables = this.attachProfileValues(variablesRaw);
 
     /* 4. カテゴリの取得 */
     /* sortOrderが設定されている場合はそれで、なければ名前順 */
@@ -151,7 +138,10 @@ export class ImportMapper {
     };
   }
 
-  /** 全復元用に、業務データを加工せず取得する。 */
+  /**
+   * 全復元用に、業務データを加工せず取得する。
+   * @returns 一時DBの全業務データ（system_variable_formatsテーブルが無い場合、書式は空配列）
+   */
   getFullRestoreData(): FullRestoreData {
     const hasFormats = Boolean(
       this.adapter.get<{ name: string }>(
@@ -172,6 +162,11 @@ export class ImportMapper {
     };
   }
 
+  /**
+   * 選択されたIDのカテゴリだけを取り込み対象として取得する
+   * @param ids - 取り込むカテゴリID（空配列なら空配列を返す）
+   * @returns 該当するカテゴリ行
+   */
   getCategories(ids: string[]): ImportCandidateCategory[] {
     if (ids.length === 0) return [];
 
@@ -182,6 +177,11 @@ export class ImportMapper {
     );
   }
 
+  /**
+   * 選択されたIDの変数だけを、プロファイルごとの値を添えて取得する
+   * @param ids - 取り込む変数ID（空配列なら空配列を返す）
+   * @returns 該当する変数一覧
+   */
   getVariables(ids: string[]): ImportCandidateVariable[] {
     if (ids.length === 0) return [];
 
@@ -191,28 +191,14 @@ export class ImportMapper {
       ids
     );
 
-    const variables: ImportCandidateVariable[] = [];
-    for (const v of variablesRaw) {
-      /* LEFT JOINでプロファイルが削除されている場合も対応 */
-      const profileValues = this.adapter.all<ImportCandidateVariableProfileValue>(`
-        SELECT
-          pv.profileId,
-          pv.value,
-          p.name as profileName
-        FROM profile_variables pv
-        LEFT JOIN profiles p ON pv.profileId = p.id
-        WHERE pv.variableId = ?
-      `, [v.id]);
-
-      variables.push({
-        ...v,
-        profileValues,
-      });
-    }
-
-    return variables;
+    return this.attachProfileValues(variablesRaw);
   }
 
+  /**
+   * 選択されたIDのプロファイルだけを取り込み対象として取得する
+   * @param ids - 取り込むプロファイルID（空配列なら空配列を返す）
+   * @returns 該当するプロファイル行
+   */
   getProfiles(ids: string[]): ProfileImportRow[] {
     if (ids.length === 0) return [];
 
@@ -223,14 +209,34 @@ export class ImportMapper {
     );
   }
 
+  /**
+   * 一時DBのプロファイルを選択有無に関わらず全件取得する
+   * @returns 一時DBの全プロファイル行
+   * @description
+   * ImportServiceのprepareExistingProfileMappingが、既存プロファイルと同名のものを
+   * 突き合わせるために使う。選択されたものだけを取り込むgetProfiles()とは用途が異なる。
+   */
   getAllProfiles(): ProfileImportRow[] {
     return this.adapter.all('SELECT * FROM profiles');
   }
 
+  /**
+   * 一時DBのカテゴリを選択有無に関わらず全件取得する
+   * @returns 一時DBの全カテゴリ行
+   * @description
+   * ImportServiceのprepareExistingCategoryMappingが、既存カテゴリと同名のものを
+   * 突き合わせるために使う。選択されたものだけを取り込むgetCategories()とは用途が異なる。
+   */
   getAllCategories(): ImportCandidateCategory[] {
     return this.adapter.all('SELECT * FROM categories');
   }
 
+  /**
+   * 選択された変数とプロファイルの組み合わせに対応する値を取得する
+   * @param variableIds - 取り込む変数ID（空配列なら空配列を返す）
+   * @param profileIds - 取り込むプロファイルID（空配列なら空配列を返す）
+   * @returns 該当するプロファイル変数行
+   */
   getProfileVariables(
     variableIds: string[],
     profileIds: string[]
@@ -245,6 +251,11 @@ export class ImportMapper {
     );
   }
 
+  /**
+   * 選択されたIDのスニペットだけを取り込み対象として取得する
+   * @param ids - 取り込むスニペットID（空配列なら空配列を返す）
+   * @returns 該当するスニペット行（カテゴリ名を含む）
+   */
   getSnippets(ids: string[]): SnippetImportRow[] {
     if (ids.length === 0) return [];
 
@@ -263,6 +274,11 @@ export class ImportMapper {
     );
   }
 
+  /**
+   * 選択されたスニペットに紐づくプロファイル関連を取得する
+   * @param snippetIds - 取り込むスニペットID（空配列なら空配列を返す）
+   * @returns 該当するスニペット・プロファイル関連行
+   */
   getSnippetProfiles(snippetIds: string[]): SnippetProfileRow[] {
     if (snippetIds.length === 0) return [];
 
@@ -270,5 +286,35 @@ export class ImportMapper {
       `SELECT snippetId, profileId FROM snippet_profiles WHERE snippetId IN (${placeholders(snippetIds.length)})`,
       snippetIds
     );
+  }
+
+  /**
+   * 変数行に、各プロファイルでの値をぶら下げてインポート候補の形にする
+   * @param rows - profileValuesを持たない変数行
+   * @returns profileValuesを付与したインポート候補の変数一覧
+   */
+  private attachProfileValues(
+    rows: Array<Omit<ImportCandidateVariable, 'profileValues'>>
+  ): ImportCandidateVariable[] {
+    const variables: ImportCandidateVariable[] = [];
+    for (const v of rows) {
+      /* LEFT JOINでプロファイルが削除されている場合も対応 */
+      const profileValues = this.adapter.all<ImportCandidateVariableProfileValue>(`
+        SELECT
+          pv.profileId,
+          pv.value,
+          p.name as profileName
+        FROM profile_variables pv
+        LEFT JOIN profiles p ON pv.profileId = p.id
+        WHERE pv.variableId = ?
+      `, [v.id]);
+
+      variables.push({
+        ...v,
+        profileValues,
+      });
+    }
+
+    return variables;
   }
 }

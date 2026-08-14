@@ -35,6 +35,12 @@ import { setAuthAdapter } from './AuthAdapter';
 import { setExportAdapter } from './ExportAdapter';
 import { setImportAdapter } from './ImportAdapter';
 import { setSortPreferenceAdapter } from './SortPreferenceAdapter';
+/*
+ * SubscriptionAdapter だけは set 関数がこのファイルにあり、SubscriptionService が内部で
+ * アダプターを保持する設計のため、adapters 層から services 層を参照している。
+ * 他のアダプターは set/get/has を自ファイル内に閉じており、adapters 配下で services を
+ * import しているのはこのファイルだけ。
+ */
 import { SubscriptionService } from '../services/SubscriptionService';
 
 /**
@@ -43,6 +49,14 @@ import { SubscriptionService } from '../services/SubscriptionService';
  * @description
  * サブスクリプションアダプター登録時に指定する追加設定。
  * 無料プランとProプランの機能制限を定義する。
+ *
+ * 同じ上限値が constants/inputLimits.ts の FEATURE_LIMITS にも別名で存在し、用途が分かれている。
+ * FEATURE_LIMITS.FREE_TIER_VARIABLES は無料プランで有効化するカスタム変数の切り出しに使われる
+ * （providers/SnippetProvider.tsx、apps/mobile/src/utils/variableLoader.ts）。
+ * ここで設定する freeVariablesLimit / freeProfilesLimit は
+ * services/SubscriptionService.ts の追加可否判定（canAddVariable / canAddProfile）に使われる。
+ * 片方だけ変えると追加可否と実際に有効化される変数数が食い違うため、値は揃えて変更する。
+ * FEATURE_LIMITS.FREE_TIER_PROFILES は現在どこからも参照されていない。
  */
 export interface SubscriptionAdapterOptions {
   /**
@@ -51,7 +65,7 @@ export interface SubscriptionAdapterOptions {
    * @description
    * 無料プランで作成できる環境の最大数。
    * この上限を超える環境を作成する場合はProプラン契約が必要。
-   * デフォルト: 1（無料プランは1環境のみ）
+   * 未指定時は services/SubscriptionService.ts の FREE_PROFILES_LIMIT（現在3）が使われる。
    */
   freeProfilesLimit?: number;
 
@@ -61,7 +75,7 @@ export interface SubscriptionAdapterOptions {
    * @description
    * 無料プランで作成できるカスタム変数の最大数。
    * この上限を超える変数を作成する場合はProプラン契約が必要。
-   * デフォルト: 3（無料プランは3変数まで）
+   * 未指定時は services/SubscriptionService.ts の FREE_VARIABLES_LIMIT（現在5）が使われる。
    */
   freeVariablesLimit?: number;
 }

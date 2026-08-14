@@ -1,8 +1,10 @@
 /**
  * AlertProvider - 共通アラートダイアログのContext Provider
  *
- * Mobile/Web共通のアラート表示インターフェースを提供します。
- * 実際のUIレンダリングはプラットフォーム固有のアダプターで実装します。
+ * 現状、platformAdapter を渡している箇所は無く、常にデフォルトアダプター
+ * （ブラウザの alert/confirm）が使われる。Webはこのファイルをそのまま利用し（アダプター注入なし）、
+ * Mobileは apps/mobile 側が独自のモーダル実装とフックを持っているため、
+ * platformAdapter は現在未使用の拡張点である。
  *
  * @module AlertProvider
  */
@@ -51,8 +53,8 @@ export interface AlertContextType {
 /**
  * プラットフォーム固有のアラート表示アダプター
  *
- * Mobile: カスタムモーダル
- * Web: ブラウザのalert/confirm
+ * 現状これを注入している呼び出し元は無い（Mobileは apps/mobile 側の独自Providerを使う）。
+ * 未指定時はデフォルトアダプターのブラウザ alert/confirm が使われる。
  */
 export interface AlertPlatformAdapter {
   /** アラートを表示 */

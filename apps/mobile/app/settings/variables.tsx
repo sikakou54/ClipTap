@@ -12,7 +12,7 @@
  * @limits
  * - 無料プラン: 最大5つまで（超過分はvalid=0で無効化）
  *
- * @see lib/hooks/screens/useVariablesScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useVariablesScreen.ts - ビジネスロジック
  */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
@@ -225,9 +225,6 @@ const styles = StyleSheet.create({
     borderRadius: UI_CONSTANTS.BORDER_RADIUS.XL,
     borderWidth: UI_CONSTANTS.BORDER_WIDTH.THIN,
     gap: UI_CONSTANTS.GAP.XS,
-  },
-  filterChipIcon: {
-    fontSize: UI_CONSTANTS.ICON_SIZE.XS,
   },
   filterChipText: {
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,

@@ -10,7 +10,7 @@
  * - 新規カテゴリ作成への導線
  * - 現在選択中のカテゴリのハイライト表示
  *
- * @see lib/hooks/screens/useCategorySelectScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useCategorySelectScreen.ts - ビジネスロジック
  */
 
 import { useCallback } from 'react';

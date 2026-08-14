@@ -13,19 +13,22 @@
  * @see pages/CategoryManage.tsx - UIコンポーネント
  */
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from '@cliptap/shared';
 import { useCategories, CATEGORY_COLORS, DEFAULT_CATEGORY_COLOR, type Category } from '@cliptap/shared';
 import { useUnsavedChangesWarning } from '@hooks/useUnsavedChangesWarning';
+import { useBodyScrollLock } from '@hooks/useBodyScrollLock';
+import { showConfirm } from '@utils/alerts';
+import { DEFAULT_CUSTOM_RGB, resolveCategoryColorForm } from '@utils/categoryColor';
 
 /** デフォルトのフォーム値 */
 const DEFAULT_FORM_VALUES = {
   name: '',
   color: DEFAULT_CATEGORY_COLOR,
   useCustomColor: false,
-  customR: '59',
-  customG: '130',
-  customB: '246',
+  customR: DEFAULT_CUSTOM_RGB.r,
+  customG: DEFAULT_CUSTOM_RGB.g,
+  customB: DEFAULT_CUSTOM_RGB.b,
 } as const;
 
 /** 初期値の型 */
@@ -81,7 +84,7 @@ export interface UseCategoriesScreenReturn {
   openEditModal: (category: Category) => void;
   handleCloseModal: () => void;
   handleSubmit: () => Promise<void>;
-  handleDelete: (id: string) => void;
+  handleDelete: (id: string) => Promise<void>;
   handlePresetColorSelect: (c: string) => void;
   handleSwitchToPreset: () => void;
   handleSwitchToCustom: () => void;
@@ -130,9 +133,9 @@ export function useCategoriesScreen(): UseCategoriesScreenReturn {
   const [name, setName] = useState('');
   const [color, setColor] = useState<string>(DEFAULT_CATEGORY_COLOR);
   const [useCustomColor, setUseCustomColor] = useState(false);
-  const [customR, setCustomR] = useState('59');
-  const [customG, setCustomG] = useState('130');
-  const [customB, setCustomB] = useState('246');
+  const [customR, setCustomR] = useState<string>(DEFAULT_FORM_VALUES.customR);
+  const [customG, setCustomG] = useState<string>(DEFAULT_FORM_VALUES.customG);
+  const [customB, setCustomB] = useState<string>(DEFAULT_FORM_VALUES.customB);
 
   /* 初期値保存用 */
   const [initialValues, setInitialValues] = useState<InitialValues | null>(null);
@@ -190,19 +193,8 @@ export function useCategoriesScreen(): UseCategoriesScreenReturn {
     isActive: showModal,
   });
 
-  /* ======================================== */
   /* モーダル表示時に背景スクロールを無効化 */
-  /* ======================================== */
-  useEffect(() => {
-    if (showModal) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [showModal]);
+  useBodyScrollLock(showModal);
 
   /* ======================================== */
   /* ハンドラ */
@@ -241,66 +233,24 @@ export function useCategoriesScreen(): UseCategoriesScreenReturn {
     setName(category.name);
     setError('');
 
-    /* DBから取得したカラーコードをトリムして正規化 */
-    const rawColor = category.color || DEFAULT_CATEGORY_COLOR;
-    const categoryColor = rawColor.trim();
-
-    /* 色を大文字に正規化して比較（#3b82f6 → #3B82F6） */
-    const normalizedColor = categoryColor.toUpperCase();
-
-    /* プリセットカラーかどうかを判定（大文字小文字を無視） */
-    const isPresetColor = presetColors.some((c) => c.toUpperCase() === normalizedColor);
-
-    let initColor: string;
-    let initUseCustomColor: boolean;
-    let initCustomR: string;
-    let initCustomG: string;
-    let initCustomB: string;
-
-    if (isPresetColor) {
-      /* プリセットカラーの場合 */
-      const matchingPreset = presetColors.find((c) => c.toUpperCase() === normalizedColor);
-      initColor = matchingPreset || DEFAULT_CATEGORY_COLOR;
-      initCustomR = '59';
-      initCustomG = '130';
-      initCustomB = '246';
-      initUseCustomColor = false;
-    } else {
-      /* カスタムカラーの場合（#RRGGBB 前提） */
-      const hex = normalizedColor.startsWith('#') ? normalizedColor.slice(1) : normalizedColor;
-
-      if (hex.length >= 6) {
-        const r = parseInt(hex.slice(0, 2), 16);
-        const g = parseInt(hex.slice(2, 4), 16);
-        const b = parseInt(hex.slice(4, 6), 16);
-        initCustomR = r.toString();
-        initCustomG = g.toString();
-        initCustomB = b.toString();
-      } else {
-        initCustomR = '59';
-        initCustomG = '130';
-        initCustomB = '246';
-      }
-
-      initUseCustomColor = true;
-      initColor = categoryColor;
-    }
+    /* 保存されている色から、プリセット選択とカスタムRGBのどちらで開くかを決める */
+    const colorForm = resolveCategoryColorForm(category.color, presetColors);
 
     /* 状態を一括更新 */
-    setUseCustomColor(initUseCustomColor);
-    setColor(initColor);
-    setCustomR(initCustomR);
-    setCustomG(initCustomG);
-    setCustomB(initCustomB);
+    setUseCustomColor(colorForm.useCustomColor);
+    setColor(colorForm.color);
+    setCustomR(colorForm.customR);
+    setCustomG(colorForm.customG);
+    setCustomB(colorForm.customB);
 
     /* 初期値を保存 */
     setInitialValues({
       name: category.name,
-      color: initColor,
-      useCustomColor: initUseCustomColor,
-      customR: initCustomR,
-      customG: initCustomG,
-      customB: initCustomB,
+      color: colorForm.color,
+      useCustomColor: colorForm.useCustomColor,
+      customR: colorForm.customR,
+      customG: colorForm.customG,
+      customB: colorForm.customB,
     });
 
     setShowModal(true);
@@ -321,6 +271,10 @@ export function useCategoriesScreen(): UseCategoriesScreenReturn {
     setIsSubmitting(true);
     setError('');
 
+    /*
+     * ここに到達するのは useCustomColor が false か、true かつ isCustomColorValid が true のときだけ
+     * （不正なRGBは上の早期returnで弾いている）。よって getCustomColor() は必ず値を返す
+     */
     const colorToSave = useCustomColor ? getCustomColor()! : color;
 
     try {
@@ -352,7 +306,6 @@ export function useCategoriesScreen(): UseCategoriesScreenReturn {
 
   /** カテゴリ削除 */
   const handleDelete = useCallback(async (id: string) => {
-    const { showConfirm } = await import('@utils/alerts');
     showConfirm('category.delete_confirm', () => {
       try {
         deleteCategory(id);
@@ -366,9 +319,9 @@ export function useCategoriesScreen(): UseCategoriesScreenReturn {
   const handlePresetColorSelect = useCallback((c: string) => {
     setColor(c);
     setUseCustomColor(false);
-    setCustomR('59');
-    setCustomG('130');
-    setCustomB('246');
+    setCustomR(DEFAULT_FORM_VALUES.customR);
+    setCustomG(DEFAULT_FORM_VALUES.customG);
+    setCustomB(DEFAULT_FORM_VALUES.customB);
   }, []);
 
   /** プリセットモードに切り替え */
@@ -386,9 +339,9 @@ export function useCategoriesScreen(): UseCategoriesScreenReturn {
       } else {
         setColor(DEFAULT_CATEGORY_COLOR);
       }
-      setCustomR('59');
-      setCustomG('130');
-      setCustomB('246');
+      setCustomR(DEFAULT_FORM_VALUES.customR);
+      setCustomG(DEFAULT_FORM_VALUES.customG);
+      setCustomB(DEFAULT_FORM_VALUES.customB);
     }
     setUseCustomColor(false);
   }, [useCustomColor, getCustomColor, presetColors]);

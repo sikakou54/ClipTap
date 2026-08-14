@@ -24,7 +24,11 @@ import {
   type Profile,
   type ProfileVariable,
 } from '@cliptap/shared';
-import { useSubscription } from '@services/SubscriptionService';
+import { useSubscription } from '@hooks/useWebSubscription';
+import { showConfirmMessage } from '@utils/alerts';
+
+/** エラーメッセージを自動的に消すまでの待ち時間（ミリ秒） */
+const ERROR_AUTO_DISMISS_MS = 5000;
 
 /** システム変数の型 */
 export type SystemVariable = typeof UI_SYSTEM_VARIABLES[number];
@@ -153,7 +157,7 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
     /* 無効な変数をクリックした場合はエラーメッセージを表示 */
     if (!variable.valid) {
       setError(t('settings.variable_disabled_message'));
-      setTimeout(() => setError(''), 5000);
+      setTimeout(() => setError(''), ERROR_AUTO_DISMISS_MS);
       return;
     }
 
@@ -164,7 +168,6 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
   /** 変数を削除 */
   const handleDelete = useCallback(async (id: string) => {
     const variable = customVariables.find(v => v.id === id);
-    const { showConfirmMessage } = await import('@utils/alerts');
     const message = t('settings.delete_variable_confirm', { name: variable?.name || '' });
     showConfirmMessage(message, async () => {
       try {

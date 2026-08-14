@@ -80,6 +80,9 @@ export const SnippetEditForm = forwardRef<SnippetEditFormRef, SnippetEditFormPro
           onChange={(e) => onTitleChange(e.target.value)}
           onFocus={() => onFieldFocus('title')}
           onBlur={() => {
+            /* 呼び出し先の onFieldBlur（SnippetEditModal が渡すハンドラ）がさらに 200ms 遅延して
+               activeField をクリアするため、実質 400ms 後にクリアされる。
+               変数バッジのクリックがフォーカス移動より先に処理されるための猶予時間。 */
             setTimeout(() => {
               onFieldBlur();
             }, 200);
@@ -103,6 +106,8 @@ export const SnippetEditForm = forwardRef<SnippetEditFormRef, SnippetEditFormPro
           onChange={(e) => onContentChange(e.target.value)}
           onFocus={() => onFieldFocus('content')}
           onBlur={() => {
+            /* タイトル欄と同じく、ここでの 200ms と onFieldBlur 側の 200ms を合わせて
+               実質 400ms 後に activeField がクリアされる */
             setTimeout(() => {
               onFieldBlur();
             }, 200);

@@ -14,10 +14,11 @@
  * - snippetFormStyles: スニペット作成・編集画面用スタイル
  *
  * 使用箇所:
- * - 全画面のヘッダー
- * - リスト表示コンポーネント
+ * - 全画面のヘッダー（Header / ScreenContainer）
+ * - ホーム・検索画面
+ * - カテゴリ・プロファイル・変数の一覧画面
  * - スニペット作成・編集画面
- * - カテゴリ・プロファイル編集画面
+ * - エクスポート/インポートのデータ選択画面
  *
  * @remarks
  * 色やフォントサイズなどテーマ依存のスタイルは
@@ -107,7 +108,7 @@ export const commonStyles = StyleSheet.create({
  * 共通のヘッダースタイル
  *
  * カスタムヘッダーで使用するスタイル。
- * 左右ボタン・中央タイトルの3分割レイアウト。
+ * 子要素を横一列に並べ、両端へ寄せるコンテナのみを提供する。
  */
 export const headerStyles = StyleSheet.create({
   /** ヘッダー本体: 横並び、両端揃え、パディング */
@@ -117,13 +118,6 @@ export const headerStyles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 18,
     paddingTop: 12,
-  },
-  /** ヘッダー中央部: flex:1で残りスペースを使用、中央揃え */
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
   },
 });
 
@@ -138,10 +132,6 @@ export const headerStyles = StyleSheet.create({
  * リストアイテムとセパレーターのスタイルを定義。
  */
 export const listStyles = StyleSheet.create({
-  /** リストコンテナ: flex:1で親要素いっぱいに広がる */
-  listContainer: {
-    flex: 1,
-  },
   /** リストアイテム: 横並び、両端揃え、パディング */
   listItem: {
     flexDirection: 'row',
@@ -212,10 +202,6 @@ export const snippetFormStyles = StyleSheet.create({
   contentText: {
     flex: 1,
   },
-  /** シェブロンアイコン: 上マージン2dp（テキストとの揃え調整） */
-  chevron: {
-    marginTop: 2,
-  },
   /** カテゴリ選択ボタン: 横並び、角丸10 */
   categoryButton: {
     flexDirection: 'row',
@@ -224,40 +210,8 @@ export const snippetFormStyles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
   },
-  /** ラベル: 太字、下マージン8dp */
-  label: {
-    fontWeight: '600',
-    marginBottom: 8,
-  },
   /** 編集アイコンコンテナ: 上マージン2dp */
   editIconContainer: {
     marginTop: 2,
-  },
-  /** セクションラベル: 太字、大文字、フォントサイズ12 */
-  sectionLabel: {
-    fontWeight: '600',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    fontSize: 12,
-  },
-  /** プロファイルコンテナ: ボーダー1px、角丸10 */
-  profileContainer: {
-    borderWidth: 1,
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  /** プロファイル選択オプション: 横並び、下ボーダー付き */
-  profileOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  /** プロファイルオプション左側: 横並び */
-  profileOptionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
 });

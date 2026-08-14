@@ -39,7 +39,7 @@ export function KeyboardGuideModal({ visible, onClose }: KeyboardGuideModalProps
     >
       {/* モーダルオーバーレイ（背景暗転） */}
       <View style={styles.modalOverlay}>
-        {/* モーダルコンテンツ（白背景のカード） */}
+        {/* モーダルコンテンツ（背景色はテーマのsurfaceを適用） */}
         <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
           {/* ヘッダー: アイコンとタイトル */}
           <View style={styles.modalHeader}>
@@ -109,21 +109,21 @@ const styles = StyleSheet.create({
   /** モーダルオーバーレイ（背景暗転レイヤー） */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // 半透明黒背景
-    justifyContent: 'center', // 縦方向中央揃え
-    alignItems: 'center', // 横方向中央揃え
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
-  /** モーダルコンテンツ（白背景のカード） */
+  /** モーダルコンテンツ（背景色は使用箇所でテーマのsurfaceを重ねる） */
   modalContent: {
     width: '100%',
-    maxWidth: 400, // 最大幅400px（大画面対応）
+    maxWidth: 400,
     borderRadius: 16,
     padding: 24,
   },
   /** モーダルヘッダー（アイコン+タイトル） */
   modalHeader: {
-    alignItems: 'center', // 中央揃え
+    alignItems: 'center',
     marginBottom: 24,
     gap: 12,
   },
@@ -134,20 +134,20 @@ const styles = StyleSheet.create({
   },
   /** ガイドステップリストコンテナ */
   guideSteps: {
-    gap: 16, // 各ステップ間の余白
+    gap: 16,
     marginBottom: 24,
   },
   /** 個別ガイドステップ（番号+テキスト） */
   guideStep: {
-    flexDirection: 'row', // 横並び
+    flexDirection: 'row',
     gap: 12,
-    alignItems: 'flex-start', // 上揃え
+    alignItems: 'flex-start',
   },
   /** ステップ番号バッジ（円形） */
   stepNumber: {
     width: 32,
     height: 32,
-    borderRadius: 16, // 完全な円形
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -159,21 +159,21 @@ const styles = StyleSheet.create({
   },
   /** ステップ説明テキスト */
   stepText: {
-    flex: 1, // 残りスペースを使用
+    flex: 1,
     lineHeight: 24,
   },
   /** フルアクセス補足ボックス（iOSのみ表示） */
   noteBox: {
-    flexDirection: 'row', // アイコンとテキストを横並び
+    flexDirection: 'row',
     gap: 8,
-    alignItems: 'flex-start', // 上揃え
+    alignItems: 'flex-start',
     padding: 12,
     borderRadius: 10,
     marginBottom: 24,
   },
   /** フルアクセス補足テキスト */
   noteText: {
-    flex: 1, // 残りスペースを使用
+    flex: 1,
     lineHeight: 20,
   },
   /** ボタンエリア */

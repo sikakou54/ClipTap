@@ -32,7 +32,7 @@ interface RGBValidation {
 /**
  * useCategoryEditScreenの引数の型
  */
-export interface UseCategoryEditScreenParams {
+interface UseCategoryEditScreenParams {
   /** 編集対象のカテゴリID（新規作成時はundefined） */
   categoryId?: string;
 }

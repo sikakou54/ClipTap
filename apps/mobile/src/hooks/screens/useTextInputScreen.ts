@@ -24,7 +24,7 @@ const FOCUS_DELAY_MS = 100;
 /**
  * useTextInputScreenの引数
  */
-export interface UseTextInputScreenParams {
+interface UseTextInputScreenParams {
   /** 入力タイプ（'title' または 'content'） */
   type: 'title' | 'content';
   /** 初期テキスト値 */
@@ -39,7 +39,6 @@ export interface UseTextInputScreenParams {
 export interface UseTextInputScreenReturn {
   /* 状態 */
   text: string;
-  cursorPosition: number;
   keyboardHeight: number;
   textInputRef: React.RefObject<TextInput | null>;
 
@@ -162,7 +161,6 @@ export function useTextInputScreen(params: UseTextInputScreenParams): UseTextInp
   return {
     /* 状態 */
     text,
-    cursorPosition,
     keyboardHeight,
     textInputRef,
 

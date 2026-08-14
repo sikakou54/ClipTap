@@ -19,7 +19,7 @@ import { SYSTEM_VARIABLES } from '../variables/systemVariables';
 /**
  * すべてのシステム変数エイリアス（日本語・英語含む）
  */
-export const ALL_SYSTEM_VARIABLE_ALIASES = SYSTEM_VARIABLES.flatMap(v => v.aliases);
+const ALL_SYSTEM_VARIABLE_ALIASES = SYSTEM_VARIABLES.flatMap(v => v.aliases);
 
 /**
  * 変数名がシステム変数の予約語かどうかをチェック

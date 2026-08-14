@@ -2,8 +2,14 @@
  * 汎用モーダルコンポーネント
  *
  * @description
- * 全モーダルで共通のオーバーレイとコンテナ構造を提供。
- * ExportModal, SnippetEditModal, VariableEditModal 等で使用。
+ * オーバーレイとコンテナ構造、ヘッダー/本文/フッターのサブコンポーネントを提供する。
+ *
+ * 現状の利用箇所は AccountLinkModal のみ。
+ * 他のモーダル（CategoryModal / ProfileModal / IconPickerModal / VariableEditModal /
+ * SnippetEditModal / WebPageModal / SystemVariableFormatModal）は同じオーバーレイDOMを
+ * 各自で実装している。背景スクロールロックはそれらも useBodyScrollLock を個別に呼んでおり
+ * （CategoryModal / ProfileModal は useCategoriesScreen / useProfilesScreen 側で呼ぶ）、
+ * 下記のうちこのコンポーネント固有なのはESCクローズだけ。
  *
  * アクセシビリティ対応:
  * - ESCキーでモーダルを閉じる

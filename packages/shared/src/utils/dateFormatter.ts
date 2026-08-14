@@ -1,5 +1,9 @@
 import type { SupportedLocale } from '../variables/systemVariables';
 
+/**
+ * 曜日のロケール別表示名。
+ * 配列の添字は Date.getDay() の戻り値（0=日曜 〜 6=土曜）に対応する。
+ */
 const WEEKDAYS_SHORT: Record<SupportedLocale, readonly string[]> = {
   ja: ['日', '月', '火', '水', '木', '金', '土'],
   en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],

@@ -15,7 +15,7 @@
  * - 自動フォーカスでキーボード即時表示
  * - 検索結果がない場合のEmpty State表示
  *
- * @see lib/hooks/screens/useSearchScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useSearchScreen.ts - ビジネスロジック
  */
 
 import { View, StyleSheet, TouchableOpacity } from 'react-native';

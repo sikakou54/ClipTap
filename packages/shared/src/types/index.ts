@@ -8,6 +8,15 @@
  * @module types
  */
 
+/*
+ * Zodスキーマの公開方針:
+ * 他のスキーマの部品としてのみ使われるものは定義ファイル内に閉じ、ここへは出さない。
+ * z.infer で型を導出するだけのスキーマは ESLint の no-unused-vars が
+ * 「値なのに型としてしか使われていない」と判定するため export のまま残している。
+ * 実行時に safeParse しているのは ClipTapExportDataSchema の1つだけ
+ * （services/ImportParserService.ts）。
+ */
+
 /* ==================== Snippet ==================== */
 export {
   SnippetSortBySchema,
@@ -39,18 +48,15 @@ export {
   UpdateProfileInputSchema,
   ProfileVariableSchema,
   CreateProfileVariableInputSchema,
-  UpdateProfileVariableInputSchema,
   type Profile,
   type CreateProfileInput,
   type UpdateProfileInput,
   type ProfileVariable,
   type CreateProfileVariableInput,
-  type UpdateProfileVariableInput,
 } from './profile';
 
 /* ==================== Variable ==================== */
 export {
-  VariableTypeSchema,
   VariableSchema,
   CreateVariableInputSchema,
   UpdateVariableInputSchema,
@@ -68,20 +74,8 @@ export {
 
 /* ==================== Export/Import ==================== */
 export {
-  ImportCandidateSnippetProfileSchema,
-  ImportCandidateSnippetSchema,
-  ImportCandidateProfileSchema,
-  ImportCandidateVariableProfileValueSchema,
-  ImportCandidateVariableSchema,
-  ImportCandidateCategorySchema,
   ImportCandidatesSchema,
   ClipTapExportDataSchema,
-  SelectionSnippetProfileSchema,
-  SelectionSnippetDataSchema,
-  SelectionProfileDataSchema,
-  SelectionVariableProfileValueSchema,
-  SelectionVariableDataSchema,
-  SelectionCategoryDataSchema,
   SelectionCandidatesSchema,
   type ImportCandidateSnippetProfile,
   type ImportCandidateSnippet,

@@ -29,7 +29,7 @@ import { translateError } from '@cliptap/shared';
 /**
  * useProfileVariableEditScreenの引数の型
  */
-export interface UseProfileVariableEditScreenParams {
+interface UseProfileVariableEditScreenParams {
   /** 対象のプロファイルID */
   profileId: string;
   /** 編集対象の変数ID（新規作成時はundefined） */

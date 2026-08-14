@@ -16,9 +16,13 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from '@cliptap/shared';
 import { useProfiles, FREE_PROFILES_LIMIT, translateError, type Profile } from '@cliptap/shared';
-import { useSubscription } from '@services/SubscriptionService';
+import { useSubscription } from '@hooks/useWebSubscription';
 import { useUnsavedChangesWarning } from '@hooks/useUnsavedChangesWarning';
 import { useBodyScrollLock } from '@hooks/useBodyScrollLock';
+import { showConfirmMessage } from '@utils/alerts';
+
+/** エラーメッセージを自動的に消すまでの待ち時間（ミリ秒） */
+const ERROR_AUTO_DISMISS_MS = 5000;
 
 /**
  * useProfilesScreenの戻り値の型
@@ -132,7 +136,7 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
     /* 無効な環境は編集不可 */
     if (!profile.valid) {
       setError(t('profile.disabled_message'));
-      setTimeout(() => setError(''), 5000);
+      setTimeout(() => setError(''), ERROR_AUTO_DISMISS_MS);
       return;
     }
 
@@ -186,7 +190,6 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
       return;
     }
 
-    const { showConfirmMessage } = await import('@utils/alerts');
     const message = t('profile.delete_confirm', { name: profile?.name || '' });
     showConfirmMessage(message, () => {
       try {
@@ -212,11 +215,10 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
     /* 無効な環境は標準にできない（一覧に操作を出さないため通常は到達しない） */
     if (!profile.valid) {
       setError(t('profile.disabled_message'));
-      setTimeout(() => setError(''), 5000);
+      setTimeout(() => setError(''), ERROR_AUTO_DISMISS_MS);
       return;
     }
 
-    const { showConfirmMessage } = await import('@utils/alerts');
     const message = t('profile.set_default_confirm', { name: profile.name });
     showConfirmMessage(message, () => {
       try {

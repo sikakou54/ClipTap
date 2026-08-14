@@ -22,7 +22,7 @@ import { Profile } from '@cliptap/shared';
 /**
  * useProfileSelectScreenの引数の型
  */
-export interface UseProfileSelectScreenParams {
+interface UseProfileSelectScreenParams {
   /** 現在選択中のプロファイルID配列 */
   selectedIds: string[];
 }

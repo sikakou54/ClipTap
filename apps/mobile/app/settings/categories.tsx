@@ -11,7 +11,7 @@
  *
  * @note 削除時、紐づく定型文はカテゴリなしになる（ON DELETE SET NULL）
  *
- * @see lib/hooks/screens/useCategoriesScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useCategoriesScreen.ts - ビジネスロジック
  */
 
 import { useCallback } from 'react';

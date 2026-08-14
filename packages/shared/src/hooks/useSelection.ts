@@ -68,12 +68,6 @@ export interface UseSelectionResult {
   selectedVariableIds: Set<string>;
   selectedCategoryIds: Set<string>;
 
-  /* セッター（直接操作が必要な場合用） */
-  setSelectedSnippetIds: React.Dispatch<React.SetStateAction<Set<string>>>;
-  setSelectedProfileIds: React.Dispatch<React.SetStateAction<Set<string>>>;
-  setSelectedVariableIds: React.Dispatch<React.SetStateAction<Set<string>>>;
-  setSelectedCategoryIds: React.Dispatch<React.SetStateAction<Set<string>>>;
-
   /* UI状態 */
   activeTab: SelectionTabType;
   setActiveTab: React.Dispatch<React.SetStateAction<SelectionTabType>>;
@@ -94,9 +88,6 @@ export interface UseSelectionResult {
 
   /* 集計 */
   totalSelected: number;
-
-  /* 初期化 */
-  resetSelection: () => void;
 }
 
 /**
@@ -104,6 +95,58 @@ export interface UseSelectionResult {
  * null、undefined、空文字を扱い、前後の空白を除去する
  */
 const normalizeName = (value?: string | null): string => (value ?? '').trim();
+
+/**
+ * Setの要素をトグルする
+ *
+ * 選択のトグルと展開のトグルは「あれば削除、なければ追加」という同じ手順なので
+ * 1箇所にまとめる。Reactに変更を検知させるため、必ず新しいSetを返して参照を変える。
+ */
+function toggleInSet(prev: Set<string>, id: string): Set<string> {
+  const next = new Set(prev);
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+  return next;
+}
+
+/**
+ * 指定タブで選択可能なアイテムを返す
+ *
+ * 全選択の切り替え（toggleSelectAll）と全選択判定（isAllSelected）は同じ集合を
+ * 対象にしないと、チェックボックスの表示と実際の選択結果が食い違う。
+ * 片方だけ修正される事故を防ぐため、集合の定義はここだけに置く。
+ * プロファイルとカテゴリだけ既存重複を除外するのは、同名なら既存を再利用する方針で
+ * 取り込み対象から外すため。スニペットと変数は同名でも取り込むので全件が対象。
+ *
+ * enableDuplicateCheck の判定は isProfileDisabled / isCategoryDisabled の中にも入っており
+ * （false なら述語は常に false を返す）、ここの三項演算子と二重になっている。
+ * どちらを通しても結果は同じ。
+ */
+function getSelectableItems(
+  tab: SelectionTabType,
+  candidates: SelectionCandidatesBase,
+  enableDuplicateCheck: boolean,
+  isProfileDisabled: (name: string) => boolean,
+  isCategoryDisabled: (name: string) => boolean
+): SelectableItem[] {
+  switch (tab) {
+    case 'snippets':
+      return candidates.snippets;
+    case 'variables':
+      return candidates.variables;
+    case 'profiles':
+      return enableDuplicateCheck
+        ? candidates.profiles.filter((item) => !isProfileDisabled(item.name ?? ''))
+        : candidates.profiles;
+    case 'categories':
+      return enableDuplicateCheck
+        ? candidates.categories.filter((item) => !isCategoryDisabled(item.name ?? ''))
+        : candidates.categories;
+  }
+}
 
 /**
  * 初期選択状態を計算する
@@ -130,13 +173,12 @@ interface InitialSelectionState {
 function computeInitialSelection(params: InitialSelectionParams): InitialSelectionState {
   const { candidates, existingProfileNames, existingCategoryNames, enableDuplicateCheck } = params;
 
-  /* スニペット: 全て選択（重複チェックなし、同名でも追加可能） */
+  /* スニペット: 同名でも取り込むため全件を選択する */
   const snippets = new Set(candidates.snippets.map((s) => s.id));
-  /* 変数: 全て選択（重複チェックなし、重複時は上書き警告のみ） */
+  /* 変数: 重複していても取り込む（既存の値を上書きする）ため全件を選択し、重複はUIの警告表示だけに使う */
   const variables = new Set(candidates.variables.map((v) => v.id));
 
-  /* プロファイル: 重複チェック有効時は既存と名前が重複しないもののみ選択 */
-  /* 重複名のプロファイルは既存のものを使用する方針のため、重複チェック時は選択から除外 */
+  /* プロファイル: 重複したものは既存を再利用する方針のため、重複チェック有効時は取り込み対象から除外する */
   const profiles = enableDuplicateCheck
     ? new Set(
         candidates.profiles
@@ -145,8 +187,7 @@ function computeInitialSelection(params: InitialSelectionParams): InitialSelecti
       )
     : new Set(candidates.profiles.map((p) => p.id));
 
-  /* カテゴリ: 重複チェック有効時は既存と名前が重複しないもののみ選択 */
-  /* 重複名のカテゴリは既存のものを使用する方針のため、重複チェック時は選択から除外 */
+  /* カテゴリ: 重複したものは既存を再利用する方針のため、重複チェック有効時は取り込み対象から除外する */
   const categories = enableDuplicateCheck
     ? new Set(
         candidates.categories
@@ -220,11 +261,12 @@ export function useSelection({
     }
   }, [isOpen, applyInitialSelection]);
 
-  const resetSelection = applyInitialSelection;
-
   /**
    * プロファイル名が既存と重複しているか判定
    * 重複チェック無効時は常にfalse
+   *
+   * 重複したものは既存のプロファイルを再利用する方針のため、
+   * 取り込み対象（選択集合）から除外する。
    */
   const isProfileDisabled = useCallback(
     (name: string) => enableDuplicateCheck && existingProfileNames.has(normalizeName(name)),
@@ -234,6 +276,10 @@ export function useSelection({
   /**
    * 変数名が既存と重複しているか判定
    * 重複チェック無効時は常にfalse
+   *
+   * 重複していても選択は可能で、取り込むと既存の値を上書きする。
+   * この判定はUIで上書き警告を出すためだけに使い、
+   * 選択集合の計算（toggleSelectAll / isAllSelected）には使わない。
    */
   const isVariableDuplicate = useCallback(
     (name: string) => enableDuplicateCheck && existingVariableNames.has(normalizeName(name)),
@@ -243,6 +289,9 @@ export function useSelection({
   /**
    * カテゴリ名が既存と重複しているか判定
    * 重複チェック無効時は常にfalse
+   *
+   * 重複したものは既存のカテゴリを再利用する方針のため、
+   * 取り込み対象（選択集合）から除外する。
    */
   const isCategoryDisabled = useCallback(
     (name: string) => enableDuplicateCheck && existingCategoryNames.has(normalizeName(name)),
@@ -261,15 +310,7 @@ export function useSelection({
     };
 
     const setFunction = setterMap[type];
-    setFunction((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+    setFunction((prev) => toggleInSet(prev, id));
   }, []);
 
   /**
@@ -279,49 +320,40 @@ export function useSelection({
     (tab?: SelectionTabType) => {
       const targetTab = tab ?? activeTab;
 
-      /* 各タブごとの設定を定義 */
-      /* filterDisabledが定義されているタブは、重複チェック時に無効な項目を除外する */
+      /* タブごとの現在の選択集合と更新関数。選択可能アイテムの定義は getSelectableItems に集約している */
       const config: Record<
         SelectionTabType,
         {
           currentSet: Set<string>;
-          items: { id: string; name?: string }[];
           setFunction: React.Dispatch<React.SetStateAction<Set<string>>>;
-          filterDisabled?: (item: { id: string; name?: string }) => boolean;
         }
       > = {
         snippets: {
           currentSet: selectedSnippetIds,
-          items: candidates.snippets,
           setFunction: setSelectedSnippetIds,
         },
         profiles: {
           currentSet: selectedProfileIds,
-          items: candidates.profiles,
           setFunction: setSelectedProfileIds,
-          filterDisabled: enableDuplicateCheck
-            ? (item) => !isProfileDisabled(item.name ?? '')
-            : undefined,
         },
         variables: {
           currentSet: selectedVariableIds,
-          items: candidates.variables,
           setFunction: setSelectedVariableIds,
         },
         categories: {
           currentSet: selectedCategoryIds,
-          items: candidates.categories,
           setFunction: setSelectedCategoryIds,
-          filterDisabled: enableDuplicateCheck
-            ? (item) => !isCategoryDisabled(item.name ?? '')
-            : undefined,
         },
       };
 
-      const { currentSet, items, setFunction, filterDisabled } = config[targetTab];
-
-      /* 選択可能なアイテムを取得（重複チェック時は無効な項目を除外） */
-      const selectableItems = filterDisabled ? items.filter(filterDisabled) : items;
+      const { currentSet, setFunction } = config[targetTab];
+      const selectableItems = getSelectableItems(
+        targetTab,
+        candidates,
+        enableDuplicateCheck,
+        isProfileDisabled,
+        isCategoryDisabled
+      );
 
       if (selectableItems.length === 0) {
         setFunction(new Set());
@@ -355,43 +387,23 @@ export function useSelection({
   const isAllSelected = useCallback(
     (tab?: SelectionTabType): boolean => {
       const targetTab = tab ?? activeTab;
+      /* タブごとの現在の選択集合。選択可能アイテムの定義は getSelectableItems に集約している */
+      const currentSets: Record<SelectionTabType, Set<string>> = {
+        snippets: selectedSnippetIds,
+        profiles: selectedProfileIds,
+        variables: selectedVariableIds,
+        categories: selectedCategoryIds,
+      };
+      const selectableItems = getSelectableItems(
+        targetTab,
+        candidates,
+        enableDuplicateCheck,
+        isProfileDisabled,
+        isCategoryDisabled
+      );
 
-      switch (targetTab) {
-        case 'snippets':
-          return (
-            candidates.snippets.length > 0 &&
-            selectedSnippetIds.size === candidates.snippets.length
-          );
-        case 'profiles': {
-          if (enableDuplicateCheck) {
-            const selectable = candidates.profiles.filter(
-              (item) => !isProfileDisabled(item.name ?? '')
-            );
-            return selectable.length > 0 && selectedProfileIds.size === selectable.length;
-          }
-          return (
-            candidates.profiles.length > 0 &&
-            selectedProfileIds.size === candidates.profiles.length
-          );
-        }
-        case 'variables':
-          return (
-            candidates.variables.length > 0 &&
-            selectedVariableIds.size === candidates.variables.length
-          );
-        case 'categories': {
-          if (enableDuplicateCheck) {
-            const selectable = candidates.categories.filter(
-              (item) => !isCategoryDisabled(item.name ?? '')
-            );
-            return selectable.length > 0 && selectedCategoryIds.size === selectable.length;
-          }
-          return (
-            candidates.categories.length > 0 &&
-            selectedCategoryIds.size === candidates.categories.length
-          );
-        }
-      }
+      /* 候補0件を「全選択済み」と誤判定しないよう、length > 0 のガードは外さない */
+      return selectableItems.length > 0 && currentSets[targetTab].size === selectableItems.length;
     },
     [
       activeTab,
@@ -410,30 +422,14 @@ export function useSelection({
    * スニペットの展開状態をトグル
    */
   const toggleExpandSnippet = useCallback((id: string) => {
-    setExpandedSnippetIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+    setExpandedSnippetIds((prev) => toggleInSet(prev, id));
   }, []);
 
   /**
    * 変数の展開状態をトグル
    */
   const toggleExpandVariable = useCallback((id: string) => {
-    setExpandedVariableIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+    setExpandedVariableIds((prev) => toggleInSet(prev, id));
   }, []);
 
   const totalSelected = useMemo(() => {
@@ -450,10 +446,6 @@ export function useSelection({
     selectedProfileIds,
     selectedVariableIds,
     selectedCategoryIds,
-    setSelectedSnippetIds,
-    setSelectedProfileIds,
-    setSelectedVariableIds,
-    setSelectedCategoryIds,
     activeTab,
     setActiveTab,
     expandedSnippetIds,
@@ -467,6 +459,5 @@ export function useSelection({
     toggleExpandSnippet,
     toggleExpandVariable,
     totalSelected,
-    resetSelection,
   };
 }

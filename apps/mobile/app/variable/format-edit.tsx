@@ -1,3 +1,21 @@
+/**
+ * @module SystemVariableFormatEditScreen
+ * @description システム変数書式選択画面
+ *
+ * 1つのシステム変数について、プリセットの書式から1つを選ばせる画面。
+ * 画面フックを持たず、画面内から SystemVariableFormatMapper を直接呼ぶ現行構造。
+ *
+ * @param key - 書式を編集するシステム変数のキー
+ *
+ * @features
+ * - プリセット書式の一覧表示（現在時刻を整形したプレビュー付き）
+ * - 選択中の書式のラジオ表示
+ * - 既定書式を選んだ場合は保存済み書式を削除、それ以外は上書き保存
+ *
+ * @see packages/shared/src/mappers/SystemVariableFormatMapper.ts - 書式の保存・読込
+ * @see packages/shared/src/constants/systemVariableFormats.ts - 既定書式とプリセットの定義
+ */
+
 import { useMemo } from 'react';
 import { Platform, StyleSheet, Text, ToastAndroid, TouchableOpacity, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -28,8 +46,10 @@ export default function SystemVariableFormatEditScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ key?: string }>();
   const { colors } = useTheme();
+  /* 不正・欠落した key パラメータは 'today' に落として画面を成立させる */
   const key = params.key && isSystemVariableKey(params.key) ? params.key : 'today';
   const locale = normalizeLocale(i18next.language);
+  /* 保存済み書式はレンダーごとに読み直し、無ければ既定書式を使う */
   const current = SystemVariableFormatMapper.getAll()[key] ?? DEFAULT_SYSTEM_VARIABLE_FORMATS[key];
   const presets = useMemo(() => getSystemVariableFormatPresets(key, locale), [key, locale]);
   const definition = UI_SYSTEM_VARIABLES.find((item) => item.name === key);

@@ -1,9 +1,10 @@
 /**
- * アプリデータ初期化フック（共通型定義・ロジック）
+ * アプリデータ初期化フックの型契約
  *
  * @description
- * useAppInitializationフックの共通インターフェースと共通ロジックを定義。
- * プラットフォーム固有の実装は各アプリで提供される。
+ * 両アプリの useAppInitialization が満たす型契約のみを定義する。
+ * フック本体はプラットフォーム差（DBの読み込み方法・シード投入の手順）があるため、
+ * apps/web と apps/mobile がそれぞれ実装する。
  *
  * @module useAppInitialization
  */

@@ -24,7 +24,7 @@ import { translateError } from '@cliptap/shared';
 /**
  * useProfileValueEditScreenの引数の型
  */
-export interface UseProfileValueEditScreenParams {
+interface UseProfileValueEditScreenParams {
   /** 対象のプロファイルID */
   profileId: string;
   /** 変数名（表示用） */

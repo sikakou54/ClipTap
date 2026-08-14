@@ -18,14 +18,9 @@
  */
 import React, { useState } from 'react';
 import { useTranslation } from '@cliptap/shared';
-import type { Snippet } from '@cliptap/shared';
+import type { SnippetWithDisplay } from '@cliptap/shared';
 import { SnippetActionButtons } from './SnippetActionButtons';
 import { ExpandButton } from './ExpandButton';
-
-interface SnippetWithDisplay extends Snippet {
-  displayTitle: string | null;
-  displayContent: string;
-}
 
 interface SnippetCardProps {
   snippet: SnippetWithDisplay;
@@ -162,5 +157,3 @@ export const SnippetCard = React.memo(SnippetCardComponent, (prevProps, nextProp
     prevProps.categoryName === nextProps.categoryName
   );
 });
-
-export type { SnippetWithDisplay };

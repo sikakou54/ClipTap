@@ -5,6 +5,11 @@
  *
  * スペーシング、フォントサイズ、タイポグラフィシステムを提供。
  * プラットフォーム固有の拡張は各アプリ側で行う。
+ *
+ * apps/mobile/src/themeSystem.tsx が取り込むのは SPACING / FONT_SIZES / TYPOGRAPHY /
+ * SHADOWS と両テーマのカラーで、useTheme() が返す theme の spacing / typography / shadows
+ * などになる。designTokens.ts の DESIGN_TOKENS とはスケールが異なる
+ * （SPACING.sm=12 に対し DESIGN_TOKENS.SPACING.SM=6）ため、同一スタイル内で混在させない。
  */
 
 /**
@@ -106,53 +111,6 @@ export const TYPOGRAPHY = {
   },
 } as const;
 
-
-/**
- * ボーダーラディウス（角丸）
- */
-export const RADIUS = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  round: 50,
-} as const;
-
-
-/**
- * 寸法システム（固定寸法）
- */
-export const DIMENSIONS = {
-  header: {
-    height: 60,
-    paddingHorizontal: 20,
-    iconSize: 24,
-  },
-  tabBar: {
-    height: 85,
-    paddingBottom: 20,
-    paddingTop: 8,
-  },
-  avatar: {
-    small: 32,
-    medium: 40,
-    large: 80,
-  },
-  iconSize: {
-    small: 16,
-    medium: 20,
-    large: 24,
-    xlarge: 32,
-  },
-  button: {
-    small: 36,
-    medium: 44,
-    large: 52,
-  },
-} as const;
-
-export type Dimensions = typeof DIMENSIONS;
 
 /**
  * シャドウシステム（フラットデザイン採用のため未使用）

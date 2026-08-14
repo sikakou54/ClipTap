@@ -9,7 +9,7 @@
  * - 複数選択によるプロファイル指定
  * - 「全ての環境」オプション（空配列=全プロファイルで表示）
  *
- * @see lib/hooks/screens/useProfileSelectScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useProfileSelectScreen.ts - ビジネスロジック
  */
 
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';

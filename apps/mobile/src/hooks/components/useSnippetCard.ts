@@ -106,6 +106,11 @@ export function useSnippetCard({
 
   /**
    * コピー完了アイコンの自動リセット
+   *
+   * @remarks
+   * コピー完了アイコンは UI_CONSTANTS.COPY_SUCCESS_DURATION_MS 後に自動で消す。
+   * クリーンアップでタイマーを解除するのは、アンマウント後や次のコピーでフラグが立ち直した後に
+   * 前回のタイマーが発火して表示を戻してしまわないようにするため。
    */
   useEffect(() => {
     if (!isCopied) return;
@@ -136,6 +141,11 @@ export function useSnippetCard({
 
   /**
    * タイトルのコピー完了アイコンの自動リセット
+   *
+   * @remarks
+   * コピー完了アイコンは UI_CONSTANTS.COPY_SUCCESS_DURATION_MS 後に自動で消す。
+   * クリーンアップでタイマーを解除するのは、アンマウント後や次のコピーでフラグが立ち直した後に
+   * 前回のタイマーが発火して表示を戻してしまわないようにするため。
    */
   useEffect(() => {
     if (!isTitleCopied) return;
@@ -151,6 +161,7 @@ export function useSnippetCard({
    * タイトル押下時の処理（タイトルのみをコピー）
    */
   const handleCopyTitle = useCallback(async () => {
+    /* タイトルコピーは呼び出し側がハンドラを渡し、かつタイトルのコピーが許可されている場合のみ実行する（本文コピーは常に可能なのでガードが1つ少ない）。 */
     if (!onPressTitle || !canCopyTitle || isCopyingTitle) return;
     setIsCopyingTitle(true);
 

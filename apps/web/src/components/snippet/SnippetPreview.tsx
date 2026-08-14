@@ -11,8 +11,8 @@
  * - プレビューコピーボタン
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useTranslation, VariableService, FREE_VARIABLES_LIMIT, type Profile, type ProfileVariable, type Variable } from '@cliptap/shared';
-import { useSubscription } from '@services/SubscriptionService';
+import { useTranslation, VariableService, getClipboardAdapter, FREE_VARIABLES_LIMIT, type Profile, type ProfileVariable, type Variable } from '@cliptap/shared';
+import { useSubscription } from '@hooks/useWebSubscription';
 import { PreviewHeader } from './PreviewHeader';
 import { ProfileTabs } from './ProfileTabs';
 import { PreviewContent } from './PreviewContent';
@@ -55,30 +55,14 @@ export function SnippetPreview({
   const [focusedProfileId, setFocusedProfileId] = useState<string | null>(null);
 
   /**
-   * プロファイル別の変数マップを構築
-   */
-  const buildProfileVariablesMap = useCallback((profileId: string | null): Record<string, string> => {
-    if (!profileId) return {};
-    const map: Record<string, string> = {};
-    for (const pv of profileVariables) {
-      if (pv.profileId === profileId) {
-        const variable = variables.find((v) => v.id === pv.variableId);
-        if (variable) {
-          map[variable.name] = pv.value;
-        }
-      }
-    }
-    return map;
-  }, [profileVariables, variables]);
-
-  /**
    * 変数リゾルバーを作成（変数展開処理で使用）
    *
    * プレビューの展開結果をコピーと一致させるため、実際のプラン状態と同じ上限で解決する。
+   * 標準プロファイル分のマップも渡すのは、対象プロファイルに値が無い変数を標準側で補うため。
    */
   const createResolver = useCallback((profileId: string | null) => {
-    const profileVariablesMap = buildProfileVariablesMap(profileId);
-    const defaultProfileVariablesMap = buildProfileVariablesMap(defaultProfileId);
+    const profileVariablesMap = VariableService.buildProfileVariablesMapFromArrays(profileId, variables, profileVariables);
+    const defaultProfileVariablesMap = VariableService.buildProfileVariablesMapFromArrays(defaultProfileId, variables, profileVariables);
     return VariableService.createCustomVariableResolver(
       {
         isSubscribed,
@@ -87,7 +71,7 @@ export function SnippetPreview({
       },
       { freeTierLimit: FREE_VARIABLES_LIMIT }
     );
-  }, [buildProfileVariablesMap, defaultProfileId, isSubscribed]);
+  }, [variables, profileVariables, defaultProfileId, isSubscribed]);
 
   useEffect(() => {
     if (filteredProfiles.length === 0) {
@@ -162,7 +146,8 @@ export function SnippetPreview({
     }
 
     try {
-      await navigator.clipboard.writeText(lines.join('\n'));
+      /* getClipboardAdapter() は未登録時に throw するため、この try の内側で呼ぶ */
+      await getClipboardAdapter().copy(lines.join('\n'));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {

@@ -76,9 +76,8 @@ export function useSearchScreen(): UseSearchScreenReturn {
   /* ======================================== */
   /* データ取得 */
   /* ======================================== */
-  /* profilesは標準プロファイルの特定にだけ使い、選択肢にはvalidProfilesを使う */
-  const { profiles, validProfiles, profileVariables, activeProfile } = useProfiles();
-  const defaultProfile = useMemo(() => profiles.find((p) => p.isDefault) ?? null, [profiles]);
+  /* 選択肢にはvalidProfilesを使う。profilesは無効なものも含む一覧として画面へそのまま返すためだけに受け取る（返却値の profiles）。 */
+  const { profiles, validProfiles, profileVariables, activeProfile, defaultProfile } = useProfiles();
   const defaultProfileId = defaultProfile?.id;
   const { categories } = useCategories();
   const { variables } = useVariables();

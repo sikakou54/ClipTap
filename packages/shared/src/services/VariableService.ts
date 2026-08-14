@@ -10,7 +10,6 @@
 
 import { VariableMapper } from '../mappers/VariableMapper';
 import { ProfileVariableMapper } from '../mappers/ProfileMapper';
-import { ProfileService } from './ProfileService';
 import type { Variable, CreateVariableInput, UpdateVariableInput } from '../schema';
 import type { VariableResolver } from '../variables/parser';
 import { hasVariables, replaceVariables, VARIABLE_TOKEN_PATTERN } from '../variables/parser';
@@ -66,6 +65,32 @@ function validateVariableName(name: string, currentId: string | null): void {
 }
 
 /**
+ * プロファイル変数値の解決
+ *
+ * @param name - 変数名
+ * @param profileMap - 対象プロファイルの変数値マップ
+ * @param defaultMap - 標準プロファイルの変数値マップ
+ * @returns 解決した値。未設定なら null
+ *
+ * @remarks
+ * 解決順序は「対象プロファイルの非空値 → 標準プロファイルの非空値 → 未設定」。
+ * 空文字は「未設定」として扱う。値が空のときに空文字へ置換してしまうと、
+ * 利用者が値を入れ忘れたことに気づけなくなるため、未設定として扱って呼び出し側で
+ * トークンを保持させる。
+ * この順序は同期展開（expandTextSync＝一覧の見た目）とコピー経路
+ * （createCustomVariableResolver）で必ず一致させる必要がある。食い違うと
+ * 「一覧に見えている文字列とコピーされる文字列が違う」という利用者に直接見える不具合になる
+ * （tests/variables/expandTextSyncParity.test.ts がこの一致を固定している）。
+ */
+function resolveProfileValue(
+  name: string,
+  profileMap: Record<string, string>,
+  defaultMap: Record<string, string>
+): string | null {
+  return profileMap[name] || defaultMap[name] || null;
+}
+
+/**
  * 変数サービス
  */
 export class VariableService {
@@ -84,27 +109,6 @@ export class VariableService {
   }
 
   /**
-   * カスタム変数のみ取得
-   */
-  static getCustomVariables(): Variable[] {
-    return VariableMapper.getCustomVariables();
-  }
-
-  /**
-   * IDで変数を取得
-   */
-  static getById(id: string): Variable | null {
-    return VariableMapper.getById(id);
-  }
-
-  /**
-   * 名前で変数を取得
-   */
-  static getByName(name: string): Variable | null {
-    return VariableMapper.getByName(name);
-  }
-
-  /**
    * 変数を作成
    * @throws {VariableNameRequiredError} 変数名が空の場合
    * @throws {VariableNameInvalidError} 変数名の形式が無効な場合
@@ -112,10 +116,14 @@ export class VariableService {
    * @throws {DuplicateNameError} 同名の変数が既に存在する場合
    */
   static create(data: CreateVariableInput): Variable {
-    /* 変数名のバリデーション（空文字、長さ、形式、予約語、重複チェック） */
+    /* 空文字→形式→予約語→重複の順で検証する。
+       長さ上限はUI層のフォームバリデーションで判定しており
+       （mobile: useVariableEditScreen / web: VariableEditModal、いずれも
+       INPUT_LIMITS.VARIABLE_NAME_MAX）、Service層では検査していない */
     validateVariableName(data.name, null);
 
-    /* バリデーション通過後、名前をトリムしてMapper層に処理を委譲 */
+    /* 検証はService、SQLはMapperに集約する規約のため、
+       トリム済みの検証済みデータをそのままMapperへ渡す */
     return VariableMapper.create({
       ...data,
       name: data.name.trim(),
@@ -142,7 +150,8 @@ export class VariableService {
       validateVariableName(data.name, id);
     }
 
-    /* バリデーション通過後、名前をトリムしてMapper層に処理を委譲 */
+    /* 検証はService、SQLはMapperに集約する規約のため、
+       トリム済みの検証済みデータをそのままMapperへ渡す */
     return VariableMapper.update(id, {
       ...data,
       name: data.name?.trim(),
@@ -173,29 +182,6 @@ export class VariableService {
   }
 
   /**
-   * 変数数を取得
-   */
-  static count(): number {
-    return VariableMapper.count();
-  }
-
-
-  /**
-   * プランに応じてvalidフラグを更新
-   */
-  static updateValidFlags(limit: number): void {
-    VariableMapper.updateValidFlags(limit);
-  }
-
-  /**
-   * 変数の標準値を取得
-   */
-  static getStandardValue(variableName: string): string {
-    const defaultVariablesMap = ProfileService.getDefaultProfileVariablesMap();
-    return defaultVariablesMap[variableName] || '';
-  }
-
-  /**
    * カスタム変数リゾルバーを作成
    */
   static createCustomVariableResolver(
@@ -219,17 +205,9 @@ export class VariableService {
         return null;
       }
 
-      /* 値の解決優先順位: 指定プロファイルの非空値 → デフォルトプロファイルの非空値 → 元トークン */
-      if (context.profileVariablesMap[name]) {
-        return context.profileVariablesMap[name];
-      }
-
-      if (context.defaultProfileVariablesMap[name]) {
-        return context.defaultProfileVariablesMap[name];
-      }
-
-      /* nullを返すと変数パーサーが元のトークンを保持する */
-      return null;
+      /* 値が引ければ文字列、引けなければnullを返す。
+         nullの場合は変数パーサーが元のトークンを保持する */
+      return resolveProfileValue(name, context.profileVariablesMap, context.defaultProfileVariablesMap);
     };
   }
 
@@ -290,20 +268,24 @@ export class VariableService {
 
 
   /**
-   * 全カスタム変数の取得（sortOrder順でソート済み）
+   * 有効なカスタム変数の取得（無効化されたものは含まない）
    * @returns カスタム変数の配列
+   *
+   * @remarks
+   * VariableMapper.getByType は SELECT_BY_TYPE（ORDER BY sortOrder ASC）で返すため、ここで再ソートしない。
    */
   static getAllCustomVariablesSorted(): Variable[] {
-    // Mapper側で既にsortOrder ASCでソート済み
     return VariableMapper.getByType('custom');
   }
 
   /**
    * 全カスタム変数の取得（無効なものも含む、sortOrder順でソート済み）
    * @returns カスタム変数の配列
+   *
+   * @remarks
+   * VariableMapper.getAllIncludingInvalid は SELECT_ALL（ORDER BY sortOrder ASC）で返すため、ここで再ソートしない。
    */
   static getAllCustomVariablesIncludingInvalidSorted(): Variable[] {
-    // Mapper側で既にsortOrder ASCでソート済み
     return VariableMapper.getAllIncludingInvalid().filter((v) => v.type === 'custom');
   }
 
@@ -367,23 +349,12 @@ export class VariableService {
       /* validフラグがtrueのカスタム変数のみ展開対象 */
       const variable = validVariables.find((v) => v.name === trimmedName);
       if (!variable) {
-        return match; // 未知の変数はそのまま保持
+        return match; /* 定義のない変数はトークンのまま残す */
       }
 
-      /* 値の解決優先順位: プロファイル固有の非空値 → デフォルトの非空値 → 未設定（トークン保持） */
-      /* 空文字は「未設定」として扱い、コピー経路（createCustomVariableResolver）と規則を揃える */
-      const profileValue = profileVariablesMap[variable.name];
-      if (profileValue) {
-        return profileValue;
-      }
-
-      const defaultValue = defaultProfileVariablesMap[variable.name];
-      if (defaultValue) {
-        return defaultValue;
-      }
-
-      /* 値が未設定の場合はトークンを保持してユーザーに気づかせる */
-      return match;
+      /* 未設定ならトークンを保持して、値が入っていないことに気づかせる */
+      const resolved = resolveProfileValue(variable.name, profileVariablesMap, defaultProfileVariablesMap);
+      return resolved ?? match;
     });
   }
 

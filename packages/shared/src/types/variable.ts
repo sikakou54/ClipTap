@@ -24,7 +24,12 @@
  * - パース処理用のSystemVariableDefinition（systemVariables.ts）とは別の型
  */
 export interface UISystemVariableDefinition {
-  /** 変数名（内部識別子） - {{today}}, {{now}} などのプレースホルダーに使用 */
+  /**
+   * 変数名（内部識別子） - {{today}} / {{now}} などのプレースホルダーに使用する。
+   * 実際に入る値は SYSTEM_VARIABLE_KEYS のいずれかだが、型は string のままにしている
+   * （SystemVariableKey へ狭めると共有パッケージの公開型の契約が変わるため、
+   *   このリファクタリングの範囲外と判断した）。
+   */
   name: string;
   /** アイコン名 - Ionicons等で解釈される文字列 */
   icon: string;

@@ -1,14 +1,16 @@
 /**
  * @module dataItemStyles
- * @description データアイテム共通スタイル
+ * @description データ選択リストアイテムのスタイル
  *
- * インポート/エクスポート・選択画面で使用される各種アイテムコンポーネントの
- * 共通スタイルを定義。一貫したUIを提供。
+ * インポート/エクスポートのデータ選択画面で使うリストアイテム専用のスタイル定義。
+ * 同ディレクトリの SelectionSnippetItem / SelectionCategoryItem /
+ * SelectionProfileItem / SelectionVariableItem の4コンポーネントからのみ使われ、
+ * 4つの行の見た目を揃えるために1箇所へまとめている。
  */
 import { StyleSheet } from 'react-native';
 
 /**
- * データアイテムの共通スタイル
+ * データ選択リストアイテムのスタイル
  *
  * 統一レイアウト: チェックボックス | コンテンツ（タイトル、サブタイトル、メタ情報）
  */
@@ -88,25 +90,6 @@ export const dataItemStyles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     marginRight: 8,
-  },
-
-  /** @description メタ情報行（作成日時など） */
-  itemMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-
-  /** @description バッジ（Pro, 新規など） */
-  itemBadge: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-
-  /** @description プロファイル紐付きバッジ */
-  profileBadge: {
-    fontSize: 11,
-    marginLeft: 8,
   },
 
   /** @description バッジコンテナ（横並び） */

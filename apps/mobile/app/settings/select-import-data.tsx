@@ -9,7 +9,7 @@
  * - 個別選択・全選択切り替え
  * - 重複データの検知・警告表示
  *
- * @see lib/hooks/screens/useSelectImportDataScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useSelectImportDataScreen.ts - ビジネスロジック
  */
 import {
   View,
@@ -90,6 +90,7 @@ export default function SelectImportDataScreen() {
       backIcon="close"
       isModal={true}
     >
+      {/* タブコンテナ */}
       <View style={[styles.tabContainer, { borderBottomColor: colors.border, backgroundColor: colors.surface }]}>
         {TAB_OPTIONS.map((tab) => (
           <Pressable
@@ -119,6 +120,7 @@ export default function SelectImportDataScreen() {
         ))}
       </View>
 
+      {/* コンテンツ（タブ別リスト） */}
       <View style={[styles.content, { backgroundColor: colors.background }]}>
         {activeTab === 'snippets' && (
           <FlatList
@@ -150,7 +152,7 @@ export default function SelectImportDataScreen() {
                 />
               );
             }}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
             style={{ backgroundColor: colors.background }}
           />
         )}
@@ -168,7 +170,7 @@ export default function SelectImportDataScreen() {
                 colors={colors}
               />
             )}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
             style={{ backgroundColor: colors.background }}
           />
         )}
@@ -199,7 +201,7 @@ export default function SelectImportDataScreen() {
                 />
               );
             }}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
             style={{ backgroundColor: colors.background }}
           />
         )}
@@ -217,12 +219,13 @@ export default function SelectImportDataScreen() {
                 colors={colors}
               />
             )}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
             style={{ backgroundColor: colors.background }}
           />
         )}
       </View>
 
+      {/* フッター（インポートボタン） */}
       <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
         <TouchableOpacity
           style={[styles.importButton, { backgroundColor: totalSelected > 0 ? colors.primary : colors.border }]}
@@ -262,6 +265,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  /* 一覧の下余白。フッター（styles.footer）が position:absolute で画面下端に重なるため、最終行が隠れないよう余白を確保する */
+  listContent: {
+    paddingBottom: 100,
   },
   footer: {
     position: 'absolute',

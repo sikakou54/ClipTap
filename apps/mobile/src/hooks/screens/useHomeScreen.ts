@@ -71,17 +71,17 @@ export function useHomeScreen(): UseHomeScreenReturn {
   /* データ取得 */
   /* ======================================== */
   const { categories, refresh: refreshCategories } = useCategories();
-  const { profiles, profileVariables, refresh: refreshProfiles } = useProfiles();
+  const { profiles, profileVariables, defaultProfile, refresh: refreshProfiles } = useProfiles();
   const { variables } = useVariables();
 
   /* アクティブなプロファイルを取得（現在選択中の環境、isActive=trueのもの） */
+  /* ProfileProviderのactiveProfileは別クエリ由来で自動有効化を含み、この配列のisActiveと一時的に食い違うため、ここでは配列からの導出を維持する。 */
   const activeProfile = useMemo(
     () => profiles.find((p) => p.isActive) ?? null,
     [profiles]
   );
 
   const activeProfileId = activeProfile?.id;
-  const defaultProfile = useMemo(() => profiles.find((p) => p.isDefault) ?? null, [profiles]);
   const defaultProfileId = defaultProfile?.id;
 
   /* スニペットデータを取得（Providerから全データを取得） */

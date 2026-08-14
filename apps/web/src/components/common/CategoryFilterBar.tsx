@@ -27,6 +27,8 @@ function CategoryFilterBarComponent({
   const [localSelected, setLocalSelected] = useState(selectedCategory);
 
   const handleSelect = (categoryId: string | null) => {
+    /* 見た目（localSelected）を即時更新してから親へ通知する。
+       親コールバックは一覧の再計算を伴うため、次フレームへ逃がしている */
     setLocalSelected(categoryId);
     requestAnimationFrame(() => onSelectCategory(categoryId));
   };
@@ -77,6 +79,11 @@ function CategoryFilterBarComponent({
   );
 }
 
+/**
+ * 比較対象は categories / allLabel / uncategorizedLabel のみ。
+ * selectedCategory は localSelected の useState 初期値としてしか読まれず、選択表示は内部state（localSelected）が
+ * 決めるため比較していない。親から選択カテゴリを変える経路が増えた場合はここも見直しが必要。
+ */
 export const CategoryFilterBar = React.memo(CategoryFilterBarComponent, (prevProps, nextProps) => {
   return (
     prevProps.categories === nextProps.categories &&

@@ -38,9 +38,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Logger } from '@cliptap/shared';
 import { REVENUECAT_CONFIG, PRODUCT_IDS_CONFIG } from '@constants/config';
 
-export const ENTITLEMENT_ID = REVENUECAT_CONFIG.ENTITLEMENT_ID;
+const ENTITLEMENT_ID = REVENUECAT_CONFIG.ENTITLEMENT_ID;
 
-export const PRODUCT_IDS = Platform.select({
+const PRODUCT_IDS = Platform.select({
   ios: PRODUCT_IDS_CONFIG.iOS,
   android: PRODUCT_IDS_CONFIG.android,
   default: PRODUCT_IDS_CONFIG.iOS,
@@ -64,7 +64,7 @@ function isBillingUnavailableError(error: unknown): boolean {
   );
 }
 
-export type SubscriptionChangeCallback = (isSubscribed: boolean) => void;
+type SubscriptionChangeCallback = (isSubscribed: boolean) => void;
 
 /**
  * サブスクリプション管理クラス
@@ -406,6 +406,11 @@ class PurchaseService {
 
   /**
    * RevenueCatからログアウト
+   *
+   * @remarks
+   * Purchases.isAnonymous() が匿名を返した場合は何もしない。
+   * 実処理は performLogout() 側で完結し、その内部の catch が例外を再送出しないため、
+   * このメソッドの catch へ到達するのは isAnonymous() 自体が失敗した場合だけ。
    */
   async logout(): Promise<void> {
     try {

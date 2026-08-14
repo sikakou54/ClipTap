@@ -27,6 +27,17 @@ export const FREE_PROFILES_LIMIT = 3;
 export const FREE_VARIABLES_LIMIT = 5;
 
 /**
+ * 上限なしを表す番兵値。
+ *
+ * @remarks
+ * Proプランでも updateValidFlags をスキップしてはならない。ProfileMapper.updateValidFlags /
+ * VariableMapper.updateValidFlags は RESET_VALID で全件を valid=0 にしてから
+ * SET_VALID_BY_LIMIT で上限件数だけ valid=1 に戻す実装のため、Pro加入・購入復元の直後に
+ * 「無料プラン上限で無効化されていた項目」を全件有効へ戻すには、この巨大な上限で更新を実行する必要がある。
+ */
+const UNLIMITED_LIMIT = 999999;
+
+/**
  * validフラグ更新用のコールバックインターフェース
  *
  * @interface ValidFlagsUpdater
@@ -201,6 +212,9 @@ export class SubscriptionService {
    * サブスク状態に応じてProfile/Variableのvalidフラグを更新。
    * 無料版では上限を超えたアイテムをinvalidにする。
    * アクティブプロファイルが無効になった場合、デフォルトに自動切り替え。
+   *
+   * @returns 更新を実行できたか。現在の呼び出し元8箇所はいずれも戻り値を見ていないが、
+   *          共有パッケージの公開APIのため型は変えずに維持している。
    */
   static updateValidFlags(): boolean {
     if (!this.validFlagsUpdater?.hasDbAdapter()) {
@@ -211,9 +225,8 @@ export class SubscriptionService {
       const activeProfile = this.validFlagsUpdater.getActiveProfile();
       const subscribed = this.isSubscribed();
 
-      /* Pro版は実質無制限（999999）、無料版は定数制限 */
-      const limit = subscribed ? 999999 : this.freeProfilesLimit;
-      const varLimit = subscribed ? 999999 : this.freeVariablesLimit;
+      const limit = subscribed ? UNLIMITED_LIMIT : this.freeProfilesLimit;
+      const varLimit = subscribed ? UNLIMITED_LIMIT : this.freeVariablesLimit;
 
       /* created_at順でソート後、limit番目以降のアイテムのvalidフラグをfalseに設定 */
       this.validFlagsUpdater.updateProfileValidFlags(limit);
@@ -231,6 +244,9 @@ export class SubscriptionService {
       }
       return true;
     } catch {
+      /* 有効フラグの再計算に失敗してもローカル業務機能は続行させる。
+         ここで例外を上げると、プロファイル削除・標準切替・インポートのトランザクションを
+         巻き込んで中断してしまうため。失敗はログにも残さず、戻り値のfalseだけで伝える。 */
       return false;
     }
   }

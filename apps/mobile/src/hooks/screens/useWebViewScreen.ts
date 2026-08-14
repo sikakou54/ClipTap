@@ -24,7 +24,7 @@ import privacyHtml from '../../../assets/web/privacy.html';
 /* ======================================== */
 
 /** useWebViewScreen フックのパラメータ */
-export interface UseWebViewScreenParams {
+interface UseWebViewScreenParams {
   /** 表示するHTMLファイル名（'terms' | 'privacy'） */
   file: string;
   /** 表示タイトル */

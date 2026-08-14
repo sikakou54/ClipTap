@@ -20,6 +20,8 @@ import {
   useSnippets,        /* 定型文一覧取得フック */
   type ImportTabType, /* タブの種類（snippets/profiles/variables/categories） */
 } from '@cliptap/shared';
+import { showAlert } from '@utils/alerts';
+import { ExportPasswordModal } from './ExportPasswordModal';
 
 /** タブオプションの定義（固定値） */
 const TAB_OPTIONS: ImportTabType[] = ['snippets', 'profiles', 'variables', 'categories'];
@@ -194,6 +196,10 @@ export function ExportSelectionModal({
   /**
    * 初期選択状態の設定
    * モーダルが開かれた時に全てのアイテムを選択状態にする
+   *
+   * 依存に candidates.* を含むため、モーダルを開いたまま候補データが再計算されると
+   * 選択・タブ・展開状態・パスワード入力がすべて初期化される
+   * （shared の useSelection は開くたび1回だけ初期化する点で異なる）。
    */
   useEffect(() => {
     if (isOpen) {
@@ -358,7 +364,6 @@ export function ExportSelectionModal({
   const handleExportPress = useCallback(async () => {
     /* 何も選択されていない場合はエラー */
     if (totalSelected === 0) {
-      const { showAlert } = await import('@utils/alerts');
       showAlert('', t('backup.no_selection'));
       return;
     }
@@ -373,7 +378,6 @@ export function ExportSelectionModal({
   const handlePasswordSubmit = useCallback(async () => {
     /* パスワードが未入力の場合はエラー */
     if (!password.trim()) {
-      const { showAlert } = await import('@utils/alerts');
       showAlert('', t('error.password_required'));
       return;
     }
@@ -489,6 +493,8 @@ export function ExportSelectionModal({
                     /* カテゴリが選択されているかチェック（選択されていない場合は未分類として表示） */
                     const isCategorySelected = item.categoryId ? selectedCategoryIds.has(item.categoryId) : false;
                     const displayCategoryName = isCategorySelected ? (item.categoryName || t('common.uncategorized')) : t('common.uncategorized');
+                    /* カテゴリ未選択時・色未設定時はどちらも青（#3B82F6）で表示する。
+                       同ファイルのカテゴリタブの丸は #ccc、CategoryItem のカラーインジケーターは #6B7280 と値が揃っていない */
                     const displayCategoryColor = isCategorySelected ? (item.categoryColor || '#3B82F6') : '#3B82F6';
 
                     /* 定型文アイテム（チェックボックス、タイトル、本文、カテゴリ・プロファイルバッジ、展開/折りたたみ） */
@@ -714,62 +720,14 @@ export function ExportSelectionModal({
       </Dialog>
 
       {/* パスワード入力モーダル（z-60で選択モーダルより前面に表示） */}
-      <Dialog open={showPasswordModal} onClose={() => setShowPasswordModal(false)} className="relative z-[60]">
-        {/* 背景オーバーレイ */}
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        {/* モーダルコンテナ（中央配置） */}
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          {/* モーダルパネル */}
-          <Dialog.Panel className="w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-xl p-6">
-            {/* タイトル */}
-            <Dialog.Title className="text-lg font-bold text-gray-900 dark:text-white mb-2 text-center">
-              {t('export_import.password_title')}
-            </Dialog.Title>
-            {/* 説明文 */}
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 text-center">
-              {t('export_import.password_description')}
-            </p>
-            {/* パスワード入力欄（Enterキーでも送信可能） */}
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t('export_import.password_placeholder')}
-              autoFocus
-              className="w-full px-4 py-3 border border-gray-300 dark:border-[#2A2A2A] rounded-xl focus:outline-none mb-4 bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#707070]"
-              onKeyDown={(e) => {
-                /* Enterキーが押されたら送信 */
-                if (e.key === 'Enter' && password.trim()) {
-                  handlePasswordSubmit();
-                }
-              }}
-            />
-            {/* ボタン群（キャンセル・OK） */}
-            <div className="flex gap-3">
-              {/* キャンセルボタン */}
-              <button
-                onClick={() => setShowPasswordModal(false)}
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#333] border border-gray-300 dark:border-[#444] rounded-lg hover:bg-gray-50 dark:hover:bg-[#444]"
-              >
-                {t('common.cancel')}
-              </button>
-              {/* OKボタン（パスワード未入力または処理中は無効化） */}
-              <button
-                onClick={handlePasswordSubmit}
-                disabled={!password.trim() || isProcessing}
-                className={`flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${
-                  !password.trim() || isProcessing
-                    ? 'bg-blue-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700'
-                }`}
-              >
-                {/* 処理中は「処理中」、それ以外は「OK」 */}
-                {isProcessing ? t('common.processing') : t('common.ok')}
-              </button>
-            </div>
-          </Dialog.Panel>
-        </div>
-      </Dialog>
+      <ExportPasswordModal
+        isOpen={showPasswordModal}
+        password={password}
+        onPasswordChange={setPassword}
+        onSubmit={handlePasswordSubmit}
+        onCancel={() => setShowPasswordModal(false)}
+        isProcessing={isProcessing}
+      />
     </>
   );
 }

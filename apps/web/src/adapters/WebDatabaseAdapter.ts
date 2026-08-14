@@ -9,7 +9,7 @@
  */
 
 import type { DbAdapter, DbRunResult } from '@cliptap/shared';
-import { getDirectoryPath, isOpfsPath, OPFS_PREFIX } from '@cliptap/shared';
+import { isOpfsPath } from '@cliptap/shared';
 import type { Database } from 'sql.js';
 import { SQLiteWasm } from '@src/mappers/sqliteWasm';
 import type { WebFileIOAdapter } from '@adapters/WebFileIOAdapter';
@@ -70,15 +70,6 @@ export class WebDatabaseAdapter implements DbAdapter {
 
     /* OPFSパスの場合 */
     if (isOpfsPath(path)) {
-      /* ディレクトリ作成（必要な場合） */
-      const dirPath = getDirectoryPath(path);
-      if (dirPath.length >= OPFS_PREFIX.length && dirPath !== path) {
-        const exists = await this.fileIO.exists(dirPath);
-        if (!exists) {
-          await this.fileIO.makeDirectory(dirPath);
-        }
-      }
-
       /* ファイルが存在する場合は読み込んでDBを作成 */
       const fileExists = await this.fileIO.exists(path);
       if (fileExists) {

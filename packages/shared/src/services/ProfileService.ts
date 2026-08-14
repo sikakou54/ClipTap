@@ -111,7 +111,7 @@ export class ProfileService {
   static create(data: CreateProfileInput): Profile {
     /* プロファイル名の前後空白をトリム */
     const trimmedName = data.name.trim();
-    /* 空文字チェック（空白のみも不可） */
+    /* 空白のみの名前は一覧で識別できず重複判定もすり抜けるため、trim後の空文字を拒否する */
     if (!trimmedName) {
       throw new EmptyContentError();
     }
@@ -122,7 +122,7 @@ export class ProfileService {
       throw new DuplicateNameError('profile', trimmedName);
     }
 
-    /* バリデーション通過後、Mapper層に処理を委譲 */
+    /* 検証はService、SQLはMapperに集約する規約のため、検証済みデータをそのままMapperへ渡す */
     return ProfileMapper.create({ ...data, name: trimmedName });
   }
 
@@ -144,7 +144,7 @@ export class ProfileService {
     if (data.name !== undefined) {
       /* プロファイル名の前後空白をトリム */
       const trimmedName = data.name.trim();
-      /* 空文字チェック（空白のみも不可） */
+      /* 空白のみの名前は一覧で識別できず重複判定もすり抜けるため、trim後の空文字を拒否する */
       if (!trimmedName) {
         throw new EmptyContentError();
       }
@@ -161,7 +161,7 @@ export class ProfileService {
       updateData = { ...updateData, name: trimmedName };
     }
 
-    /* バリデーション通過後、Mapper層に処理を委譲 */
+    /* 検証はService、SQLはMapperに集約する規約のため、検証済みデータをそのままMapperへ渡す */
     return ProfileMapper.update(id, updateData);
   }
 
@@ -277,20 +277,6 @@ export class ProfileService {
     if (!activeProfile) this.setActive(targetProfileId);
   }
 
-  /**
-   * プロファイル数を取得
-   */
-  static count(): number {
-    return ProfileMapper.count();
-  }
-
-  /**
-   * プランに応じてvalidフラグを更新
-   */
-  static updateValidFlags(limit: number): void {
-    ProfileMapper.updateValidFlags(limit);
-  }
-
   /* ======================================== */
   /* ProfileVariable操作 */
   /* ======================================== */
@@ -352,16 +338,6 @@ export class ProfileService {
   /* ======================================== */
   /* 拡張メソッド（Mobile/Web共通） */
   /* ======================================== */
-
-  /**
-   * プロファイルIDで変数一覧を取得
-   * @param profileId - プロファイルID
-   * @returns プロファイル変数一覧
-   */
-  static getProfileVariables(profileId: string): ProfileVariable[] {
-    return ProfileVariableMapper.getByProfileId(profileId);
-  }
-
 
   /**
    * プロファイルを削除（アクティブなプロファイルの自動切り替え付き）

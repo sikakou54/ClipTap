@@ -265,7 +265,13 @@ function importSnippets(
  * @returns プロファイルIDマッピング（旧ID → 新ID）
  *
  * @remarks
- * スニペットに紐づくプロファイル（選択されていないものも含む）を正しくマッピングするため
+ * スニペットに紐づくプロファイル（選択されていないものも含む）を正しくマッピングするため。
+ *
+ * このマッピングは、取込元スニペットが参照する「選択されていない既存プロファイル」の
+ * ローカルIDを引くためのもの。失敗して空マップになっても、選択項目は upsert が名前で
+ * 再解決するため取込自体は完了する（未選択プロファイルへの紐付けだけが落ちる。
+ * カテゴリの分類は prepareExistingCategoryMapping が別に解決するため影響しない）。
+ * ここで例外を上げると取込全体が失敗するため握り潰す。
  */
 function prepareExistingProfileMapping(
   importMapper: ImportMapper
@@ -281,7 +287,7 @@ function prepareExistingProfileMapping(
       }
     }
   } catch {
-    /* エラーが発生しても処理は続行 */
+    /* 上記のとおり縮退して続行する。中断させない */
   }
 
   return profileIdMap;
@@ -294,7 +300,12 @@ function prepareExistingProfileMapping(
  * @returns カテゴリIDマッピング（旧ID → 新ID）
  *
  * @remarks
- * スニペットに紐づくカテゴリ（選択されていない既存重複カテゴリも含む）を正しくマッピングするため
+ * スニペットに紐づくカテゴリ（選択されていない既存重複カテゴリも含む）を正しくマッピングするため。
+ *
+ * このマッピングは、取込元スニペットが参照する「選択されていない既存カテゴリ」の
+ * ローカルIDを引くためのもの。失敗して空マップになっても、選択項目は upsert が名前で
+ * 再解決するため取込自体は完了する（未選択カテゴリを参照するスニペットが未分類になるだけ）。
+ * ここで例外を上げると取込全体が失敗するため握り潰す。
  */
 function prepareExistingCategoryMapping(
   importMapper: ImportMapper
@@ -310,7 +321,7 @@ function prepareExistingCategoryMapping(
       }
     }
   } catch {
-    /* エラーが発生しても処理は続行 */
+    /* 上記のとおり縮退して続行する。中断させない */
   }
 
   return categoryIdMap;
@@ -322,6 +333,9 @@ function prepareExistingCategoryMapping(
  * @description
  * ImportAdapterを使用してプラットフォーム固有の処理を実行。
  * すべて静的メソッドで提供。
+ *
+ * importPartial＝選択項目のマージ取込、importDatabaseFromTempDb＝全データの逐語復元。
+ * どちらも prepareImportDatabase が作った一時DBのパスを受け取る。
  */
 export class ImportService {
   /* ======================================== */
@@ -467,7 +481,7 @@ export class ImportService {
 
       const mapper = new ImportMapper(tempDbAdapter);
       getMainDbAdapter().transaction(() => {
-        const importedDefaultProfileId = this.executePartialImportWithMapper(
+        const importedDefaultProfileId = this.runPartialImport(
           mapper,
           selectedSnippetIds,
           selectedProfileIds,
@@ -485,6 +499,9 @@ export class ImportService {
       Logger.info('[ImportService] Partial import completed');
     } catch (error) {
       Logger.error('[ImportService] Partial import failed:', error);
+      /* Error以外がthrowされたときの文言は現行の日本語リテラルをそのまま維持する。
+         PartialImportError の既定値へ委ねると message が 'Partial import failed' に変わり、
+         ログと翻訳失敗時のフォールバック表示が変化するため。i18n化は別途判断すること */
       throw new PartialImportError(
         error instanceof Error ? error.message : 'インポート中にエラーが発生しました',
         error
@@ -498,7 +515,7 @@ export class ImportService {
    * Mapperを使用して部分インポートを実行（内部静的メソッド）
    * @returns インポート元でデフォルトだったプロファイルの新ID（存在する場合）
    */
-  private static executePartialImportWithMapper(
+  private static runPartialImport(
     importMapper: ImportMapper,
     selectedSnippetIds: string[],
     selectedProfileIds: string[],
@@ -545,11 +562,14 @@ export class ImportService {
       await this.refreshSubscriptionForImport();
 
       const mapper = new ImportMapper(tempDbAdapter);
-      this.executeFullRestoreWithMapper(mapper);
+      this.runFullRestore(mapper);
 
       Logger.info('[ImportService] Import completed successfully');
     } catch (error) {
       Logger.error('[ImportService] Import failed:', error);
+      /* Error以外がthrowされたときの文言は現行の日本語リテラルをそのまま維持する。
+         PartialImportError の既定値へ委ねると message が 'Partial import failed' に変わり、
+         ログと翻訳失敗時のフォールバック表示が変化するため。i18n化は別途判断すること */
       throw new PartialImportError(
         error instanceof Error ? error.message : 'インポート中にエラーが発生しました',
         error
@@ -563,12 +583,12 @@ export class ImportService {
    * 全復元を単一トランザクションで実行する。
    * 通常のupsert経路を通さず、バックアップの識別子とメタデータを保持する。
    */
-  private static executeFullRestoreWithMapper(importMapper: ImportMapper): void {
+  private static runFullRestore(importMapper: ImportMapper): void {
     const restoreData = importMapper.getFullRestoreData();
     const mainDbAdapter = getMainDbAdapter();
 
     mainDbAdapter.transaction(() => {
-      this.deleteAllExistingData();
+      this.clearAllDataForFullRestore();
 
       restoreData.categories.forEach((row) => CategoryMapper.restore(row));
       restoreData.variables.forEach((row) => VariableMapper.restore(row));
@@ -598,7 +618,7 @@ export class ImportService {
    * @remarks
    * 外部キー制約があるため、関連テーブルから先に削除する必要がある
    */
-  private static deleteAllExistingData(): void {
+  private static clearAllDataForFullRestore(): void {
     const mainDbAdapter = getMainDbAdapter();
 
     try {

@@ -65,15 +65,15 @@ const VariableQueries = {
  * @returns Variable型のオブジェクト
  */
 const toEntity = (row: any): Variable => ({
-  id: row.id, // 変数ID
-  name: row.name, // 変数名（例: {{API_KEY}}）
-  label: row.label || null, // ラベル（UIに表示する名前）
-  icon: row.icon || null, // アイコン（オプション）
-  type: row.type || 'custom', // タイプ（custom: カスタム変数、それ以外はシステム変数）
-  valid: row.valid !== undefined ? Boolean(row.valid) : true, // 有効かどうか（Proプラン制限）
-  sortOrder: row.sortOrder ?? 0, // 並び順
-  createdAt: row.createdAt, // 作成日時
-  updatedAt: row.updatedAt, // 最終更新日時
+  id: row.id, /* 変数ID */
+  name: row.name, /* 変数名（例: {{API_KEY}}） */
+  label: row.label || null, /* ラベル（UIに表示する名前。未設定・空文字はnullに寄せる） */
+  icon: row.icon || null, /* アイコン（オプション。未設定・空文字はnullに寄せる） */
+  type: row.type || 'custom', /* タイプ（custom: カスタム変数、それ以外はシステム変数。未設定・空文字はcustom扱い） */
+  valid: row.valid !== undefined ? Boolean(row.valid) : true, /* 有効かどうか（Proプラン制限） */
+  sortOrder: row.sortOrder ?? 0, /* 並び順 */
+  createdAt: row.createdAt, /* 作成日時 */
+  updatedAt: row.updatedAt, /* 最終更新日時 */
 });
 
 /**
@@ -183,7 +183,7 @@ export class VariableMapper {
       data.label || null,
       data.icon || null,
       data.type || 'custom',
-      1, // valid（初期値は有効）
+      1, /* valid（初期値は有効） */
       sortOrder,
       now,
       now,
@@ -259,18 +259,6 @@ export class VariableMapper {
     const db = getMainDbAdapter();
     const result = db.get<{ count: number }>(VariableQueries.SELECT_COUNT);
     return result?.count || 0;
-  }
-
-  /**
-   * 複数変数を一括作成
-   * @param variables - 変数データ一覧
-   * @description
-   * インポート機能で使用。各変数に対してcreate()を呼び出す。
-   */
-  static bulkCreate(variables: CreateVariableInput[]): void {
-    for (const variable of variables) {
-      this.create(variable);
-    }
   }
 
   /**

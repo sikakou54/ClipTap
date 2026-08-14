@@ -65,6 +65,8 @@ readonly METRO_PORT="${METRO_PORT:-8081}"
 
 # build-native.sh が解決した実機のUDIDを受け取る場所
 # 端末の解決はあちらの責務なので、ここでは解決し直さず結果だけ読む。
+# パスは build-native.sh の同名定数と一致させること。片方だけ変えてもエラーにならず、
+# 起動案内のUDIDが <端末のUDID> のままになるだけで静かに壊れる。
 readonly IOS_DEVICE_UDID_FILE="${LOG_DIR}/ios-device-udid.txt"
 
 # 対象プラットフォーム（ios / android）。引数で必ず指定する
@@ -124,6 +126,9 @@ while [ $# -gt 0 ]; do
     --skip-build)   DO_BUILD=0 ;;
     --no-install)   DO_INSTALL=0 ;;
     --device)       IOS_TARGET="device" ;;
+    # 既定値と同じだが削除しないこと
+    # package.json の verify:ios:device は --device を焼き込んでいる。
+    # npm は -- 以降を末尾に足すだけなので、`-- --simulator` で後勝ちに打ち消すのが唯一の手段になる。
     --simulator)    IOS_TARGET="simulator" ;;
     -h|--help)
       # 先頭のコメントブロックをそのまま使い方として出す

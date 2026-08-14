@@ -128,20 +128,20 @@ export {
 
 /* エクスポートサービス */
 export {
-  ExportService,                      // エクスポートサービスクラス
+  ExportService,                      /* エクスポートサービスクラス */
 } from './services/ExportService';
 
 /* インポートパーサーサービス */
 export {
-  ImportParserService,                // インポートパーサーサービスクラス
+  ImportParserService,                /* インポートパーサーサービスクラス */
 } from './services/ImportParserService';
 
 /* ======================================== */
 /* Variables */
 /* ======================================== */
 /* 変数解析とシステム変数関連の関数・型をエクスポート */
-export * from './variables/parser';           // 変数パース・展開エンジン
-export * from './variables/systemVariables';  // システム変数定義と解決関数
+export * from './variables/parser';           /* 変数パース・展開エンジン */
+export * from './variables/systemVariables';  /* システム変数定義と解決関数 */
 
 /* ======================================== */
 /* Export/Import utilities */
@@ -153,32 +153,31 @@ export * from './utils/exportImportUtils';
 /* Constants */
 /* ======================================== */
 /* 定数定義をエクスポート */
-export * from './constants/inputLimits';      // 入力値の制限（最大文字数等）
-export * from './constants/variables';        // 変数関連の定数
-export * from './constants/designTokens';     // デザイントークン（色、サイズ等）
-export * from './constants/componentTokens';  // コンポーネント用トークン（高さ、z-index、アニメーション等）
-export * from './constants/themeTokens';      // テーマトークン（スペーシング、フォント、タイポグラフィ）
-export * from './constants/subscription';     // サブスクリプション定数（PRO_ENTITLEMENT_ID）
-export * from './constants/variableIcons';    // 変数アイコン定数
+export * from './constants/inputLimits';      /* 入力値の制限（最大文字数等） */
+export * from './constants/variables';        /* 変数関連の定数 */
+export * from './constants/designTokens';     /* デザイントークン（色、サイズ等） */
+export * from './constants/themeTokens';      /* テーマトークン（スペーシング、フォント、タイポグラフィ） */
+export * from './constants/subscription';     /* サブスクリプション定数（PRO_ENTITLEMENT_ID） */
+export * from './constants/variableIcons';    /* 変数アイコン定数 */
 export * from './constants/systemVariableFormats';
 
 /* ======================================== */
 /* Utils */
 /* ======================================== */
 /* ユーティリティ関数をエクスポート */
-export * from './utils/dateHelpers';      // 日付フォーマット関数
+export * from './utils/dateHelpers';      /* 日付フォーマット関数 */
 export * from './utils/dateFormatter';
-export * from './utils/snippetUtils';     // スニペット関連ユーティリティ
-export * from './utils/logger';           // ロガー
-export * from './utils/pathUtils';        // パス操作ユーティリティ
-export * from './utils/categoryUtils';    // カテゴリ関連ユーティリティ
-export * from './utils/snippetFilterUtils'; // スニペットフィルタリングユーティリティ
-export * from './utils/errorUtils';      // エラーメッセージ翻訳ユーティリティ
+export * from './utils/snippetUtils';     /* スニペット関連ユーティリティ */
+export * from './utils/logger';           /* ロガー */
+export * from './utils/pathUtils';        /* パス操作ユーティリティ */
+export * from './utils/categoryUtils';    /* カテゴリ関連ユーティリティ */
+export * from './utils/snippetFilterUtils'; /* スニペットフィルタリングユーティリティ */
+export * from './utils/errorUtils';      /* エラーメッセージ翻訳ユーティリティ */
 
 /* 認証エラー関連のユーティリティ */
 export {
-  AUTH_ERROR_CODES,          // 認証エラーコード定数
-  isAuthCancelledError,      // キャンセルエラー判定関数
+  AUTH_ERROR_CODES,          /* 認証エラーコード定数 */
+  isAuthCancelledError,      /* キャンセルエラー判定関数 */
 } from './utils/authErrors';
 
 /* ======================================== */
@@ -289,7 +288,6 @@ export {
   useAlert,
   type AlertContextType,
   type AlertOptions,
-  type AlertType as SharedAlertType,
   type AlertPlatformAdapter,
   type AlertProviderProps,
 } from './providers';

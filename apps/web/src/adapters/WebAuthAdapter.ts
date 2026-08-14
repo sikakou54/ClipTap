@@ -33,12 +33,12 @@ function mapUser(user: User | null): SharedUser | null {
   /* FirebaseのUser型から必要なプロパティのみを抽出し、 */
   /* SharedUser型にマッピングして返す */
   return {
-    uid: user.uid, /* ユーザーID */
-    email: user.email, /* メールアドレス */
-    displayName: user.displayName, /* 表示名 */
-    photoURL: user.photoURL, /* プロフィール画像URL */
-    isAnonymous: user.isAnonymous, /* 匿名ユーザーかどうか */
-    emailVerified: user.emailVerified, /* メール確認済みかどうか */
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName,
+    photoURL: user.photoURL,
+    isAnonymous: user.isAnonymous,
+    emailVerified: user.emailVerified,
     /* IDトークン取得メソッドのラッパー */
     getIdToken: (forceRefresh) => user.getIdToken(forceRefresh),
   };

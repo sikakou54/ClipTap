@@ -13,7 +13,7 @@ import { SystemVariableFormatRegistry } from '../services/SystemVariableFormatRe
 /**
  * スニペットをクリップボードにコピーする際のオプション
  */
-export interface CopySnippetOptions {
+interface CopySnippetOptions {
   /** コピー対象のスニペット */
   snippet: Snippet;
   /** カスタム変数の値を解決するリゾルバー関数（オプション） */

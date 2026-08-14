@@ -93,6 +93,8 @@ class MobileSubscriptionAdapterImpl implements SubscriptionAdapter {
   /**
    * ローディング中かどうか
    *
+   * SubscriptionAdapter インターフェースを満たすための実装。
+   *
    * @returns 常にfalse（PurchaseServiceには明示的なisLoading状態がない）
    */
   isLoading(): boolean {
@@ -121,7 +123,9 @@ class MobileSubscriptionAdapterImpl implements SubscriptionAdapter {
 
   /**
    * リスナーに通知
-   * SubscriptionProviderから呼び出される
+   *
+   * SubscriptionAdapter インターフェースの必須実装。
+   * mobile では呼び出し元が現状存在しない（web は WebSubscriptionAdapter 内から呼んでいる）。
    */
   notifyListeners(): void {
     const isSubscribed = this.isSubscribed();

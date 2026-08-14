@@ -8,11 +8,12 @@
  * @responsibility
  * - アダプター初期化処理（useAdapterInitialization）
  * - アプリデータ初期化処理（useAppInitialization、AuthProvider内）
- * - プロバイダー階層: ThemeProvider → AlertProvider → AuthProvider → SubscriptionProvider → DatabaseProvider
+ * - プロバイダー階層: ThemeProvider → AlertProvider → AuthProvider → SubscriptionProvider
+ *   → DatabaseProvider → ProfileProvider → VariableProvider → CategoryProvider → SnippetProvider
  * - 全画面のナビゲーション設定（Stack Navigator）
  * - スプラッシュスクリーンの表示制御
  *
- * @see docs/ARCHITECTURE.md - 全体アーキテクチャ
+ * @see docs/機能仕様書.md §3.3 システム構成
  */
 
 import { Stack } from 'expo-router';
@@ -35,16 +36,29 @@ const HEADER_HIDDEN_OPTIONS = {
   headerShown: false,
 } as const;
 
+/**
+ * 初期化中の待機表示に使う固定色
+ *
+ * styles.rootContainer を適用する View は ThemeProvider を包む側にあるため useTheme() を呼べず、
+ * テーマトークンを参照できない。
+ * styles.loadingContainer と ActivityIndicator は ThemeProvider の内側だが、
+ * colors.background / colors.primary はダークで別値（primary はダークで #60A5FA）になるため、
+ * 現行の見た目を保つ目的でスプラッシュ（src/components/common/SplashScreen.tsx の #1F2937）と
+ * 同じ値をリテラルのまま保持する。
+ */
+const SPLASH_BACKGROUND = '#1F2937';
+const SPLASH_INDICATOR = '#3B82F6';
+
 const styles = StyleSheet.create({
   rootContainer: {
     flex: 1,
-    backgroundColor: '#1F2937',
+    backgroundColor: SPLASH_BACKGROUND,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1F2937',
+    backgroundColor: SPLASH_BACKGROUND,
   },
 });
 
@@ -65,13 +79,13 @@ function AppContent({ isTabletDevice }: { isTabletDevice: boolean }) {
   if (!isAppReady) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3B82F6" />
+        <ActivityIndicator size="large" color={SPLASH_INDICATOR} />
       </View>
     );
   }
 
   /* データベースプロバイダーとナビゲーションスタック */
-  /* Provider階層: Database → Profile → Variable → Category */
+  /* Provider階層: Database → Profile → Variable → Category → Snippet（各Providerが useDatabase() を前提にするため Database を最外に置く） */
   return (
     <DatabaseProvider value={{ isLoaded, setLoaded }}>
       <ProfileProvider>
@@ -111,16 +125,16 @@ function AppContent({ isTabletDevice }: { isTabletDevice: boolean }) {
                 {/* プロファイル変数編集画面 */}
                 <Stack.Screen name="profile/variable-edit" options={MODAL_SLIDE_OPTIONS} />
                 {/* 設定画面 */}
-                <Stack.Screen name="settings" options={HEADER_HIDDEN_OPTIONS} />
+                <Stack.Screen name="settings" />
                 {/* サブスクリプション課金画面（フルスクリーンモーダル） */}
                 <Stack.Screen
                   name="subscription/paywall"
                   options={{ presentation: 'fullScreenModal', headerShown: false }}
                 />
                 {/* サブスクリプション管理画面 */}
-                <Stack.Screen name="subscription/manage" options={HEADER_HIDDEN_OPTIONS} />
+                <Stack.Screen name="subscription/manage" />
                 {/* WebView画面 */}
-                <Stack.Screen name="webview" options={HEADER_HIDDEN_OPTIONS} />
+                <Stack.Screen name="webview" />
               </Stack>
             </SnippetProvider>
           </CategoryProvider>
@@ -138,7 +152,7 @@ export default function RootLayout() {
       {/* アダプター初期化完了後のメインアプリコンテンツ */}
       {isAdaptersReady && (
         <View style={styles.rootContainer}>
-          {/* プロバイダー階層（テーマ → アラート → 認証 → サブスクリプション → Database → Profile → Variable → Category） */}
+          {/* プロバイダー階層（テーマ → アラート → 認証 → サブスクリプション → Database → Profile → Variable → Category → Snippet） */}
           <ThemeProvider>
             <AlertProvider>
               <AuthProvider>

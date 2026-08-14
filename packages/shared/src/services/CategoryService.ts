@@ -62,7 +62,7 @@ export class CategoryService {
     /* カテゴリ名の前後空白をトリム（ユーザー入力の正規化） */
     const trimmedName = input.name.trim();
 
-    /* 空文字チェック（空白のみも不可） */
+    /* 空白のみの名前は一覧で識別できず重複判定もすり抜けるため、trim後の空文字を拒否する */
     if (!trimmedName) {
       throw new EmptyContentError();
     }
@@ -73,7 +73,7 @@ export class CategoryService {
       throw new DuplicateNameError('category', trimmedName);
     }
 
-    /* バリデーション通過後、Mapper層に処理を委譲（データベース操作） */
+    /* 検証はService、SQLはMapperに集約する規約のため、検証済みデータをそのままMapperへ渡す */
     return CategoryMapper.create({ ...input, name: trimmedName });
   }
 
@@ -93,7 +93,7 @@ export class CategoryService {
       /* カテゴリ名の前後空白をトリム（ユーザー入力の正規化） */
       const trimmedName = data.name.trim();
 
-      /* 空文字チェック（空白のみも不可） */
+      /* 空白のみの名前は一覧で識別できず重複判定もすり抜けるため、trim後の空文字を拒否する */
       if (!trimmedName) {
         throw new EmptyContentError();
       }
@@ -108,7 +108,7 @@ export class CategoryService {
       updateData = { ...updateData, name: trimmedName };
     }
 
-    /* バリデーション通過後、Mapper層に処理を委譲（データベース操作） */
+    /* 検証はService、SQLはMapperに集約する規約のため、検証済みデータをそのままMapperへ渡す */
     return CategoryMapper.update(updateData);
   }
 
@@ -136,15 +136,6 @@ export class CategoryService {
    */
   static reorder(orderedIds: string[]): void {
     CategoryMapper.updateOrder(orderedIds);
-  }
-
-  /**
-   * カテゴリ総数を取得
-   *
-   * @returns カテゴリの総数
-   */
-  static count(): number {
-    return CategoryMapper.count();
   }
 
   /**

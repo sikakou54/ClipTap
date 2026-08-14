@@ -66,6 +66,8 @@ readonly IOS_APP_GROUP="group.com.sikakou.cliptap"
 # 解決した実機のUDIDの受け渡し先
 # verify.sh がインストール後の起動コマンドを案内するために読む。
 # 端末の解決はこのスクリプトの責務なので、あちらでは解決し直さない。
+# パスは verify.sh の同名定数と一致させること。片方だけ変えてもエラーにならず、
+# あちらの起動案内が <端末のUDID> のままになるだけで静かに壊れる。
 readonly IOS_DEVICE_UDID_FILE="${LOG_DIR}/ios-device-udid.txt"
 
 # devicectl の端末一覧の出力先（JSON出力はファイル経由しか用意されていない）
@@ -102,6 +104,9 @@ while [ $# -gt 0 ]; do
     --skip-build)    DO_BUILD=0 ;;
     --no-install)    DO_INSTALL=0 ;;
     --device)        IOS_TARGET="device" ;;
+    # 既定値と同じだが削除しないこと
+    # package.json の build:native:ios:device は --device を焼き込んでいる。
+    # npm は -- 以降を末尾に足すだけなので、`-- --simulator` で後勝ちに打ち消すのが唯一の手段になる。
     --simulator)     IOS_TARGET="simulator" ;;
     -h|--help)
       # 先頭のコメントブロックをそのまま使い方として出す
@@ -118,6 +123,10 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+# ここは print_ng ではなく生の printf を使う
+# 表示ヘルパーの定義はこの下にあり、この判定はそれより前に走る。
+# print_ng に置き換えると command not found となり、set -e で終了コードが 2 ではなく 127 になる。
+# （verify.sh は逆にヘルパーを引数解析より前で定義しているため print_ng を使える）
 if [ "${IOS_TARGET}" = "device" ] && [ "${TARGET}" = "android" ]; then
   printf '\033[31m--device はiOS向けの指定です。Androidは adb が見ている端末へそのまま入ります\033[0m\n' >&2
   exit 2
@@ -165,6 +174,7 @@ check_free_space() {
     return 0
   fi
 
+  # print_ng を使わないのは、絵文字を付けず復旧手順を続けて出す書式のため
   printf '\033[31m空き容量が %sGB しかありません（%sGB以上を推奨）\033[0m\n' \
     "${free_gb}" "${REQUIRED_FREE_GB}" >&2
   printf '次はいずれも再生成できます:\n' >&2
@@ -218,7 +228,7 @@ verify_appex_embedded() {
     return 0
   fi
 
-  printf '\033[31m❌ 拡張キーボードが埋め込まれていません: %s\033[0m\n' "${appex_path}" >&2
+  print_ng "拡張キーボードが埋め込まれていません: ${appex_path}"
   printf 'ClipTapKeyboardターゲットがproject.pbxprojから失われていないか確認してください。\n' >&2
   return 1
 }
@@ -261,11 +271,11 @@ build_ios() {
 
   if xcodebuild "${build_args[@]}" build >"${log_file}" 2>&1; then
     verify_appex_embedded "${scheme}" || return 1
-    printf '\033[32m✅ iOS (%s) ビルド成功\033[0m\n' "${scheme}"
+    print_ok "iOS (${scheme}) ビルド成功"
     return 0
   fi
 
-  printf '\033[31m❌ iOS (%s) ビルド失敗\033[0m\n' "${scheme}" >&2
+  print_ng "iOS (${scheme}) ビルド失敗"
   # 自前コードのエラーを拾いやすいよう、error: 行だけ抜き出す
   grep -E 'error:|BUILD FAILED' "${log_file}" | head -40 >&2 || true
   printf '詳細: %s\n' "${log_file}" >&2
@@ -279,11 +289,11 @@ build_android() {
   print_header "Android: assembleDebug をビルド中（ログ: ${log_file}）"
 
   if (cd "${ANDROID_DIR}" && ./gradlew :app:assembleDebug --console=plain) >"${log_file}" 2>&1; then
-    printf '\033[32m✅ Android ビルド成功\033[0m\n'
+    print_ok "Android ビルド成功"
     return 0
   fi
 
-  printf '\033[31m❌ Android ビルド失敗\033[0m\n' >&2
+  print_ng "Android ビルド失敗"
   # Kotlinのエラーは "e: "、リソースのエラーは "error:" で出る
   grep -E '^e: |error:|FAILURE:' "${log_file}" | head -40 >&2 || true
   printf '詳細: %s\n' "${log_file}" >&2
@@ -696,6 +706,8 @@ case "${TARGET}" in
     run_platform ios || failed=1
     run_platform android || failed=1
 
+    # 以下2つの集約メッセージは ✅ / ❌ を付けず、直前の出力と間を空けるため先頭に改行を入れる
+    # （この書式のため print_ok / print_ng は使わない）
     if [ "${failed}" -ne 0 ]; then
       printf '\n\033[31mネイティブビルドに失敗があります。\033[0m\n' >&2
       exit 1

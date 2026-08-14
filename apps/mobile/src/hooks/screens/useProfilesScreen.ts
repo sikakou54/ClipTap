@@ -26,6 +26,7 @@ import {
   type Profile,
 } from '@cliptap/shared';
 import { useSubscription } from '@providers/SubscriptionProvider';
+import { useUpgradePrompt } from '@hooks/useUpgradePrompt';
 import { showConfirm, showErrorAlert } from '@utils/alerts';
 
 /**
@@ -54,6 +55,8 @@ export interface UseProfilesScreenReturn {
 export function useProfilesScreen(): UseProfilesScreenReturn {
   const { t } = useTranslation();
   const router = useRouter();
+
+  const confirmUpgrade = useUpgradePrompt();
 
   const { refresh, setDefaultProfile, deleteProfile } = useProfiles();
   const { canAddProfile } = useSubscription();
@@ -116,17 +119,12 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
    */
   const handleCreateProfile = useCallback(() => {
     if (!canAddProfile(allProfiles.length)) {
-      showConfirm(
-        t('profile.limit_message', { limit: FREE_PROFILES_LIMIT }),
-        () => router.push('/subscription/paywall'),
-        undefined,
-        'warning'
-      );
+      confirmUpgrade(t('profile.limit_message', { limit: FREE_PROFILES_LIMIT }));
       return;
     }
 
     router.push('/profile/edit');
-  }, [allProfiles, canAddProfile, router, t]);
+  }, [allProfiles, canAddProfile, confirmUpgrade, router, t]);
 
   /**
    * プロファイル編集画面への遷移
@@ -135,12 +133,7 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
   const handleEditProfile = useCallback(
     (profile: Profile, enabled: boolean) => {
       if (!enabled) {
-        showConfirm(
-          t('profile.disabled_message'),
-          () => router.push('/subscription/paywall'),
-          undefined,
-          'warning'
-        );
+        confirmUpgrade(t('profile.disabled_message'));
         return;
       }
 
@@ -149,7 +142,7 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
         params: { id: profile.id },
       });
     },
-    [router, t]
+    [confirmUpgrade, router, t]
   );
 
   /**

@@ -77,7 +77,7 @@ export function VariablePreview({ title, content, selectedProfileIds = [], copyW
 
       setTimeout(() => {
         setIsCopied(false);
-      }, 2000);
+      }, UI_CONSTANTS.COPY_SUCCESS_DURATION_MS);
     } catch (error) {
       Logger.error('Failed to copy preview:', error);
     }
@@ -105,22 +105,16 @@ export function VariablePreview({ title, content, selectedProfileIds = [], copyW
   }, [selectedProfileId, filteredProfiles]);
 
   /**
-   * profileIdに対応する変数マップを構築
+   * profileIdに対応する「変数名 → 値」のマップを構築する
+   *
+   * @remarks
+   * 組み立て規則は Web版のプレビュー（SnippetPreview）と同一でなければならない。
+   * 片方だけ規則が変わるとプラットフォーム間で展開結果が食い違うため、
+   * 実体は shared の VariableService に置き、両アプリはそれを呼ぶだけにしている。
    */
   const buildProfileVariablesMap = useCallback(
-    (profileId: string | null): Record<string, string> => {
-      if (!profileId) return {};
-      const map: Record<string, string> = {};
-      for (const pv of profileVariables) {
-        if (pv.profileId === profileId) {
-          const variable = variables.find((v) => v.id === pv.variableId);
-          if (variable) {
-            map[variable.name] = pv.value;
-          }
-        }
-      }
-      return map;
-    },
+    (profileId: string | null): Record<string, string> =>
+      VariableService.buildProfileVariablesMapFromArrays(profileId, variables, profileVariables),
     [profileVariables, variables]
   );
 
@@ -327,9 +321,6 @@ const styles = StyleSheet.create({
     borderRadius: UI_CONSTANTS.BORDER_RADIUS.XL,
     borderWidth: UI_CONSTANTS.BORDER_WIDTH.THIN,
     gap: UI_CONSTANTS.GAP.XS,
-  },
-  profileChipIcon: {
-    fontSize: 14,
   },
   profileChipText: {
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,

@@ -13,7 +13,8 @@
  * - パスワード + スキーマバージョンのSHA-256ハッシュ化
  * - 全フィールドのチェックサム検証
  *
- * @see lib/services/ExportImportService.ts - ビジネスロジック
+ * @see src/hooks/screens/useExportImportScreen.ts - ビジネスロジック
+ * @see packages/shared/src/services/ImportService.ts - インポート実処理
  */
 import React from 'react';
 import {
@@ -35,6 +36,9 @@ import { SCHEMA_VERSION } from '@database/schema';
 import { ScreenContainer } from '@components/common/ScreenContainer';
 import { UI_CONSTANTS } from '@constants/ui';
 import { useExportImportScreen } from '@hooks/screens/useExportImportScreen';
+
+/* 使い方ガイドの手順。番号は配列順（index + 1）で描画する */
+const HELP_STEPS = ['export_import.step1', 'export_import.step2', 'export_import.step3'] as const;
 
 export default function ExportImportScreen() {
   const { t } = useTranslation();
@@ -135,30 +139,17 @@ export default function ExportImportScreen() {
             {t('export_import.how_to_use')}
           </Text>
           <View style={[styles.helpCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <View style={styles.helpItem}>
-              <View style={[styles.helpNumber, { backgroundColor: colors.primary }]}>
-                <Text style={styles.helpNumberText}>1</Text>
+            {/* 使い方の手順 */}
+            {HELP_STEPS.map((stepKey, index) => (
+              <View key={stepKey} style={styles.helpItem}>
+                <View style={[styles.helpNumber, { backgroundColor: colors.primary }]}>
+                  <Text style={styles.helpNumberText}>{index + 1}</Text>
+                </View>
+                <Text style={[styles.helpText, { color: colors.text, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
+                  {t(stepKey)}
+                </Text>
               </View>
-              <Text style={[styles.helpText, { color: colors.text, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
-                {t('export_import.step1')}
-              </Text>
-            </View>
-            <View style={styles.helpItem}>
-              <View style={[styles.helpNumber, { backgroundColor: colors.primary }]}>
-                <Text style={styles.helpNumberText}>2</Text>
-              </View>
-              <Text style={[styles.helpText, { color: colors.text, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
-                {t('export_import.step2')}
-              </Text>
-            </View>
-            <View style={styles.helpItem}>
-              <View style={[styles.helpNumber, { backgroundColor: colors.primary }]}>
-                <Text style={styles.helpNumberText}>3</Text>
-              </View>
-              <Text style={[styles.helpText, { color: colors.text, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
-                {t('export_import.step3')}
-              </Text>
-            </View>
+            ))}
           </View>
         </View>
       </ScrollView>

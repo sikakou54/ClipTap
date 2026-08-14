@@ -25,8 +25,8 @@ export interface SnippetImportRow {
   title: string | null;
   content: string;
   categoryId?: string | null;
-  categoryName: string | null; // LEFT JOINで取得
-  copyWithTitle?: number | boolean; // SQLiteでは0/1、JSではboolean
+  categoryName: string | null; /* LEFT JOINで取得 */
+  copyWithTitle?: number | boolean; /* SQLiteでは0/1、JSではboolean */
   copyCount?: number;
   createdAt: string;
   updatedAt: string;
@@ -38,9 +38,9 @@ export interface SnippetImportRow {
 export interface ProfileImportRow {
   id: string;
   name: string;
-  isDefault: number | boolean; // SQLiteでは0/1、JSではboolean
-  isActive?: number | boolean; // SQLiteでは0/1、JSではboolean
-  valid?: number | boolean; // SQLiteでは0/1、JSではboolean
+  isDefault: number | boolean; /* SQLiteでは0/1、JSではboolean */
+  isActive?: number | boolean; /* SQLiteでは0/1、JSではboolean */
+  valid?: number | boolean; /* SQLiteでは0/1、JSではboolean */
   sortOrder: number;
   createdAt: string;
   updatedAt: string;

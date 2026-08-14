@@ -21,8 +21,8 @@
  * - データベースリセット
  * - テストデータの再生成
  *
- * @see useSettingsScreen - ビジネスロジック
- * @see docs/ARCHITECTURE.md - 設定画面の構成
+ * @see src/hooks/screens/useSettingsScreen.ts - ビジネスロジック
+ * @see docs/機能仕様書.md §9.1 モバイル画面
  */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';

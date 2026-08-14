@@ -11,12 +11,11 @@
 import { useState, useCallback, useMemo, type ReactNode } from 'react';
 import { ThemeProvider as SharedThemeProvider, useTheme as useSharedTheme, type ThemeProviderProps } from '@cliptap/shared';
 import { WebThemeContext, type WebThemeContextValue } from '@providers/WebThemeContext';
+import { THEME_STORAGE_KEY } from '@providers/themeStorage';
 
 /* ======================================== */
 /* ストレージ管理 */
 /* ======================================== */
-
-const STORAGE_KEY = 'cliptap-theme';
 
 /**
  * gridColumnsをストレージから読み込み
@@ -27,7 +26,7 @@ function loadGridColumns(): 1 | 2 | 3 {
   }
 
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       const gridColumns = parsed.state?.gridColumns;
@@ -49,10 +48,10 @@ function saveGridColumns(columns: 1 | 2 | 3): void {
   if (typeof localStorage === 'undefined') return;
 
   try {
-    const current = localStorage.getItem(STORAGE_KEY);
+    const current = localStorage.getItem(THEME_STORAGE_KEY);
     const parsed = current ? JSON.parse(current) : { state: {}, version: 0 };
     parsed.state = { ...parsed.state, gridColumns: columns };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(parsed));
   } catch {
     /* ストレージエラーは無視 */
   }

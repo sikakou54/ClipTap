@@ -32,9 +32,13 @@ const isDevelopment = typeof __DEV__ !== 'undefined' ? __DEV__ : false;
  * - isDevelopment: 開発環境かどうか（開発環境のみログ出力）
  * - useEmoji: エモジを使用するか（視認性向上のため有効）
  */
+/*
+ * isDevelopment: 開発環境判定フラグ
+ * useEmoji: エモジ有効化（例: 🐛 debug, ℹ️ info, ⚠️ warn, ❌ error, ✅ success）
+ */
 initializeLogger({
-  isDevelopment,  // 開発環境判定フラグ
-  useEmoji: true, // エモジ有効化（例: 🐛 debug, ℹ️ info, ⚠️ warn, ❌ error, ✅ success）
+  isDevelopment,
+  useEmoji: true,
 });
 
 /* ======================================== */

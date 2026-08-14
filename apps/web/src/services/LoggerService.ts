@@ -7,7 +7,7 @@
  * Web版ではエモジなしのシンプルなログ出力。
  */
 
-import { initializeLogger, Logger } from '@cliptap/shared';
+import { initializeLogger } from '@cliptap/shared';
 
 /* 環境判定: Viteの開発モードかどうかを判定（development環境 = true, production環境 = false） */
 const isDevelopment = import.meta.env.DEV;
@@ -19,6 +19,3 @@ initializeLogger({
   /* エモジを使用しない（Web版はシンプルなログ出力のため） */
   useEmoji: false,
 });
-
-/* 共通Loggerをre-export（他のファイルからimportできるようにする） */
-export { Logger };

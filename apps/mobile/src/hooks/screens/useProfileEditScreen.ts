@@ -24,12 +24,13 @@ import {
   translateError,
 } from '@cliptap/shared';
 import { useSubscription } from '@providers/SubscriptionProvider';
-import { showConfirm, showErrorAlert } from '@utils/alerts';
+import { useUpgradePrompt } from '@hooks/useUpgradePrompt';
+import { showErrorAlert } from '@utils/alerts';
 
 /**
  * useProfileEditScreenの引数の型
  */
-export interface UseProfileEditScreenParams {
+interface UseProfileEditScreenParams {
   /** 編集対象のプロファイルID（新規作成時はundefined） */
   profileId?: string;
 }
@@ -62,6 +63,8 @@ export function useProfileEditScreen(params: UseProfileEditScreenParams): UsePro
 
   const { t } = useTranslation();
   const router = useRouter();
+
+  const confirmUpgrade = useUpgradePrompt();
 
   const { profiles, createProfile, updateProfile } = useProfiles();
   const { canAddProfile } = useSubscription();
@@ -107,12 +110,7 @@ export function useProfileEditScreen(params: UseProfileEditScreenParams): UsePro
    */
   const handleSave = useCallback(async () => {
     if (!isEdit && !canAddProfile(profiles.length)) {
-      showConfirm(
-        t('profile.limit_message', { limit: FREE_PROFILES_LIMIT }),
-        () => router.push('/subscription/paywall'),
-        undefined,
-        'warning'
-      );
+      confirmUpgrade(t('profile.limit_message', { limit: FREE_PROFILES_LIMIT }));
       return;
     }
 
@@ -143,6 +141,7 @@ export function useProfileEditScreen(params: UseProfileEditScreenParams): UsePro
     profileId,
     profiles.length,
     canAddProfile,
+    confirmUpgrade,
     updateProfile,
     createProfile,
     router,

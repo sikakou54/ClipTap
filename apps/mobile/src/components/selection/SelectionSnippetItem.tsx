@@ -17,7 +17,7 @@ import {
   type ImportTabType,
   type SelectionSnippetData,
 } from '@cliptap/shared';
-import { dataItemStyles as styles } from '@components/common/dataItemStyles';
+import { dataItemStyles as styles } from './dataItemStyles';
 
 export type { SelectionSnippetData } from '@cliptap/shared';
 

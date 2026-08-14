@@ -20,6 +20,7 @@ import {
   useVariables,
   useCategories,
   translateError,
+  ExportService,
 } from '@cliptap/shared';
 import { SideMenu } from '@components/settings/SideMenu';
 import { showErrorAlert, showConfirm } from '@utils/alerts';
@@ -42,11 +43,9 @@ interface PageLayoutProps {
   children: ReactNode;
   /** ヘッダー右側に配置するアクション要素 */
   rightAction?: ReactNode;
-  /** カスタムエクスポート処理（指定時はデフォルトモーダルを表示しない） */
-  onExportRequest?: () => void;
 }
 
-export function PageLayout({ title, icon, children, rightAction, onExportRequest }: PageLayoutProps) {
+export function PageLayout({ title, icon, children, rightAction }: PageLayoutProps) {
   const { setLoaded } = useDatabase();
   const { user, signInWithGoogle, signInWithApple, loading: authLoading, error: authError } = useAuth();
 
@@ -100,33 +99,15 @@ export function PageLayout({ title, icon, children, rightAction, onExportRequest
     });
   }, [webImport]);
 
-  const importCandidates = webImport.importCandidates;
-  const isProcessingImport = webImport.isProcessing;
-  const isLoadingImport = webImport.isLoading;
-  const showImportFileModal = webImport.showFileSelect;
-  const setShowImportFileModal = webImport.setShowFileSelect;
-  const showImportSelection = webImport.showItemSelect;
-  const setShowImportSelection = webImport.setShowItemSelect;
-  const showImportModeSelect = webImport.showModeSelect;
-  const setShowImportModeSelect = webImport.setShowModeSelect;
-  const handleImportFileSelected = webImport.handleFileSelected;
-  const handleExecuteImport = webImport.handleExecutePartialImport;
-  const handleRestoreBackup = handleRestoreBackupWithConfirm;
-  const handleSelectMergeMode = webImport.handleSelectMergeMode;
-
-  const isModalOpen = showExportModal || isMobileMenuOpen || showImportFileModal || showImportSelection || showImportModeSelect || showAccountLinkModal;
+  const isModalOpen = showExportModal || isMobileMenuOpen || webImport.showFileSelect || webImport.showItemSelect || webImport.showModeSelect || showAccountLinkModal;
   useBodyScrollLock(isModalOpen);
 
   const handleExport = () => {
-    if (onExportRequest) {
-      onExportRequest();
-    } else {
-      setShowExportModal(true);
-    }
+    setShowExportModal(true);
   };
 
   const handleImport = () => {
-    setShowImportFileModal(true);
+    webImport.setShowFileSelect(true);
   };
 
   const handleExportSelected = useCallback(
@@ -139,7 +120,6 @@ export function PageLayout({ title, icon, children, rightAction, onExportRequest
     ) => {
       setIsExporting(true);
       try {
-        const { ExportService } = await import('@cliptap/shared');
         await ExportService.exportSelectedData(password, {
           snippetIds,
           profileIds,
@@ -195,32 +175,32 @@ export function PageLayout({ title, icon, children, rightAction, onExportRequest
 
       {/* インポートファイル選択モーダル（.cliptapファイル選択） */}
       <ImportFileModal
-        isOpen={showImportFileModal}
-        onClose={() => setShowImportFileModal(false)}
-        onFileSelected={handleImportFileSelected}
-        isLoading={isLoadingImport}
+        isOpen={webImport.showFileSelect}
+        onClose={() => webImport.setShowFileSelect(false)}
+        onFileSelected={webImport.handleFileSelected}
+        isLoading={webImport.isLoading}
       />
 
       {/* インポートモード選択モーダル（復元/マージ選択） */}
       <ImportModeSelectModal
-        isOpen={showImportModeSelect}
-        onClose={() => setShowImportModeSelect(false)}
+        isOpen={webImport.showModeSelect}
+        onClose={() => webImport.setShowModeSelect(false)}
         onSelectMode={(mode) => {
           if (mode === 'restore') {
-            handleRestoreBackup();
+            handleRestoreBackupWithConfirm();
           } else {
-            handleSelectMergeMode();
+            webImport.handleSelectMergeMode();
           }
         }}
       />
 
       {/* インポート選択モーダル（部分インポート用、アイテム選択） */}
       <ImportSelectionModal
-        isOpen={showImportSelection}
-        onClose={() => setShowImportSelection(false)}
-        candidates={importCandidates}
-        onImport={handleExecuteImport}
-        isProcessing={isProcessingImport}
+        isOpen={webImport.showItemSelect}
+        onClose={() => webImport.setShowItemSelect(false)}
+        candidates={webImport.importCandidates}
+        onImport={webImport.handleExecutePartialImport}
+        isProcessing={webImport.isProcessing}
       />
 
       {/* アカウント連携モーダル（Google/Apple認証） */}

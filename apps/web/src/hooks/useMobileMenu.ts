@@ -22,7 +22,6 @@ export function useMobileMenu(): UseMobileMenuReturn {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggle = useCallback(() => {
-    /* 現在の状態を反転（開いていれば閉じる、閉じていれば開く） */
     setIsOpen((prev) => !prev);
   }, []);
 

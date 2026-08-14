@@ -1,3 +1,19 @@
+/**
+ * @module SystemVariableFormatsScreen
+ * @description システム変数書式管理画面
+ *
+ * 日付・時刻などのシステム変数（{{today}} 等）の表示書式を一覧表示・管理。
+ * 画面フックを持たず、画面内から SystemVariableFormatMapper を直接呼ぶ現行構造。
+ *
+ * @features
+ * - システム変数一覧の表示（現在の書式と、その書式で現在時刻を整形したプレビュー）
+ * - 書式編集画面（/variable/format-edit）への遷移
+ * - 保存済み書式の一括リセット
+ *
+ * @see packages/shared/src/mappers/SystemVariableFormatMapper.ts - 書式の保存・読込
+ * @see packages/shared/src/constants/systemVariableFormats.ts - 既定書式の定義
+ */
+
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';

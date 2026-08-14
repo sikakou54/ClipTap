@@ -13,7 +13,7 @@
  * - 無料プラン: 最大3つまで（超過分はvalid=0で無効化）
  * - デフォルトプロファイル（isDefault=1）は削除不可
  *
- * @see lib/hooks/screens/useProfilesScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useProfilesScreen.ts - ビジネスロジック
  */
 
 import { useCallback } from 'react';

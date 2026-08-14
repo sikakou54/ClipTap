@@ -114,48 +114,43 @@ export function useSettingsScreen(): UseSettingsScreenReturn {
   }, [t]);
 
   /**
-   * Appleでサインイン
+   * サインイン処理の共通ラッパー
+   *
+   * @remarks
+   * 再入防止に2つのフラグを見ている。
+   * authLoading は AuthProvider が認証開始時に立てる共有フラグで、成功時は onAuthStateChanged が
+   * 届くまで true のまま。isLinkingAccount は本画面での連携操作中を表すローカルフラグで、
+   * signIn の解決時に false へ戻す。後者だけでは認証状態の遷移中に別の連携を開始できてしまう。
+   * 成功時は onAuthStateChanged 経由でUIが自動更新されるため、ここでは成功時の後処理を行わない。
    */
-  const handleAppleSignIn = useCallback(async () => {
-    /* 処理中なら何もしない */
+  const runSignIn = useCallback(async (signIn: () => Promise<void>) => {
     if (authLoading || isLinkingAccount) return;
 
-    /* 処理開始 */
     setIsLinkingAccount(true);
     try {
-      /* 共有AuthHookのAppleサインインを実行 */
-      await signInWithApple();
-      /* 成功時はUIが自動で更新される（onAuthStateChanged経由） */
+      await signIn();
     } catch (error) {
-      /* エラー時の共通処理を実行 */
       handleSignInError(error);
     } finally {
-      /* 処理終了 */
       setIsLinkingAccount(false);
     }
-  }, [authLoading, isLinkingAccount, signInWithApple, handleSignInError]);
+  }, [authLoading, isLinkingAccount, handleSignInError]);
+
+  /**
+   * Appleでサインイン
+   */
+  const handleAppleSignIn = useCallback(
+    () => runSignIn(signInWithApple),
+    [runSignIn, signInWithApple]
+  );
 
   /**
    * Googleでサインイン
    */
-  const handleGoogleSignIn = useCallback(async () => {
-    /* 処理中なら何もしない */
-    if (authLoading || isLinkingAccount) return;
-
-    /* 処理開始 */
-    setIsLinkingAccount(true);
-    try {
-      /* 共有AuthHookのGoogleサインインを実行 */
-      await signInWithGoogle();
-      /* 成功時はUIが自動で更新される（onAuthStateChanged経由） */
-    } catch (error) {
-      /* エラー時の共通処理を実行 */
-      handleSignInError(error);
-    } finally {
-      /* 処理終了 */
-      setIsLinkingAccount(false);
-    }
-  }, [authLoading, isLinkingAccount, signInWithGoogle, handleSignInError]);
+  const handleGoogleSignIn = useCallback(
+    () => runSignIn(signInWithGoogle),
+    [runSignIn, signInWithGoogle]
+  );
 
   /**
    * ログアウト処理

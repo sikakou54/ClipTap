@@ -37,18 +37,14 @@ import { UI_CONSTANTS } from '@constants/ui';
 /**
  * HeaderのProps
  * @property title - ヘッダータイトル
- * @property showBackButton - バックボタンを表示するか（デフォルト: true）
  * @property backIcon - バックボタンのアイコン名（タブレット時は自動的にarrow-backになる）
- * @property onBack - バックボタン押下時のカスタムハンドラー
  * @property rightAction - 右側のアクションボタン（React要素）
  * @property backgroundColor - ヘッダーの背景色を上書き
  * @property isModal - モーダル画面かどうか（closeアイコン表示と上部余白の付与に使う）
  */
 export interface HeaderProps {
   title: string;
-  showBackButton?: boolean;
   backIcon?: keyof typeof Ionicons.glyphMap;
-  onBack?: () => void;
   rightAction?: React.ReactNode;
   backgroundColor?: string;
   isModal?: boolean;
@@ -56,9 +52,7 @@ export interface HeaderProps {
 
 export function Header({
   title,
-  showBackButton = true,
   backIcon = 'close',
-  onBack,
   rightAction,
   backgroundColor,
   isModal = false,
@@ -79,14 +73,10 @@ export function Header({
 
   /**
    * バックボタン押下時の処理
-   * カスタムハンドラーがあればそれを呼び、なければrouter.back()
+   * 直前の画面へ戻る
    */
   const handleBack = () => {
-    if (onBack) {
-      onBack();
-    } else {
-      router.back();
-    }
+    router.back();
   };
 
   /*
@@ -122,14 +112,10 @@ export function Header({
         },
       ]}
     >
-      {/* バックボタンまたはプレースホルダー */}
-      {showBackButton ? (
-        <TouchableOpacity onPress={handleBack} style={commonStyles.backButton}>
-          <Ionicons name={displayBackIcon} size={iconSize} color={colors.text} />
-        </TouchableOpacity>
-      ) : (
-        <View style={commonStyles.placeholder} />
-      )}
+      {/* バックボタン */}
+      <TouchableOpacity onPress={handleBack} style={commonStyles.backButton}>
+        <Ionicons name={displayBackIcon} size={iconSize} color={colors.text} />
+      </TouchableOpacity>
 
       {/* タイトル */}
       <Text

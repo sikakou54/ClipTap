@@ -43,7 +43,6 @@ export interface UseSortMenuReturn {
   /* 状態 */
   visible: boolean;
   sortOptions: SortOption[];
-  currentOption: SortOption | undefined;
   isDefaultSort: boolean;
 
   /* ハンドラ */
@@ -91,13 +90,6 @@ export function useSortMenu({
   const isDefaultSort = currentSort === DEFAULT_SORT;
 
   /**
-   * 現在選択中のオプション
-   */
-  const currentOption = useMemo(() => {
-    return sortOptions.find((opt) => opt.value === currentSort);
-  }, [sortOptions, currentSort]);
-
-  /**
    * メニューを開く
    */
   const handlePress = useCallback(() => {
@@ -122,7 +114,6 @@ export function useSortMenu({
   return {
     visible,
     sortOptions,
-    currentOption,
     isDefaultSort,
     handlePress,
     handleSelect,

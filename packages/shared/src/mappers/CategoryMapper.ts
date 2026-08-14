@@ -49,11 +49,11 @@ const CategoryQueries = {
  * @returns Category型のオブジェクト
  */
 const toEntity = (row: any): Category => ({
-  id: row.id, // カテゴリID
-  name: row.name, // カテゴリ名
-  color: row.color || null, // カテゴリ色（未設定時はnull）
-  sortOrder: row.sortOrder ?? 0, // 並び順（未設定時は0）
-  createdAt: row.createdAt, // 作成日時
+  id: row.id, /* カテゴリID */
+  name: row.name, /* カテゴリ名 */
+  color: row.color || null, /* カテゴリ色（未設定・空文字はnullに寄せる） */
+  sortOrder: row.sortOrder ?? 0, /* 並び順（列がNULLの場合は0） */
+  createdAt: row.createdAt, /* 作成日時 */
 });
 
 /**
@@ -209,18 +209,6 @@ export class CategoryMapper {
     const db = getMainDbAdapter();
     const result = db.get<{ count: number }>(CategoryQueries.SELECT_COUNT);
     return result?.count || 0;
-  }
-
-  /**
-   * 複数カテゴリを一括作成
-   * @param categories - 作成データ一覧
-   * @description
-   * インポート機能で使用される
-   */
-  static bulkCreate(categories: CreateCategoryInput[]): void {
-    for (const category of categories) {
-      this.create(category);
-    }
   }
 
   /**

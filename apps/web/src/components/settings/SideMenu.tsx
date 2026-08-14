@@ -12,11 +12,11 @@
  * - アカウント連携/解除
  */
 import { useTranslation, SubscriptionService, useAuth, translateError } from '@cliptap/shared';
-import { useSubscription } from '@services/SubscriptionService';
+import { useSubscription } from '@hooks/useWebSubscription';
 import { useTheme } from '@hooks/useTheme';
 import { showConfirm, showErrorAlert } from '@utils/alerts';
 import { SideMenuHeader } from './SideMenuHeader';
-import { SideMenuNavigation } from './SideMenuNavigation';
+import { SideMenuNavigation, type MenuItem } from './SideMenuNavigation';
 import { SideMenuFooter } from './SideMenuFooter';
 import { database } from '@database/database';
 import { CacheService } from '@services/CacheService';
@@ -31,12 +31,6 @@ interface SideMenuProps {
   isOpen: boolean;
   onClose: () => void;
   onAccountLink?: () => void;
-}
-
-interface MenuItem {
-  path: string;
-  label: string;
-  icon: string;
 }
 
 export function SideMenu({ onExport, onImport, isOpen, onClose, onAccountLink }: SideMenuProps) {

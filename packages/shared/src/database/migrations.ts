@@ -445,7 +445,16 @@ export async function migrateV3ToV4(mainDB: DbAdapter, systemDB: DbAdapter): Pro
   }
 }
 
-/* SystemDatabaseから共有コンテナDBへ全データをコピー */
+/**
+ * SystemDatabaseから共有コンテナDBへ全データをコピーする
+ *
+ * @remarks
+ * snippet_profiles / variables / profile_variables はV2以降にしか無く、旧DBに無ければ
+ * SELECT自体が失敗するため、テーブルごとに try / catch で囲んで警告のみで先へ進む。
+ * この try はSELECTだけでなくINSERT OR IGNOREのループまで含むため、テーブル不在以外の失敗
+ * （挿入時の制約違反など）でも同じ経路に入り、そのテーブルのコピーだけが途中で打ち切られる。
+ * catchは各テーブルで独立しており、後続テーブルのコピーとマイグレーション本体は継続する。
+ */
 async function copyDataFromSystemDatabase(
   sharedDb: DbAdapter,
   systemDb: DbAdapter
@@ -493,6 +502,7 @@ async function copyDataFromSystemDatabase(
       );
     }
   } catch {
+    /* 打ち切られるのはsnippet_profilesのコピーのみ。詳細はこの関数のJSDocを参照 */
     Logger.warn('[Migration V3→V4] snippet_profiles table may not exist in old DB, skipping');
   }
 
@@ -509,6 +519,7 @@ async function copyDataFromSystemDatabase(
       );
     }
   } catch {
+    /* 打ち切られるのはvariablesのコピーのみ。詳細はこの関数のJSDocを参照 */
     Logger.warn('[Migration V3→V4] variables table may not exist in old DB, skipping');
   }
 
@@ -525,6 +536,7 @@ async function copyDataFromSystemDatabase(
       );
     }
   } catch {
+    /* 打ち切られるのはprofile_variablesのコピーのみ。詳細はこの関数のJSDocを参照 */
     Logger.warn('[Migration V3→V4] profile_variables table may not exist in old DB, skipping');
   }
 
@@ -780,6 +792,9 @@ export async function runMigrations(
       case 7:
         await migrateV6ToV7(mainDB);
         break;
+      /* 冒頭のassertSupportedMigrationVersion(fromVersion, 1)によりfromVersionは1〜SCHEMA_VERSION(7)に
+         制限されるため、nextVersionは2〜7となり上のcaseが全て存在する＝現行の版範囲では到達しない。
+         なお版番号を確定する前にfinalizeLatestSchemaが必須テーブルの欠落をDatabaseErrorにする */
       default:
         Logger.warn(`[Migration] No migration defined for version ${nextVersion}`);
         break;
@@ -829,6 +844,9 @@ export async function migrateImportTempDb(db: DbAdapter, fromVersion: number): P
       case 7:
         await migrateV6ToV7(db);
         break;
+      /* 冒頭のassertSupportedMigrationVersion(fromVersion, MIN_SUPPORTED_SCHEMA_VERSION)により
+         fromVersionは3〜SCHEMA_VERSION(7)に制限されるため、nextVersionは4〜7となり
+         上のcaseが全て存在する＝現行の版範囲では到達しない */
       default:
         throw new VersionMismatchError(SCHEMA_VERSION, currentVersion);
     }

@@ -10,7 +10,7 @@
  * - カスタムRGBカラーの入力
  * - 新規作成/編集モードの自動判定
  *
- * @see lib/hooks/screens/useCategoryEditScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useCategoryEditScreen.ts - ビジネスロジック
  */
 
 import {
@@ -201,6 +201,7 @@ export default function CategoryEditModal() {
               <View style={styles.rgbInputRow}>
                 {/* RGB入力カラム */}
                 <View style={styles.rgbInputColumn}>
+                  {/* R/G/B の3入力は同じ規則で、不正値のときは枠線色を colors.error にするだけでなく太さも 1→2 にし、色と太さの両方で異常を示している */}
                   {/* R値入力 */}
                   <View style={styles.rgbInputWrapper}>
                     <Text

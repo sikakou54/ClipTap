@@ -10,16 +10,6 @@
  * - Google/Apple Sign-In統合
  * - エラーハンドリング
  *
- * 使用例:
- * ```tsx
- * <AuthProvider>
- *   <App />
- * </AuthProvider>
- *
- * // コンポーネント内
- * const { user, signInWithGoogle, signOut } = useAuth();
- * ```
- *
  * @module AuthProvider
  */
 

@@ -106,19 +106,4 @@ export const CreateProfileVariableInputSchema = z.object({
  */
 export type CreateProfileVariableInput = z.infer<typeof CreateProfileVariableInputSchema>;
 
-/**
- * プロファイル変数値更新入力スキーマ
- *
- * @remarks
- * - profileIdとvariableIdは変更不可
- */
-export const UpdateProfileVariableInputSchema = z.object({
-  value: z.string().optional(),
-});
-
-/**
- * プロファイル変数値更新入力
- */
-export type UpdateProfileVariableInput = z.infer<typeof UpdateProfileVariableInputSchema>;
-
 

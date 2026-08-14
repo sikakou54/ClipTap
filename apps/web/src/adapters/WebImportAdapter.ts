@@ -14,19 +14,7 @@
 import { type ImportAdapter, type FileIOAdapter, getMainDbAdapter, toOpfsPath } from '@cliptap/shared';
 import type { WebFileIOAdapter } from './WebFileIOAdapter';
 import type { WebDatabaseAdapter } from './WebDatabaseAdapter';
-
-/**
- * Base64文字列をUint8Arrayに変換
- */
-function base64ToUint8Array(base64: string): Uint8Array {
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
-}
+import { base64ToUint8Array } from '@utils/base64';
 
 /**
  * Web用ImportAdapter実装クラス

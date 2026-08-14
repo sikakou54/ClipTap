@@ -8,7 +8,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from '@cliptap/shared';
 
-interface MenuItem {
+export interface MenuItem {
   path: string;
   label: string;
   icon: string;

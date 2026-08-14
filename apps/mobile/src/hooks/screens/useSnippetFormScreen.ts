@@ -25,7 +25,7 @@ import { Logger } from '@cliptap/shared';
 /**
  * useSnippetFormScreenの引数
  */
-export interface UseSnippetFormScreenParams {
+interface UseSnippetFormScreenParams {
   mode: 'create' | 'edit';
   snippetId?: string;
 }

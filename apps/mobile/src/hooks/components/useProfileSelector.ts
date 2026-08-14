@@ -68,6 +68,7 @@ export function useProfileSelector({
    * プロファイル選択時の処理
    */
   const handleSelectProfile = useCallback((profile: Profile) => {
+    /* 既に選択中の環境をタップした場合はDB更新も再読込も行わず、モーダルを閉じるだけにする（無駄な setActive とContext再読込を避ける）。 */
     if (activeProfile?.id === profile.id) {
       setShowModal(false);
       return;
@@ -78,7 +79,7 @@ export function useProfileSelector({
       setShowModal(false);
       onProfileChange?.();
     } catch {
-      /* エラーは無視 */
+      /* setActiveProfile が失敗した場合は showModal を false にせず onProfileChange も呼ばないため、モーダルは開いたままになり利用者への通知も行わない（現行挙動）。 */
     }
   }, [activeProfile?.id, setActiveProfile, onProfileChange]);
 

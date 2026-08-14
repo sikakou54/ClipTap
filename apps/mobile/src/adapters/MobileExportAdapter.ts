@@ -32,6 +32,10 @@ export class MobileExportAdapter implements ExportAdapter {
     const exportFileUri = await this.fileIO.writeFile(fileName, content);
 
     /* Mobile: システム共有シートで保存先選択（iOS/Android標準UI） */
+    /*
+     * 共有シートのタイトルは仕様（docs/機能仕様書.md §8.13）でUI言語にかかわらず
+     * 日本語固定と定められているため、意図的に i18next を経由しない。
+     */
     await this.fileShare.shareFile(exportFileUri, 'エクスポートファイルを保存');
 
     await this.fileIO.deleteFile(exportFileUri).catch(() => { });

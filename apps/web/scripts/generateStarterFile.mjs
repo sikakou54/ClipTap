@@ -14,8 +14,11 @@
  * npm run generate:starter --workspace=@cliptap/web
  * ```
  *
- * スキーマ定義・エクスポート形式・パスワードはいずれも実装から読み込むため、
+ * スキーマのCREATE文・エクスポート形式・パスワードは実装から読み込むため、
  * このスクリプト内にそれらを再定義しないこと。
+ * ただしサンプル投入時のカラム列挙（buildDatabase）と、件数検証のテーブル一覧
+ * （verifyExportJson の expected）はこのスクリプトが手書きで持っているため、
+ * SCHEMA_VERSION を更新するときは両方の見直しが必要。
  *
  * @module scripts/generateStarterFile
  */

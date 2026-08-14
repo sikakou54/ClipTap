@@ -40,19 +40,16 @@ export type SupportedLocale = 'ja' | 'en';
 const ASCII_PATTERN = /^[^\u0080-\uFFFF]+$/;
 
 /**
- * 曜日のロケール別表示名
- * @constant
- * @private
- *
- * Date.getDay() の戻り値（0=日曜、1=月曜、...、6=土曜）に対応するインデックス
- */
-/**
  * システム変数の定義
  *
  * @interface SystemVariableDefinition
  * @property {string} key - 変数の識別子（内部用）
  * @property {string[]} aliases - 変数名のエイリアス（日本語・英語両対応）
- * @property {Function} getValue - 変数の値を生成する関数
+ *
+ * @remarks
+ * 値の生成はこの型に持たせない。書式は constants/systemVariableFormats.ts の
+ * SYSTEM_VARIABLE_FORMAT_PRESETS、実際の描画は utils/dateFormatter.ts の
+ * formatByPattern が担う。
  */
 export interface SystemVariableDefinition {
   key: SystemVariableKey;
@@ -133,7 +130,7 @@ export const normalizeLocale = (locale?: string): SupportedLocale => {
  * これにより、大文字小文字を区別せずに変数を解決できます。
  * 例: "TODAY" と "today" は同じ変数として扱われます。
  */
-export const normalizeVariableName = (value: string): string => {
+const normalizeVariableName = (value: string): string => {
   const trimmed = value.trim();
   return ASCII_PATTERN.test(trimmed) ? trimmed.toLowerCase() : trimmed;
 };

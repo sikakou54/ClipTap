@@ -35,7 +35,7 @@ export const AUTH_CONFIG = {
   GOOGLE_IOS_CLIENT_ID: '570104360158-tp89lr2buks8va20lg2ml8g2ercpdmko.apps.googleusercontent.com',
   /** Google Sign-In Web Client ID - WebおよびサーバーサイドのGoogleサインイン用クライアントID */
   GOOGLE_WEB_CLIENT_ID: '570104360158-jj3g9mc15782i8ia6bh92qo5mtdhtuu5.apps.googleusercontent.com',
-} as const; // as const: 定数として扱い、値の変更を防ぐ
+} as const;
 
 
 /**
@@ -44,6 +44,7 @@ export const AUTH_CONFIG = {
  * 型を明示することでタイポや不正な値を防ぐ
  */
 /* サブスクリプション商品ID設定オブジェクト（型注釈付き） */
+/* 注: as const を付けていないのは、値が文字列リテラル型でなく汎用string型として扱いたいため */
 export const PRODUCT_IDS_CONFIG: {
   /* iOS用商品ID - App Store Connect で登録したサブスクリプションID */
   iOS: { monthly: string; annual: string };
@@ -64,4 +65,4 @@ export const PRODUCT_IDS_CONFIG: {
     /** 年間プラン商品ID */
     annual: 'product.cliptap.pro:annual',
   },
-}; // 注: as const を付けていないのは、値が文字列リテラル型でなく汎用string型として扱いたいため
+};

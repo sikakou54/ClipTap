@@ -11,7 +11,7 @@
  * - App Store/Google Playのサブスクリプション設定への誘導
  * - 購入復元機能
  *
- * @see lib/hooks/screens/useManageSubscriptionScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useManageSubscriptionScreen.ts - ビジネスロジック
  */
 
 import {
@@ -28,6 +28,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
 import { ScreenContainer } from '@components/common/ScreenContainer';
 import { useManageSubscriptionScreen } from '@hooks/screens/useManageSubscriptionScreen';
+
+/**
+ * Proプランの機能カード定義
+ *
+ * 3枚のカードはアイコンと翻訳キーだけが違う同一構造だったため、差分をデータとして並べる。
+ * 翻訳キーはリテラルで保持し、grep で参照箇所を追えるようにしている。
+ */
+const PRO_FEATURES = [
+  { icon: 'close-circle-outline', titleKey: 'subscription.feature_no_ads', descKey: 'subscription.feature_no_ads_desc' },
+  { icon: 'options-outline', titleKey: 'subscription.feature_unlimited_profiles', descKey: 'subscription.feature_unlimited_profiles_desc' },
+  { icon: 'code-slash-outline', titleKey: 'subscription.feature_custom_variables', descKey: 'subscription.feature_custom_variables_desc' },
+] as const;
 
 export default function ManageSubscriptionScreen() {
   const { t } = useTranslation();
@@ -92,41 +104,20 @@ export default function ManageSubscriptionScreen() {
             {t('subscription.features_title')}
           </Text>
 
-          <View style={[styles.featureCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Ionicons name="close-circle-outline" size={24} color={colors.primary} />
-            <View style={styles.featureText}>
-              <Text style={[styles.featureTitle, { color: colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
-                {t('subscription.feature_no_ads')}
-              </Text>
-              <Text style={[styles.featureDescription, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
-                {t('subscription.feature_no_ads_desc')}
-              </Text>
+          {/* Proプランの機能カード */}
+          {PRO_FEATURES.map((feature) => (
+            <View key={feature.icon} style={[styles.featureCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Ionicons name={feature.icon} size={24} color={colors.primary} />
+              <View style={styles.featureText}>
+                <Text style={[styles.featureTitle, { color: colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
+                  {t(feature.titleKey)}
+                </Text>
+                <Text style={[styles.featureDescription, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
+                  {t(feature.descKey)}
+                </Text>
+              </View>
             </View>
-          </View>
-
-          <View style={[styles.featureCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Ionicons name="options-outline" size={24} color={colors.primary} />
-            <View style={styles.featureText}>
-              <Text style={[styles.featureTitle, { color: colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
-                {t('subscription.feature_unlimited_profiles')}
-              </Text>
-              <Text style={[styles.featureDescription, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
-                {t('subscription.feature_unlimited_profiles_desc')}
-              </Text>
-            </View>
-          </View>
-
-          <View style={[styles.featureCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Ionicons name="code-slash-outline" size={24} color={colors.primary} />
-            <View style={styles.featureText}>
-              <Text style={[styles.featureTitle, { color: colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
-                {t('subscription.feature_custom_variables')}
-              </Text>
-              <Text style={[styles.featureDescription, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
-                {t('subscription.feature_custom_variables_desc')}
-              </Text>
-            </View>
-          </View>
+          ))}
         </View>
 
         <View style={styles.section}>
@@ -414,14 +405,5 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
-  },
-  modalButtonSecondary: {
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  modalButtonSecondaryText: {
-    fontWeight: '500',
   },
 });

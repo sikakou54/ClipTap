@@ -16,8 +16,8 @@
  * - 追加アイコン → /snippet/create（モーダル）
  * - 設定アイコン → /settings
  *
- * @see lib/hooks/screens/useHomeScreen.ts - ビジネスロジック
- * @see components/snippet/SnippetList.tsx - 一覧表示コンポーネント
+ * @see src/hooks/screens/useHomeScreen.ts - ビジネスロジック
+ * @see src/components/snippet/SnippetList.tsx - 一覧表示コンポーネント
  */
 
 import { View, StyleSheet, TouchableOpacity } from 'react-native';

@@ -50,6 +50,12 @@ const getAtob = () => {
   throw new EnvironmentError('atob');
 };
 
+/*
+ * btoa / atob / TextEncoder はモジュール読み込み時に解決している。
+ * 対象ランタイム（iOS / Android の Hermes、主要ブラウザ）にはいずれも存在するため、
+ * ここの throw に到達するのは想定外の環境のみ。
+ * なお textDecoder は存在確認のためだけに生成しており、デコード処理には使っていない。
+ */
 const btoa = getBtoa();
 const atob = getAtob();
 

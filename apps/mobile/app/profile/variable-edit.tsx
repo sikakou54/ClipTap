@@ -9,7 +9,7 @@
  * - 複数行テキスト入力対応
  * - 値のプレビュー表示
  *
- * @see lib/hooks/screens/useProfileVariableEditScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useProfileVariableEditScreen.ts - ビジネスロジック
  */
 
 import {

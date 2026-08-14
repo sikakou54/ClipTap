@@ -1,8 +1,13 @@
 /**
- * ホーム画面のビジネスロジックフック
+ * 定型文一覧画面のビジネスロジックフック
  *
  * @description
- * メイン画面（定型文一覧）の状態管理とロジックを提供。
+ * 定型文一覧の状態管理とロジックを提供。
+ * webではルート `/` をファイル読み込み画面（pages/Home.tsx）が占めるため、
+ * 定型文一覧は `/dashboard`（pages/Dashboard.tsx）が担う。
+ * このフックは Dashboard.tsx からのみ使われ、
+ * apps/mobile/src/hooks/screens/useHomeScreen.ts と対応する。
+ *
  * Mobile版と同様のシンプルな構成で、モーダル/エクスポート/インポートは
  * 専用フック（useSnippetModal, useExportScreen, useImportScreen）に分離。
  *
@@ -37,9 +42,6 @@ import { useMobileMenu } from '@hooks/useMobileMenu';
 import { useSnippetModal } from '@hooks/screens/useSnippetModal';
 import { useExportScreen } from '@hooks/screens/useExportScreen';
 import { useImportScreen } from '@hooks/screens/useImportScreen';
-
-/** スニペットフォームの値（re-export） */
-export type { SnippetFormValues } from './useSnippetModal';
 
 /**
  * useHomeScreenの戻り値の型
@@ -175,6 +177,10 @@ export function useHomeScreen(): UseHomeScreenReturn {
   const { filteredSnippets } = useFilteredSnippets({
     snippets: allSnippets,
     snippetProfiles,
+    /*
+     * 検索欄を空にしたときだけデバウンスを待たず、即座に全件表示へ戻す。
+     * 入力中は300msのデバウンス値（debouncedSearchQuery）を使う
+     */
     searchQuery: searchQuery === '' ? '' : debouncedSearchQuery,
     selectedCategory,
     activeProfileId,
@@ -218,6 +224,11 @@ export function useHomeScreen(): UseHomeScreenReturn {
 
   /** スニペットを削除（確認ダイアログ付き） */
   const handleDeleteSnippet = useCallback(async (id: string) => {
+    /*
+     * ここは動的importのままにしている。静的importに変えるとReact Compilerが
+     * このフックの解析へ進み、handleCopySnippet / handleCopySnippetTitle の
+     * useCallback依存（activeProfile?.id）でlintエラーになるため
+     */
     const { showConfirm } = await import('@utils/alerts');
     showConfirm('snippet.delete_confirm', async () => {
       try {

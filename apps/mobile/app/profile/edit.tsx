@@ -10,7 +10,7 @@
  * - 重複プロファイル名のバリデーション
  * - 無料プラン制限チェック
  *
- * @see lib/hooks/screens/useProfileEditScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useProfileEditScreen.ts - ビジネスロジック
  */
 
 import {

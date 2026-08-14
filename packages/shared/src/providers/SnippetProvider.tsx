@@ -54,16 +54,8 @@ export interface SnippetContextValue {
   copySnippet: (id: string, profileId?: string) => Promise<void>;
   /** タイトルだけをクリップボードにコピー */
   copySnippetTitle: (id: string, profileId?: string) => Promise<void>;
-  /** テキストプレビュー生成 */
-  getTextPreview: (content: string) => Promise<string>;
   /** ID指定で取得 */
   getById: (id: string) => Snippet | null;
-  /** プロファイルID一覧を取得 */
-  getProfileIds: (snippetId: string) => string[];
-  /** プレビュー生成 */
-  getPreview: (id: string, profileId?: string) => Promise<string>;
-  /** クリップボード用テキスト準備 */
-  prepareForClipboard: (id: string, profileId?: string) => Promise<string>;
 }
 
 /**
@@ -233,6 +225,8 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
 
   /**
    * スニペット更新
+   *
+   * 更新後に現在のソート順で再読込し、Contextを見ている全画面へ即時反映する。
    */
   const updateSnippet = useCallback(
     (input: UpdateSnippetInput): Snippet => {
@@ -245,6 +239,8 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
 
   /**
    * スニペット削除
+   *
+   * 削除後に現在のソート順で再読込し、Contextを見ている全画面へ即時反映する。
    */
   const deleteSnippet = useCallback(
     (id: string): void => {
@@ -272,7 +268,8 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
         shouldReplaceVariables: true,
       });
     } catch (err) {
-      /* 変数展開に失敗した場合は元のテキストをフォールバック */
+      /* 展開に失敗したからといってコピー自体を失敗させると、利用者は原因が分からないまま操作できなくなる。
+         未展開のテキストなら貼り付け先で手直しできるため、警告ログだけ残して処理を続ける */
       Logger.warn('[SnippetProvider] Variable replacement failed, copying original content:', err);
       textToCopy = await SnippetService.prepareForClipboard(id, {
         shouldReplaceVariables: false,
@@ -282,7 +279,9 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
     if (hasClipboardAdapter()) {
       await getClipboardAdapter().copy(textToCopy);
 
-      /* アプリ本体とWebではコピーの入口にかかわらず使用回数を加算 */
+      /* アプリ本体とWebは一覧・検索・詳細のどの導線から呼ばれても本文コピー1回として加算する。
+         加算条件がフルアクセス許可に依存する拡張キーボードは、
+         ネイティブ側（ClipTapKeyboard/Services/SnippetService.swift の isUsageTrackingEnabled）で個別に判定している */
       SnippetService.incrementCopyCount(id);
       setAllSnippets(prev => prev.map(s =>
         s.id === id ? { ...s, copyCount: (s.copyCount ?? 0) + 1 } : s
@@ -308,7 +307,7 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
         shouldReplaceVariables: true,
       });
     } catch (err) {
-      /* 変数展開に失敗した場合は元のタイトルをフォールバック */
+      /* 本文コピーと同じ方針。展開に失敗してもコピー自体は成立させ、未展開のタイトルを渡して手直しできる状態にする */
       Logger.warn('[SnippetProvider] Variable replacement failed, copying original title:', err);
       titleToCopy = await SnippetService.prepareTitleForClipboard(id, {
         shouldReplaceVariables: false,
@@ -325,36 +324,7 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
     }
   }, []);
 
-  const getTextPreview = useCallback(async (content: string): Promise<string> => {
-    const customResolver = createCustomResolver();
-    return SnippetService.getTextPreview(content, {
-      locale: getCurrentLocale(),
-      customResolver,
-    });
-  }, []);
-
   const getById = useCallback((id: string): Snippet | null => SnippetService.getById(id), []);
-
-  const getProfileIds = useCallback((snippetId: string): string[] => {
-    return SnippetService.getProfileIds(snippetId);
-  }, []);
-
-  const getPreview = useCallback(async (id: string, profileId?: string): Promise<string> => {
-    const customResolver = createCustomResolver(profileId);
-    return SnippetService.getPreview(id, {
-      locale: getCurrentLocale(),
-      customResolver,
-    });
-  }, []);
-
-  const prepareForClipboard = useCallback(async (id: string, profileId?: string): Promise<string> => {
-    const customResolver = createCustomResolver(profileId);
-    return SnippetService.prepareForClipboard(id, {
-      locale: getCurrentLocale(),
-      customResolver,
-      shouldReplaceVariables: true,
-    });
-  }, []);
 
   /* ======================================== */
   /* Context Value */
@@ -373,11 +343,7 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
       deleteSnippet,
       copySnippet,
       copySnippetTitle,
-      getTextPreview,
       getById,
-      getProfileIds,
-      getPreview,
-      prepareForClipboard,
     }),
     [
       allSnippets,
@@ -392,11 +358,7 @@ export function SnippetProvider({ children }: SnippetProviderProps) {
       deleteSnippet,
       copySnippet,
       copySnippetTitle,
-      getTextPreview,
       getById,
-      getProfileIds,
-      getPreview,
-      prepareForClipboard,
     ]
   );
 

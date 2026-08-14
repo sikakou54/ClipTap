@@ -24,6 +24,8 @@ import {
   useProfiles,
   Profile,
   VariableNameRequiredError,
+  type Variable,
+  type TranslationFunction,
 } from '@cliptap/shared';
 import { UI_CONSTANTS, type VariableIconName } from '@constants/ui';
 import { showConfirm, showErrorAlert } from '@utils/alerts';
@@ -33,7 +35,7 @@ import { Logger } from '@cliptap/shared';
 /**
  * useVariableEditScreenの引数の型
  */
-export interface UseVariableEditScreenParams {
+interface UseVariableEditScreenParams {
   /** 編集対象の変数ID（新規作成時はundefined） */
   variableId?: string;
 }
@@ -49,7 +51,6 @@ export interface UseVariableEditScreenReturn {
   setLabel: (label: string) => void;
   value: string;
   selectedIcon: VariableIconName;
-  setSelectedIcon: (icon: VariableIconName) => void;
   showIconModal: boolean;
   setShowIconModal: (show: boolean) => void;
   profileValues: Record<string, string>;
@@ -66,6 +67,63 @@ export interface UseVariableEditScreenReturn {
   handleOpenValueEdit: (profile: Profile) => void;
   handleSelectIcon: (icon: VariableIconName) => void;
   getDisplayValue: (profile: Profile) => string;
+}
+
+/**
+ * 変数名の検証結果
+ */
+interface VariableNameValidation {
+  isValid: boolean;
+  errorMessage: string;
+}
+
+/**
+ * 変数名を検証する
+ *
+ * @param params - 検証対象の名前・既存変数一覧・編集中の変数ID・翻訳関数
+ * @returns 検証結果（有効かどうかと画面に出すエラー文言）
+ *
+ * @remarks
+ * 判定順（未入力→長さ→予約語→重複→形式）はそのまま画面に出るエラーの優先順位になるため、
+ * 入れ替えてはならない。未入力を有効として返すのは、入力前からエラーを出さないためで、
+ * 保存の可否は canSave 側が名前の有無で別途判定する。
+ * 重複判定は type==='custom' の変数だけを対象にし、編集中の変数自身は除外する。
+ */
+function validateVariableName(params: {
+  name: string;
+  variables: Variable[];
+  editingVariableId: string | undefined;
+  t: TranslationFunction;
+}): VariableNameValidation {
+  const { name, variables, editingVariableId, t } = params;
+
+  const trimmedName = name.trim();
+  const maxLength = UI_CONSTANTS.INPUT_LIMITS.VARIABLE_NAME_MAX;
+
+  if (!trimmedName) {
+    return { isValid: true, errorMessage: '' };
+  }
+
+  if (trimmedName.length > maxLength) {
+    return { isValid: false, errorMessage: t('error.variable_name_too_long', { max: maxLength }) };
+  }
+
+  if (isReservedVariableName(trimmedName)) {
+    return { isValid: false, errorMessage: t('error.variable_name_reserved', { name: trimmedName }) };
+  }
+
+  const isDuplicate = variables.some(
+    v => v.name === trimmedName && v.type === 'custom' && v.id !== editingVariableId
+  );
+  if (isDuplicate) {
+    return { isValid: false, errorMessage: t('error.variable_name_exists', { name: trimmedName }) };
+  }
+
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(trimmedName)) {
+    return { isValid: false, errorMessage: t('error.variable_name_invalid') };
+  }
+
+  return { isValid: true, errorMessage: '' };
 }
 
 /**
@@ -88,6 +146,7 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
   /* ======================================== */
   const [name, setName] = useState('');
   const [label, setLabel] = useState('');
+  /* 標準環境（isDefault=trueのプロファイル）の値。profileValues にも同じプロファイルIDのエントリが入るため、標準環境の値は2箇所に保持されている（保存時は performSave が isDefault で分岐して value 側を採用する）。 */
   const [value, setValue] = useState('');
   const [selectedIcon, setSelectedIcon] = useState<VariableIconName>('code-outline');
   const [showIconModal, setShowIconModal] = useState(false);
@@ -116,41 +175,19 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
    * 変数名バリデーション
    * 長さ・予約語・重複・形式をチェック
    */
-  const nameValidation = useMemo(() => {
-    const trimmedName = name.trim();
-    const maxLength = UI_CONSTANTS.INPUT_LIMITS.VARIABLE_NAME_MAX;
-
-    if (!trimmedName) {
-      return { isValid: true, errorMessage: '' };
-    }
-
-    if (trimmedName.length > maxLength) {
-      return { isValid: false, errorMessage: t('error.variable_name_too_long', { max: maxLength }) };
-    }
-
-    if (isReservedVariableName(trimmedName)) {
-      return { isValid: false, errorMessage: t('error.variable_name_reserved', { name: trimmedName }) };
-    }
-
-    const isDuplicate = variables.some(
-      v => v.name === trimmedName && v.type === 'custom' && v.id !== editingVariable?.id
-    );
-    if (isDuplicate) {
-      return { isValid: false, errorMessage: t('error.variable_name_exists', { name: trimmedName }) };
-    }
-
-    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(trimmedName)) {
-      return { isValid: false, errorMessage: t('error.variable_name_invalid') };
-    }
-
-    return { isValid: true, errorMessage: '' };
-  }, [name, variables, editingVariable, t]);
+  const nameValidation = useMemo(
+    () => validateVariableName({ name, variables, editingVariableId: editingVariable?.id, t }),
+    [name, variables, editingVariable, t]
+  );
 
   const isNameValid = nameValidation.isValid;
   const nameErrorMessage = nameValidation.errorMessage;
 
   /**
    * 保存可能かどうか
+   *
+   * @remarks
+   * 標準値と環境値のいずれかが入っていれば保存可。両方空の変数を作らせないための条件。
    */
   const canSave = useMemo(() => {
     if (!name.trim()) return false;
@@ -205,6 +242,7 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
   /* ======================================== */
   /* 画面フォーカス時の処理（コールバックデータ処理） */
   /* ======================================== */
+  /* 値編集モーダル（profile/value-edit）からの戻り値をグローバル変数経由で受け取る。expo-router のモーダルは戻り値を返せないため、モーダル側が router.back() の直前に global.variableValueCallbackData へ書き込み、こちらはフォーカス復帰時に読み取って即座に破棄する。依存配列が空なのはsetterのみを閉じ込めており再購読が不要なため。 */
   useFocusEffect(
     useCallback(() => {
       if (global.variableValueCallbackData) {
@@ -367,7 +405,6 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
     setLabel,
     value,
     selectedIcon,
-    setSelectedIcon,
     showIconModal,
     setShowIconModal,
     profileValues,

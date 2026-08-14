@@ -4,11 +4,11 @@
  * 統一テーマシステム
  *
  * このモジュールはプロジェクト全体で単一のテーマ管理システムを提供します。
- * ライト/ダークモードの切り替え、レスポンシブデザイン、
+ * ライト/ダークモードの配色、レスポンシブデザイン、
  * タイポグラフィなど、UIに関するすべてのスタイル定義を集約しています。
  *
  * 主な機能:
- * - ライト/ダークモードの自動・手動切り替え
+ * - OSのライト/ダーク設定に追従した配色の切り替え（手動切替UIは持たない）
  * - レスポンシブなスペーシング・フォントサイズ
  * - 統一されたカラーパレット
  * - タイポグラフィシステム
@@ -16,25 +16,21 @@
  *
  * 使用箇所:
  * - 全画面・コンポーネントでのスタイル適用
- * - 設定画面でのテーマ切り替え
  *
  * @see useTheme - テーマ情報を取得するフック
  * @see ThemeProvider - テーマコンテキストを提供するプロバイダー
  */
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext } from 'react';
 import { useColorScheme, Platform } from 'react-native';
 import { Logger } from './logger';
 import { responsive, isTablet } from '@utils/responsive';
 import {
   LIGHT_THEME_COLORS,
   DARK_THEME_COLORS,
-  type ThemeMode,
   SPACING as SHARED_SPACING,
   FONT_SIZES as SHARED_FONT_SIZES,
   TYPOGRAPHY as SHARED_TYPOGRAPHY,
-  RADIUS as SHARED_RADIUS,
-  DIMENSIONS as SHARED_DIMENSIONS,
   SHADOWS as SHARED_SHADOWS,
 } from '@cliptap/shared';
 
@@ -62,7 +58,7 @@ const DARK_COLORS = DARK_THEME_COLORS;
  * スペーシングシステム（基本値）
  * @cliptap/sharedのSPACINGを使用
  */
-export const SPACING = SHARED_SPACING;
+const SPACING = SHARED_SPACING;
 
 /**
  * レスポンシブスペーシングを取得
@@ -72,7 +68,7 @@ export const SPACING = SHARED_SPACING;
  *
  * @returns レスポンシブスペーシングオブジェクト
  */
-export const getResponsiveSpacing = () => ({
+const getResponsiveSpacing = () => ({
   screenPadding: responsive.spacing(16, 32, 48),
   cardGap: responsive.spacing(12, 16, 20),
   sectionGap: responsive.spacing(24, 32, 40),
@@ -87,7 +83,7 @@ export const getResponsiveSpacing = () => ({
  * フォントサイズシステム（基本値）
  * @cliptap/sharedのFONT_SIZESを使用
  */
-export const FONT_SIZES = SHARED_FONT_SIZES;
+const FONT_SIZES = SHARED_FONT_SIZES;
 
 /**
  * レスポンシブフォントサイズを取得
@@ -97,7 +93,7 @@ export const FONT_SIZES = SHARED_FONT_SIZES;
  *
  * @returns フォントサイズオブジェクト
  */
-export const getResponsiveFontSizes = () => {
+const getResponsiveFontSizes = () => {
   const deviceType = isTablet() ? 'tablet' : 'phone';
 
   if (deviceType === 'tablet') {
@@ -124,7 +120,7 @@ export const getResponsiveFontSizes = () => {
  *
  * @returns ラインハイトオブジェクト
  */
-export const getResponsiveLineHeights = () => {
+const getResponsiveLineHeights = () => {
   const fontSizes = getResponsiveFontSizes();
 
   return {
@@ -147,17 +143,11 @@ export const getResponsiveLineHeights = () => {
  * タイポグラフィシステム
  * @cliptap/sharedのTYPOGRAPHYを使用
  */
-export const TYPOGRAPHY = SHARED_TYPOGRAPHY;
+const TYPOGRAPHY = SHARED_TYPOGRAPHY;
 
 /* ========================================
    寸法システム（sharedから取得）
    ======================================== */
-
-/**
- * 寸法システム（基本値）
- * @cliptap/sharedのDIMENSIONSを使用
- */
-export const DIMENSIONS = SHARED_DIMENSIONS;
 
 /**
  * レスポンシブ寸法を取得
@@ -167,7 +157,7 @@ export const DIMENSIONS = SHARED_DIMENSIONS;
  *
  * @returns レスポンシブ寸法オブジェクト
  */
-export const getResponsiveDimensions = () => {
+const getResponsiveDimensions = () => {
   const isTabletDevice = isTablet();
 
   return {
@@ -193,20 +183,14 @@ export const getResponsiveDimensions = () => {
 };
 
 /* ========================================
-   シャドウ・ボーダーシステム（sharedから取得）
+   シャドウシステム（sharedから取得）
    ======================================== */
 
 /**
  * シャドウシステム
  * @cliptap/sharedのSHADOWSを使用
  */
-export const SHADOWS = SHARED_SHADOWS;
-
-/**
- * ボーダーラディウス
- * @cliptap/sharedのRADIUSを使用
- */
-export const RADIUS = SHARED_RADIUS;
+const SHADOWS = SHARED_SHADOWS;
 
 /* ========================================
    ヘルパー関数
@@ -227,8 +211,6 @@ const getWebDarkMode = (): boolean => {
    テーマコンテキスト
    ======================================== */
 
-/* ThemeMode型は@cliptap/sharedからインポート済み */
-
 /**
  * テーマコンテキストの型定義
  *
@@ -237,22 +219,13 @@ const getWebDarkMode = (): boolean => {
  * すべてのテーマ関連情報を含みます。
  */
 interface ThemeContextType {
-  /** 現在のテーマモード */
-  themeMode: ThemeMode;
-  /** テーマモードを変更する関数 */
-  setThemeMode: (mode: ThemeMode) => void;
   /** 現在のテーマに応じたカラーパレット */
   colors: typeof LIGHT_COLORS;
   spacing: typeof SPACING;
-  fontSizes: typeof FONT_SIZES;
   responsiveFontSizes: ReturnType<typeof getResponsiveFontSizes>;
   responsiveLineHeights: ReturnType<typeof getResponsiveLineHeights>;
   typography: typeof TYPOGRAPHY;
-  dimensions: typeof DIMENSIONS;
   shadows: typeof SHADOWS;
-  radius: typeof RADIUS;
-  isDark: boolean;
-  colorScheme: 'light' | 'dark' | null | undefined;
   isTablet: boolean;
   responsive: ReturnType<typeof getResponsiveDimensions>;
   responsiveSpacing: ReturnType<typeof getResponsiveSpacing>;
@@ -266,6 +239,27 @@ const ThemeContext = createContext<ThemeContextType | null>(null);
    ======================================== */
 
 /**
+ * テーマ値を組み立てる
+ *
+ * ThemeProviderが提供する値と、useThemeがProvider外で返すフォールバック値は同じ内容である。
+ * 両者がずれないよう、組み立てをこの関数へ集約している。
+ *
+ * @param isDark - ダークモードかどうか（カラーパレットの選択にのみ使用する）
+ * @returns テーマコンテキストの値
+ */
+const buildThemeValue = (isDark: boolean): ThemeContextType => ({
+  colors: isDark ? DARK_COLORS : LIGHT_COLORS,
+  spacing: SPACING,
+  responsiveFontSizes: getResponsiveFontSizes(),
+  responsiveLineHeights: getResponsiveLineHeights(),
+  typography: TYPOGRAPHY,
+  shadows: SHADOWS,
+  isTablet: isTablet(),
+  responsive: getResponsiveDimensions(),
+  responsiveSpacing: getResponsiveSpacing(),
+});
+
+/**
  * テーマプロバイダーコンポーネント
  *
  * アプリ全体にテーマコンテキストを提供します。
@@ -274,35 +268,13 @@ const ThemeContext = createContext<ThemeContextType | null>(null);
  * @param {React.ReactNode} children - 子コンポーネント
  */
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [themeMode, setThemeMode] = useState<ThemeMode>('auto');
   /* RN 0.86のuseColorSchemeは'unspecified'を返しうるため、テーマ型の'light'|'dark'|nullへ正規化する */
   const rawColorScheme = useColorScheme();
   const colorScheme = rawColorScheme === 'unspecified' ? null : rawColorScheme;
 
-  const isDark = themeMode === 'auto'
-    ? (colorScheme === 'dark' || (Platform.OS === 'web' && getWebDarkMode()))
-    : themeMode === 'dark';
+  const isDark = colorScheme === 'dark' || (Platform.OS === 'web' && getWebDarkMode());
 
-  const colors = isDark ? DARK_COLORS : LIGHT_COLORS;
-
-  const value: ThemeContextType = {
-    themeMode,
-    setThemeMode,
-    colors,
-    spacing: SPACING,
-    fontSizes: FONT_SIZES,
-    responsiveFontSizes: getResponsiveFontSizes(),
-    responsiveLineHeights: getResponsiveLineHeights(),
-    typography: TYPOGRAPHY,
-    dimensions: DIMENSIONS,
-    shadows: SHADOWS,
-    radius: RADIUS,
-    isDark,
-    colorScheme,
-    isTablet: isTablet(),
-    responsive: getResponsiveDimensions(),
-    responsiveSpacing: getResponsiveSpacing(),
-  };
+  const value = buildThemeValue(isDark);
 
   /* テーマプロバイダー（テーマコンテキストを提供） */
   return (
@@ -342,24 +314,7 @@ export const useTheme = () => {
       reason: 'no_context'
     });
 
-    return {
-      colors: isDark ? DARK_COLORS : LIGHT_COLORS,
-      spacing: SPACING,
-      fontSizes: FONT_SIZES,
-      responsiveFontSizes: getResponsiveFontSizes(),
-      responsiveLineHeights: getResponsiveLineHeights(),
-      typography: TYPOGRAPHY,
-      dimensions: DIMENSIONS,
-      shadows: SHADOWS,
-      radius: RADIUS,
-      isDark,
-      colorScheme,
-      themeMode: 'auto' as ThemeMode,
-      setThemeMode: () => { },
-      isTablet: isTablet(),
-      responsive: getResponsiveDimensions(),
-      responsiveSpacing: getResponsiveSpacing(),
-    };
+    return buildThemeValue(isDark);
   }
 
   return context;

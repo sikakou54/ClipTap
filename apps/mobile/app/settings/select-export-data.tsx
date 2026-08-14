@@ -9,7 +9,7 @@
  * - 個別選択・全選択切り替え
  * - パスワード入力後にエクスポート実行
  *
- * @see lib/hooks/screens/useSelectExportDataScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useSelectExportDataScreen.ts - ビジネスロジック
  */
 import {
   View,
@@ -153,7 +153,7 @@ export default function SelectExportDataScreen() {
               ItemSeparatorComponent={() => (
                 <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border }} />
               )}
-              contentContainerStyle={{ paddingBottom: 100 }}
+              contentContainerStyle={styles.listContent}
               style={{ backgroundColor: colors.background }}
             />
         )}
@@ -169,7 +169,7 @@ export default function SelectExportDataScreen() {
                 colors={colors}
               />
             )}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
             style={{ backgroundColor: colors.background }}
           />
         )}
@@ -194,7 +194,7 @@ export default function SelectExportDataScreen() {
                 />
               );
             }}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
             style={{ backgroundColor: colors.background }}
           />
         )}
@@ -210,7 +210,7 @@ export default function SelectExportDataScreen() {
                 colors={colors}
               />
             )}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
             style={{ backgroundColor: colors.background }}
           />
         )}
@@ -315,6 +315,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  /* 一覧の下余白。フッター（styles.footer）が position:absolute で画面下端に重なるため、最終行が隠れないよう余白を確保する */
+  listContent: {
+    paddingBottom: 100,
   },
   footer: {
     position: 'absolute',

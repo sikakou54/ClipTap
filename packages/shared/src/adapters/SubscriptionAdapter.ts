@@ -11,7 +11,8 @@
  *
  * 使用方法:
  * 1. アプリ起動時にプラットフォーム固有の実装を登録: setSubscriptionAdapter()
- * 2. SubscriptionServiceから getSubscriptionAdapter() で取得して課金処理実行
+ * 2. 取得は SubscriptionService.getAdapter()。他のアダプターと違い
+ *    getSubscriptionAdapter() / hasSubscriptionAdapter() は存在しない
  *
  * @module SubscriptionAdapter
  */

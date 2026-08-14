@@ -62,6 +62,11 @@ export function useUnsavedChangesWarning({
     (onClose: () => void) => {
       if (hasChanges) {
         /* 変更がある場合は確認ダイアログを表示 */
+        /*
+         * @utils/alerts を動的importしているため、確認ダイアログの表示は次のマイクロタスクになる。
+         * Web版で動的importが残っているのは、ここと useHomeScreen.handleDeleteSnippet、
+         * useExportScreen の ExportService 取得の3箇所
+         */
         import('@utils/alerts').then(({ showConfirmMessage }) => {
           const message = t('common.unsaved_changes_warning');
           showConfirmMessage(message, () => {

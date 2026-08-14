@@ -10,7 +10,7 @@
  * - アイコンの選択（80種類以上のIonicons）
  * - プロファイルごとの値設定（テーブル形式）
  *
- * @see lib/hooks/screens/useVariableEditScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useVariableEditScreen.ts - ビジネスロジック
  */
 
 import {
@@ -298,6 +298,7 @@ export default function VariableEditModal() {
               keyExtractor={(item) => item.id}
               scrollEnabled={false}
               estimatedItemSize={60}
+              /* FlashList は data（profiles）の同一性しか監視しないため、profiles が変わらないまま value / profileValues だけ更新されたケースを extraData で再描画対象として明示している */
               extraData={[value, profileValues]}
             />
           </View>

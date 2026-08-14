@@ -12,6 +12,7 @@ import {
   type Variable,
   type Category,
 } from '@cliptap/shared';
+import { showConfirm } from '@utils/alerts';
 
 /**
  * インポート選択モーダルのProps型定義
@@ -104,7 +105,6 @@ export function ImportSelectionModal({
    * インポート実行前に確認ダイアログを表示
    */
   const handleImport = async () => {
-    const { showConfirm } = await import('@utils/alerts');
     showConfirm('backup.import_confirm', async () => {
       await onImport(
         Array.from(selectedSnippetIds),
@@ -172,13 +172,7 @@ export function ImportSelectionModal({
                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
-                {t(`backup.tab_${tab}`)} ({tab === 'snippets'
-                  ? selectedSnippetIds.size
-                  : tab === 'profiles'
-                  ? selectedProfileIds.size
-                  : tab === 'variables'
-                  ? selectedVariableIds.size
-                  : selectedCategoryIds.size})
+                {t(`backup.tab_${tab}`)} ({selectedCounts[tab]})
               </button>
             ))}
           </div>
@@ -212,6 +206,8 @@ export function ImportSelectionModal({
                     ? selectedCategoryIds.has(category.id) || isCategoryDisabled(category.name)
                     : false;
                   const displayCategoryName = isCategorySelectedOrDisabled ? (item.categoryName || t('common.uncategorized')) : t('common.uncategorized');
+                  /* カテゴリ未選択時・色未設定時はどちらも青（#3B82F6）で表示する。
+                     同ファイルのカテゴリタブの丸は #ccc、CategoryItem のカラーインジケーターは #6B7280 と値が揃っていない */
                   const displayCategoryColor = isCategorySelectedOrDisabled && category ? (category.color || '#3B82F6') : '#3B82F6';
 
                   /* 定型文アイテム（チェックボックス、タイトル、本文、カテゴリ・プロファイルバッジ、展開/折りたたみ） */

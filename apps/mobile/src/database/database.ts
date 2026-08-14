@@ -3,12 +3,12 @@
  *
  * ClipTapアプリのデータベース操作を一元管理します。
  *
- * 使用方法:
- * ```typescript
- * import { database } from './database';
- * await database.init(); // 初期化（アプリ起動時に1回のみ）
- * const db = database.getDB(); // SQLiteインスタンス取得
- * ```
+ * 公開しているのは init() / dropAllTables() / getDatabaseFilePath() / reset() の4つで、
+ * SQLiteインスタンス自体は外へ出さない。DB操作はアダプター（getMainDbAdapter 等）を
+ * 経由させ、呼び出し側がコネクションを直接握らないようにするため。
+ *
+ * init() の呼び出し元はアプリ起動処理（useAppInitialization）の1箇所のみ。
+ * 二重初期化は isInitialized フラグで弾いている。
  */
 
 import {
@@ -21,6 +21,8 @@ import {
   createTablesWithDb,
   createIndexesWithDb,
   SystemVariableFormatMapper,
+  getSchemaVersionFromDb,
+  runMigrations,
 } from '@cliptap/shared';
 import { DROP_TABLES, SCHEMA_VERSION } from './schema';
 import {
@@ -29,7 +31,6 @@ import {
   getSharedDatabaseFile,
   getSystemDatabaseFile,
 } from './DatabaseFileManager';
-import { runMigrations, getSchemaVersionFromDb } from './DatabaseMigrations';
 
 /**
  * Databaseクラス - SQLiteデータベースの管理クラス
@@ -153,7 +154,7 @@ class Database {
   /**
    * マイグレーション実行
    *
-   * DatabaseMigrationsモジュールにマイグレーション設定を渡して実行します。
+   * @cliptap/shared の runMigrations にマイグレーション設定を渡して実行します。
    * 注意: init()内で this.fileIO が設定された後に呼び出されることを前提としています。
    */
   private async runMigrations(): Promise<void> {
@@ -227,6 +228,13 @@ class Database {
     return await getSharedDatabaseFile(this.fileIO);
   }
 
+  /**
+   * データベースを初期状態へリセット
+   *
+   * @remarks
+   * リセット後もDBは開いたままにする（init() と同様、以降の操作でそのまま使い続けるため close しない）。
+   * setupDatabase / runMigrations が finally で close() を呼ぶのとは非対称である点に注意。
+   */
   async reset(): Promise<void> {
     /* FileIOAdapterが初期化されていない場合はエラー */
     if (!this.fileIO) {
@@ -244,20 +252,15 @@ class Database {
     }
     await mainDbAdapter.open(dbPath);
 
-    try {
-      await this.dropAllTables();
-      await createTablesWithDb(mainDbAdapter);
-      await createIndexesWithDb(mainDbAdapter);
-      await createDefaultProfileIfNeeded(mainDbAdapter);
-      const systemDbAdapter = getSystemDbAdapter();
-      const systemDbPath = await this.getDatabaseFilePath('system');
-      await systemDbAdapter.open(systemDbPath);
-      await systemDbAdapter.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
-      Logger.info(`Database reset successfully to version ${SCHEMA_VERSION}`);
-    } finally {
-      /* リセット後もデータベースは開いたままにしておく（init()と同様） */
-      /* 必要に応じて close() を呼び出すが、通常は開いたままにしておく */
-    }
+    await this.dropAllTables();
+    await createTablesWithDb(mainDbAdapter);
+    await createIndexesWithDb(mainDbAdapter);
+    await createDefaultProfileIfNeeded(mainDbAdapter);
+    const systemDbAdapter = getSystemDbAdapter();
+    const systemDbPath = await this.getDatabaseFilePath('system');
+    await systemDbAdapter.open(systemDbPath);
+    await systemDbAdapter.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
+    Logger.info(`Database reset successfully to version ${SCHEMA_VERSION}`);
   }
 
 }

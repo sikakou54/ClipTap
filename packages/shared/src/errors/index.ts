@@ -3,6 +3,8 @@
  * @description ClipTapアプリ共通のカスタム例外クラス
  *
  * 例外階層:
+ * この図は base.ts / database.ts / validation.ts / importExport.ts / misc.ts の実装を写したもの。
+ * クラスを追加・削除したら同じ変更でこの図も更新する。
  * ```
  * Error
  * └── ClipTapError (基底クラス)
@@ -10,15 +12,27 @@
  *     ├── ValidationError (バリデーション関連)
  *     │   ├── EmptyContentError
  *     │   ├── DuplicateNameError
- *     │   └── Variable*Error
- *     ├── NotFoundError (リソース未検出)
- *     ├── AuthenticationError (認証関連)
- *     ├── PurchaseError (課金関連)
+ *     │   ├── SystemVariableDeleteError
+ *     │   ├── DefaultProfileDeleteError
+ *     │   ├── InvalidProfileDefaultError
+ *     │   ├── VariableNameRequiredError
+ *     │   ├── VariableNameInvalidError
+ *     │   ├── VariableNameReservedError
+ *     │   ├── VariableValueRequiredError
+ *     │   └── InvalidRgbValueError
+ *     ├── NotFoundError (リソース未検出。validation.ts にあるが ValidationError の配下ではない)
  *     ├── ImportExportError (インポート/エクスポート関連)
  *     │   ├── IncorrectPasswordError
  *     │   ├── ChecksumMismatchError
  *     │   ├── VersionMismatchError
- *     │   └── NewerVersionError
+ *     │   ├── NewerVersionError
+ *     │   ├── InvalidFileTypeError
+ *     │   ├── InvalidFileFormatError
+ *     │   ├── PasswordRequiredError
+ *     │   ├── ExportFailedError
+ *     │   ├── TempDbPathRequiredError
+ *     │   ├── PartialImportError
+ *     │   └── DatabasePathNotFoundError
  *     └── EnvironmentError (実行環境関連)
  * ```
  */

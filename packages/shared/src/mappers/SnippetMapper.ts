@@ -56,6 +56,12 @@ const SnippetQueries = {
   `,
   /* スニペットを新規作成 */
   INSERT: `INSERT INTO snippets (id, title, content, categoryId, copyWithTitle, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+  /* 復元専用のスニペット挿入。通常作成のINSERTはcopyCount列を持たないため、コピー回数を保持する復元ではこちらを使う */
+  RESTORE_INSERT: `INSERT INTO snippets
+        (id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  /* コピー回数を1加算（コピー成功後に呼ぶ） */
+  INCREMENT_COPY_COUNT: 'UPDATE snippets SET copyCount = copyCount + 1 WHERE id = ?',
   /* スニペットを更新 */
   UPDATE: `UPDATE snippets SET title = ?, content = ?, categoryId = ?, copyWithTitle = ?, updatedAt = ? WHERE id = ?`,
   /* スニペットを削除 */
@@ -120,9 +126,7 @@ export class SnippetMapper {
   /** バックアップ行をID・日時・使用回数ごと逐語復元する。 */
   static restore(snippet: Snippet): void {
     getMainDbAdapter().run(
-      `INSERT INTO snippets
-        (id, title, content, categoryId, copyWithTitle, copyCount, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      SnippetQueries.RESTORE_INSERT,
       [
         snippet.id,
         snippet.title,
@@ -341,8 +345,8 @@ export class SnippetMapper {
     /* カテゴリフィルタが指定されている場合、カテゴリ内で検索 */
     if (categoryId) {
       const rows = db.all<any>(SnippetQueries.SEARCH_WITH_CATEGORY, [
-        searchQuery, // タイトル検索用
-        searchQuery, // 本文検索用
+        searchQuery, /* タイトル検索用 */
+        searchQuery, /* 本文検索用 */
         categoryId,
       ]);
       return toEntities(rows);
@@ -355,7 +359,7 @@ export class SnippetMapper {
 
   /**
    * ソート条件を指定してスニペットを取得
-   * @param sortBy - ソート条件（'created', 'recent', 'title', 'usage'）
+   * @param sortBy - ソート条件（'created', 'updated', 'title', 'usage'）
    * @returns ソート済みスニペット一覧
    */
   static getSorted(sortBy: SnippetSortBy): Snippet[] {
@@ -378,11 +382,15 @@ export class SnippetMapper {
         /* コピー回数順（多い順）、同数は作成日時順 */
         orderClause = 'ORDER BY copyCount DESC, createdAt DESC';
         break;
+      /* SnippetSortByは4値の閉じたunionのため型上は到達しない。
+         ここを削るとorderClauseが空のまま `SELECT * FROM snippets ` になりORDER BYが消えるため、
+         'created'と同じ並びを既定として残している */
       default:
         /* デフォルトは作成日時順、同日時はタイトル順 */
         orderClause = 'ORDER BY createdAt DESC, title IS NULL, title ASC';
     }
 
+    /* orderClauseは上のswitchが設定するリテラルのみで、外部入力を連結しない */
     const rows = db.all<any>(`SELECT * FROM snippets ${orderClause}`);
     return toEntities(rows);
   }
@@ -395,7 +403,7 @@ export class SnippetMapper {
    */
   static incrementCopyCount(id: string): void {
     const db = getMainDbAdapter();
-    db.run('UPDATE snippets SET copyCount = copyCount + 1 WHERE id = ?', [id]);
+    db.run(SnippetQueries.INCREMENT_COPY_COUNT, [id]);
   }
 
   /**
@@ -474,17 +482,5 @@ export class SnippetMapper {
   static getAllSnippetProfiles(): SnippetProfile[] {
     const db = getMainDbAdapter();
     return db.all<SnippetProfile>(SnippetProfileQueries.SELECT_ALL);
-  }
-
-  /**
-   * 複数スニペットを一括作成
-   * @param snippets - スニペットデータ一覧
-   * @description
-   * インポート機能で使用。各スニペットに対してcreate()を呼び出す。
-   */
-  static bulkCreate(snippets: CreateSnippetInput[]): void {
-    for (const snippet of snippets) {
-      this.create(snippet);
-    }
   }
 }

@@ -9,7 +9,7 @@
  * - 標準値の編集（デフォルトプロファイル用）
  * - プロファイル固有値の編集
  *
- * @see lib/hooks/screens/useProfileValueEditScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useProfileValueEditScreen.ts - ビジネスロジック
  */
 
 import {

@@ -15,7 +15,7 @@
 import React from 'react';
 import { useTranslation } from '@cliptap/shared';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth, ProfileProvider, VariableProvider, CategoryProvider, SnippetProvider } from '@cliptap/shared';
+import { AlertProvider, AuthProvider, useAuth, ProfileProvider, VariableProvider, CategoryProvider, SnippetProvider } from '@cliptap/shared';
 import { Home } from '@pages/Home';
 import { Dashboard } from '@pages/Dashboard';
 import { CategoryManage } from '@pages/CategoryManage';
@@ -24,7 +24,6 @@ import { VariableManage } from '@pages/VariableManage';
 import { getThemeColors } from '@cliptap/shared';
 import { webThemeStorageAdapter } from '@providers/themeStorageAdapter';
 import { WebThemeProvider } from '@providers/WebThemeProvider';
-import { AlertProvider } from '@providers/AlertProvider';
 import { SubscriptionProvider } from '@providers/SubscriptionProvider';
 import { DatabaseProvider, useDatabase } from '@cliptap/shared';
 import { useAdapterInitialization } from '@hooks/useAdapterInitialization';

@@ -14,7 +14,7 @@
  */
 
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
-import { SubscriptionService, FREE_PROFILES_LIMIT, FREE_VARIABLES_LIMIT, createValidFlagsUpdater } from '../services';
+import { SubscriptionService } from '../services/SubscriptionService';
 import { Logger } from '../utils/logger';
 
 /* ======================================== */
@@ -93,8 +93,6 @@ export interface SubscriptionProviderProps {
   children: ReactNode;
   /** プラットフォームアダプター */
   platformAdapter: SubscriptionPlatformAdapter;
-  /** 初期化完了時のコールバック（オプション） */
-  onInitialized?: () => void;
 }
 
 /* ======================================== */
@@ -115,7 +113,6 @@ const SubscriptionContext = createContext<SubscriptionContextValue | null>(null)
 export function SubscriptionProvider({
   children,
   platformAdapter,
-  onInitialized,
 }: SubscriptionProviderProps) {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -137,36 +134,21 @@ export function SubscriptionProvider({
     const initialize = async () => {
       setIsLoading(true);
       try {
-        /* ValidFlagsUpdater を共通設定（未設定の場合のみ） */
-        if (!SubscriptionService.hasValidFlagsUpdater()) {
-          SubscriptionService.setValidFlagsUpdater(createValidFlagsUpdater());
-        }
-
-        /* アダプター制限値を共通設定 */
-        const adapter = SubscriptionService.getAdapter();
-        if (adapter) {
-          SubscriptionService.setAdapter(adapter, {
-            freeProfilesLimit: FREE_PROFILES_LIMIT,
-            freeVariablesLimit: FREE_VARIABLES_LIMIT,
-          });
-        }
-
+        /* ValidFlagsUpdaterと無料上限は init() が起動時に設定済みのため、ここではアダプターの初期化と加入状態の取得だけを行う */
         await platformAdapter.initialize();
         const subscribed = await platformAdapter.checkSubscription();
         handleSubscriptionChange(subscribed);
-        onInitialized?.();
       } catch (error) {
         Logger.error('[SubscriptionProvider] Init failed:', error);
         setIsSubscribed(false);
         setVerificationFailed(true);
-        onInitialized?.();
       } finally {
         setIsLoading(false);
       }
     };
 
     void initialize();
-  }, [platformAdapter, onInitialized, handleSubscriptionChange]);
+  }, [platformAdapter, handleSubscriptionChange]);
 
   useEffect(() => {
     if (!platformAdapter.onSubscriptionChange) return;
@@ -246,9 +228,3 @@ export function useSubscription(): SubscriptionContextValue {
   }
   return context;
 }
-
-/* ======================================== */
-/* 定数のre-export */
-/* ======================================== */
-
-export { FREE_PROFILES_LIMIT, FREE_VARIABLES_LIMIT };

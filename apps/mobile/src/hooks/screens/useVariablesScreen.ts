@@ -22,10 +22,12 @@ import {
   useVariables,
   useProfiles,
   Logger,
+  FREE_VARIABLES_LIMIT,
   type Variable,
   type Profile,
 } from '@cliptap/shared';
 import { useSubscription } from '@providers/SubscriptionProvider';
+import { useUpgradePrompt } from '@hooks/useUpgradePrompt';
 import { showConfirm } from '@utils/alerts';
 
 /**
@@ -58,6 +60,8 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
   const { t } = useTranslation();
   const router = useRouter();
 
+  const confirmUpgrade = useUpgradePrompt();
+
   const { canAddCustomVariable } = useSubscription();
   const { deleteVariable: deleteVar } = useVariables();
   const { profiles, profileVariables, defaultProfile } = useProfiles();
@@ -85,7 +89,7 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
   );
 
   /* ======================================== */
-  /* 派生状態: プロファイル選択と値マップ */
+  /* 派生状態: プロファイル選択 */
   /* ======================================== */
 
   /**
@@ -103,31 +107,6 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
     return profiles[0].id;
   }, [profileOverride, profiles]);
 
-  /**
-   * 選択中プロファイルの変数値マップ
-   */
-  const profileValuesMap = useMemo<Record<string, string>>(() => {
-    /* プロファイルが選択されていない場合 */
-    if (!selectedProfileId) {
-      return {};
-    }
-    /* profileVariablesからマップを構築 */
-    const variableIdToName: Record<string, string> = {};
-    const allVars = VariableService.getAllCustomVariablesIncludingInvalidSorted();
-    allVars.forEach(v => { variableIdToName[v.id] = v.name; });
-
-    const map: Record<string, string> = {};
-    profileVariables
-      .filter(pv => pv.profileId === selectedProfileId)
-      .forEach(pv => {
-        const varName = variableIdToName[pv.variableId];
-        if (varName) {
-          map[varName] = pv.value;
-        }
-      });
-    return map;
-  }, [selectedProfileId, profileVariables]);
-
   /* ======================================== */
   /* ヘルパー関数 */
   /* ======================================== */
@@ -141,6 +120,12 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
 
   /**
    * 変数の表示値を取得
+   *
+   * @remarks
+   * 選択環境の非空値 → 標準環境の非空値 → t('common.not_set') の順に解決する。
+   * 空文字は値なしとして扱い、次の候補へ進む。
+   * 環境が1件も無い（selectedProfileId が null）ときは標準環境の値のみを見る。
+   * 参照は変数IDで行う。変数名は一意制約に依存するため、キーには使わない。
    */
   const getVariableValue = useCallback(
     (variable: Variable): string => {
@@ -153,29 +138,25 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
         return pv?.value || '';
       };
 
-      /* 環境が選択されていない場合 */
       if (!selectedProfileId) {
         return getStandardValueInline(variable.id) || t('common.not_set');
       }
 
-      /* 環境固有の値を取得 */
-      const profileValue = profileValuesMap[variable.name];
-      /* 環境固有の値がある場合 */
+      const profileValue = profileVariables.find(
+        pv => pv.profileId === selectedProfileId && pv.variableId === variable.id
+      )?.value || '';
       if (profileValue) {
         return profileValue;
       }
 
-      /* 標準値を取得 */
       const standardValue = getStandardValueInline(variable.id);
-      /* 標準値がある場合 */
       if (standardValue) {
         return standardValue;
       }
 
-      /* 値がない場合 */
       return t('common.not_set');
     },
-    [selectedProfileId, profileValuesMap, defaultProfile, profileVariables, t]
+    [selectedProfileId, defaultProfile, profileVariables, t]
   );
 
   /* ======================================== */
@@ -214,12 +195,7 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
       /* 無効な変数をタップした場合 */
       if (!enabled) {
         /* 「この変数は無効です。Proプランにアップグレードしますか？」警告 */
-        showConfirm(
-          t('settings.variable_disabled_message'),
-          () => router.push('/subscription/paywall'),
-          undefined,
-          'warning'
-        );
+        confirmUpgrade(t('settings.variable_disabled_message'));
         return;
       }
 
@@ -228,7 +204,7 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
         params: { id: variable.id },
       });
     },
-    [router, t]
+    [confirmUpgrade, router, t]
   );
 
   /**
@@ -238,17 +214,12 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
     /* 5つ制限チェック（無料版） */
     if (!canAddCustomVariable(variables.length)) {
       /* 「変数数が上限に達しました。Proプランにアップグレードしますか？」警告 */
-      showConfirm(
-        t('settings.variable_limit_message', { limit: 5 }),
-        () => router.push('/subscription/paywall'),
-        undefined,
-        'warning'
-      );
+      confirmUpgrade(t('settings.variable_limit_message', { limit: FREE_VARIABLES_LIMIT }));
       return;
     }
 
     router.push('/variable/edit');
-  }, [variables.length, canAddCustomVariable, router, t]);
+  }, [variables.length, canAddCustomVariable, confirmUpgrade, router, t]);
 
   /* ======================================== */
   /* 戻り値 */

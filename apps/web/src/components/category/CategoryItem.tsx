@@ -22,7 +22,8 @@ export function CategoryItem({ category, isLast, onEdit, onDelete }: CategoryIte
         !isLast ? 'border-b border-gray-200 dark:border-[#2A2A2A]' : ''
       }`}
     >
-      {/* カラーインジケーター（カテゴリの色を表示） */}
+      {/* カラーインジケーター。color 未設定時は #6B7280（グレー）で描く。
+          エクスポート/インポート画面のカテゴリバッジは #3B82F6、同画面のカテゴリタブの丸は #ccc と値が揃っていない。 */}
       <div
         className="w-4 h-4 rounded-full"
         style={{ backgroundColor: category.color || '#6B7280' }}

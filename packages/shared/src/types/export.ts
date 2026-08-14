@@ -15,7 +15,7 @@ import { z } from 'zod';
  * - インポート画面でスニペットに紐付く環境情報を表示
  * - profileNameがnullの場合はIDから取得
  */
-export const ImportCandidateSnippetProfileSchema = z.object({
+const ImportCandidateSnippetProfileSchema = z.object({
   profileId: z.string(),
   profileName: z.string().nullable(),
 });
@@ -33,7 +33,7 @@ export type ImportCandidateSnippetProfile = z.infer<typeof ImportCandidateSnippe
  * - categoryNameはIDではなく名前を保持（プレビュー表示用）
  * - profilesが空の場合は全プロファイルで利用可能
  */
-export const ImportCandidateSnippetSchema = z.object({
+const ImportCandidateSnippetSchema = z.object({
   id: z.string(),
   title: z.string().nullable(),
   content: z.string(),
@@ -54,7 +54,7 @@ export type ImportCandidateSnippet = z.infer<typeof ImportCandidateSnippetSchema
  * - インポート画面でプレビュー表示用
  * - isDefaultはUI表示でバッジ表示に使用
  */
-export const ImportCandidateProfileSchema = z.object({
+const ImportCandidateProfileSchema = z.object({
   id: z.string(),
   name: z.string(),
   isDefault: z.boolean(),
@@ -74,7 +74,7 @@ export type ImportCandidateProfile = z.infer<typeof ImportCandidateProfileSchema
  * - 変数に紐付く環境ごとの値をプレビュー表示
  * - profileNameがnullの場合はIDから取得
  */
-export const ImportCandidateVariableProfileValueSchema = z.object({
+const ImportCandidateVariableProfileValueSchema = z.object({
   profileId: z.string(),
   profileName: z.string().nullable(),
   value: z.string(),
@@ -93,7 +93,7 @@ export type ImportCandidateVariableProfileValue = z.infer<typeof ImportCandidate
  * - labelがnullの場合はnameを使用
  * - iconがnullの場合はデフォルトアイコン
  */
-export const ImportCandidateVariableSchema = z.object({
+const ImportCandidateVariableSchema = z.object({
   id: z.string(),
   name: z.string(),
   label: z.string().nullable(),
@@ -118,7 +118,7 @@ export type ImportCandidateVariable = z.infer<typeof ImportCandidateVariableSche
  * - インポート画面でプレビュー表示用
  * - colorがnullの場合はデフォルト色
  */
-export const ImportCandidateCategorySchema = z.object({
+const ImportCandidateCategorySchema = z.object({
   id: z.string(),
   name: z.string(),
   color: z.string().nullable(),
@@ -186,7 +186,7 @@ export type ClipTapExportData = z.infer<typeof ClipTapExportDataSchema>;
  * @remarks
  * - profileNameがnullの場合はIDから取得
  */
-export const SelectionSnippetProfileSchema = z.object({
+const SelectionSnippetProfileSchema = z.object({
   profileId: z.string(),
   profileName: z.string().nullable(),
 });
@@ -200,7 +200,7 @@ export const SelectionSnippetProfileSchema = z.object({
  * - categoryId, categoryName, categoryColorを保持（UI表示用）
  * - categoryColorはバッジ表示用
  */
-export const SelectionSnippetDataSchema = z.object({
+const SelectionSnippetDataSchema = z.object({
   id: z.string(),
   title: z.string().nullable(),
   content: z.string(),
@@ -218,7 +218,7 @@ export type SelectionSnippetData = z.infer<typeof SelectionSnippetDataSchema>;
 /**
  * 選択プロファイルデータスキーマ（選択UI用）
  */
-export const SelectionProfileDataSchema = z.object({
+const SelectionProfileDataSchema = z.object({
   id: z.string(),
   name: z.string(),
 });
@@ -234,7 +234,7 @@ export type SelectionProfileData = z.infer<typeof SelectionProfileDataSchema>;
  * @remarks
  * - profileNameがnullの場合はIDから取得
  */
-export const SelectionVariableProfileValueSchema = z.object({
+const SelectionVariableProfileValueSchema = z.object({
   profileId: z.string(),
   profileName: z.string().nullable(),
   value: z.string(),
@@ -252,7 +252,7 @@ export type SelectionVariableProfileValue = z.infer<typeof SelectionVariableProf
  * - labelがnullの場合はnameを使用
  * - iconがnullの場合はデフォルトアイコン
  */
-export const SelectionVariableDataSchema = z.object({
+const SelectionVariableDataSchema = z.object({
   id: z.string(),
   name: z.string(),
   label: z.string().nullable(),
@@ -271,7 +271,7 @@ export type SelectionVariableData = z.infer<typeof SelectionVariableDataSchema>;
  * @remarks
  * - colorがnullの場合はデフォルト色
  */
-export const SelectionCategoryDataSchema = z.object({
+const SelectionCategoryDataSchema = z.object({
   id: z.string(),
   name: z.string(),
   color: z.string().nullable(),

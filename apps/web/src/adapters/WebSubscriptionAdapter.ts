@@ -39,12 +39,12 @@ const FREE_STATUS: SubscriptionStatus = {
  * Web用サブスクリプションアダプター実装クラス
  * ClipTap API経由でProプランの購読状態を管理する
  */
-class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
+export class WebSubscriptionAdapter implements SubscriptionAdapter {
   /** 購読状態（Pro会員かどうか） */
   private _isSubscribed: boolean = false;
   /** ローディング中かどうか（サブスクリプション確認中） */
   private _isLoading: boolean = false;
-  /** 現在のユーザーID（RevenueCatのApp User IDに相当） */
+  /** checkSubscription() に渡された Firebase UID。getCustomerId() 経由でIndexedDBキャッシュのcustomerIdにも使う */
   private currentAppUserId: string | null = null;
   /** 購読状態の変更を監視するリスナーのセット */
   private listeners: Set<SubscriptionListener> = new Set();
@@ -62,7 +62,6 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
    * @returns Pro会員の場合はtrue、無料会員の場合はfalse
    */
   isSubscribed(): boolean {
-    /* 現在の購読状態を返す */
     return this._isSubscribed;
   }
 
@@ -71,7 +70,6 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
    * @returns サブスクリプション確認中の場合はtrue、それ以外はfalse
    */
   isLoading(): boolean {
-    /* 現在のローディング状態を返す */
     return this._isLoading;
   }
 
@@ -80,7 +78,6 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
    * @returns ユーザーID、またはログアウト状態の場合はnull
    */
   getCustomerId(): string | null {
-    /* 現在のユーザーIDを返す */
     return this.currentAppUserId;
   }
 
@@ -174,11 +171,8 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
    * @returns リスナーを解除する関数
    */
   subscribe(listener: SubscriptionListener): () => void {
-    /* リスナーをセットに追加 */
     this.listeners.add(listener);
-    /* リスナーを解除する関数を返す */
     return () => {
-      /* リスナーをセットから削除 */
       this.listeners.delete(listener);
     };
   }
@@ -188,21 +182,25 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
    * 登録されているすべてのリスナーに現在の購読状態を通知する
    */
   notifyListeners(): void {
-    /* すべてのリスナーに対して現在の購読状態を渡して呼び出す */
     this.listeners.forEach((listener) => listener(this._isSubscribed));
   }
 
   /**
    * 状態をリセット
    * ログアウト時などに呼び出され、購読状態を初期化する
+   *
+   * @param notify - リスナーへ通知するかどうか
+   *
+   * @remarks
+   * notify=false で呼ぶのは検証失敗の経路（APIベースURL未設定・IDトークン取得不可・
+   * APIエラー応答・通信例外）だけで、失敗は hasVerificationFailed() 経由で
+   * SubscriptionProvider が扱う。正常なログアウト（userIdなしでのcheckSubscription）は
+   * notify=true で通知する。
    */
   reset(notify = true): void {
-    /* 購読状態を無料プランに戻す */
     this._isSubscribed = false;
     this._status = FREE_STATUS;
-    /* ローディング状態をfalseに設定 */
     this._isLoading = false;
-    /* リスナーに通知 */
     if (notify) this.notifyListeners();
   }
 
@@ -247,8 +245,3 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
     return this.getStatus();
   }
 }
-
-/**
- * WebSubscriptionAdapterクラスを再エクスポート
- */
-export { WebSubscriptionAdapterImpl as WebSubscriptionAdapter };

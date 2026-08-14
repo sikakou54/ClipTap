@@ -15,6 +15,19 @@ const APP_GROUP_IDENTIFIER = 'group.com.sikakou.cliptap';
 const DB_FILE_NAME = 'cliptap.db';
 
 /**
+ * 共有コンテナディレクトリからDBファイルパスを組み立てる
+ *
+ * getAppGroupDirectory() が末尾スラッシュ付きで返す場合があるため、
+ * 連結前に取り除いて区切りが二重にならないようにしている。
+ *
+ * @param sharedDir - App Groupの共有コンテナディレクトリ
+ * @returns DBファイルの素のパス（URIスキームは付けない）
+ */
+function buildSharedDbPath(sharedDir: string): string {
+  return `${sharedDir.replace(/\/$/, '')}/${DB_FILE_NAME}`;
+}
+
+/**
  * メインDBファイルパスを取得
  *
  * メインアプリとキーボード拡張機能でデータベースを共有するため、
@@ -24,8 +37,10 @@ const DB_FILE_NAME = 'cliptap.db';
  * - Android: files/group.com.sikakou.cliptap/databases
  *
  * Web版の getMainDatabasePath() と同様の役割を果たします。
+ * 同じ共有コンテナDBを指す getSharedDatabaseFile() / getDatabasePath() とは戻り値と失敗時の扱いが異なり、
+ * こちらは `file://` 付きURIを返し、失敗時は例外ではなく null を返す（存在チェック用）。
  */
-export async function getMainDatabasePath(
+async function getMainDatabasePath(
   fileIO: FileIOAdapter
 ): Promise<string | null> {
   try {
@@ -36,7 +51,7 @@ export async function getMainDatabasePath(
       return null;
     }
 
-    const dbPath = `${sharedDir.replace(/\/$/, '')}/${DB_FILE_NAME}`;
+    const dbPath = buildSharedDbPath(sharedDir);
     const dbUri = `file://${dbPath}`;
 
     Logger.info(`[Get Shared Container DB] Path: ${dbUri}`);
@@ -67,10 +82,10 @@ export async function getSystemDatabaseFile(fileIO: FileIOAdapter): Promise<stri
 }
 
 /**
- * 共有コンテナDBファイルパスを取得（ディレクトリがなければ作成）
+ * 共有コンテナDBファイルパスを取得
  *
- * 共有コンテナ内のデータベースファイルパスを返します。
- * ディレクトリが存在しない場合は自動作成します。
+ * App Groupの共有コンテナ内DBの素のパスを返します。
+ * コンテナが取得できなければ例外を投げます（ディレクトリの作成は行いません）。
  */
 export async function getSharedDatabaseFile(
   fileIO: FileIOAdapter
@@ -81,13 +96,11 @@ export async function getSharedDatabaseFile(
     throw new Error(`App Group container not found: ${APP_GROUP_IDENTIFIER}`);
   }
 
-  return `${sharedDir.replace(/\/$/, '')}/${DB_FILE_NAME}`;
+  return buildSharedDbPath(sharedDir);
 }
 
 /**
  * メインDBファイルが存在するかチェック
- *
- * Web版の checkMainDatabaseExists() と同様の役割を果たします。
  */
 export async function checkMainDatabaseExists(
   fileIO: FileIOAdapter
@@ -117,8 +130,10 @@ export async function checkSystemDatabaseExists(
 /**
  * 共有コンテナDBファイルパスを取得（エクスポート・インポート用）
  *
- * getMainDatabasePathと異なり、エラー時に例外をスローします。
- * URI形式ではなく、ファイルシステムパスを返します。
+ * getMainDatabasePath と異なり、コンテナが取得できないときは null ではなく例外を投げ、
+ * URI形式ではなくファイルシステムパスを返します。
+ * getSharedDatabaseFile とは例外メッセージが異なり、App Group識別子は
+ * メッセージへ含めずログ側へ出します。
  */
 export async function getDatabasePath(fileIO: FileIOAdapter): Promise<string> {
   const sharedDir = await fileIO.getAppGroupDirectory(APP_GROUP_IDENTIFIER);
@@ -128,5 +143,5 @@ export async function getDatabasePath(fileIO: FileIOAdapter): Promise<string> {
     throw new Error('App Group container not found');
   }
 
-  return `${sharedDir.replace(/\/$/, '')}/${DB_FILE_NAME}`;
+  return buildSharedDbPath(sharedDir);
 }

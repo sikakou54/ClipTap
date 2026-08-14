@@ -50,11 +50,6 @@ export interface ProfileContextValue {
   setActiveProfile: (id: string) => void;
   /** 標準プロファイルを設定 */
   setDefaultProfile: (id: string) => void;
-  /** 変数値を一括設定 */
-  setVariableValuesForVariable: (
-    variableId: string,
-    values: { profileId: string; variableId: string; value: string }[]
-  ) => void;
 }
 
 /**
@@ -117,7 +112,7 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       let active = ProfileService.getActive();
       Logger.info('[ProfileProvider] Active profile:', active?.name ?? 'none');
 
-      /* アクティブなプロファイルがない場合、デフォルトプロファイルを自動的にアクティブに設定 */
+      /* アクティブ未設定のときは標準プロファイルを昇格させる。DBのisActiveも書き換えるため、次回以降の読み込みでも同じプロファイルが選ばれる */
       if (!active && defaultProf) {
         ProfileService.setActive(defaultProf.id);
         active = defaultProf;
@@ -146,6 +141,8 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
 
   /**
    * プロファイル作成
+   *
+   * 作成後に一覧を再読込し、Contextを参照する全画面へ即時反映する。
    */
   const createProfile = useCallback(
     (input: CreateProfileInput): Profile => {
@@ -158,6 +155,8 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
 
   /**
    * プロファイル更新
+   *
+   * 更新後に一覧を再読込し、Contextを参照する全画面へ即時反映する。
    */
   const updateProfile = useCallback(
     (id: string, data: UpdateProfileInput): Profile => {
@@ -189,6 +188,8 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
 
   /**
    * アクティブプロファイルを設定
+   *
+   * 設定後に一覧を再読込し、activeProfileと一覧を同じスナップショットへ揃える。
    */
   const setActiveProfile = useCallback(
     (id: string): void => {
@@ -221,17 +222,6 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
   );
 
   /**
-   * 変数の全プロファイル値を一括設定
-   */
-  const setVariableValuesForVariable = useCallback(
-    (variableId: string, values: { profileId: string; variableId: string; value: string }[]): void => {
-      ProfileService.setVariableValuesForVariable(variableId, values);
-      loadProfiles();
-    },
-    [loadProfiles]
-  );
-
-  /**
    * 有効なプロファイル一覧
    *
    * プラン上限を超えて無効になったプロファイルは、通常利用の選択肢・展開対象から
@@ -257,7 +247,6 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       deleteProfile,
       setActiveProfile,
       setDefaultProfile,
-      setVariableValuesForVariable,
     }),
     [
       profiles,
@@ -273,7 +262,6 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       deleteProfile,
       setActiveProfile,
       setDefaultProfile,
-      setVariableValuesForVariable,
     ]
   );
 

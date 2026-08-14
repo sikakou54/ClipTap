@@ -23,7 +23,7 @@ export interface ExportSelection {
 /**
  * SQLプレースホルダーを生成
  * @param count - プレースホルダーの数
- * @returns プレースホルダー文字列 (例: "?, ?, ?")
+ * @returns プレースホルダー文字列 (例: "?,?,?")
  */
 const placeholders = (count: number): string =>
   Array.from({ length: count }, () => '?').join(',');

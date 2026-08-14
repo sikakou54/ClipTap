@@ -15,7 +15,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { type ImportTabType, type SelectionVariableData } from '@cliptap/shared';
-import { dataItemStyles as styles } from '@components/common/dataItemStyles';
+import { dataItemStyles as styles } from './dataItemStyles';
 
 export type { SelectionVariableData, SelectionVariableProfileValue } from '@cliptap/shared';
 
