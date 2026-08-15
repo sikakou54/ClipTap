@@ -19,15 +19,15 @@
 
 期待値は §8.9 に合わせてあるため、実行するとFAILする。
 
-## 2. サブスクリプション管理のキーボード案内にフルアクセス注記が無い
+## 2. サブスクリプション管理のキーボード案内にフルアクセス注記が無い（対応済み・クローズ）
 
 | | |
 |---|---|
 | 検出 | グループD2（F-22） |
 | 根拠 | 機能仕様書 §8.22「iOSではフルアクセスの注記を併記する」 |
-| 実装 | `manage.tsx` にモーダルが複製実装されており、`KeyboardGuideModal` にある注記が欠けている |
+| 検出時の実装 | `manage.tsx` にモーダルが複製実装されており、`KeyboardGuideModal` にある注記が欠けていた |
 | 関連 | TC-4603 |
-| 分類案 | `SPEC_IMPLEMENTATION_MISMATCH` |
+| 結論 | `manage.tsx` の複製モーダルを削除し、設定画面と同じ `KeyboardGuideModal`（`apps/mobile/src/components/settings/KeyboardGuideModal.tsx`）を使うようにした。注記は `subscription.keyboard_guide_full_access_note` で、iOSのときだけ両画面に出る |
 
 ## 3. 一覧行の入れ子ボタンがアクセシビリティツリーから操作できない
 
@@ -45,17 +45,20 @@
 行コンテナを `accessible={false}` にするか、行本体と操作ボタンを兄弟要素へ分ければ、
 13パターンはそのまま `REACHABLE` へ戻せる。
 
-## 4. `/profile/variable-edit` へ遷移する導線が実装されていない
+## 4. `/profile/variable-edit` へ遷移する導線が実装されていない（対応済み・クローズ）
 
 | | |
 |---|---|
 | 検出 | 画面・ルート解析 |
-| 根拠 | 機能仕様書 §9.1 は「変数編集 → プロファイル値編集」を遷移として記載 |
-| 実装 | リポジトリ全体に `router.push('/profile/variable-edit')` が1件も無い |
-| 関連 | R-043 / `SC-PROFILE-VARIABLE-EDIT` |
-| 分類案 | 要判断（デッドコードか実装漏れか） |
+| 根拠 | 機能仕様書 §9.1 が記載する「変数編集 → プロファイル値編集」の実体は `/variable/profile-value-edit` であり、`/profile/variable-edit` は §9.1 に記載が無かった |
+| 実装 | リポジトリ全体に `router.push('/profile/variable-edit')` が1件も無かった |
+| 関連 | R-043 / `SC-PROFILE-VARIABLE-EDIT`（いずれも削除済み） |
+| 結論 | デッドコードと判断し、`apps/mobile/app/profile/variable-edit.tsx`、`useProfileVariableEditScreen.ts`、`_layout.tsx` のStack登録を削除した |
 
-`_layout.tsx` には登録されているため、画面自体は存在する。
+削除にあわせて `routes.csv` の R-043、`screens.csv` の `SC-PROFILE-VARIABLE-EDIT`、
+`pattern-matrix.csv` の P-F05-902 / P-F05-904、`ERROR-MAP.md` の
+`変数の値を入力してください` の行、機能仕様書 §10.4 の同エラー行も削除した。
+deep link `cliptap://profile/variable-edit` も開かなくなった。
 
 ## 5. 未連携時に状態バッジが表示されない
 
@@ -96,7 +99,7 @@
 |---|---|
 | 検出 | グループD1（F-18） |
 | 根拠 | 機能仕様書 §8.18 に通常起動での `updatedAt` 更新の記述が無い（§8.14 のインポート文脈にのみ言及がある） |
-| 実装 | `ProfileMapper.RESET_VALID` / `VariableMapper.RESET_VALID` が `valid=0, updatedAt=?` を無条件で全行へ流す。`updateValidFlags()` は `useAppInitialization.ts:76-79` と `SubscriptionProvider` の初期化から**毎回の起動時に**呼ばれる |
+| 実装 | `ProfileMapper.RESET_VALID` / `VariableMapper.RESET_VALID` が `valid=0, updatedAt=?` を無条件で全行へ流す。`SubscriptionService.updateValidFlags()` は `useAppInitialization` のDB初期化後の `useEffect`（`isDbInitialized && !subscriptionLoading && !verificationFailed` のとき実行）と `SubscriptionProvider` の初期化から**毎回の起動時に**呼ばれる |
 | 影響 | プランが変わっていなくても、起動するだけで全行の更新日時が現在時刻になる。fixtureで固定した日時は起動後に必ず失われる |
 | 関連 | TC-3420 / TC-3421（実装挙動を期待値として固定） |
 | 分類案 | `SPEC_IMPLEMENTATION_MISMATCH` または仕様書の記載漏れ |
@@ -108,20 +111,28 @@
 | | |
 |---|---|
 | 検出 | グループD1（F-13） |
-| 実装1 | `export-import.tsx:179-249` の `modalMode==='export'` パスワードモーダル。`showPasswordModal` を立てるのはインポート経路だけ |
-| 実装2 | `useSelectExportDataScreen.ts:266-276` の `error.no_selection`（「1件以上選択してください」）。ボタンが `disabled={totalSelected === 0}` のため `onPress` が発火しない |
+| 実装1 | `export-import.tsx` のパスワード入力モーダルにある `modalMode === 'export'` 側の分岐（アイコン `cloud-upload` / `export_import.export_title` / `export_import.export_password_hint` の3か所）。`useExportImportScreen` で `setShowPasswordModal(true)` を呼ぶのは `handleImportBackup` だけで、そこでは必ず直前に `setModalMode('import')` している。`handlePasswordSubmit` の `modalMode === 'export'` 側（モーダルを閉じて入力を捨てるだけの分岐）も同じ理由で通らない |
+| 実装2 | `useSelectExportDataScreen` の `handleExportPress` にある `totalSelected === 0` のとき `error.no_selection`（「1件以上選択してください」）を出す分岐。`select-export-data.tsx` のエクスポートボタンが `disabled={totalSelected === 0 \|\| isProcessing}` のため `onPress` が発火しない |
 | 分類案 | 不具合ではない（デッドコード） |
 
-第4項の `/profile/variable-edit` と合わせて、到達しない実装が3か所ある。
+位置は関数名と条件式で示している（行番号は編集のたびにずれ、記述だけが古くなるため）。
 
-## 10. モバイルに「全件エクスポート」の独立導線が無い
+検出時点では第4項の `/profile/variable-edit` と合わせて3か所だったが、
+第4項は画面ごと削除してクローズしたため、残る到達しない実装は上記2か所である。
+
+## 10. モバイルにもWebにも「全件エクスポート」の独立導線が無い
 
 | | |
 |---|---|
 | 検出 | グループD1（F-13） |
 | 根拠 | 機能仕様書 §8.13 は「全データまたは選択データをエクスポートできる」と書き、Webについてだけ「独立した『全件』ボタンを持たず4タブを全件選択済みで開く」と明記している |
-| 実装 | モバイルも同じ構造。`handleExportBackup` は選択画面へ `router.push` するだけで、`ExportService.exportDatabase()` はWebからしか呼ばれていない |
+| 実装 | モバイルも同じ構造。`useExportImportScreen.handleExportBackup` は `/settings/select-export-data` へ `router.push` するだけで、書き出しは `useSelectExportDataScreen.handlePasswordSubmit` の `ExportService.exportSelectedData()` が行う。Webも `useExportScreen.handleExportSelected` / `PageLayout.handleExportSelected` から同じ `exportSelectedData()` を呼ぶ |
+| 補足 | 「全件」は `useSelection` の `computeInitialSelection` が候補を全件選択した状態で選択画面を開くことで成り立っており、全件専用のメソッドは両プラットフォームとも持たない |
 | 分類案 | 仕様書の記載漏れ（実装は一貫している） |
+
+検出時点では全件専用の `ExportService.exportDatabase()` が残っており、Webからのみ呼ばれていた。
+今回の修正でこのメソッドを削除し、モバイル・Webとも `exportSelectedData()` へ統一した。
+`ExportService` の公開メソッドは現在 `generateFilename()` と `exportSelectedData()` の2つだけである。
 
 ## 11. 無効なプロファイルを標準にするガードへ到達できない
 

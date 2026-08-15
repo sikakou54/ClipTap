@@ -220,7 +220,7 @@ const SnippetCardComponent = ({
           <Ionicons
             name="trash-outline"
             size={isTablet ? 22 : 18}
-            color="#FF3B30"
+            color={colors.error}
           />
         </TouchableOpacity>
 
@@ -248,7 +248,8 @@ const SnippetCardComponent = ({
               borderColor: isCopied ? colors.success : colors.primary,
               backgroundColor: colors.surface,
             },
-            disableCopy && styles.disabledButton
+            /* 無効時は枠線を中立色へ戻す。style配列は後勝ちのため、上の borderColor より後ろに置く */
+            disableCopy && [styles.disabledButton, { borderColor: colors.border }]
           ]}
           onPress={handleCopy}
           disabled={isCopying || disableCopy}
@@ -333,6 +334,5 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.4,
-    borderColor: '#ccc',
   },
 });

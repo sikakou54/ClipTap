@@ -11,8 +11,7 @@
  * - テーマ切り替え（ライト/ダーク）
  * - アカウント連携/解除
  */
-import { useTranslation, SubscriptionService, useAuth, translateError } from '@cliptap/shared';
-import { useSubscription } from '@hooks/useWebSubscription';
+import { Logger, useTranslation, SubscriptionService, useAuth, translateError, useSharedSubscription } from '@cliptap/shared';
 import { useTheme } from '@hooks/useTheme';
 import { showConfirm, showErrorAlert } from '@utils/alerts';
 import { SideMenuHeader } from './SideMenuHeader';
@@ -35,7 +34,7 @@ interface SideMenuProps {
 
 export function SideMenu({ onExport, onImport, isOpen, onClose, onAccountLink }: SideMenuProps) {
   const { t } = useTranslation();
-  const { isSubscribed } = useSubscription();
+  const { isSubscribed } = useSharedSubscription();
   const resetSubscription = () => SubscriptionService.reset();
   const { isDark, themeMode, setThemeMode } = useTheme();
   const { signOut, user } = useAuth();
@@ -71,7 +70,7 @@ export function SideMenu({ onExport, onImport, isOpen, onClose, onAccountLink }:
         await signOut();
         onClose();
       } catch (error) {
-        console.error('Unlink account failed:', error);
+        Logger.error('Unlink account failed:', error);
         const message = translateError(error) || t('error.unlink_failed');
         showErrorAlert(message);
       }

@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import {
   DEFAULT_SYSTEM_VARIABLE_FORMATS,
-  SystemVariableFormatMapper,
+  SystemVariableFormatService,
   formatByPattern,
   normalizeLocale,
   type SystemVariableFormats,
@@ -26,7 +26,7 @@ interface SystemVariableSectionProps {
 export function SystemVariableSection({ systemVariables }: SystemVariableSectionProps) {
   const { t } = useTranslation();
   const [formats, setFormats] = useState<SystemVariableFormats>(() => (
-    SystemVariableFormatMapper.loadRegistry()
+    SystemVariableFormatService.loadRegistry()
   ));
   const [editingKey, setEditingKey] = useState<SystemVariableKey | null>(null);
   const locale = normalizeLocale(navigator.language);
@@ -59,7 +59,7 @@ export function SystemVariableSection({ systemVariables }: SystemVariableSection
       <SystemVariableFormatModal
         variableKey={editingKey}
         onClose={() => setEditingKey(null)}
-        onChanged={() => setFormats(SystemVariableFormatMapper.loadRegistry())}
+        onChanged={() => setFormats(SystemVariableFormatService.loadRegistry())}
       />
     </div>
   );

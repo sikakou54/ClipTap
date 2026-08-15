@@ -19,6 +19,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from '@cliptap/shared';
 import type { SnippetWithDisplay } from '@cliptap/shared';
+import { CATEGORY_FALLBACK_COLOR } from '@utils/categoryColor';
 import { SnippetActionButtons } from './SnippetActionButtons';
 import { ExpandButton } from './ExpandButton';
 
@@ -56,6 +57,9 @@ function SnippetCardComponent({
 
   /* タイトル未設定の定型文は（タイトルなし）を表示するだけでコピー対象がない */
   const canCopyTitle = Boolean(snippet.title);
+
+  /* カテゴリ名はあるが色が未設定の場合があるため、バッジの色はフォールバックまで含めて確定させる */
+  const badgeColor = categoryColor || CATEGORY_FALLBACK_COLOR;
 
   /* スニペットカード（タイトル、カテゴリ、本文、アクションボタン、展開/折りたたみ機能） */
   return (
@@ -106,8 +110,8 @@ function SnippetCardComponent({
             <span
               className="inline-block text-xs font-medium px-1.5 py-[3px] rounded-md"
               style={{
-                backgroundColor: `${categoryColor}20`,
-                color: categoryColor || undefined,
+                backgroundColor: `${badgeColor}20`,
+                color: badgeColor,
               }}
             >
               {categoryName}

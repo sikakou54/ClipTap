@@ -338,8 +338,8 @@ export default function VariableEditModal() {
         transparent={true}
         onRequestClose={() => setShowIconModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[styles.modalContent, { backgroundColor: colors.background, shadowColor: colors.shadow }]}>
             <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
               <Text
                 style={[
@@ -376,7 +376,7 @@ export default function VariableEditModal() {
                     <Ionicons
                       name={icon}
                       size={isTablet ? 28 : 24}
-                      color={selectedIcon === icon ? '#fff' : colors.text}
+                      color={selectedIcon === icon ? colors.onPrimary : colors.text}
                     />
                   </TouchableOpacity>
                 ))}
@@ -496,18 +496,18 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'left',
   },
+  /** モーダルオーバーレイ（背景色は使用箇所でテーマの overlay を重ねる） */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
+  /** モーダル本体（背景色と影の色は使用箇所でテーマから重ねる） */
   modalContent: {
     borderTopLeftRadius: UI_CONSTANTS.BORDER_RADIUS.XXL,
     borderTopRightRadius: UI_CONSTANTS.BORDER_RADIUS.XXL,
     minHeight: '60%',
     maxHeight: '80%',
     paddingBottom: 20,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.25,
     shadowRadius: UI_CONSTANTS.BORDER_RADIUS.BASE,

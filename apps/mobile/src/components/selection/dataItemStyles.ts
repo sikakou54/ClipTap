@@ -6,6 +6,10 @@
  * 同ディレクトリの SelectionSnippetItem / SelectionCategoryItem /
  * SelectionProfileItem / SelectionVariableItem の4コンポーネントからのみ使われ、
  * 4つの行の見た目を揃えるために1箇所へまとめている。
+ *
+ * 文字サイズはこのモジュールでは持たない。タブレットでの拡大に追従させるため、
+ * 各コンポーネントが useTheme() の responsiveFontSizes を style配列で重ねる
+ * （モバイル全体で採用している「静的StyleSheet + 使用箇所でテーマ値を重ねる」形に揃えている）。
  */
 import { StyleSheet } from 'react-native';
 
@@ -67,21 +71,19 @@ export const dataItemStyles = StyleSheet.create({
     gap: 8,
   },
 
-  /** @description アイテムタイトル */
+  /** @description アイテムタイトル（文字サイズは responsiveFontSizes.base を使用箇所で重ねる） */
   itemTitle: {
-    fontSize: 16,
     fontWeight: '600',
   },
 
-  /** @description アイテムサブタイトル */
-  itemSubtitle: {
-    fontSize: 14,
+  /** @description 重複警告テキスト（文字サイズは responsiveFontSizes.xs を使用箇所で重ねる） */
+  duplicateText: {
+    marginTop: 4,
   },
 
-  /** @description 重複警告テキスト */
-  duplicateText: {
-    fontSize: 12,
-    marginTop: 4,
+  /** @description 変数名の右に並べるアイコン */
+  variableIcon: {
+    marginLeft: 8,
   },
 
   /** @description カテゴリ色のドット */
@@ -109,9 +111,8 @@ export const dataItemStyles = StyleSheet.create({
     borderRadius: 4,
   },
 
-  /** @description バッジテキスト */
+  /** @description バッジテキスト（文字サイズは responsiveFontSizes.xs を使用箇所で重ねる） */
   badgeText: {
-    fontSize: 11,
     fontWeight: '500',
   },
 
@@ -131,15 +132,13 @@ export const dataItemStyles = StyleSheet.create({
     gap: 12,
   },
 
-  /** @description プロファイル名 */
+  /** @description プロファイル名（文字サイズは responsiveFontSizes.xs を使用箇所で重ねる） */
   profileValueName: {
-    fontSize: 12,
     fontWeight: '600',
   },
 
-  /** @description プロファイル値 */
+  /** @description プロファイル値（文字サイズは responsiveFontSizes.xs を使用箇所で重ねる） */
   profileValueText: {
-    fontSize: 12,
     flex: 1,
     textAlign: 'right',
   },

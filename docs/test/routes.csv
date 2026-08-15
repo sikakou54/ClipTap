@@ -41,7 +41,6 @@ R-039,/settings/select-import-data,SC-SETTINGS-SELECT-IMPORT-DATA,バックア�
 R-040,/subscription/paywall,SC-SUBSCRIPTION-PAYWALL,サブスクリプション管理の「Proにアップグレード」,Proプラン未加入,なし,Freeのみ,P-F17-030,,
 R-041,/webview,SC-WEBVIEW-TERMS,Paywallの「利用規約」リンク,購入処理中でない（file=terms）,なし,なし,P-F17-017,TC-4108,
 R-042,/webview,SC-WEBVIEW-PRIVACY,Paywallの「プライバシーポリシー」リンク,購入処理中でない（file=privacy）,なし,なし,P-F17-018,TC-4109,
-R-043,/profile/variable-edit,SC-PROFILE-VARIABLE-EDIT,なし（アプリ内に遷移導線が実装されていない）,到達不能,なし,なし,P-F05-902,,
 R-044,/,SC-HOME,検索画面の閉じるボタン,無条件,なし,なし,P-F06-025;P-F07-034,TC-1010;TC-2130,
 R-045,/,SC-HOME,定型文作成画面の閉じるボタン,無条件,なし,なし,P-F02-030,TC-0030,
 R-046,/,SC-HOME,定型文作成画面の保存ボタン,タイトルと本文が入力済み,なし,なし,P-F02-001,TC-0001,

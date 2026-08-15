@@ -4,7 +4,7 @@
  * スニペット検索用の入力フィールド。
  * 検索アイコン、入力フィールド、クリアボタンを含む。
  *
- * @see app/(tabs)/search.tsx - 検索画面での使用例
+ * @see app/search.tsx - 検索画面での使用例
  */
 
 import { useCallback } from 'react';

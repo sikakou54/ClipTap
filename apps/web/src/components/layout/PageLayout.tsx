@@ -13,6 +13,7 @@
 import type { ReactNode } from 'react';
 import { useState, useCallback } from 'react';
 import {
+  Logger,
   useAuth,
   useDatabase,
   useSnippets,
@@ -71,7 +72,7 @@ export function PageLayout({ title, icon, children, rightAction }: PageLayoutPro
 
   const handleError = useCallback(
     (error: Error) => {
-      console.error('Export/Import error:', error);
+      Logger.error('Export/Import error:', error);
       const translatedMessage = translateError(error);
       showErrorAlert(translatedMessage);
     },
@@ -127,7 +128,7 @@ export function PageLayout({ title, icon, children, rightAction }: PageLayoutPro
           categoryIds,
         });
       } catch (err) {
-        console.error('Failed to export:', err);
+        Logger.error('Failed to export:', err);
         const translatedMessage = translateError(err);
         showErrorAlert(translatedMessage);
       } finally {
@@ -184,7 +185,8 @@ export function PageLayout({ title, icon, children, rightAction }: PageLayoutPro
       {/* インポートモード選択モーダル（復元/マージ選択） */}
       <ImportModeSelectModal
         isOpen={webImport.showModeSelect}
-        onClose={() => webImport.setShowModeSelect(false)}
+        onClose={webImport.closeModeSelect}
+        isProcessing={webImport.isProcessing}
         onSelectMode={(mode) => {
           if (mode === 'restore') {
             handleRestoreBackupWithConfirm();
@@ -197,7 +199,7 @@ export function PageLayout({ title, icon, children, rightAction }: PageLayoutPro
       {/* インポート選択モーダル（部分インポート用、アイテム選択） */}
       <ImportSelectionModal
         isOpen={webImport.showItemSelect}
-        onClose={() => webImport.setShowItemSelect(false)}
+        onClose={webImport.closeItemSelect}
         candidates={webImport.importCandidates}
         onImport={webImport.handleExecutePartialImport}
         isProcessing={webImport.isProcessing}

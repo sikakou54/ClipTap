@@ -6,9 +6,18 @@
  * プラットフォーム固有の実装はアダプター経由で提供される。
  *
  * 主な機能:
- * - サブスクリプション状態の管理
- * - 機能制限チェック（変数数・プロファイル数）
- * - 購入・復元処理の抽象化
+ * - Reactの描画状態としての加入状態の保持
+ * - 権利確認に失敗したときのFree表示へのフォールバック制御
+ * - 機能制限チェック（変数数・プロファイル数）の窓口
+ *
+ * @remarks
+ * 課金抽象の責務境界:
+ * - SubscriptionAdapter / SubscriptionService = React非依存の権利判定とvalidフラグ更新。
+ *   SnippetProvider・AuthService・ImportService などReact外からも呼ばれるため、購入・復元・
+ *   プラン取得といった課金操作はすべてこちらに置く。
+ * - SubscriptionPlatformAdapter / SubscriptionProvider = Reactの描画状態と権利確認失敗の制御。
+ *   購入・復元・プラン取得・有効期限の取得をこちら側へ再追加しないこと。画面が課金操作を要する
+ *   場合は useSubscriptionService（SubscriptionService経由）を使う。
  *
  * @module SubscriptionProvider
  */
@@ -39,48 +48,35 @@ export interface SubscriptionContextValue {
   canAddProfile: (currentCount: number) => boolean;
   /** サブスク状態を最新化 */
   refresh: () => Promise<void>;
-  /** 有効期限を取得 */
-  getExpirationDate: () => Date | null;
-  /** 現在のプラン種別を取得 */
-  getCurrentPlanType: () => 'monthly' | 'annual' | null;
-  /** 購入を復元 */
-  restorePurchases: () => Promise<void>;
-  /** 購入可能なプランを取得 */
-  getOfferings: () => Promise<unknown>;
-  /** パッケージを購入 */
-  purchasePackage: (pkg: unknown) => Promise<void>;
-  /** 開発者オーバーライド状態を取得（DEVのみ、未実装の場合はnull） */
-  getDevSubscriptionOverride: () => boolean | null;
   /** 開発者オーバーライドを設定（DEVのみ） */
   setDevSubscriptionOverride: (value: boolean | null) => Promise<void>;
 }
 
 /**
  * サブスクリプションプラットフォームアダプター
- * プラットフォーム固有の実装を抽象化
+ *
+ * @remarks
+ * Reactの描画状態を組み立てるために必要な最小限の操作だけを抽象化する。
+ * 購入・復元・プラン取得・有効期限の取得は SubscriptionAdapter 側の責務であり、
+ * ここへ追加してはならない（同じ機能が2つのインターフェースへ重複して生えるため）。
  */
 export interface SubscriptionPlatformAdapter {
   /** 初期化処理 */
   initialize: () => Promise<void>;
-  /** サブスクリプション状態を確認 */
-  checkSubscription: () => Promise<boolean>;
+  /**
+   * 現在の加入状態を解決する
+   *
+   * @remarks
+   * 検証の有無はプラットフォーム実装に委ねる。
+   * mobileはRevenueCatのキャッシュを読み出すだけ、webはClipTap APIへ通信して検証し、
+   * 失敗した場合は例外を投げてProviderにFree表示へフォールバックさせる。
+   * SubscriptionAdapter.checkSubscription（サーバーから検証・更新）とは別契約のため名前を分けている。
+   */
+  resolveSubscribed: () => Promise<boolean>;
   /** サブスク状態を最新化 */
   refresh: () => Promise<void>;
-  /** 有効期限を取得 */
-  getExpirationDate: () => Date | null;
-  /** 現在のプラン種別を取得 */
-  getCurrentPlanType: () => 'monthly' | 'annual' | null;
-  /** 購入を復元 */
-  restorePurchases: () => Promise<void>;
-  /** 購入可能なプランを取得 */
-  getOfferings: () => Promise<unknown>;
-  /** パッケージを購入 */
-  purchasePackage: (pkg: unknown) => Promise<void>;
   /** サブスク状態変更時のコールバックを登録 */
   onSubscriptionChange?: (callback: (isSubscribed: boolean) => void) => () => void;
-
-  /** DEVオーバーライド状態を取得（開発環境用） */
-  getDevSubscriptionOverride?: () => boolean | null;
   /** DEVオーバーライドを設定（開発環境用） */
   setDevSubscriptionOverride?: (value: boolean | null) => Promise<void>;
 }
@@ -136,7 +132,7 @@ export function SubscriptionProvider({
       try {
         /* ValidFlagsUpdaterと無料上限は init() が起動時に設定済みのため、ここではアダプターの初期化と加入状態の取得だけを行う */
         await platformAdapter.initialize();
-        const subscribed = await platformAdapter.checkSubscription();
+        const subscribed = await platformAdapter.resolveSubscribed();
         handleSubscriptionChange(subscribed);
       } catch (error) {
         Logger.error('[SubscriptionProvider] Init failed:', error);
@@ -161,7 +157,7 @@ export function SubscriptionProvider({
   const refresh = useCallback(async () => {
     try {
       await platformAdapter.refresh();
-      const subscribed = await platformAdapter.checkSubscription();
+      const subscribed = await platformAdapter.resolveSubscribed();
       handleSubscriptionChange(subscribed);
     } catch (error) {
       Logger.error('[SubscriptionProvider] Refresh failed:', error);
@@ -169,16 +165,6 @@ export function SubscriptionProvider({
       setVerificationFailed(true);
     }
   }, [platformAdapter, handleSubscriptionChange]);
-
-  const restorePurchases = useCallback(async () => {
-    await platformAdapter.restorePurchases();
-    await refresh();
-  }, [platformAdapter, refresh]);
-
-  const purchasePackage = useCallback(async (pkg: unknown) => {
-    await platformAdapter.purchasePackage(pkg);
-    await refresh();
-  }, [platformAdapter, refresh]);
 
   const setDevSubscriptionOverride = useCallback(async (value: boolean | null) => {
     if (platformAdapter.setDevSubscriptionOverride) {
@@ -195,14 +181,8 @@ export function SubscriptionProvider({
     canAddCustomVariable: (count) => SubscriptionService.canAddVariable(count),
     canAddProfile: (count) => SubscriptionService.canAddProfile(count),
     refresh,
-    getExpirationDate: () => platformAdapter.getExpirationDate(),
-    getCurrentPlanType: () => platformAdapter.getCurrentPlanType(),
-    restorePurchases,
-    getOfferings: () => platformAdapter.getOfferings(),
-    purchasePackage,
-    getDevSubscriptionOverride: () => platformAdapter.getDevSubscriptionOverride?.() ?? null,
     setDevSubscriptionOverride,
-  }), [isSubscribed, isLoading, verificationFailed, refresh, platformAdapter, restorePurchases, purchasePackage, setDevSubscriptionOverride]);
+  }), [isSubscribed, isLoading, verificationFailed, refresh, setDevSubscriptionOverride]);
 
   return (
     <SubscriptionContext.Provider value={value}>

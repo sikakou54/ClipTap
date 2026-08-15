@@ -162,18 +162,6 @@ export class VariableNameReservedError extends ValidationError {
 }
 
 /**
- * 変数値必須エラー
- *
- * プロファイル変数の値が空の場合にスローされます。
- */
-export class VariableValueRequiredError extends ValidationError {
-  constructor(message: string = 'Variable value is required') {
-    super(message, 'error.variable_value_required');
-    this.name = 'VariableValueRequiredError';
-  }
-}
-
-/**
  * 無効なRGB値エラー
  *
  * カテゴリの色のRGB値が0-255の範囲外の場合にスローされます。

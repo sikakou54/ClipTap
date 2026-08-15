@@ -164,15 +164,3 @@ export class PartialImportError extends ImportExportError {
     this.name = 'PartialImportError';
   }
 }
-
-/**
- * データベースパス未取得エラー
- *
- * データベースファイルのパスが取得できない場合にスローされます。
- */
-export class DatabasePathNotFoundError extends ImportExportError {
-  constructor(message: string = 'Database path not found') {
-    super(message, 'error.generic');
-    this.name = 'DatabasePathNotFoundError';
-  }
-}

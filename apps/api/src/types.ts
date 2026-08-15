@@ -64,17 +64,12 @@ export interface RevenueCatSubscriberResponse {
 
 /**
  * クライアントへ返却するサブスクリプション状態
- * shared の SubscriptionStatus と同じ構造にすることで、Web側での変換を不要にする
+ *
+ * @remarks
+ * packages/shared の SubscriptionStatus を唯一の正とし、API側では手写しをしない。
+ * 手写しにすると shared 側だけフィールド名を変えても双方の型チェックが通ってしまい、
+ * Web の Pro判定が静かに壊れるため、型を直接参照して tsc に一致を守らせる。
+ * type-only の再エクスポートにしているので、Worker のバンドル成果物には
+ * shared のコード（zod を含む）は一切含まれない。
  */
-export interface SubscriptionStatusPayload {
-  /** Proプラン契約中かどうか */
-  isSubscribed: boolean;
-  /** 有効期限（ISO8601）。無期限購入の場合は null */
-  expirationDate: string | null;
-  /** 有効な商品識別子 */
-  activePlanId: string | null;
-  /** 次回自動更新されるかどうか */
-  willRenew: boolean;
-  /** ストアの購読管理画面URL */
-  managementURL: string | null;
-}
+export type { SubscriptionStatus as SubscriptionStatusPayload } from '@cliptap/shared/types/Subscription';

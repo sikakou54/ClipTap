@@ -6,7 +6,6 @@
     "save": "Save",
     "done": "Done",
     "close": "Close",
-    "confirm": "Confirm",
     "warning": "Warning",
     "copy": "Copy",
     "preview": "Preview",
@@ -24,7 +23,9 @@
     "next": "Next",
     "column": " column(s)",
     "unsaved_changes_warning": "You have unsaved changes. Are you sure you want to discard them?",
-    "closeModal": "Close modal"
+    "closeModal": "Close modal",
+    "open_menu": "Open menu",
+    "search": "Search"
   },
   "snippet": {
     "title": "Title",
@@ -39,8 +40,6 @@
     "title_input_placeholder": "Enter title...",
     "content": "Content",
     "content_placeholder": "Enter content...",
-    "content_input": "Enter Content",
-    "content_input_placeholder": "Enter content...",
     "search_placeholder": "Search templates...",
     "category": "Category",
     "select_category": "Select category",
@@ -84,7 +83,8 @@
       "logout_success_message": "The account link was removed.",
       "status_authenticated": "Linked",
       "status_unauthenticated": "Not linked",
-      "description": "Link an account to share your Pro entitlement across devices."
+      "description": "Link an account to share your Pro entitlement across devices.",
+      "tap_to_logout": "Tap to unlink"
     },
     "terms": "Terms of Use",
     "privacy": "Privacy Policy",
@@ -127,8 +127,10 @@
       "password_placeholder": "Password set during export",
       "load_button": "Load",
       "loading": "Loading...",
-      "terms_agree": "I agree to Terms of Use",
-      "privacy_agree": "I agree to Privacy Policy",
+      "terms_agree_before": "I agree to ",
+      "terms_agree_after": "",
+      "privacy_agree_before": "I agree to ",
+      "privacy_agree_after": "",
       "how_to_use": "Please upload the .cliptap file exported from the mobile app",
       "error_password": "Incorrect password",
       "error_checksum": "File is corrupted or tampered",
@@ -139,7 +141,8 @@
       "error_no_password": "Please enter a password",
       "error_terms": "Please agree to Terms of Use",
       "error_privacy": "Please agree to Privacy Policy",
-      "confirm_unlink": "Are you sure you want to unlink your account?"
+      "confirm_unlink": "Are you sure you want to unlink your account?",
+      "db_version": "DB Version : {{version}}"
     }
   },
   "profile": {
@@ -151,12 +154,6 @@
     "add_hint": "Tap the + button to add a profile",
     "name": "Profile Name",
     "name_placeholder": "e.g. Company A",
-    "add_variable": "Add Variable",
-    "edit_variable": "Edit Variable",
-    "variable_name": "Variable Name",
-    "variable_name_placeholder": "e.g. company",
-    "variable_value": "Value",
-    "variable_value_placeholder": "e.g. Company A",
     "default_badge": "Default",
     "environment": "Profile",
     "switch_environment": "Switch Profile",
@@ -211,7 +208,6 @@
     "cannot_delete_system_variable": "System variables cannot be deleted",
     "cannot_delete_default_profile": "The default profile cannot be deleted",
     "cannot_set_invalid_profile_as_default": "A disabled profile cannot be set as the default",
-    "variable_value_required": "Please enter a variable value",
     "invalid_rgb_values": "RGB values must be between 0 and 255",
     "account_auth_failed_title": "Account Authentication Failed",
     "account_auth_failed_message": "An error occurred while linking the account.",
@@ -234,6 +230,9 @@
     "invalid_file_format": "Invalid file format",
     "invalid_file_type": "Invalid file type",
     "logout_failed": "Failed to log out",
+    "google_sign_in_failed": "Failed to sign in with Google",
+    "apple_sign_in_failed": "Failed to sign in with Apple",
+    "sign_out_failed": "Failed to sign out",
     "newer_version": "This version is not supported on your current device. Please update the app to the latest version and try again."
   },
   "tabs": {
@@ -331,7 +330,6 @@
     "day_desc": "Day",
     "weekday": "Weekday",
     "weekday_desc": "Weekday name",
-    "name_format_hint": "Alphanumeric and underscore only",
     "enter_value": "Enter Value",
     "standard_value": "Standard Value",
     "standard_value_empty_warning": "\"Standard\" value is not entered.\nDo you want to save anyway?",

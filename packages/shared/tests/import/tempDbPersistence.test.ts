@@ -123,8 +123,6 @@ describe('ImportService.prepareImportDatabase', () => {
     setImportAdapter({
       readImportFile: async () => currentExportJson,
       writeTempDatabase: async (fileName: string) => `/tmp/${fileName}`,
-      getDatabasePath: async () => '/tmp/main.db',
-      copyFile: async () => undefined,
       deleteFile: async (path: string) => {
         lifecycleCalls.push('delete');
         deletedPaths.push(path);

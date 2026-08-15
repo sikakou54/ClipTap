@@ -124,7 +124,7 @@ export function ProfileSelector({ onProfileChange }: ProfileSelectorProps) {
         <View style={styles.modalOverlay}>
           {/* 背景オーバーレイ（タップで閉じる） */}
           <TouchableOpacity
-            style={styles.backdrop}
+            style={[styles.backdrop, { backgroundColor: colors.overlay }]}
             activeOpacity={1}
             onPress={closeModal}
           />
@@ -183,14 +183,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
-  /** 背景オーバーレイ（半透明黒）。RN 0.86でStyleSheet.absoluteFillObjectが削除されたため明示指定 */
+  /** 背景オーバーレイ（背景色は使用箇所でテーマの overlay を重ねる）。RN 0.86でStyleSheet.absoluteFillObjectが削除されたため明示指定 */
   backdrop: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   /** ボトムシート本体 */
   bottomSheet: {

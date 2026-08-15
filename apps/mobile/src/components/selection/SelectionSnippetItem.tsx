@@ -16,7 +16,9 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   type ImportTabType,
   type SelectionSnippetData,
+  type SemanticColors,
 } from '@cliptap/shared';
+import { useTheme } from '@lib/themeSystem';
 import { dataItemStyles as styles } from './dataItemStyles';
 
 export type { SelectionSnippetData } from '@cliptap/shared';
@@ -27,7 +29,7 @@ interface SelectionSnippetItemProps {
   isExpanded: boolean;
   onToggleSelection: (id: string, type: ImportTabType) => void;
   onToggleExpand: (id: string) => void;
-  colors: any;
+  colors: SemanticColors;
   t: (key: string) => string;
 }
 
@@ -40,6 +42,9 @@ function SelectionSnippetItemInner({
   colors,
   t,
 }: SelectionSnippetItemProps) {
+  /* 文字サイズはタブレットで拡大させるためテーマから取得する（色は呼び出し側からpropsで受け取る） */
+  const { responsiveFontSizes } = useTheme();
+
   const profileNames = item.profiles.length === 0
     ? [t('snippet.all_profiles')]
     : item.profiles.map(p => p.profileName).filter(Boolean) as string[];
@@ -67,7 +72,10 @@ function SelectionSnippetItemInner({
         {/* ヘッダー（タイトルと展開アイコン） */}
         <View style={styles.header}>
           {/* スニペットタイトル */}
-          <Text style={[styles.itemTitle, { color: colors.text }]} numberOfLines={1}>
+          <Text
+            style={[styles.itemTitle, { color: colors.text, fontSize: responsiveFontSizes.base }]}
+            numberOfLines={1}
+          >
             {item.title || t('common.no_title')}
           </Text>
           {/* 展開/折りたたみアイコン */}
@@ -79,7 +87,7 @@ function SelectionSnippetItemInner({
         </View>
         {/* スニペットコンテンツ */}
         <Text
-          style={[styles.itemSubtitle, { color: colors.textSecondary }]}
+          style={{ color: colors.textSecondary, fontSize: responsiveFontSizes.sm }}
           numberOfLines={isExpanded ? undefined : 2}
         >
           {item.content}
@@ -88,7 +96,12 @@ function SelectionSnippetItemInner({
         <View style={[styles.badgeContainer, { borderTopColor: colors.border }]}>
           {/* カテゴリバッジ */}
           <View style={[styles.badge, { backgroundColor: `${item.categoryColor || colors.primary}20` }]}>
-            <Text style={[styles.badgeText, { color: item.categoryColor || colors.primary }]}>
+            <Text
+              style={[
+                styles.badgeText,
+                { color: item.categoryColor || colors.primary, fontSize: responsiveFontSizes.xs },
+              ]}
+            >
               {item.categoryName || t('common.uncategorized')}
             </Text>
           </View>
@@ -98,7 +111,12 @@ function SelectionSnippetItemInner({
               key={`profile-${index}`}
               style={[styles.badge, { backgroundColor: `${colors.textSecondary}20` }]}
             >
-              <Text style={[styles.badgeText, { color: colors.textSecondary }]}>
+              <Text
+                style={[
+                  styles.badgeText,
+                  { color: colors.textSecondary, fontSize: responsiveFontSizes.xs },
+                ]}
+              >
                 {name}
               </Text>
             </View>

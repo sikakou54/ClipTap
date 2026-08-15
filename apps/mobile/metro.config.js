@@ -7,6 +7,33 @@ const monorepoRoot = path.resolve(projectRoot, '../..');
 
 const config = getDefaultConfig(projectRoot);
 
+/**
+ * 開発用シードデータのモジュールパス
+ *
+ * src/database/seed.ts は dummy.json（開発用サンプルデータ）を静的importしている。
+ * Metroはimport()を別チャンクへ分割せず非同期requireへ変換するだけなので、
+ * 呼び出し側を動的importにしてもシード本体は本番バンドルへ含まれたままになる。
+ * そのため本番ビルドでは解決先を空実装へ差し替えて、実体をバンドルから外す。
+ */
+const SEED_MODULE_PATH = path.resolve(projectRoot, 'src/database/seed.ts');
+const SEED_NOOP_MODULE_PATH = path.resolve(projectRoot, 'src/database/seed.noop.ts');
+
+/**
+ * 本番バンドルのビルドかどうかを判定する
+ *
+ * Metroの解決コンテキストが持つdevフラグを優先し、
+ * 与えられない場合のみNODE_ENVで判定する。
+ *
+ * @param context - Metroの解決コンテキスト
+ * @returns 本番バンドルのビルドならtrue
+ */
+const isProductionBundle = (context) => {
+  if (typeof context.dev === 'boolean') {
+    return !context.dev;
+  }
+  return process.env.NODE_ENV === 'production';
+};
+
 // Watch the monorepo root to enable watching packages
 config.watchFolders = [monorepoRoot];
 
@@ -40,7 +67,25 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     };
   }
 
-  return context.resolveRequest(context, moduleName, platform);
+  const resolution = context.resolveRequest(context, moduleName, platform);
+
+  /*
+   * 本番バンドルでは開発用シードを空実装へ差し替える。
+   * babel-plugin-module-resolverが'@database/seed'を相対パスへ書き換えた後に
+   * ここへ来るため、モジュール名ではなく解決後のファイルパスで判定する。
+   */
+  if (
+    isProductionBundle(context) &&
+    resolution.type === 'sourceFile' &&
+    resolution.filePath === SEED_MODULE_PATH
+  ) {
+    return {
+      type: 'sourceFile',
+      filePath: SEED_NOOP_MODULE_PATH,
+    };
+  }
+
+  return resolution;
 };
 
 module.exports = config;

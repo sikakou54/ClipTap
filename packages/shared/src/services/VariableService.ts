@@ -257,6 +257,10 @@ export class VariableService {
    * @param profileId - プロファイルID
    * @param variableId - 変数ID
    * @param value - 変数値
+   *
+   * @remarks
+   * 値は前後空白を除去して保存する。
+   * UI経由の一括保存 ProfileService.setVariableValuesForVariable と同じ正規化規則。
    */
   static upsertValueForProfile(profileId: string, variableId: string, value: string): void {
     ProfileVariableMapper.upsert({

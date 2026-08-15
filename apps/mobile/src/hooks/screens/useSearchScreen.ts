@@ -11,7 +11,7 @@
  * - Pull-to-refresh処理
  *
  * @see app/search.tsx - UIコンポーネント
- * @see lib/hooks/useSearch.ts - 検索デバウンス処理
+ * @see packages/shared/src/hooks/useSearch.ts - 検索デバウンス処理
  */
 
 import { useState, useCallback, useMemo } from 'react';

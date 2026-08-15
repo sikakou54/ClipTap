@@ -233,9 +233,9 @@ export default function SelectImportDataScreen() {
           disabled={totalSelected === 0 || isProcessing}
         >
           {isProcessing ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={colors.onPrimary} />
           ) : (
-            <Text style={styles.importButtonText}>{t('export_import.import')}</Text>
+            <Text style={[styles.importButtonText, { color: colors.onPrimary }]}>{t('export_import.import')}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -286,8 +286,8 @@ const styles = StyleSheet.create({
     minWidth: 100,
     alignItems: 'center',
   },
+  /** インポートボタンのテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   importButtonText: {
-    color: '#FFFFFF',
     fontWeight: '600',
   },
 });

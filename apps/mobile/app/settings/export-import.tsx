@@ -143,7 +143,7 @@ export default function ExportImportScreen() {
             {HELP_STEPS.map((stepKey, index) => (
               <View key={stepKey} style={styles.helpItem}>
                 <View style={[styles.helpNumber, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.helpNumberText}>{index + 1}</Text>
+                  <Text style={[styles.helpNumberText, { color: colors.onPrimary }]}>{index + 1}</Text>
                 </View>
                 <Text style={[styles.helpText, { color: colors.text, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
                   {t(stepKey)}
@@ -156,7 +156,7 @@ export default function ExportImportScreen() {
 
       {/* ローディングオーバーレイ */}
       {isProcessing && (
-        <View style={styles.loadingOverlay}>
+        <View style={[styles.loadingOverlay, { backgroundColor: colors.overlay }]}>
           <View style={[styles.loadingContainer, { backgroundColor: colors.surface }]}>
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={[styles.loadingText, { color: colors.text }]}>
@@ -174,7 +174,7 @@ export default function ExportImportScreen() {
         onRequestClose={closePasswordModal}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <View style={styles.modalOverlay}>
+          <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
             <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
               <View style={styles.modalHeader}>
                 <Ionicons
@@ -229,7 +229,7 @@ export default function ExportImportScreen() {
                   style={[styles.modalButton, { backgroundColor: colors.primary }]}
                   onPress={handlePasswordSubmit}
                 >
-                  <Text style={[styles.modalButtonText, { fontSize: responsiveFontSizes.base }]}>
+                  <Text style={[styles.modalButtonText, { color: colors.onPrimary, fontSize: responsiveFontSizes.base }]}>
                     {t('common.ok')}
                   </Text>
                 </TouchableOpacity>
@@ -246,7 +246,7 @@ export default function ExportImportScreen() {
         animationType="fade"
         onRequestClose={closeImportModeModal}
       >
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             <View style={styles.modalHeader}>
               <Ionicons name="options-outline" size={48} color={colors.primary} />
@@ -412,17 +412,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  /** 手順番号のテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   helpNumberText: {
-    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '600',
   },
   helpText: {
     flex: 1,
   },
+  /** モーダルオーバーレイ（背景色は使用箇所でテーマの overlay を重ねる） */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -468,10 +468,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
+  /** モーダルボタンのテキスト（文字色は使用箇所でテーマから重ねる） */
   modalButtonText: {
-    color: '#FFFFFF',
     fontWeight: '600',
   },
+  /** 処理中の全面遮蔽（背景色は使用箇所でテーマの overlay を重ねる） */
   loadingOverlay: {
     /* RN 0.86でStyleSheet.absoluteFillObjectが削除されたため明示指定 */
     position: 'absolute',
@@ -479,7 +480,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,

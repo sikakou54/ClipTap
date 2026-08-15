@@ -2,7 +2,8 @@
  * サブスクリプション管理サービス（Web版）
  *
  * Web固有の機能を提供。主要な機能は @cliptap/shared の SubscriptionService に委譲。
- * React フックは @hooks/useWebSubscription へ移した。
+ * 画面からの購読状態の参照は @cliptap/shared の useSharedSubscription（共通Context）に一本化しており、
+ * このモジュールは Web の SubscriptionProvider とキャッシュ管理から使う薄いラッパーに限定する。
  */
 import { SubscriptionService as SharedSubscriptionService } from '@cliptap/shared';
 import type { WebSubscriptionAdapter } from '@adapters/WebSubscriptionAdapter';

@@ -107,7 +107,6 @@
         }
       ],
       "expo-font",
-      "expo-audio",
       "expo-asset",
       "./plugins/withClipTapKeyboard",
       "expo-sharing"

@@ -2,7 +2,7 @@
  * プロファイル選択チップコンポーネント
  *
  * 水平スクロール可能なチップ形式でプロファイルを選択するUI。
- * 変数管理画面など、プロファイル別にデータを切り替える場面で使用。
+ * プロファイル別にデータを切り替える場面で使用。
  *
  * 主な機能:
  * - 水平スクロール可能なチップリスト
@@ -10,7 +10,7 @@
  * - オプションのカウントバッジ表示
  * - カスタマイズ可能なパディング
  *
- * @see app/variable/index.tsx - 変数管理画面での使用
+ * @see app/search.tsx - 検索画面での使用（現在の唯一の使用箇所）
  */
 
 import React from 'react';
@@ -111,7 +111,7 @@ export const ProfileChipSelector: React.FC<ProfileChipSelectorProps> = ({
               style={[
                 styles.chipText,
                 {
-                  color: isSelected ? '#FFFFFF' : colors.text,
+                  color: isSelected ? colors.onPrimary : colors.text,
                   fontSize: responsiveFontSizes.sm,
                 }
               ]}
@@ -124,7 +124,7 @@ export const ProfileChipSelector: React.FC<ProfileChipSelectorProps> = ({
                 style={[
                   styles.countBadge,
                   {
-                    backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.3)' : colors.border,
+                    backgroundColor: isSelected ? colors.onPrimaryMuted : colors.border,
                   }
                 ]}
               >
@@ -132,7 +132,7 @@ export const ProfileChipSelector: React.FC<ProfileChipSelectorProps> = ({
                   style={[
                     styles.countBadgeText,
                     {
-                      color: isSelected ? '#FFFFFF' : colors.textSecondary,
+                      color: isSelected ? colors.onPrimary : colors.textSecondary,
                       fontSize: responsiveFontSizes.xs,
                     }
                   ]}
@@ -162,13 +162,20 @@ const styles = StyleSheet.create({
     paddingTop: 0,
     paddingBottom: UI_CONSTANTS.GAP.BASE,
   },
-  /** チップ（丸みのある長方形） */
+  /**
+   * チップ（丸みのある長方形）
+   *
+   * 角丸と左右余白は他のチップ実装（CategoryFilter / SortMenu / VariablePreview /
+   * settings/variables）と同一トークンに揃えている。
+   * 高さは固定しない。カウントバッジを内包し、タブレットでは responsiveFontSizes.sm が18ptになるため、
+   * 固定高にするとバッジと文字がクリップされる。
+   */
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: UI_CONSTANTS.GAP.MD,
+    paddingHorizontal: UI_CONSTANTS.GAP.BASE,
     paddingVertical: UI_CONSTANTS.GAP.SM,
-    borderRadius: UI_CONSTANTS.BORDER_RADIUS.XXL,
+    borderRadius: UI_CONSTANTS.BORDER_RADIUS.XL,
     borderWidth: UI_CONSTANTS.BORDER_WIDTH.THIN,
     gap: UI_CONSTANTS.GAP.XS,
   },

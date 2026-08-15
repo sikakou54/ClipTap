@@ -139,8 +139,6 @@ describe('distributed starter database migration', () => {
         writeFileSync(path, Buffer.from(base64Data, 'base64'));
         return path;
       },
-      getDatabasePath: async () => sourceDbPath,
-      copyFile: async () => undefined,
       deleteFile: async (path: string) => {
         rmSync(path, { force: true });
       },

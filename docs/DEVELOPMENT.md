@@ -28,13 +28,13 @@
 ### 必須ツール
 
 #### Node.js & npm
-- **Node.js**: v20.19.0以上、またはv22.12.0以上（Vite 7の要件）
+- **Node.js**: v22以上（ルート `package.json` の `engines` に合わせる）
 - **npm**: 使用するNode.js同梱の現行版
 - インストール: [https://nodejs.org/](https://nodejs.org/)
 
 ```bash
 # バージョン確認
-node --version  # v20.19.0以上、またはv22.12.0以上
+node --version  # v22以上
 npm --version
 ```
 
@@ -744,13 +744,17 @@ npm run type-check:shared
 #### 2. Linter実行
 
 ```bash
-# ESLint実行（mobile → web → shared の順にワークスペースへ委譲）
+# ESLint実行（mobile → web → shared → api の順にワークスペースへ委譲し、最後に store/ を見る）
 npm run lint
 
 # ワークスペース単位で実行する場合
 npm run lint --workspace=@cliptap/mobile
 npm run lint --workspace=@cliptap/web
 npm run lint --workspace=@cliptap/shared
+npm run lint --workspace=@cliptap/api
+
+# ワークスペース外（store/screen/build.mjs）はルートの flat config で見る
+npx eslint store
 ```
 
 自動修正可能なエラーがある場合:
@@ -759,8 +763,11 @@ npm run lint --workspace=@cliptap/shared
 npm run lint:fix
 ```
 
-ルートには flat config を置かず、ワークスペースへ委譲しています（web は型情報を使わない設定で、mobile と shared は型情報付き lint のため設定が大きく異なる）。
-3ワークスペースすべてを CI の `npm run lint` で強制しています。
+lint の本体は各ワークスペースの flat config です（web は型情報を使わない設定で、mobile / shared / api は型情報付き lint のため設定が大きく異なる）。4ワークスペースすべてを CI の `npm run lint` で強制しています。
+
+ルートの `eslint.config.js` が受け持つのは `store/` だけです。`store/` は npm workspaces の定義（`apps/*` と `packages/*`）に含まれず、どのワークスペースの `eslint .` からも到達しないためです。**ワークスペース側（`apps/**`、`packages/**`）はルート設定で必ず ignore しています**。除外を外すと、ルートで `npx eslint` したときに型情報付きのルールが適用されないまま緑になります。
+
+各ワークスペースの config には TypeScript 用（`**/*.{ts,tsx}`）とは別に JavaScript 用のブロックを置いています。files が `.ts/.tsx` だけだと、`apps/web/scripts/*.mjs` や `apps/mobile/plugins/*.js` は「読み込まれるがルールが1つも適用されない」状態になり、静かに検査対象から漏れるためです。
 
 `packages/shared` の lint は `tsconfig.lint.json` を型情報のプロジェクトに使います。ビルド用の `tsconfig.json` が `src` のみを対象とするのに対し、こちらは `tests` も含めるためです。**`src` や `tests` の外に新しいディレクトリを追加する場合は `tsconfig.lint.json` の `include` も更新してください**（対象外のファイルは lint 時にパースエラーになります）。
 
@@ -784,7 +791,12 @@ npm run build:native:android      # Android（:app:assembleDebug）→ adbが見
 
 # ビルドだけ行い、端末を触らない場合
 npm run build:native:ios -- --no-install
+
+# 実機向けのnpm scriptを使いつつ、今回だけシミュレータへ入れたい場合
+npm run build:native:ios:device -- --simulator
 ```
+
+`--simulator` は既定値と同じですが、`build:native:ios:device` が `--device` を焼き込んでいるため、これを打ち消す唯一の手段です（npmは `--` 以降を末尾へ足すだけなので、後勝ちで上書きします）。
 
 実体は [scripts/build-native.sh](../scripts/build-native.sh) です。ビルドログは `.build-logs/` に出力され（gitignore済み）、失敗時はエラー行を抜き出して表示します。
 
@@ -805,6 +817,7 @@ npm run build:native:ios -- --no-install
 - iOSのシミュレータは上書きインストールの前に一度アンインストールします。`.appex` はアプリ本体と別バンドルのため、上書きだけでは古い拡張キーボードが残ることがあるためです。
 - インストール後、iOSは端末上の `.appex` の存在とApp Groupの有効性を、Androidは `adb shell ime list` でIMEが入力方式として認識されているかを確認します。
 - このスクリプトは `expo prebuild --clean` を実行しません。`ios/` が再生成されるとClipTapKeyboardターゲットの手動設定が失われるためです。
+- CIのiOSジョブもこのスクリプト（`npm run build:native:ios -- --no-install`）を使います。CI側で `xcodebuild` を直接呼ぶと `.appex` の埋め込み検査が抜け、ターゲットが失われてもCIが緑のまま通るためです。ビルドログは失敗時に `ios-build-logs` アーティファクトとして残ります。空き容量の事前チェックはランナー向けに `REQUIRED_FREE_GB` で下げています。
 - iOSビルドで `CODE_SIGNING_ALLOWED=NO` を使ってはいけません。エンタイトルメントが埋め込まれず、App Group（`group.com.sikakou.cliptap`）が無効になります。アプリと拡張キーボードは共有SQLiteをApp Group経由で読むため、署名を切るとDB初期化に失敗し（`App Group container not found`）、動作確認に使えないビルドになります。シミュレータ向けはアドホック署名（`CODE_SIGN_IDENTITY = -`）で足りるため、開発者アカウントは不要です。
 
 ##### iOS実機（`--device`）
@@ -860,7 +873,12 @@ npm run verify:ios -- --no-install
 # 検証を飛ばしてインストールだけしたい場合
 npm run verify:ios -- --skip-checks --skip-build
 npm run verify:ios:device -- --skip-checks --skip-build
+
+# 実機向けのnpm scriptを使いつつ、今回だけシミュレータへ入れたい場合
+npm run verify:ios:device -- --simulator
 ```
+
+`--simulator` は既定値と同じですが、`verify:ios:device` が焼き込んでいる `--device` を打ち消す唯一の手段です（npmは `--` 以降を末尾へ足すだけなので、後勝ちで上書きします）。
 
 **iOSとAndroidは必ず分けて実行します。** プラットフォーム引数は必須で、同時指定はエラーになります。片方の環境不備（エミュレータのディスク不足など）でもう片方の確認が止まらないようにするためです。
 
@@ -1194,7 +1212,7 @@ npm run preview
 本番WebはGitHub Pagesへデプロイします。
 
 - `release/prod` ブランチへのpush、またはGitHub Actionsの手動実行で開始
-- Node.js 20で依存関係をインストールし、`npm run build:web` を実行
+- Node.js 22で依存関係をインストールし、`npm run build:web` を実行
 - `apps/web/dist` をGitHub Pagesへアップロード
 - `apps/web/public/CNAME` により `cliptap.net` を使用
 

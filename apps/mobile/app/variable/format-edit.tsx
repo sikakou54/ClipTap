@@ -3,7 +3,8 @@
  * @description システム変数書式選択画面
  *
  * 1つのシステム変数について、プリセットの書式から1つを選ばせる画面。
- * 画面フックを持たず、画面内から SystemVariableFormatMapper を直接呼ぶ現行構造。
+ * 画面フックを持たず、画面内から SystemVariableFormatService を直接呼ぶ現行構造。
+ * データアクセスはService層に閉じており、画面からMapperは参照しない。
  *
  * @param key - 書式を編集するシステム変数のキー
  *
@@ -12,7 +13,7 @@
  * - 選択中の書式のラジオ表示
  * - 既定書式を選んだ場合は保存済み書式を削除、それ以外は上書き保存
  *
- * @see packages/shared/src/mappers/SystemVariableFormatMapper.ts - 書式の保存・読込
+ * @see packages/shared/src/services/SystemVariableFormatService.ts - 書式の保存・読込
  * @see packages/shared/src/constants/systemVariableFormats.ts - 既定書式とプリセットの定義
  */
 
@@ -24,7 +25,7 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   DEFAULT_SYSTEM_VARIABLE_FORMATS,
   SYSTEM_VARIABLE_KEYS,
-  SystemVariableFormatMapper,
+  SystemVariableFormatService,
   UI_SYSTEM_VARIABLES,
   formatByPattern,
   getSystemVariableFormatPresets,
@@ -50,15 +51,15 @@ export default function SystemVariableFormatEditScreen() {
   const key = params.key && isSystemVariableKey(params.key) ? params.key : 'today';
   const locale = normalizeLocale(i18next.language);
   /* 保存済み書式はレンダーごとに読み直し、無ければ既定書式を使う */
-  const current = SystemVariableFormatMapper.getAll()[key] ?? DEFAULT_SYSTEM_VARIABLE_FORMATS[key];
+  const current = SystemVariableFormatService.getAll()[key] ?? DEFAULT_SYSTEM_VARIABLE_FORMATS[key];
   const presets = useMemo(() => getSystemVariableFormatPresets(key, locale), [key, locale]);
   const definition = UI_SYSTEM_VARIABLES.find((item) => item.name === key);
 
   const handleSelect = (pattern: string) => {
     if (pattern === DEFAULT_SYSTEM_VARIABLE_FORMATS[key]) {
-      SystemVariableFormatMapper.delete(key);
+      SystemVariableFormatService.delete(key);
     } else {
-      SystemVariableFormatMapper.upsert(key, pattern);
+      SystemVariableFormatService.upsert(key, pattern);
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     if (Platform.OS === 'android') {

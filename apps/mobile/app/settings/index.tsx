@@ -84,7 +84,7 @@ export default function SettingsScreen() {
                     {/* Proバッジ（Pro機能で未購読の場合） */}
                     {item.isPro && !isSubscribed && (
                       <View style={[styles.proBadge, { backgroundColor: colors.primary }]}>
-                        <Text style={[styles.proBadgeText, { fontSize: responsiveFontSizes.xs, lineHeight: responsiveLineHeights.xs }]}>Pro</Text>
+                        <Text style={[styles.proBadgeText, { color: colors.onPrimary, fontSize: responsiveFontSizes.xs, lineHeight: responsiveLineHeights.xs }]}>Pro</Text>
                       </View>
                     )}
                   </View>
@@ -176,8 +176,8 @@ const styles = StyleSheet.create({
     borderRadius: UI_CONSTANTS.BORDER_RADIUS.SM,
     marginLeft: UI_CONSTANTS.GAP.MD,
   },
+  /** Proバッジのテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   proBadgeText: {
-    color: '#FFFFFF',
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,
   },
 });

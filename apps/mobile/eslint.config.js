@@ -13,6 +13,8 @@ export default tseslint.config(
       'dist',
       'babel.config.js',
       'metro.config.js',
+      /* eslint.config.js 自身は下の JavaScript 用ブロックの対象に入るため除外する */
+      'eslint.config.js',
     ],
   },
   {
@@ -35,6 +37,12 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
+    /*
+     * ここのルールは packages/shared/eslint.config.js と同一内容を意図的に重複させている。
+     * 共通ベースへ切り出すと1ファイルで読み切れなくなり、
+     * apps/web は別系統（typeCheckedではない）のため3ファイル中2ファイルしかまとまらない。
+     * 片方を変えたらもう片方も同じ変更を入れること。
+     */
     rules: {
       /* React Hooks */
       ...reactHooks.configs.recommended.rules,
@@ -76,6 +84,20 @@ export default tseslint.config(
 
       /* awaitがないasync関数は許可（意図的な場合がある） */
       '@typescript-eslint/require-await': 'off',
+    },
+  },
+  {
+    /*
+     * plugins/ のExpo Config Plugin（Node上で動くCommonJS）。
+     * TypeScript用のブロックは files が .ts/.tsx のみのため、
+     * このブロックが無いと .js はルールが1つも適用されないまま素通りする。
+     */
+    files: ['**/*.js'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'commonjs',
+      globals: globals.node,
     },
   }
 );

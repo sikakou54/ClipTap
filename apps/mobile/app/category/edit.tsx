@@ -140,7 +140,7 @@ export default function CategoryEditModal() {
                 style={[
                   styles.modeSwitchText,
                   {
-                    color: !useCustomColor ? '#FFFFFF' : colors.textSecondary,
+                    color: !useCustomColor ? colors.onPrimary : colors.textSecondary,
                     fontSize: responsiveFontSizes.sm,
                   },
                 ]}
@@ -160,7 +160,7 @@ export default function CategoryEditModal() {
                 style={[
                   styles.modeSwitchText,
                   {
-                    color: useCustomColor ? '#FFFFFF' : colors.textSecondary,
+                    color: useCustomColor ? colors.onPrimary : colors.textSecondary,
                     fontSize: responsiveFontSizes.sm,
                   },
                 ]}
@@ -173,27 +173,37 @@ export default function CategoryEditModal() {
           {/* プリセットカラーグリッド */}
           {!useCustomColor ? (
             <View style={styles.colorGrid}>
-              {CATEGORY_COLORS.map((color) => (
-                <TouchableOpacity
-                  key={color}
-                  style={[
-                    styles.colorOption,
-                    {
-                      backgroundColor: color,
-                      width: isTablet ? 48 : 40,
-                      height: isTablet ? 48 : 40,
-                      borderRadius: isTablet ? 24 : 20,
-                    },
-                    selectedColor === color && !useCustomColor && styles.colorOptionSelected,
-                  ]}
-                  onPress={() => handleColorSelect(color)}
-                >
-                  {/* 選択中のチェックマーク */}
-                  {selectedColor === color && (
-                    <Ionicons name="checkmark" size={isTablet ? 24 : 20} color="#FFFFFF" />
-                  )}
-                </TouchableOpacity>
-              ))}
+              {CATEGORY_COLORS.map((color) => {
+                /* 保存値の表記ゆれ（小文字・前後の空白）を吸収して選択中かを判定する。
+                   判定規則は resolveCategoryColorForm のプリセット判定と揃えている */
+                const isColorSelected = selectedColor.trim().toUpperCase() === color.toUpperCase();
+
+                /* プリセットカラーの選択肢 */
+                return (
+                  <TouchableOpacity
+                    key={color}
+                    style={[
+                      styles.colorOption,
+                      {
+                        backgroundColor: color,
+                        width: isTablet ? 48 : 40,
+                        height: isTablet ? 48 : 40,
+                        borderRadius: isTablet ? 24 : 20,
+                      },
+                      isColorSelected && !useCustomColor && [
+                        styles.colorOptionSelected,
+                        { borderColor: colors.onPrimary, shadowColor: colors.shadow },
+                      ],
+                    ]}
+                    onPress={() => handleColorSelect(color)}
+                  >
+                    {/* 選択中のチェックマーク */}
+                    {isColorSelected && (
+                      <Ionicons name="checkmark" size={isTablet ? 24 : 20} color={colors.onPrimary} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           ) : (
             /* カスタムRGB入力セクション */
@@ -299,6 +309,7 @@ export default function CategoryEditModal() {
                       {
                         backgroundColor: currentColor,
                         borderColor: colors.border,
+                        shadowColor: colors.shadow,
                       },
                     ]}
                   />
@@ -371,10 +382,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  /** 選択中のプリセットカラー（枠線色と影の色は使用箇所でテーマから重ねる） */
   colorOptionSelected: {
     borderWidth: 3,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -416,12 +426,12 @@ const styles = StyleSheet.create({
     gap: 8,
     justifyContent: 'center',
   },
+  /** 現在の色のプレビュー（枠線色と影の色は使用箇所でテーマから重ねる） */
   colorPreview: {
     width: 80,
     height: 80,
     borderRadius: 40,
     borderWidth: 2,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,

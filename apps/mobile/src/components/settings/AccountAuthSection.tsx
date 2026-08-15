@@ -126,7 +126,7 @@ export function AccountAuthSection({
                   },
                 ]}
               >
-                {user.email || 'ログアウトするにはタップ'}
+                {user.email || t('settings.account_auth.tap_to_logout')}
               </Text>
             </View>
           </View>
@@ -192,7 +192,7 @@ export function AccountAuthSection({
                     },
                   ]}
                 >
-                  Apple でサインイン
+                  {t('auth.sign_in_apple')}
                 </Text>
               </TouchableOpacity>
 
@@ -225,7 +225,7 @@ export function AccountAuthSection({
                 },
               ]}
             >
-              Google でサインイン
+              {t('auth.sign_in_google')}
             </Text>
           </TouchableOpacity>
         </>

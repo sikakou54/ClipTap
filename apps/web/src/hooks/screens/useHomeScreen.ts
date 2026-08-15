@@ -17,9 +17,10 @@
  * @see useImportScreen.ts - インポート処理
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from '@cliptap/shared';
 import {
+  Logger,
   useSnippets,
   useCategories,
   useProfiles,
@@ -42,6 +43,9 @@ import { useMobileMenu } from '@hooks/useMobileMenu';
 import { useSnippetModal } from '@hooks/screens/useSnippetModal';
 import { useExportScreen } from '@hooks/screens/useExportScreen';
 import { useImportScreen } from '@hooks/screens/useImportScreen';
+
+/** コピー完了表示を出しておく時間（ミリ秒） */
+const COPY_SUCCESS_DURATION_MS = 2000;
 
 /**
  * useHomeScreenの戻り値の型
@@ -199,11 +203,25 @@ export function useHomeScreen(): UseHomeScreenReturn {
     try {
       await copySnippet(snippet.id, activeProfile?.id);
       setCopiedId(snippet.id);
-      setTimeout(() => setCopiedId(null), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      Logger.error('Failed to copy:', err);
     }
   }, [copySnippet, activeProfile?.id]);
+
+  /**
+   * コピー完了表示の自動リセット
+   *
+   * @remarks
+   * クリーンアップでタイマーを解除するのは、アンマウント後や別の定型文をコピーして
+   * IDが入れ替わった後に、前回のタイマーが発火して表示を消してしまわないようにするため。
+   */
+  useEffect(() => {
+    if (!copiedId) return;
+
+    const timeoutId = setTimeout(() => setCopiedId(null), COPY_SUCCESS_DURATION_MS);
+
+    return () => clearTimeout(timeoutId);
+  }, [copiedId]);
 
   /**
    * スニペットのタイトルだけをクリップボードにコピー
@@ -216,11 +234,25 @@ export function useHomeScreen(): UseHomeScreenReturn {
     try {
       await copySnippetTitle(snippet.id, activeProfile?.id);
       setCopiedTitleId(snippet.id);
-      setTimeout(() => setCopiedTitleId(null), 2000);
     } catch (err) {
-      console.error('Failed to copy title:', err);
+      Logger.error('Failed to copy title:', err);
     }
   }, [copySnippetTitle, activeProfile?.id]);
+
+  /**
+   * タイトルのコピー完了表示の自動リセット
+   *
+   * @remarks
+   * 本文側と同じ理由でクリーンアップを置く。タイマーを解除しないと、
+   * 続けて別のタイトルをコピーしたときに前回のタイマーが表示を消してしまう。
+   */
+  useEffect(() => {
+    if (!copiedTitleId) return;
+
+    const timeoutId = setTimeout(() => setCopiedTitleId(null), COPY_SUCCESS_DURATION_MS);
+
+    return () => clearTimeout(timeoutId);
+  }, [copiedTitleId]);
 
   /** スニペットを削除（確認ダイアログ付き） */
   const handleDeleteSnippet = useCallback(async (id: string) => {
@@ -234,7 +266,7 @@ export function useHomeScreen(): UseHomeScreenReturn {
       try {
         await deleteSnippet(id);
       } catch (err) {
-        console.error('Failed to delete:', err);
+        Logger.error('Failed to delete:', err);
       }
     });
   }, [deleteSnippet]);

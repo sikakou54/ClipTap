@@ -114,7 +114,8 @@ export async function fetchSubscriptionStatus(
       return FREE_STATUS;
     }
 
-    const data = await response.json() as RevenueCatSubscriberResponse;
+    /* Workers の Response.json は型引数で応答型を指定する（as での断言は冗長になる） */
+    const data = await response.json<RevenueCatSubscriberResponse>();
     const subscriber = data.subscriber;
 
     /* 対象の Entitlement を取得（存在しなければ無料プラン） */

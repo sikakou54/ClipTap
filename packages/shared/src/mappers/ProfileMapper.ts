@@ -114,7 +114,7 @@ const toProfileEntity = (row: any): Profile => ({
   name: row.name, /* プロファイル名 */
   isDefault: Boolean(row.isDefault), /* デフォルトプロファイルか（SQLiteでは0/1、JSではboolean） */
   isActive: Boolean(row.isActive), /* アクティブプロファイルか（現在選択中の環境） */
-  valid: row.valid !== undefined ? Boolean(row.valid) : true, /* 有効かどうか（Proプラン制限） */
+  valid: Boolean(row.valid), /* 有効かどうか（Proプラン制限） */
   sortOrder: row.sortOrder ?? 0, /* 並び順 */
   createdAt: row.createdAt, /* 作成日時 */
   updatedAt: row.updatedAt, /* 最終更新日時 */

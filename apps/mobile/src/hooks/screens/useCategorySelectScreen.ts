@@ -10,7 +10,7 @@
  * - 新規カテゴリ作成画面への遷移
  *
  * @see app/category/select.tsx - UIコンポーネント
- * @see lib/hooks/useCategories.ts - カテゴリCRUD操作
+ * @see packages/shared/src/providers/CategoryProvider.tsx - カテゴリCRUD操作（useCategories）
  */
 
 import { useCallback, useMemo } from 'react';

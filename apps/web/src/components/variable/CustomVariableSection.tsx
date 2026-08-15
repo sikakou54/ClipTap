@@ -12,7 +12,8 @@ import { EmptyVariableList } from './EmptyVariableList';
 
 interface CustomVariableSectionProps {
   variables: Variable[];
-  getVariableValue: (variableId: string) => string;
+  /** 変数の表示値。未設定の場合は null */
+  getVariableValue: (variableId: string) => string | null;
   onEdit: (variableId: string) => void;
   onDelete: (variableId: string) => void;
   onAdd: () => void;

@@ -37,7 +37,9 @@ export function AgreementSection({
           onChange={(e) => onAgreeTerms(e.target.checked)}
           className="mt-1 w-4 h-4 border-gray-300 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
         />
+        {/* リンクの前後で文言を分けて組み立てる（言語によって語順が異なるため） */}
         <span>
+          {t('settings.web_specific.terms_agree_before')}
           {/* 利用規約リンク */}
           <button
             type="button"
@@ -46,7 +48,7 @@ export function AgreementSection({
           >
             {t('settings.terms')}
           </button>
-          {t('settings.web_specific.terms_agree').replace('利用規約', '')}
+          {t('settings.web_specific.terms_agree_after')}
         </span>
       </label>
 
@@ -58,7 +60,9 @@ export function AgreementSection({
           onChange={(e) => onAgreePrivacy(e.target.checked)}
           className="mt-1 w-4 h-4 border-gray-300 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
         />
+        {/* リンクの前後で文言を分けて組み立てる（言語によって語順が異なるため） */}
         <span>
+          {t('settings.web_specific.privacy_agree_before')}
           {/* プライバシーポリシーリンク */}
           <button
             type="button"
@@ -67,7 +71,7 @@ export function AgreementSection({
           >
             {t('settings.privacy')}
           </button>
-          {t('settings.web_specific.privacy_agree').replace('プライバシーポリシー', '')}
+          {t('settings.web_specific.privacy_agree_after')}
         </span>
       </label>
     </div>

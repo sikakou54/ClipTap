@@ -6,7 +6,6 @@
     "save": "保存",
     "done": "完了",
     "close": "閉じる",
-    "confirm": "確認",
     "warning": "警告",
     "copy": "コピー",
     "preview": "プレビュー",
@@ -24,7 +23,9 @@
     "next": "次へ",
     "column": "列",
     "unsaved_changes_warning": "入力途中のデータがあります。破棄してもよろしいですか？",
-    "closeModal": "モーダルを閉じる"
+    "closeModal": "モーダルを閉じる",
+    "open_menu": "メニューを開く",
+    "search": "検索"
   },
   "snippet": {
     "title": "タイトル",
@@ -39,8 +40,6 @@
     "title_input_placeholder": "タイトルを入力...",
     "content": "内容",
     "content_placeholder": "内容を入力してください",
-    "content_input": "内容を入力",
-    "content_input_placeholder": "内容を入力...",
     "search_placeholder": "定型文を検索...",
     "category": "カテゴリ",
     "select_category": "カテゴリを選択",
@@ -84,7 +83,8 @@
       "logout_success_message": "アカウント連携が解除されました。",
       "status_authenticated": "連携済",
       "status_unauthenticated": "未連携",
-      "description": "アカウントを連携すると、Pro権利を複数端末で共有できます。"
+      "description": "アカウントを連携すると、Pro権利を複数端末で共有できます。",
+      "tap_to_logout": "ログアウトするにはタップ"
     },
     "terms": "利用規約",
     "privacy": "プライバシーポリシー",
@@ -127,8 +127,10 @@
       "password_placeholder": "エクスポート時に設定したパスワード",
       "load_button": "読み込む",
       "loading": "読み込み中...",
-      "terms_agree": "利用規約に同意します",
-      "privacy_agree": "プライバシーポリシーに同意します",
+      "terms_agree_before": "",
+      "terms_agree_after": "に同意します",
+      "privacy_agree_before": "",
+      "privacy_agree_after": "に同意します",
       "how_to_use": "モバイルアプリでエクスポートした .cliptap ファイルを\nアップロードしてください",
       "error_password": "パスワードが正しくありません",
       "error_checksum": "ファイルが破損しているか改竄されています",
@@ -139,7 +141,8 @@
       "error_no_password": "パスワードを入力してください",
       "error_terms": "利用規約に同意してください",
       "error_privacy": "プライバシーポリシーに同意してください",
-      "confirm_unlink": "アカウント連携を解除しますか？"
+      "confirm_unlink": "アカウント連携を解除しますか？",
+      "db_version": "DBバージョン : {{version}}"
     }
   },
   "profile": {
@@ -151,12 +154,6 @@
     "add_hint": "右上の + ボタンからプロファイルを追加できます",
     "name": "プロファイル名",
     "name_placeholder": "例: 株式会社A",
-    "add_variable": "変数を追加",
-    "edit_variable": "変数を編集",
-    "variable_name": "変数名",
-    "variable_name_placeholder": "例: company",
-    "variable_value": "値",
-    "variable_value_placeholder": "例: 株式会社A",
     "default_badge": "標準",
     "environment": "プロファイル",
     "switch_environment": "プロファイルを切り替える",
@@ -211,7 +208,6 @@
     "cannot_delete_system_variable": "システム変数は削除できません",
     "cannot_delete_default_profile": "標準プロファイルは削除できません",
     "cannot_set_invalid_profile_as_default": "無効なプロファイルは標準にできません",
-    "variable_value_required": "変数の値を入力してください",
     "invalid_rgb_values": "RGB値は0から255の範囲で入力してください",
     "account_auth_failed_title": "アカウント認証失敗",
     "account_auth_failed_message": "アカウント連携中にエラーが発生しました。",
@@ -234,6 +230,9 @@
     "invalid_file_format": "ファイル形式が正しくありません",
     "invalid_file_type": "無効なファイル形式です",
     "logout_failed": "ログアウトに失敗しました",
+    "google_sign_in_failed": "Googleでのサインインに失敗しました",
+    "apple_sign_in_failed": "Appleでのサインインに失敗しました",
+    "sign_out_failed": "サインアウトに失敗しました",
     "newer_version": "現在の端末では対応していないバージョンです。アプリを最新バージョンに更新してから再度お試しください。"
   },
   "tabs": {
@@ -310,7 +309,7 @@
   },
   "auth": {
     "sign_in_google": "Googleでログイン",
-    "sign_in_apple": "Appleでログイン",
+    "sign_in_apple": "Appleでサインイン",
     "account_link": "アカウント連携",
     "account_link_description": "アカウントを連携するとProプランの同期ができます",
     "account_linked": "連携済み",
@@ -331,7 +330,6 @@
     "day_desc": "日",
     "weekday": "曜日名",
     "weekday_desc": "曜日名",
-    "name_format_hint": "英数字とアンダースコアのみ使用可能",
     "enter_value": "値を入力",
     "standard_value": "標準値",
     "standard_value_empty_warning": "「標準」の値が入力されていません。\nこのまま保存しますか？",

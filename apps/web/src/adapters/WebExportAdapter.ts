@@ -33,17 +33,6 @@ export class WebExportAdapter implements ExportAdapter {
   }
 
   /**
-   * データベースファイルのパス（Blob URL）を取得
-   * WebではメモリDBからBlobを作成してURLを返す
-   */
-  async getDatabasePath(): Promise<string> {
-    const mainDbAdapter = getMainDbAdapter() as WebDatabaseAdapter;
-    const data = mainDbAdapter.exportDatabase();
-    const blob = new Blob([data.buffer as ArrayBuffer], { type: 'application/octet-stream' });
-    return URL.createObjectURL(blob);
-  }
-
-  /**
    * エクスポートデータをファイルとして保存（ダウンロード）
    */
   async saveExportFile(fileName: string, content: string): Promise<string> {

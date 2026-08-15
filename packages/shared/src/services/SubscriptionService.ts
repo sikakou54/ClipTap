@@ -13,11 +13,19 @@
  * - 認証連携（Firebase UID ↔ RevenueCat）
  *
  * アーキテクチャ:
- * - Adapterパターンで依存を注入（Mobile: RevenueCat, Web: NoOp）
+ * - Adapterパターンで依存を注入（Mobile: RevenueCat SDK, Web: ClipTap API経由のWebSubscriptionAdapter）
  * - ValidFlagsUpdaterでMapper操作を抽象化（shared→app依存を回避）
+ * - アダプター本体と無料プラン上限の保持先はadapters/AdapterRegistry.tsで、
+ *   本サービスはそこから読み出す（services→adaptersの一方向依存）
  */
 
+import { Logger } from '../utils/logger';
 import type { SubscriptionAdapter, SubscriptionListener } from '../adapters/SubscriptionAdapter';
+import {
+  setSubscriptionAdapter,
+  getRegisteredSubscriptionAdapter,
+  getRegisteredSubscriptionLimits,
+} from '../adapters/AdapterRegistry';
 import type { SubscriptionPlan, SubscriptionStatus, PurchaseResult } from '../types/Subscription';
 import type { Profile } from '../schema';
 
@@ -71,14 +79,26 @@ export interface ValidFlagsUpdater {
  * Adapterパターンでプラットフォーム固有の実装を注入。
  */
 export class SubscriptionService {
-  /** プラットフォーム固有のアダプター */
-  private static adapter: SubscriptionAdapter | null = null;
-  /** 無料プランのプロファイル上限 */
-  private static freeProfilesLimit = FREE_PROFILES_LIMIT;
-  /** 無料プランの変数上限 */
-  private static freeVariablesLimit = FREE_VARIABLES_LIMIT;
   /** validフラグ更新用コールバック */
   private static validFlagsUpdater: ValidFlagsUpdater | null = null;
+
+  /**
+   * 無料プランのプロファイル上限
+   *
+   * @remarks 登録時に指定が無ければFREE_PROFILES_LIMITを使う。
+   */
+  private static get freeProfilesLimit(): number {
+    return getRegisteredSubscriptionLimits().freeProfilesLimit ?? FREE_PROFILES_LIMIT;
+  }
+
+  /**
+   * 無料プランの変数上限
+   *
+   * @remarks 登録時に指定が無ければFREE_VARIABLES_LIMITを使う。
+   */
+  private static get freeVariablesLimit(): number {
+    return getRegisteredSubscriptionLimits().freeVariablesLimit ?? FREE_VARIABLES_LIMIT;
+  }
 
   /**
    * サブスクリプションアダプターを設定
@@ -86,20 +106,18 @@ export class SubscriptionService {
    * @param adapter - プラットフォーム固有のアダプター
    * @param options - オプション（制限値のオーバーライド）
    * @remarks
-   * アプリ起動時に一度だけ呼び出す。
-   * Mobile: MobileSubscriptionAdapter, Web: NoOp実装を注入。
+   * 本番の登録経路はこのメソッドではない。Mobile/Webとも起動時に init()（shared/init.ts）へ
+   * アダプター群を渡し、init() が setAllAdapters() 経由で setSubscriptionAdapter() を呼ぶ。
+   * 注入される実装は Mobile: MobileSubscriptionAdapter、Web: WebSubscriptionAdapter。
+   * このメソッドは同じ setSubscriptionAdapter() への単体差し替え口で、
+   * 現在の呼び出し元は packages/shared/tests 配下のみ。
+   * いずれの経路でも実体の保持はadapters/AdapterRegistry.tsが行う。
    */
   static setAdapter(
     adapter: SubscriptionAdapter,
     options?: { freeProfilesLimit?: number; freeVariablesLimit?: number }
   ): void {
-    this.adapter = adapter;
-    if (options?.freeProfilesLimit !== undefined) {
-      this.freeProfilesLimit = options.freeProfilesLimit;
-    }
-    if (options?.freeVariablesLimit !== undefined) {
-      this.freeVariablesLimit = options.freeVariablesLimit;
-    }
+    setSubscriptionAdapter(adapter, options);
   }
 
   /**
@@ -112,25 +130,17 @@ export class SubscriptionService {
   }
 
   /**
-   * validFlagsUpdater が設定済みか確認
-   *
-   * @returns 設定済みの場合true
-   */
-  static hasValidFlagsUpdater(): boolean {
-    return this.validFlagsUpdater !== null;
-  }
-
-  /**
    * アダプターが設定済みか確認
    *
    * @returns SubscriptionAdapter
    * @throws {Error} アダプター未設定の場合
    */
   private static ensureAdapter(): SubscriptionAdapter {
-    if (!this.adapter) {
+    const adapter = getRegisteredSubscriptionAdapter();
+    if (!adapter) {
       throw new Error('SubscriptionAdapter not set. Call setAdapter() first.');
     }
-    return this.adapter;
+    return adapter;
   }
 
   /**
@@ -141,7 +151,7 @@ export class SubscriptionService {
    * Mobile: プラットフォーム固有のコールバック設定などに使用
    */
   static getAdapter(): SubscriptionAdapter | null {
-    return this.adapter;
+    return getRegisteredSubscriptionAdapter();
   }
 
   /**
@@ -150,7 +160,7 @@ export class SubscriptionService {
    * @returns Pro版に加入している場合true
    */
   static isSubscribed(): boolean {
-    return this.adapter?.isSubscribed() ?? false;
+    return getRegisteredSubscriptionAdapter()?.isSubscribed() ?? false;
   }
 
   /**
@@ -159,7 +169,7 @@ export class SubscriptionService {
    * @returns 初期化中の場合true
    */
   static isLoading(): boolean {
-    return this.adapter?.isLoading() ?? false;
+    return getRegisteredSubscriptionAdapter()?.isLoading() ?? false;
   }
 
   /**
@@ -215,6 +225,7 @@ export class SubscriptionService {
    *
    * @returns 更新を実行できたか。現在の呼び出し元8箇所はいずれも戻り値を見ていないが、
    *          共有パッケージの公開APIのため型は変えずに維持している。
+   *          失敗は警告としてログに残す。
    */
   static updateValidFlags(): boolean {
     if (!this.validFlagsUpdater?.hasDbAdapter()) {
@@ -243,10 +254,11 @@ export class SubscriptionService {
         }
       }
       return true;
-    } catch {
+    } catch (error) {
       /* 有効フラグの再計算に失敗してもローカル業務機能は続行させる。
          ここで例外を上げると、プロファイル削除・標準切替・インポートのトランザクションを
-         巻き込んで中断してしまうため。失敗はログにも残さず、戻り値のfalseだけで伝える。 */
+         巻き込んで中断してしまうため再スローしない。原因追跡のため警告だけ残す。 */
+      Logger.warn('[SubscriptionService] Failed to update valid flags. Continuing without recalculation.', error);
       return false;
     }
   }
@@ -257,21 +269,21 @@ export class SubscriptionService {
    * @param userId - Firebase UID
    */
   static async linkAccount(userId: string): Promise<void> {
-    await this.adapter?.linkAccount?.(userId);
+    await getRegisteredSubscriptionAdapter()?.linkAccount?.(userId);
   }
 
   /**
    * RevenueCatからログアウト
    */
   static async logout(): Promise<void> {
-    await this.adapter?.logout?.();
+    await getRegisteredSubscriptionAdapter()?.logout?.();
   }
 
   /**
    * CustomerInfo（顧客情報）を最新化
    */
   static async refreshCustomerInfo(): Promise<void> {
-    await this.adapter?.refreshCustomerInfo?.();
+    await getRegisteredSubscriptionAdapter()?.refreshCustomerInfo?.();
   }
 
   /**
@@ -280,7 +292,7 @@ export class SubscriptionService {
    * @remarks テスト用。状態を初期化する。
    */
   static reset(): void {
-    this.adapter?.reset?.();
+    getRegisteredSubscriptionAdapter()?.reset?.();
   }
 
   /* ======================================== */
@@ -293,7 +305,7 @@ export class SubscriptionService {
    * @returns サブスクリプションステータス、未実装時はnull
    */
   static async getStatus(): Promise<SubscriptionStatus | null> {
-    return this.adapter?.getStatus?.() ?? null;
+    return getRegisteredSubscriptionAdapter()?.getStatus?.() ?? null;
   }
 
   /**
@@ -302,7 +314,7 @@ export class SubscriptionService {
    * @returns プラン一覧、未実装時は空配列
    */
   static async getPlans(): Promise<SubscriptionPlan[]> {
-    return this.adapter?.getPlans?.() ?? [];
+    return getRegisteredSubscriptionAdapter()?.getPlans?.() ?? [];
   }
 
   /**

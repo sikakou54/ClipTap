@@ -19,13 +19,11 @@ import { useTranslation } from '@cliptap/shared';
 import { useSubscriptionService } from '@cliptap/shared';
 import { showConfirm, showAlert, showErrorAlert } from '@utils/alerts';
 import { Logger } from '@cliptap/shared';
+import { toCurrentPlanType, type CurrentPlanType } from '@mobile-types/subscription';
 
 /* ======================================== */
 /* 型定義 */
 /* ======================================== */
-
-/** 現在のプラン種別 */
-export type CurrentPlanType = 'monthly' | 'annual' | null;
 
 /** useManageSubscriptionScreen フックの返却値 */
 export interface UseManageSubscriptionScreenReturn {
@@ -83,7 +81,7 @@ export function useManageSubscriptionScreen(): UseManageSubscriptionScreenReturn
   const loadSubscriptionInfo = useCallback(() => {
     if (status) {
       const expiration = status.expirationDate ? new Date(status.expirationDate) : null;
-      const planType = status.activePlanId as CurrentPlanType;
+      const planType = toCurrentPlanType(status.activePlanId);
 
       setExpirationDate(expiration);
       setCurrentPlan(planType);

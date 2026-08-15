@@ -22,8 +22,10 @@ import type {
   SnippetProfileRow,
   SnippetImportRow,
   ProfileImportRow,
+  VariableImportRow,
 } from './IImportMapper';
 import type { DbAdapter } from '../adapters/DbAdapter';
+import { tableExists } from '../database/migrations';
 import type {
   Category,
   Profile,
@@ -83,24 +85,32 @@ export class ImportMapper {
       ORDER BY s.updatedAt DESC
     `);
 
-    /* 各スニペットに紐づくプロファイルを取得 */
-    const snippets: ImportCandidateSnippet[] = [];
-    for (const s of snippetsRaw) {
-      /* LEFT JOINでプロファイルが削除されている場合も対応 */
-      const snippetProfilesData = this.adapter.all<ImportCandidateSnippetProfile>(`
-        SELECT
-          sp.profileId,
-          p.name as profileName
-        FROM snippet_profiles sp
-        LEFT JOIN profiles p ON sp.profileId = p.id
-        WHERE sp.snippetId = ?
-      `, [s.id]);
+    /* 各スニペットに紐づくプロファイルを1回のクエリでまとめて取得する */
+    /* LEFT JOINでプロファイルが削除されている場合も対応 */
+    /* ORDER BYはスニペット単位で引いていた頃の並び（snippet_profilesの主キー順）を保つため */
+    const snippetProfileRows = this.adapter.all<
+      ImportCandidateSnippetProfile & { snippetId: string }
+    >(`
+      SELECT
+        sp.snippetId,
+        sp.profileId,
+        p.name as profileName
+      FROM snippet_profiles sp
+      LEFT JOIN profiles p ON sp.profileId = p.id
+      ORDER BY sp.snippetId, sp.profileId
+    `);
 
-      snippets.push({
-        ...s,
-        profiles: snippetProfilesData,
-      });
+    const profilesBySnippet = new Map<string, ImportCandidateSnippetProfile[]>();
+    for (const row of snippetProfileRows) {
+      const entries = profilesBySnippet.get(row.snippetId) ?? [];
+      entries.push({ profileId: row.profileId, profileName: row.profileName });
+      profilesBySnippet.set(row.snippetId, entries);
     }
+
+    const snippets: ImportCandidateSnippet[] = snippetsRaw.map((s) => ({
+      ...s,
+      profiles: profilesBySnippet.get(s.id) ?? [],
+    }));
 
     /* 2. プロファイルの取得 */
     /* sortOrder順で表示 */
@@ -143,11 +153,7 @@ export class ImportMapper {
    * @returns 一時DBの全業務データ（system_variable_formatsテーブルが無い場合、書式は空配列）
    */
   getFullRestoreData(): FullRestoreData {
-    const hasFormats = Boolean(
-      this.adapter.get<{ name: string }>(
-        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'system_variable_formats'"
-      )
-    );
+    const hasFormats = tableExists(this.adapter, 'system_variable_formats');
 
     return {
       categories: this.adapter.all<Category>('SELECT * FROM categories'),
@@ -178,20 +184,20 @@ export class ImportMapper {
   }
 
   /**
-   * 選択されたIDの変数だけを、プロファイルごとの値を添えて取得する
+   * 選択されたIDの変数だけを取り込み対象として取得する
    * @param ids - 取り込む変数ID（空配列なら空配列を返す）
-   * @returns 該当する変数一覧
+   * @returns 該当する変数行
+   * @description
+   * プロファイルごとの値は取り込み時にgetProfileVariables()でまとめて取得するため、ここでは添えない。
    */
-  getVariables(ids: string[]): ImportCandidateVariable[] {
+  getVariables(ids: string[]): VariableImportRow[] {
     if (ids.length === 0) return [];
 
     /* createdAt/updatedAt/sortOrderを含めて取得 */
-    const variablesRaw = this.adapter.all<Omit<ImportCandidateVariable, 'profileValues'>>(
+    return this.adapter.all(
       `SELECT id, name, label, icon, type, valid, sortOrder, createdAt, updatedAt FROM variables WHERE id IN (${placeholders(ids.length)})`,
       ids
     );
-
-    return this.attachProfileValues(variablesRaw);
   }
 
   /**
@@ -292,29 +298,41 @@ export class ImportMapper {
    * 変数行に、各プロファイルでの値をぶら下げてインポート候補の形にする
    * @param rows - profileValuesを持たない変数行
    * @returns profileValuesを付与したインポート候補の変数一覧
+   * @description
+   * 値は変数の件数によらず1回のクエリでまとめて取得する。
+   * ORDER BYは変数単位で引いていた頃の並び（変数ごとに挿入順）を保つため。
    */
   private attachProfileValues(
     rows: Array<Omit<ImportCandidateVariable, 'profileValues'>>
   ): ImportCandidateVariable[] {
-    const variables: ImportCandidateVariable[] = [];
-    for (const v of rows) {
-      /* LEFT JOINでプロファイルが削除されている場合も対応 */
-      const profileValues = this.adapter.all<ImportCandidateVariableProfileValue>(`
-        SELECT
-          pv.profileId,
-          pv.value,
-          p.name as profileName
-        FROM profile_variables pv
-        LEFT JOIN profiles p ON pv.profileId = p.id
-        WHERE pv.variableId = ?
-      `, [v.id]);
+    /* LEFT JOINでプロファイルが削除されている場合も対応 */
+    const valueRows = this.adapter.all<
+      ImportCandidateVariableProfileValue & { variableId: string }
+    >(`
+      SELECT
+        pv.variableId,
+        pv.profileId,
+        pv.value,
+        p.name as profileName
+      FROM profile_variables pv
+      LEFT JOIN profiles p ON pv.profileId = p.id
+      ORDER BY pv.variableId, pv.rowid
+    `);
 
-      variables.push({
-        ...v,
-        profileValues,
+    const valuesByVariable = new Map<string, ImportCandidateVariableProfileValue[]>();
+    for (const row of valueRows) {
+      const entries = valuesByVariable.get(row.variableId) ?? [];
+      entries.push({
+        profileId: row.profileId,
+        profileName: row.profileName,
+        value: row.value,
       });
+      valuesByVariable.set(row.variableId, entries);
     }
 
-    return variables;
+    return rows.map((v) => ({
+      ...v,
+      profileValues: valuesByVariable.get(v.id) ?? [],
+    }));
   }
 }

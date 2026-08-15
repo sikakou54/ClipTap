@@ -6,6 +6,7 @@
  * カラーインジケーター、名前表示、編集/削除ボタンを含む。
  */
 import type { Category } from '@cliptap/shared';
+import { CATEGORY_FALLBACK_COLOR } from '@utils/categoryColor';
 
 interface CategoryItemProps {
   category: Category;
@@ -22,11 +23,10 @@ export function CategoryItem({ category, isLast, onEdit, onDelete }: CategoryIte
         !isLast ? 'border-b border-gray-200 dark:border-[#2A2A2A]' : ''
       }`}
     >
-      {/* カラーインジケーター。color 未設定時は #6B7280（グレー）で描く。
-          エクスポート/インポート画面のカテゴリバッジは #3B82F6、同画面のカテゴリタブの丸は #ccc と値が揃っていない。 */}
+      {/* カラーインジケーター（color 未設定時は未設定フォールバック色で描く） */}
       <div
         className="w-4 h-4 rounded-full"
-        style={{ backgroundColor: category.color || '#6B7280' }}
+        style={{ backgroundColor: category.color || CATEGORY_FALLBACK_COLOR }}
       />
       {/* カテゴリ名 */}
       <span className="flex-1 font-medium text-gray-900 dark:text-white">{category.name}</span>

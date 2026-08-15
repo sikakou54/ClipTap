@@ -111,7 +111,7 @@ export const showAlert = (title: string, message: string, onClose?: () => void):
  * エラーアラートダイアログを表示
  *
  * window.alertを使用してエラーメッセージを表示します。
- * タイトルは自動的に「エラー」になります。
+ * タイトルは common.error の翻訳が入ります。I18nAdapterが未登録の場合はタイトルなしで表示します。
  *
  * この関数は、translateError()で翻訳済みのエラーメッセージを受け取ることを想定しています。
  *
@@ -124,8 +124,8 @@ export const showErrorAlert = (message: string, onClose?: () => void): void => {
     const title = i18nAdapter.translate('common.error');
     showSingleButtonAlert(title, message, onClose);
   } catch {
-    /* I18nAdapterが未登録の場合はデフォルトタイトルを使用 */
-    showSingleButtonAlert('エラー', message, onClose);
+    /* I18nAdapter未登録時はタイトルを付けず、翻訳済みのメッセージだけを表示する */
+    showSingleButtonAlert('', message, onClose);
   }
 };
 

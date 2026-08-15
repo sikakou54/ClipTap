@@ -10,6 +10,18 @@ const testContext = vi.hoisted(() => ({
 
 vi.mock('@cliptap/shared', () => ({
   DatabaseError: class DatabaseError extends Error {},
+  /**
+   * 実装と同じく console へ委譲する最小のLogger。
+   * 自動保存の失敗が「consoleにだけ記録される」ことを検証するため、
+   * ここを no-op にせず console.error まで通す。
+   */
+  Logger: {
+    error: (message: string, ...args: unknown[]) => console.error(message, ...args),
+    warn: (message: string, ...args: unknown[]) => console.warn(message, ...args),
+    info: () => undefined,
+    debug: () => undefined,
+    success: () => undefined,
+  },
   getMainDbAdapter: () => ({
     isOpen: () => testContext.mainOpen,
     exportDatabase: () => testContext.mainData,

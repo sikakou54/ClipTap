@@ -47,6 +47,21 @@ export interface ProfileImportRow {
 }
 
 /**
+ * 変数行データ（DBから取得した生データ）
+ */
+export interface VariableImportRow {
+  id: string;
+  name: string;
+  label: string | null;
+  icon: string | null;
+  type: string;
+  valid?: number | boolean; /* SQLiteでは0/1、JSではboolean */
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
  * プロファイル変数（profile_variablesテーブルの行）
  */
 export interface ProfileVariableRow {

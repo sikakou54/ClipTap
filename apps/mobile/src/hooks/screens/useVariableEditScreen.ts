@@ -12,7 +12,7 @@
  * - アイコン選択モーダルの状態管理
  *
  * @see app/variable/edit.tsx - UIコンポーネント
- * @see lib/hooks/useVariables.tsx - 変数CRUD操作
+ * @see packages/shared/src/providers/VariableProvider.tsx - 変数CRUD操作（useVariables）
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -146,8 +146,6 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
   /* ======================================== */
   const [name, setName] = useState('');
   const [label, setLabel] = useState('');
-  /* 標準環境（isDefault=trueのプロファイル）の値。profileValues にも同じプロファイルIDのエントリが入るため、標準環境の値は2箇所に保持されている（保存時は performSave が isDefault で分岐して value 側を採用する）。 */
-  const [value, setValue] = useState('');
   const [selectedIcon, setSelectedIcon] = useState<VariableIconName>('code-outline');
   const [showIconModal, setShowIconModal] = useState(false);
   const [profileValues, setProfileValues] = useState<Record<string, string>>({});
@@ -184,6 +182,18 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
   const nameErrorMessage = nameValidation.errorMessage;
 
   /**
+   * 標準環境（isDefault=trueのプロファイル）の値
+   *
+   * @remarks
+   * 標準環境の値も profileValues に入れて一元管理する。別のstateへ二重に持つと、
+   * 値編集モーダルからの戻りで片方だけが更新され、保存可否の判定が古い値を見る。
+   */
+  const standardValue = useMemo(
+    () => (defaultProfile ? (profileValues[defaultProfile.id] ?? '') : ''),
+    [defaultProfile, profileValues]
+  );
+
+  /**
    * 保存可能かどうか
    *
    * @remarks
@@ -192,10 +202,10 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
   const canSave = useMemo(() => {
     if (!name.trim()) return false;
     if (!isNameValid) return false;
-    const hasStandardValue = value.trim() !== '';
+    const hasStandardValue = standardValue.trim() !== '';
     const hasProfileValue = Object.values(profileValues).some((val) => val.trim() !== '');
     return hasStandardValue || hasProfileValue;
-  }, [name, isNameValid, value, profileValues]);
+  }, [name, isNameValid, standardValue, profileValues]);
 
   /* ======================================== */
   /* 初期化 */
@@ -216,13 +226,7 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
       setLabel(editingVariable.label || '');
       setSelectedIcon((editingVariable.icon || 'code-outline') as VariableIconName);
 
-      /* 標準値を取得 */
-      const defaultPv = defaultProfile
-        ? profileVariables.find(pv => pv.profileId === defaultProfile.id && pv.variableId === editingVariable.id)
-        : undefined;
-      setValue(defaultPv?.value || '');
-
-      /* 各プロファイルから変数値を取得 */
+      /* 各プロファイルから変数値を取得（標準環境の値もこのマップに含まれる） */
       setProfileValues(initProfileValues((profileId) => {
         const pv = profileVariables.find(
           pv => pv.profileId === profileId && pv.variableId === editingVariable.id
@@ -233,11 +237,10 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
       /* 新規作成モード: フォームを空にリセット */
       setName('');
       setLabel('');
-      setValue('');
       setSelectedIcon('code-outline');
       setProfileValues(initProfileValues(() => ''));
     }
-  }, [variableId, profiles, profileVariables, defaultProfile, editingVariable]);
+  }, [variableId, profiles, profileVariables, editingVariable]);
 
   /* ======================================== */
   /* 画面フォーカス時の処理（コールバックデータ処理） */
@@ -246,20 +249,17 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
   useFocusEffect(
     useCallback(() => {
       if (global.variableValueCallbackData) {
-        const { profileId, isStandard, newValue } = global.variableValueCallbackData;
+        const { profileId, newValue } = global.variableValueCallbackData;
 
-        Logger.info('[VariableEdit] Received callback data:', { profileId, isStandard, newValue });
+        Logger.info('[VariableEdit] Received callback data:', { profileId, newValue });
 
-        if (isStandard === 'true' || isStandard === true) {
-          Logger.info('[VariableEdit] Setting standard value:', newValue);
-          setValue(newValue);
-        } else {
-          Logger.info('[VariableEdit] Setting profile value:', { profileId, newValue });
-          setProfileValues((prev) => ({
-            ...prev,
-            [profileId]: newValue,
-          }));
-        }
+        /* 標準環境の値も profileValues に入れて一元管理するため、標準かどうかで分岐しない。
+           呼び出し元が渡した profileId は標準環境でも標準プロファイル自身のIDになっている */
+        Logger.info('[VariableEdit] Setting profile value:', { profileId, newValue });
+        setProfileValues((prev) => ({
+          ...prev,
+          [profileId]: newValue,
+        }));
 
         global.variableValueCallbackData = undefined;
       }
@@ -288,14 +288,14 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
             variableName: name.trim(),
             profileName: profile.name,
             isStandard: profile.isDefault ? 'true' : 'false',
-            currentValue: profile.isDefault ? value : profileValues[profile.id] || '',
+            currentValue: profileValues[profile.id] || '',
           },
         });
       } catch (error) {
         showErrorAlert(translateError(error));
       }
     },
-    [name, value, profileValues, router]
+    [name, profileValues, router]
   );
 
   /**
@@ -311,9 +311,9 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
    */
   const getDisplayValue = useCallback(
     (profile: Profile): string => {
-      return profile.isDefault ? value : profileValues[profile.id] || '';
+      return profileValues[profile.id] || '';
     },
-    [value, profileValues]
+    [profileValues]
   );
 
   /**
@@ -343,11 +343,11 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
         });
       }
 
-      /* 全プロファイルの変数値を保存 */
+      /* 全プロファイルの変数値を保存（前後空白の除去はProfileService側で行う） */
       const valuesToSave = profiles.map(profile => ({
         profileId: profile.id,
         variableId: savedVariable.id,
-        value: profile.isDefault ? value.trim() : (profileValues[profile.id] || ''),
+        value: profileValues[profile.id] || '',
       }));
 
       /* 変数値を設定 */
@@ -368,7 +368,6 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
     selectedIcon,
     profiles,
     profileValues,
-    value,
     createVariable,
     updateVariable,
     setVariableValuesForVariable,
@@ -383,16 +382,15 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
     /* 保存不可の場合 */
     if (!canSave) return;
 
-    const standardValue = value.trim();
     /* 標準値が空の場合 */
-    if (!standardValue) {
+    if (!standardValue.trim()) {
       /* 「標準値が空ですが保存しますか？」警告 */
       showConfirm(t('variables.standard_value_empty_warning'), () => performSave(), undefined, 'warning');
       return;
     }
 
     await performSave();
-  }, [canSave, value, performSave, t]);
+  }, [canSave, standardValue, performSave, t]);
 
   /* ======================================== */
   /* 戻り値 */
@@ -403,7 +401,7 @@ export function useVariableEditScreen(params: UseVariableEditScreenParams): UseV
     setName,
     label,
     setLabel,
-    value,
+    value: standardValue,
     selectedIcon,
     showIconModal,
     setShowIconModal,

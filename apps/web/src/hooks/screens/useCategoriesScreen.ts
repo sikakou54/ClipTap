@@ -15,7 +15,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from '@cliptap/shared';
-import { useCategories, CATEGORY_COLORS, DEFAULT_CATEGORY_COLOR, type Category } from '@cliptap/shared';
+import { Logger, useCategories, CATEGORY_COLORS, DEFAULT_CATEGORY_COLOR, translateError, type Category } from '@cliptap/shared';
 import { useUnsavedChangesWarning } from '@hooks/useUnsavedChangesWarning';
 import { useBodyScrollLock } from '@hooks/useBodyScrollLock';
 import { showConfirm } from '@utils/alerts';
@@ -294,11 +294,8 @@ export function useCategoriesScreen(): UseCategoriesScreenReturn {
       setShowModal(false);
       resetForm();
     } catch (err) {
-      if (err instanceof Error && err.message.includes('already exists')) {
-        setError(t('error.duplicate_category_name'));
-      } else {
-        setError(t('error.generic'));
-      }
+      /* ClipTapError は自身が持つ翻訳キーで表示される（重複名も同経路で解決される） */
+      setError(translateError(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -310,7 +307,7 @@ export function useCategoriesScreen(): UseCategoriesScreenReturn {
       try {
         deleteCategory(id);
       } catch (err) {
-        console.error('Failed to delete category:', err);
+        Logger.error('Failed to delete category:', err);
       }
     });
   }, [deleteCategory]);

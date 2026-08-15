@@ -298,6 +298,14 @@ class Database {
   /**
    * データベースをリセット（ログアウト時）
    * DBアダプターを閉じ、OPFSファイルを削除し、初期化フラグをリセットする
+   *
+   * @throws {Error} OPFSのDBファイルを削除できなかった場合
+   *
+   * @remarks
+   * 削除の成否は init() / openImportedDatabase() と同じく assertFileDeleted で確認する。
+   * WebFileIOAdapter.deleteFile は内部で例外を吸収するため、確認しないと
+   * 「キャッシュだけ消えてOPFSに古いDBが残る」状態を成功として返してしまう。
+   * 例外を投げる場合でもDBアダプターは既に閉じているので、初期化フラグは必ず落とす。
    */
   async reset(): Promise<void> {
     try {
@@ -316,30 +324,38 @@ class Database {
       /* アダプターが未初期化の場合は無視 */
     }
 
+    let fileIO: WebFileIOAdapter | null = null;
     try {
-      /* OPFSのDBファイルを削除（再ログイン時に古いデータが残らないように） */
-      const fileIO = getFileIOAdapter() as WebFileIOAdapter;
-
-      /* mainDBファイル削除 */
-      const mainDbExists = await fileIO.exists(getMainDatabasePath());
-      if (mainDbExists) {
-        await fileIO.deleteFile(getMainDatabasePath());
-        Logger.info('[Database] OPFS main database file deleted');
-      }
-
-      /* systemDBファイル削除 */
-      const systemDbExists = await fileIO.exists(getSystemDatabasePath());
-      if (systemDbExists) {
-        await fileIO.deleteFile(getSystemDatabasePath());
-        Logger.info('[Database] OPFS system database file deleted');
-      }
+      fileIO = getFileIOAdapter() as WebFileIOAdapter;
     } catch {
-      /* ファイルIOアダプターが未初期化の場合は無視 */
+      /* ファイルIOアダプターが未初期化のときは削除対象も存在しない */
     }
 
-    this.isInitialized = false;
-    this.restoredFromCache = false;
-    Logger.info('[Database] Database state reset');
+    try {
+      /* OPFSのDBファイルを削除（再ログイン時に古いデータが残らないように） */
+      if (fileIO) {
+        /* mainDBファイル削除 */
+        const mainDbExists = await fileIO.exists(getMainDatabasePath());
+        if (mainDbExists) {
+          await fileIO.deleteFile(getMainDatabasePath());
+          await this.assertFileDeleted(fileIO, getMainDatabasePath());
+          Logger.info('[Database] OPFS main database file deleted');
+        }
+
+        /* systemDBファイル削除 */
+        const systemDbExists = await fileIO.exists(getSystemDatabasePath());
+        if (systemDbExists) {
+          await fileIO.deleteFile(getSystemDatabasePath());
+          await this.assertFileDeleted(fileIO, getSystemDatabasePath());
+          Logger.info('[Database] OPFS system database file deleted');
+        }
+      }
+    } finally {
+      /* DBアダプターは既に閉じているため、削除に失敗しても「初期化済み」のまま残さない */
+      this.isInitialized = false;
+      this.restoredFromCache = false;
+      Logger.info('[Database] Database state reset');
+    }
   }
 }
 

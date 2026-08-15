@@ -97,28 +97,35 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       setLoading(true);
       Logger.info('[ProfileProvider] loadProfiles called');
 
+      /* アクティブ未設定のときは標準プロファイルを昇格させる。DBのisActiveも書き換えるため、次回以降の読み込みでも同じプロファイルが選ばれる */
+      /* 昇格はstateへ反映する前に済ませる。読み込んだ後に書き換えると、profiles配列だけが
+         書き換え前のスナップショットのまま残り、全要素のisActiveがfalseの状態でactiveProfileと
+         食い違う。この食い違いを踏むと環境を指定した定型文が一覧から消えるため、
+         必ず「DB書込 → 読込 → state反映」の順にする */
+      if (!ProfileService.getActive()) {
+        const defaultProfileToActivate = ProfileService.getDefault();
+        if (defaultProfileToActivate) {
+          ProfileService.setActive(defaultProfileToActivate.id);
+          Logger.info('[ProfileProvider] Auto-activated default profile:', defaultProfileToActivate.id);
+        }
+      }
+
       const allProfiles = ProfileService.getAllIncludingInvalid();
       Logger.info('[ProfileProvider] Loaded profiles count:', allProfiles.length);
-      setProfiles(allProfiles);
 
       const allVars = ProfileService.getAllProfileVariables();
       Logger.info('[ProfileProvider] Loaded profile variables count:', allVars.length);
-      setProfileVariables(allVars);
 
       const defaultProf = ProfileService.getDefault();
       Logger.info('[ProfileProvider] Default profile:', defaultProf?.name ?? 'none');
-      setDefaultProfileState(defaultProf);
 
-      let active = ProfileService.getActive();
+      const active = ProfileService.getActive();
       Logger.info('[ProfileProvider] Active profile:', active?.name ?? 'none');
 
-      /* アクティブ未設定のときは標準プロファイルを昇格させる。DBのisActiveも書き換えるため、次回以降の読み込みでも同じプロファイルが選ばれる */
-      if (!active && defaultProf) {
-        ProfileService.setActive(defaultProf.id);
-        active = defaultProf;
-        Logger.info('[ProfileProvider] Auto-activated default profile:', defaultProf.id);
-      }
-
+      /* 同一スナップショットとして一括で反映する */
+      setProfiles(allProfiles);
+      setProfileVariables(allVars);
+      setDefaultProfileState(defaultProf);
       setActiveProfileState(active);
       setError(null);
     } catch (err) {

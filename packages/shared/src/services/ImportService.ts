@@ -271,7 +271,7 @@ function importSnippets(
  * ローカルIDを引くためのもの。失敗して空マップになっても、選択項目は upsert が名前で
  * 再解決するため取込自体は完了する（未選択プロファイルへの紐付けだけが落ちる。
  * カテゴリの分類は prepareExistingCategoryMapping が別に解決するため影響しない）。
- * ここで例外を上げると取込全体が失敗するため握り潰す。
+ * ここで例外を上げると取込全体が失敗するため再スローはせず、原因追跡のため警告だけ残す。
  */
 function prepareExistingProfileMapping(
   importMapper: ImportMapper
@@ -286,8 +286,12 @@ function prepareExistingProfileMapping(
         profileIdMap.set(p.id, existing.id);
       }
     }
-  } catch {
-    /* 上記のとおり縮退して続行する。中断させない */
+  } catch (error) {
+    /* 上記のとおり縮退して続行する。中断させないが、無音にすると原因追跡ができないため警告を残す */
+    Logger.warn(
+      '[ImportService] Failed to prepare existing profile mapping. Continuing with an empty map.',
+      error
+    );
   }
 
   return profileIdMap;
@@ -305,7 +309,7 @@ function prepareExistingProfileMapping(
  * このマッピングは、取込元スニペットが参照する「選択されていない既存カテゴリ」の
  * ローカルIDを引くためのもの。失敗して空マップになっても、選択項目は upsert が名前で
  * 再解決するため取込自体は完了する（未選択カテゴリを参照するスニペットが未分類になるだけ）。
- * ここで例外を上げると取込全体が失敗するため握り潰す。
+ * ここで例外を上げると取込全体が失敗するため再スローはせず、原因追跡のため警告だけ残す。
  */
 function prepareExistingCategoryMapping(
   importMapper: ImportMapper
@@ -320,8 +324,12 @@ function prepareExistingCategoryMapping(
         categoryIdMap.set(c.id, existing.id);
       }
     }
-  } catch {
-    /* 上記のとおり縮退して続行する。中断させない */
+  } catch (error) {
+    /* 上記のとおり縮退して続行する。中断させないが、無音にすると原因追跡ができないため警告を残す */
+    Logger.warn(
+      '[ImportService] Failed to prepare existing category mapping. Continuing with an empty map.',
+      error
+    );
   }
 
   return categoryIdMap;

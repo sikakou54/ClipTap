@@ -21,7 +21,7 @@ import type {
 
 import { SUBSCRIPTION_API_BASE_URL } from '@constants/subscription';
 import { auth } from '@services/FirebaseService';
-import { Logger } from '@cliptap/shared';
+import { Logger, SubscriptionStatusSchema } from '@cliptap/shared';
 
 /**
  * 無料プラン（未契約）を示す既定のサブスクリプション状態
@@ -136,8 +136,16 @@ export class WebSubscriptionAdapter implements SubscriptionAdapter {
         return false;
       }
 
-      /* 6. サブスクリプション状態を取得（Proプランの判定はWorker側で完了している） */
-      const status = await response.json() as SubscriptionStatus;
+      /* 6. サブスクリプション状態を取得（Proプランの判定はWorker側で完了している）。
+            HTTP 200でも所定の形状を満たさない応答は、他の異常経路と同じく権利検証失敗として扱う */
+      const parsed = SubscriptionStatusSchema.safeParse(await response.json());
+      if (!parsed.success) {
+        Logger.warn('[WebSubscriptionAdapter] API returned an unexpected payload shape');
+        this.verificationFailed = true;
+        this.reset(false);
+        return false;
+      }
+      const status = parsed.data;
 
       Logger.debug('[WebSubscriptionAdapter] Subscription check result:', {
         userId,

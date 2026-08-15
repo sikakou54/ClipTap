@@ -13,8 +13,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useWindowDimensions, LayoutChangeEvent } from 'react-native';
-import { useTranslation, useProfiles } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
+import { useTranslation, useProfiles, useSharedSubscription } from '@cliptap/shared';
 import { loadVariableOptions } from '@utils/variableLoader';
 import { VariableOption } from '@mobile-types/variable';
 
@@ -42,7 +41,7 @@ export interface UseVariableToolbarReturn {
 export function useVariableToolbar(): UseVariableToolbarReturn {
   const { t } = useTranslation();
   const { profileVariables, defaultProfile } = useProfiles();
-  const { isSubscribed } = useSubscription();
+  const { isSubscribed } = useSharedSubscription();
   const { width: screenWidth } = useWindowDimensions();
 
   const [contentWidth, setContentWidth] = useState(0);

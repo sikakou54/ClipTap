@@ -18,6 +18,7 @@ import {
   type SystemVariableFormats,
   type SystemVariableKey,
 } from '../constants/systemVariableFormats';
+import { tableExists } from '../database/migrations';
 import { SystemVariableFormatRegistry } from '../services/SystemVariableFormatRegistry';
 import { getCurrentTimestamp } from '../utils/dateHelpers';
 
@@ -28,10 +29,6 @@ export interface SystemVariableFormatRow {
 }
 
 const SystemVariableFormatQueries = {
-  SELECT_TABLE: `
-    SELECT name FROM sqlite_master
-    WHERE type = 'table' AND name = 'system_variable_formats'
-  `,
   SELECT_ALL: 'SELECT variableKey, pattern, updatedAt FROM system_variable_formats',
   UPSERT: `
     INSERT INTO system_variable_formats (variableKey, pattern, updatedAt)
@@ -75,7 +72,7 @@ export class SystemVariableFormatMapper {
    * @returns 変数キーと書式パターンの対応（テーブル自体が存在しないDBでは空オブジェクト）
    */
   private static getAllFrom(db: DbAdapter): SystemVariableFormats {
-    if (!db.get<{ name: string }>(SystemVariableFormatQueries.SELECT_TABLE)) return {};
+    if (!tableExists(db, 'system_variable_formats')) return {};
     return toFormats(db.all<SystemVariableFormatRow>(SystemVariableFormatQueries.SELECT_ALL));
   }
 

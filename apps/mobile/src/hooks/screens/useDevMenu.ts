@@ -13,10 +13,8 @@
 
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
-import { Logger } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
+import { Logger, useSharedSubscription } from '@cliptap/shared';
 import { database } from '@database/database';
-import { runSeed } from '@database/seed';
 import { showConfirm, showAlert, showErrorAlert } from '@utils/alerts';
 import * as Updates from 'expo-updates';
 
@@ -33,7 +31,7 @@ export interface UseDevMenuReturn {
  * DEVモードでのデバッグ・テスト機能を提供
  */
 export function useDevMenu(): UseDevMenuReturn {
-  const { setDevSubscriptionOverride } = useSubscription();
+  const { setDevSubscriptionOverride } = useSharedSubscription();
 
   /* ======================================== */
   /* イベントハンドラ */
@@ -74,12 +72,14 @@ export function useDevMenu(): UseDevMenuReturn {
 
   const handleResetDatabase = useCallback(async () => {
     showConfirm(
-      'This will delete ALL data and runSeed test data. App will reload. Continue?',
+      'This will delete ALL data and seed test data. App will reload. Continue?',
       async () => {
         try {
           Logger.debug('[Dev] Resetting database...');
           await database.reset();
           Logger.debug('[Dev] Seeding test data...');
+          /* シード処理はリセット実行時にだけ読み込む（本番バンドルからの除外は metro.config.js の解決差し替えで行う） */
+          const { runSeed } = await import('@database/seed');
           await runSeed();
           Logger.debug('[Dev] Database reset complete!');
 

@@ -70,7 +70,7 @@ const toEntity = (row: any): Variable => ({
   label: row.label || null, /* ラベル（UIに表示する名前。未設定・空文字はnullに寄せる） */
   icon: row.icon || null, /* アイコン（オプション。未設定・空文字はnullに寄せる） */
   type: row.type || 'custom', /* タイプ（custom: カスタム変数、それ以外はシステム変数。未設定・空文字はcustom扱い） */
-  valid: row.valid !== undefined ? Boolean(row.valid) : true, /* 有効かどうか（Proプラン制限） */
+  valid: Boolean(row.valid), /* 有効かどうか（Proプラン制限） */
   sortOrder: row.sortOrder ?? 0, /* 並び順 */
   createdAt: row.createdAt, /* 作成日時 */
   updatedAt: row.updatedAt, /* 最終更新日時 */

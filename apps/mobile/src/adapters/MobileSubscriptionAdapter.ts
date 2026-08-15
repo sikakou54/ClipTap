@@ -125,7 +125,9 @@ class MobileSubscriptionAdapterImpl implements SubscriptionAdapter {
    * リスナーに通知
    *
    * SubscriptionAdapter インターフェースの必須実装。
-   * mobile では呼び出し元が現状存在しない（web は WebSubscriptionAdapter 内から呼んでいる）。
+   * mobile では SubscriptionProvider の onSubscriptionChange（PurchaseService の状態変更通知）から呼ばれ、
+   * useSubscriptionService を使うペイウォール／契約管理画面へ権利変更を配る。
+   * web は WebSubscriptionAdapter が自分自身から呼んでいる。
    */
   notifyListeners(): void {
     const isSubscribed = this.isSubscribed();
@@ -232,8 +234,8 @@ class MobileSubscriptionAdapterImpl implements SubscriptionAdapter {
       const status = await this.getStatus();
       return { success: true, isCancelled: false, status };
 
-    } catch (error: any) {
-      if (error?.userCancelled) {
+    } catch (error: unknown) {
+      if ((error as { userCancelled?: boolean } | null)?.userCancelled) {
         return { success: false, isCancelled: true };
       }
       return { success: false, isCancelled: false, error: String(error) };

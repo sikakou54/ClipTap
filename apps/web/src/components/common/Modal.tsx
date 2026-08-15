@@ -7,9 +7,9 @@
  * 現状の利用箇所は AccountLinkModal のみ。
  * 他のモーダル（CategoryModal / ProfileModal / IconPickerModal / VariableEditModal /
  * SnippetEditModal / WebPageModal / SystemVariableFormatModal）は同じオーバーレイDOMを
- * 各自で実装している。背景スクロールロックはそれらも useBodyScrollLock を個別に呼んでおり
- * （CategoryModal / ProfileModal は useCategoriesScreen / useProfilesScreen 側で呼ぶ）、
- * 下記のうちこのコンポーネント固有なのはESCクローズだけ。
+ * 各自で実装している。背景スクロールロックは useBodyScrollLock、ESCクローズは useEscapeClose を
+ * それぞれ個別に呼んでおり（CategoryModal / ProfileModal のスクロールロックは
+ * useCategoriesScreen / useProfilesScreen 側で呼ぶ）、挙動はこのコンポーネントと揃っている。
  *
  * アクセシビリティ対応:
  * - ESCキーでモーダルを閉じる
@@ -17,9 +17,10 @@
  * - モーダル表示中は背景のスクロールをロック
  */
 
-import { useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { useTranslation } from '@cliptap/shared';
 import { useBodyScrollLock } from '@hooks/useBodyScrollLock';
+import { useEscapeClose } from '@hooks/useEscapeClose';
 
 /* ========================================
    型定義
@@ -94,12 +95,14 @@ function ModalTitle({ children }: ModalTitleProps) {
 }
 
 function ModalCloseButton({ onClick }: ModalCloseButtonProps) {
+  const { t } = useTranslation();
+
   /* モーダル閉じるボタン（×アイコン） */
   return (
     <button
       onClick={onClick}
       className="p-2 text-gray-400 dark:text-text-subtle hover:text-gray-600 dark:hover:text-text-muted hover:bg-gray-100 dark:hover:bg-surface-secondary rounded-lg transition-colors"
-      aria-label="Close"
+      aria-label={t('common.closeModal')}
     >
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -138,17 +141,7 @@ export function Modal({
   closeOnOverlayClick = true,
 }: ModalProps) {
   useBodyScrollLock(isOpen);
-
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
+  useEscapeClose(isOpen, onClose);
 
   if (!isOpen) return null;
 

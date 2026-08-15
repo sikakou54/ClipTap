@@ -96,7 +96,7 @@ export function SideMenuFooter({
       {/* DBバージョン表示 */}
       <div className="mt-4 text-center">
         <span className="text-xs text-gray-400 dark:text-[#707070]">
-          DB Version : {SCHEMA_VERSION}
+          {t('settings.web_specific.db_version', { version: SCHEMA_VERSION })}
         </span>
       </div>
     </div>

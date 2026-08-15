@@ -78,7 +78,7 @@ export function DeveloperMenu({
       icon: 'refresh-outline' as const,
       iconColor: colors.error,
       title: 'Reset Database',
-      description: 'Delete all data and runSeed test data',
+      description: 'Delete all data and seed test data',
       onPress: onResetDatabase,
     },
   ];

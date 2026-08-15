@@ -3,6 +3,7 @@ import {
   getSchemaVersionFromDb,
   migrateV4ToV5,
   migrateV5ToV6,
+  migrateV6ToV7,
   migrateImportTempDb,
   tableExists,
 } from '../../src/database/migrations';
@@ -246,6 +247,33 @@ describe('migrateImportTempDb', () => {
     expect(db.get('SELECT copyCount FROM snippets WHERE id = ?', ['s1'])).toEqual({
       copyCount: 4,
     });
+  });
+
+  /** V6→V7は書式設定テーブルを追加する。列構成は現行スキーマ定義と一致していなければならない */
+  it('creates the system variable format table on a V6 database', async () => {
+    const db = await createVersion(6);
+
+    await migrateV6ToV7(db);
+
+    expect(
+      db
+        .all<{ name: string }>("SELECT name FROM pragma_table_info('system_variable_formats')")
+        .map((c) => c.name)
+    ).toEqual(['variableKey', 'pattern', 'updatedAt']);
+  });
+
+  /** 既にテーブルがあるDBへ再実行しても、保存済みの書式を作り直してはならない */
+  it('keeps existing rows when the format table already exists', async () => {
+    const db = await createVersion(7);
+    db.run(
+      "INSERT INTO system_variable_formats VALUES ('date', 'YYYY/MM/DD', 'updated')"
+    );
+
+    await migrateV6ToV7(db);
+
+    expect(db.all('SELECT * FROM system_variable_formats')).toEqual([
+      { variableKey: 'date', pattern: 'YYYY/MM/DD', updatedAt: 'updated' },
+    ]);
   });
 
   /** 旧実装で作りそこねた派生indexは、移行完了時の後処理で補完される */

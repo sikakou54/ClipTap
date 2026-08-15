@@ -35,13 +35,6 @@ import { setAuthAdapter } from './AuthAdapter';
 import { setExportAdapter } from './ExportAdapter';
 import { setImportAdapter } from './ImportAdapter';
 import { setSortPreferenceAdapter } from './SortPreferenceAdapter';
-/*
- * SubscriptionAdapter だけは set 関数がこのファイルにあり、SubscriptionService が内部で
- * アダプターを保持する設計のため、adapters 層から services 層を参照している。
- * 他のアダプターは set/get/has を自ファイル内に閉じており、adapters 配下で services を
- * import しているのはこのファイルだけ。
- */
-import { SubscriptionService } from '../services/SubscriptionService';
 
 /**
  * サブスクリプション設定オプション
@@ -81,11 +74,27 @@ export interface SubscriptionAdapterOptions {
 }
 
 /**
- * SubscriptionAdapterを設定
+ * 登録済みのSubscriptionAdapter（未登録時はnull）
  *
  * @description
- * サブスクリプションアダプターをSubscriptionServiceに登録。
- * 他のアダプターと異なり、SubscriptionServiceが内部でアダプターを管理する。
+ * 他のアダプターは自ファイル内に保持先を持つが、SubscriptionAdapterだけは
+ * 登録時に無料プラン上限（SubscriptionAdapterOptions）も同時に受け取るため、
+ * その型を定義しているこのファイルに保持先を置いている。
+ */
+let subscriptionAdapter: SubscriptionAdapter | null = null;
+
+/**
+ * 登録時に指定された無料プランの上限設定
+ *
+ * @description
+ * 未指定の項目はここに入らず、services/SubscriptionService.ts の既定値
+ * （FREE_PROFILES_LIMIT / FREE_VARIABLES_LIMIT）が使われる。
+ * 上限は業務ルールのためadapters層では解釈せず、値の保持だけを行う。
+ */
+const subscriptionLimits: SubscriptionAdapterOptions = {};
+
+/**
+ * SubscriptionAdapterを設定
  *
  * @param adapter - プラットフォーム固有のSubscriptionAdapter実装
  * @param options - オプション設定（無料プランの上限数等）
@@ -94,8 +103,41 @@ export function setSubscriptionAdapter(
   adapter: SubscriptionAdapter,
   options?: SubscriptionAdapterOptions
 ): void {
-  /* SubscriptionServiceにアダプターとオプションを登録 */
-  SubscriptionService.setAdapter(adapter, options);
+  subscriptionAdapter = adapter;
+
+  /* 指定された項目だけを上書きし、未指定の項目は既存の設定を保つ */
+  if (options?.freeProfilesLimit !== undefined) {
+    subscriptionLimits.freeProfilesLimit = options.freeProfilesLimit;
+  }
+  if (options?.freeVariablesLimit !== undefined) {
+    subscriptionLimits.freeVariablesLimit = options.freeVariablesLimit;
+  }
+}
+
+/**
+ * 登録済みのSubscriptionAdapterを取得
+ *
+ * @description
+ * shared内部（services/SubscriptionService.ts）専用。
+ * アプリ側の取得口は従来どおり SubscriptionService.getAdapter() のみで、
+ * この関数は adapters/index.ts からは公開しない。
+ *
+ * @returns 登録済みのSubscriptionAdapter、未登録の場合はnull
+ */
+export function getRegisteredSubscriptionAdapter(): SubscriptionAdapter | null {
+  return subscriptionAdapter;
+}
+
+/**
+ * 登録時に指定された無料プランの上限設定を取得
+ *
+ * @description
+ * shared内部（services/SubscriptionService.ts）専用。既定値の適用はservices層が行う。
+ *
+ * @returns 指定された上限設定（未指定の項目はundefined）
+ */
+export function getRegisteredSubscriptionLimits(): Readonly<SubscriptionAdapterOptions> {
+  return subscriptionLimits;
 }
 
 /**
@@ -151,7 +193,8 @@ export interface SetAllAdaptersOptions {
  *
  * @description
  * プラットフォーム固有のアダプター実装をまとめて登録。
- * アプリ起動時（Mobile/Web各々の_layout.tsx等）で1回だけ呼び出される。
+ * 呼び出し元はinit()（init.ts）のみで、init()はMobile/Web双方のuseAdapterInitializationが
+ * アプリ起動時に1回だけ実行する。
  * これにより、sharedパッケージ内のビジネスロジックがプラットフォーム固有の機能（DB、暗号化等）を利用可能になる。
  *
  * @param adapters - 登録するアダプター群（すべてオプショナル）

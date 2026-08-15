@@ -11,7 +11,7 @@
  * - 無料プラン制限チェック
  *
  * @see app/settings/variables.tsx - UIコンポーネント
- * @see lib/hooks/useVariables.tsx - 変数CRUD操作
+ * @see packages/shared/src/providers/VariableProvider.tsx - 変数CRUD操作（useVariables）
  */
 
 import { useState, useCallback, useMemo } from 'react';
@@ -23,10 +23,10 @@ import {
   useProfiles,
   Logger,
   FREE_VARIABLES_LIMIT,
+  useSharedSubscription,
   type Variable,
   type Profile,
 } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
 import { useUpgradePrompt } from '@hooks/useUpgradePrompt';
 import { showConfirm } from '@utils/alerts';
 
@@ -48,7 +48,8 @@ export interface UseVariablesScreenReturn {
 
   /* ヘルパー */
   isVariableEnabled: (variable: Variable) => boolean;
-  getVariableValue: (variable: Variable) => string;
+  /** 変数の表示値。未設定の場合は null */
+  getVariableValue: (variable: Variable) => string | null;
 }
 
 /**
@@ -62,7 +63,7 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
 
   const confirmUpgrade = useUpgradePrompt();
 
-  const { canAddCustomVariable } = useSubscription();
+  const { canAddCustomVariable } = useSharedSubscription();
   const { deleteVariable: deleteVar } = useVariables();
   const { profiles, profileVariables, defaultProfile } = useProfiles();
 
@@ -122,13 +123,15 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
    * 変数の表示値を取得
    *
    * @remarks
-   * 選択環境の非空値 → 標準環境の非空値 → t('common.not_set') の順に解決する。
+   * 選択環境の非空値 → 標準環境の非空値 → null（未設定）の順に解決する。
    * 空文字は値なしとして扱い、次の候補へ進む。
    * 環境が1件も無い（selectedProfileId が null）ときは標準環境の値のみを見る。
    * 参照は変数IDで行う。変数名は一意制約に依存するため、キーには使わない。
+   * 未設定を翻訳済みの表示文字列で表さないのは、値として「未設定」を登録した変数が
+   * 未設定として描画されてしまうため。表示文言への変換は呼び出し側が行う。
    */
   const getVariableValue = useCallback(
-    (variable: Variable): string => {
+    (variable: Variable): string | null => {
       /* 標準値を取得（デフォルトプロファイルから） */
       const getStandardValueInline = (varId: string): string => {
         if (!defaultProfile) return '';
@@ -139,7 +142,7 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
       };
 
       if (!selectedProfileId) {
-        return getStandardValueInline(variable.id) || t('common.not_set');
+        return getStandardValueInline(variable.id) || null;
       }
 
       const profileValue = profileVariables.find(
@@ -154,9 +157,9 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
         return standardValue;
       }
 
-      return t('common.not_set');
+      return null;
     },
-    [selectedProfileId, defaultProfile, profileVariables, t]
+    [selectedProfileId, defaultProfile, profileVariables]
   );
 
   /* ======================================== */

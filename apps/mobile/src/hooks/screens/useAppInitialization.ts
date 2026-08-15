@@ -26,11 +26,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useAuth, Logger, SubscriptionService } from '@cliptap/shared';
+import { useAuth, Logger, SubscriptionService, useSharedSubscription } from '@cliptap/shared';
 import type { UseAppInitializationReturn } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
 import { database } from '@database/database';
-import { runSeed } from '@database/seed';
 
 /**
  * アプリデータ初期化フック
@@ -41,7 +39,7 @@ import { runSeed } from '@database/seed';
  */
 export function useAppInitialization(): UseAppInitializationReturn {
   const { loading: authLoading } = useAuth();
-  const { isLoading: subscriptionLoading, verificationFailed } = useSubscription();
+  const { isLoading: subscriptionLoading, verificationFailed } = useSharedSubscription();
   const [hasBeenReady, setHasBeenReady] = useState(false);
   const [isLoaded, setLoaded] = useState(false);
   const [isDbInitialized, setIsDbInitialized] = useState(false);
@@ -56,8 +54,13 @@ export function useAppInitialization(): UseAppInitializationReturn {
       try {
         await database.init();
 
-        /* 開発モードでテストデータをシード */
+        /*
+         * 開発モードでテストデータをシード。
+         * 本番バンドルからシード本体を外す手当ては metro.config.js の解決差し替えで行う
+         * （Metroはimport()を別チャンクへ分割しないため、動的importだけでは除外できない）。
+         */
         if (__DEV__) {
+          const { runSeed } = await import('@database/seed');
           await runSeed();
         }
 

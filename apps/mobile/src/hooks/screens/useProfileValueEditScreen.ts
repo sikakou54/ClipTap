@@ -10,7 +10,7 @@
  * - 保存処理（既存変数の場合は直接保存、未作成の場合はコールバック）
  *
  * @see app/variable/profile-value-edit.tsx - UIコンポーネント
- * @see lib/hooks/useVariables.tsx - 変数CRUD操作
+ * @see packages/shared/src/providers/VariableProvider.tsx - 変数CRUD操作（useVariables）
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';

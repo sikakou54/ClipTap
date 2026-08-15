@@ -38,18 +38,6 @@ export interface ImportAdapter {
   writeTempDatabase(fileName: string, base64Data: string): Promise<string>;
 
   /**
-   * 本番データベースのパスを取得
-   *
-   * @returns データベースパス
-   */
-  getDatabasePath(): Promise<string>;
-
-  /**
-   * ファイルをコピー
-   */
-  copyFile(source: string, destination: string): Promise<void>;
-
-  /**
    * ファイルを削除
    */
   deleteFile(path: string): Promise<void>;

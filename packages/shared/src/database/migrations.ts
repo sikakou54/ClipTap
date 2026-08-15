@@ -64,22 +64,18 @@ export async function setSchemaVersionToDb(db: DbAdapter, version: number): Prom
  * テーブルが存在するかチェック
  *
  * sqlite_masterシステムテーブルを使用して確認します。
+ * DBアクセス自体の失敗は握りつぶさず送出します（テーブル不在と区別するため）。
  *
  * @param db - データベースアダプター
  * @param tableName - テーブル名
  * @returns テーブルが存在する場合true
  */
 export function tableExists(db: DbAdapter, tableName: string): boolean {
-  try {
-    const result = db.get<{ count: number }>(
-      `SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name=?`,
-      [tableName]
-    );
-    return (result?.count ?? 0) > 0;
-  } catch (error) {
-    Logger.error(`Failed to check if table ${tableName} exists:`, error);
-    return false;
-  }
+  const result = db.get<{ count: number }>(
+    `SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name=?`,
+    [tableName]
+  );
+  return (result?.count ?? 0) > 0;
 }
 
 /**
@@ -449,11 +445,11 @@ export async function migrateV3ToV4(mainDB: DbAdapter, systemDB: DbAdapter): Pro
  * SystemDatabaseから共有コンテナDBへ全データをコピーする
  *
  * @remarks
- * snippet_profiles / variables / profile_variables はV2以降にしか無く、旧DBに無ければ
- * SELECT自体が失敗するため、テーブルごとに try / catch で囲んで警告のみで先へ進む。
- * この try はSELECTだけでなくINSERT OR IGNOREのループまで含むため、テーブル不在以外の失敗
- * （挿入時の制約違反など）でも同じ経路に入り、そのテーブルのコピーだけが途中で打ち切られる。
- * catchは各テーブルで独立しており、後続テーブルのコピーとマイグレーション本体は継続する。
+ * snippet_profiles / variables / profile_variables はV2以降にしか無いため、旧DBに
+ * テーブルが存在しない場合だけ警告を残して読み飛ばす。
+ * コピー中の失敗は握りつぶさず呼び出し元へ送出し、移行そのものを停止させる。
+ * user_versionは移行完了時にしか保存しないため、停止した場合は旧バージョンのまま残り、
+ * 次回起動時に INSERT OR IGNORE で冪等に再試行される。
  */
 async function copyDataFromSystemDatabase(
   sharedDb: DbAdapter,
@@ -492,7 +488,9 @@ async function copyDataFromSystemDatabase(
   }
 
   /* snippet_profilesデータのコピー（V2以降のみ存在） */
-  try {
+  if (!tableExists(systemDb, 'snippet_profiles')) {
+    Logger.warn('[Migration V3→V4] snippet_profiles table does not exist in old DB, skipping');
+  } else {
     const snippetProfiles = systemDb.all<Record<string, unknown>>('SELECT * FROM snippet_profiles');
     Logger.info(`[Migration V3→V4] Found ${snippetProfiles.length} snippet-profile relations`);
     for (const sp of snippetProfiles) {
@@ -501,13 +499,12 @@ async function copyDataFromSystemDatabase(
         [sp.snippetId, sp.profileId] as unknown[]
       );
     }
-  } catch {
-    /* 打ち切られるのはsnippet_profilesのコピーのみ。詳細はこの関数のJSDocを参照 */
-    Logger.warn('[Migration V3→V4] snippet_profiles table may not exist in old DB, skipping');
   }
 
   /* variablesデータのコピー（V2以降のみ存在） */
-  try {
+  if (!tableExists(systemDb, 'variables')) {
+    Logger.warn('[Migration V3→V4] variables table does not exist in old DB, skipping');
+  } else {
     const variables = systemDb.all<Record<string, unknown>>('SELECT * FROM variables');
     Logger.info(`[Migration V3→V4] Found ${variables.length} variables`);
     for (const variable of variables) {
@@ -518,13 +515,12 @@ async function copyDataFromSystemDatabase(
         [variable.id, variable.name, variable.label, variable.icon, variable.type, createdAt, updatedAt, (variable.valid as number | undefined) ?? 1] as unknown[]
       );
     }
-  } catch {
-    /* 打ち切られるのはvariablesのコピーのみ。詳細はこの関数のJSDocを参照 */
-    Logger.warn('[Migration V3→V4] variables table may not exist in old DB, skipping');
   }
 
   /* profile_variablesデータのコピー（V2以降のみ存在） */
-  try {
+  if (!tableExists(systemDb, 'profile_variables')) {
+    Logger.warn('[Migration V3→V4] profile_variables table does not exist in old DB, skipping');
+  } else {
     const profileVariables = systemDb.all<Record<string, unknown>>('SELECT * FROM profile_variables');
     Logger.info(`[Migration V3→V4] Found ${profileVariables.length} profile variables`);
     for (const pv of profileVariables) {
@@ -535,9 +531,6 @@ async function copyDataFromSystemDatabase(
         [(pv.id as string | undefined) ?? generateUniqueId(), pv.profileId, pv.variableId, pv.value, createdAt, updatedAt] as unknown[]
       );
     }
-  } catch {
-    /* 打ち切られるのはprofile_variablesのコピーのみ。詳細はこの関数のJSDocを参照 */
-    Logger.warn('[Migration V3→V4] profile_variables table may not exist in old DB, skipping');
   }
 
   Logger.success('[Migration V3→V4] All data copied successfully');

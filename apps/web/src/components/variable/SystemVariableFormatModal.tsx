@@ -1,6 +1,6 @@
 import {
   DEFAULT_SYSTEM_VARIABLE_FORMATS,
-  SystemVariableFormatMapper,
+  SystemVariableFormatService,
   UI_SYSTEM_VARIABLES,
   formatByPattern,
   getSystemVariableFormatPresets,
@@ -9,6 +9,7 @@ import {
   useTranslation,
 } from '@cliptap/shared';
 import { useBodyScrollLock } from '@hooks/useBodyScrollLock';
+import { useEscapeClose } from '@hooks/useEscapeClose';
 
 interface SystemVariableFormatModalProps {
   variableKey: SystemVariableKey | null;
@@ -23,20 +24,21 @@ export function SystemVariableFormatModal({
 }: SystemVariableFormatModalProps) {
   const { t } = useTranslation();
   useBodyScrollLock(variableKey !== null);
+  useEscapeClose(variableKey !== null, onClose);
 
   if (!variableKey) return null;
 
   const locale = normalizeLocale(navigator.language);
-  const current = SystemVariableFormatMapper.getAll()[variableKey]
+  const current = SystemVariableFormatService.getAll()[variableKey]
     ?? DEFAULT_SYSTEM_VARIABLE_FORMATS[variableKey];
   const definition = UI_SYSTEM_VARIABLES.find((item) => item.name === variableKey);
   const presets = getSystemVariableFormatPresets(variableKey, locale);
 
   const handleSelect = (pattern: string) => {
     if (pattern === DEFAULT_SYSTEM_VARIABLE_FORMATS[variableKey]) {
-      SystemVariableFormatMapper.delete(variableKey);
+      SystemVariableFormatService.delete(variableKey);
     } else {
-      SystemVariableFormatMapper.upsert(variableKey, pattern);
+      SystemVariableFormatService.upsert(variableKey, pattern);
     }
     onChanged();
     onClose();

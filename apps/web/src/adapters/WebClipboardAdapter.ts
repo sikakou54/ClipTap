@@ -8,6 +8,7 @@
  */
 
 import type { ClipboardAdapter } from '@cliptap/shared';
+import { Logger } from '@cliptap/shared';
 
 /**
  * Web用ClipboardAdapter実装クラス
@@ -24,7 +25,7 @@ export class WebClipboardAdapter implements ClipboardAdapter {
       /* ブラウザのセキュリティ制約により、ユーザー操作（クリック等）のコンテキスト内でのみ動作する場合がある */
       await navigator.clipboard.writeText(text);
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+      Logger.error('Failed to copy to clipboard:', error);
       /* エラーを再スロー（呼び出し元でトースト表示などのハンドリングを行うため） */
       throw error;
     }
@@ -40,7 +41,7 @@ export class WebClipboardAdapter implements ClipboardAdapter {
       /* ブラウザによっては許可ダイアログが表示される */
       return await navigator.clipboard.readText();
     } catch (error) {
-      console.error('Failed to read from clipboard:', error);
+      Logger.error('Failed to read from clipboard:', error);
       /* エラーを再スロー */
       throw error;
     }

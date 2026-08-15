@@ -11,7 +11,7 @@
  * - 保存処理（新規作成/更新）
  *
  * @see app/profile/edit.tsx - UIコンポーネント
- * @see lib/hooks/useProfiles.tsx - プロファイルCRUD操作
+ * @see packages/shared/src/providers/ProfileProvider.tsx - プロファイルCRUD操作（useProfiles）
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -22,8 +22,8 @@ import {
   useProfiles,
   EmptyContentError,
   translateError,
+  useSharedSubscription,
 } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
 import { useUpgradePrompt } from '@hooks/useUpgradePrompt';
 import { showErrorAlert } from '@utils/alerts';
 
@@ -67,7 +67,7 @@ export function useProfileEditScreen(params: UseProfileEditScreenParams): UsePro
   const confirmUpgrade = useUpgradePrompt();
 
   const { profiles, createProfile, updateProfile } = useProfiles();
-  const { canAddProfile } = useSubscription();
+  const { canAddProfile } = useSharedSubscription();
 
   /* ======================================== */
   /* 状態管理 */

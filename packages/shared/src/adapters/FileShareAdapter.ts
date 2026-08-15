@@ -23,7 +23,8 @@ export interface FileShareAdapter {
    * ファイルを共有またはダウンロード
    *
    * @param uri - ファイルのURI
-   * @param filename - 共有時のファイル名
+   * @param filename - 共有・ダウンロード時のファイル名。
+   *                   プラットフォームがファイル名の指定に対応しない場合は無視してよい
    */
   shareFile(uri: string, filename?: string): Promise<void>;
 }

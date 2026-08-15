@@ -15,8 +15,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'expo-router';
-import { useTranslation, useAuth, Logger, isAuthCancelledError } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
+import { useTranslation, useAuth, Logger, isAuthCancelledError, useSharedSubscription } from '@cliptap/shared';
 import { showAlert, showConfirm } from '@utils/alerts';
 import { useDevMenu, type UseDevMenuReturn } from './useDevMenu';
 
@@ -74,7 +73,7 @@ export function useSettingsScreen(): UseSettingsScreenReturn {
   /* ======================================== */
   const { t } = useTranslation();
   const router = useRouter();
-  const { isSubscribed } = useSubscription();
+  const { isSubscribed } = useSharedSubscription();
   const {
     user,
     loading: authLoading,

@@ -241,7 +241,7 @@ async function seedVariables(profileMap: Map<string, string>): Promise<void> {
   /* 標準値はデフォルトプロファイル（Main）に格納するため、先に取得しておく */
   const defaultProfile = ProfileMapper.getDefault();
   if (!defaultProfile) {
-    Logger.error('[Seed] Default profile not found, cannot runSeed variables');
+    Logger.error('[Seed] Default profile not found, cannot seed variables');
     return;
   }
 
@@ -331,11 +331,11 @@ export async function runSeed(): Promise<void> {
     const hasData = await hasTestData();
     if (hasData) {
       /* データが既に存在する場合はシードをスキップ（冪等性の保証） */
-      Logger.info('[Seed] Test data already exists, skipping runSeed');
+      Logger.info('[Seed] Test data already exists, skipping seed');
       return;
     }
 
-    Logger.info('[Seed] Starting to runSeed test data...');
+    Logger.info('[Seed] Starting to seed test data...');
 
     /* 1. カテゴリを作成し、カテゴリ名→IDのマッピングを取得 */
     const categoryMap = await seedCategories();
@@ -352,6 +352,6 @@ export async function runSeed(): Promise<void> {
     Logger.info('[Seed] Test data seeding completed successfully!');
   } catch (error) {
     /* 呼び出し元（アプリ起動処理）を止めないため、ここで握り潰してログのみ残す */
-    Logger.error('[Seed] Failed to runSeed test data:', error);
+    Logger.error('[Seed] Failed to seed test data:', error);
   }
 }

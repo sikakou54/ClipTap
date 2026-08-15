@@ -38,7 +38,7 @@ export function KeyboardGuideModal({ visible, onClose }: KeyboardGuideModalProps
       onRequestClose={onClose}
     >
       {/* モーダルオーバーレイ（背景暗転） */}
-      <View style={styles.modalOverlay}>
+      <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
         {/* モーダルコンテンツ（背景色はテーマのsurfaceを適用） */}
         <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
           {/* ヘッダー: アイコンとタイトル */}
@@ -59,7 +59,7 @@ export function KeyboardGuideModal({ visible, onClose }: KeyboardGuideModalProps
               <View key={step} style={styles.guideStep}>
                 {/* ステップ番号（円形バッジ） */}
                 <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.stepNumberText}>{step}</Text>
+                  <Text style={[styles.stepNumberText, { color: colors.onPrimary }]}>{step}</Text>
                 </View>
                 {/* ステップ説明テキスト（iOS/Android別） */}
                 <Text style={[styles.stepText, { color: colors.text, fontSize: responsiveFontSizes.base }]}>
@@ -91,7 +91,7 @@ export function KeyboardGuideModal({ visible, onClose }: KeyboardGuideModalProps
               style={[styles.modalButton, { backgroundColor: colors.primary }]}
               onPress={onClose}
             >
-              <Text style={[styles.modalButtonText, { fontSize: responsiveFontSizes.base }]}>
+              <Text style={[styles.modalButtonText, { color: colors.onPrimary, fontSize: responsiveFontSizes.base }]}>
                 {t('common.ok')}
               </Text>
             </TouchableOpacity>
@@ -106,10 +106,9 @@ export function KeyboardGuideModal({ visible, onClose }: KeyboardGuideModalProps
    スタイル定義
    ======================================== */
 const styles = StyleSheet.create({
-  /** モーダルオーバーレイ（背景暗転レイヤー） */
+  /** モーダルオーバーレイ（背景暗転レイヤー。背景色は使用箇所でテーマの overlay を重ねる） */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -151,9 +150,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  /** ステップ番号テキスト */
+  /** ステップ番号テキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   stepNumberText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -186,9 +184,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
-  /** ボタンテキスト */
+  /** ボタンテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   modalButtonText: {
-    color: '#FFFFFF',
     fontWeight: '600',
   },
 });

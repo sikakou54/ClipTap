@@ -224,9 +224,9 @@ export default function SelectExportDataScreen() {
           disabled={totalSelected === 0 || isProcessing}
         >
           {isProcessing ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={colors.onPrimary} />
           ) : (
-            <Text style={styles.exportButtonText}>{t('export_import.export')}</Text>
+            <Text style={[styles.exportButtonText, { color: colors.onPrimary }]}>{t('export_import.export')}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -239,7 +239,7 @@ export default function SelectExportDataScreen() {
         onRequestClose={closePasswordModal}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.modalOverlay}>
+          <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
             <TouchableWithoutFeedback>
               <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
                 <Text style={[styles.modalTitle, { color: colors.text }]}>
@@ -276,9 +276,9 @@ export default function SelectExportDataScreen() {
                     disabled={isProcessing}
                   >
                     {isProcessing ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
+                      <ActivityIndicator size="small" color={colors.onPrimary} />
                     ) : (
-                      <Text style={styles.submitButtonText}>
+                      <Text style={[styles.submitButtonText, { color: colors.onPrimary }]}>
                         {t('common.ok')}
                       </Text>
                     )}
@@ -336,13 +336,13 @@ const styles = StyleSheet.create({
     minWidth: 100,
     alignItems: 'center',
   },
+  /** エクスポートボタンのテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   exportButtonText: {
-    color: '#FFFFFF',
     fontWeight: '600',
   },
+  /** モーダルオーバーレイ（背景色は使用箇所でテーマの overlay を重ねる） */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -391,8 +391,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   submitButton: {},
+  /** 送信ボタンのテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   submitButtonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

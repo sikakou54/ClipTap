@@ -12,7 +12,7 @@
  */
 
 import type { FileIOAdapter, FileInfo } from '@cliptap/shared';
-import { isOpfsPath, getOpfsFileName } from '@cliptap/shared';
+import { Logger, isOpfsPath, getOpfsFileName } from '@cliptap/shared';
 import { base64ToUint8Array } from '@utils/base64';
 
 /**
@@ -94,7 +94,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
       const text = await response.text();
       return text;
     } catch (error) {
-      console.error('[WebFileIOAdapter] Read failed:', error);
+      Logger.error('[WebFileIOAdapter] Read failed:', error);
       throw error;
     }
   }
@@ -131,7 +131,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
         reader.readAsDataURL(blob);
       });
     } catch (error) {
-      console.error('[WebFileIOAdapter] Read binary failed:', error);
+      Logger.error('[WebFileIOAdapter] Read binary failed:', error);
       throw error;
     }
   }
@@ -156,7 +156,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
       const arrayBuffer = await response.arrayBuffer();
       return new Uint8Array(arrayBuffer);
     } catch (error) {
-      console.error('[WebFileIOAdapter] Read bytes failed:', error);
+      Logger.error('[WebFileIOAdapter] Read bytes failed:', error);
       throw error;
     }
   }
@@ -205,7 +205,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
 
       return url;
     } catch (error) {
-      console.error('[WebFileIOAdapter] Write failed:', error);
+      Logger.error('[WebFileIOAdapter] Write failed:', error);
       throw error;
     }
   }
@@ -236,7 +236,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
       this.tempFiles.set(path, url);
       return url;
     } catch (error) {
-      console.error('[WebFileIOAdapter] Write bytes failed:', error);
+      Logger.error('[WebFileIOAdapter] Write bytes failed:', error);
       throw error;
     }
   }
@@ -269,7 +269,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
       const newUrl = URL.createObjectURL(blob);
       this.tempFiles.set(targetUri, newUrl);
     } catch (error) {
-      console.error('[WebFileIOAdapter] Copy failed:', error);
+      Logger.error('[WebFileIOAdapter] Copy failed:', error);
       throw error;
     }
   }
@@ -298,7 +298,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
       }
     } catch (error) {
       /* ファイルが存在しない場合のエラーは無視 */
-      console.error('[WebFileIOAdapter] Delete failed:', error);
+      Logger.error('[WebFileIOAdapter] Delete failed:', error);
     }
   }
 

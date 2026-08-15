@@ -11,7 +11,7 @@
  * - 空状態の表示
  *
  * @see SnippetCard - 各スニペットのカード表示
- * @see app/(tabs)/index.tsx - メイン画面での使用例
+ * @see app/index.tsx - メイン画面での使用例
  */
 
 import React, { useCallback, useRef, useEffect } from 'react';

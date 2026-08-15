@@ -291,13 +291,21 @@ export class ProfileService {
 
   /**
    * 変数の全プロファイル値を一括設定
+   *
+   * @remarks
+   * 値は前後空白を除去して保存する。インポート経路の
+   * VariableService.upsertValueForProfile と同じ正規化規則にそろえ、
+   * 保存経路によって同じ入力が違う値になることを防ぐ。
+   * 空白だけの値をそのまま保存すると、必須判定（前後空白を除去して判定する）では
+   * 空なのに解決時は非空として標準値を覆う、という矛盾が起きるため、
+   * 書き込み境界であるService層で正規化する。
    */
   static setVariableValuesForVariable(
     _variableId: string,
     values: { profileId: string; variableId: string; value: string }[]
   ): void {
     for (const v of values) {
-      ProfileVariableMapper.upsert(v);
+      ProfileVariableMapper.upsert({ ...v, value: v.value.trim() });
     }
   }
 

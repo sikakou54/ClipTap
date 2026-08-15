@@ -15,18 +15,17 @@
  * - 無料プランのユーザーのみ
  * - トラッキングステータス取得完了後
  *
- * @see useSubscription - サブスクリプション状態管理
+ * @see useSharedSubscription - サブスクリプション状態管理
  * @see useTracking - ATTトラッキング管理
  */
 
 import { useEffect, useState } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { useTheme } from '@lib/themeSystem';
 import { useTracking } from '@hooks/useTracking';
-import { Logger } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
+import { Logger, useSharedSubscription } from '@cliptap/shared';
 
 /* ========================================
    Props定義
@@ -37,7 +36,7 @@ import { useSubscription } from '@providers/SubscriptionProvider';
  * @property style - カスタムスタイル（オプション）
  */
 interface AdBannerProps {
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 /* ========================================
@@ -56,7 +55,7 @@ const AD_UNIT_IDS = {
 export function AdBanner({ style }: AdBannerProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { shouldShowAds } = useSubscription();
+  const { shouldShowAds } = useSharedSubscription();
   const { getTrackingStatus } = useTracking();
 
   /**
@@ -110,6 +109,7 @@ export function AdBanner({ style }: AdBannerProps) {
       styles.container,
       {
         backgroundColor: colors.background,
+        borderTopColor: colors.border,
         paddingBottom: insets.bottom,
       },
       style
@@ -140,11 +140,11 @@ export function AdBanner({ style }: AdBannerProps) {
    スタイル定義
    ======================================== */
 const styles = StyleSheet.create({
+  /** 広告コンテナ（背景色と上境界線の色は使用箇所でテーマから重ねる） */
   container: {
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.1)',
   },
 });

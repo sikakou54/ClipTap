@@ -6,7 +6,8 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  /* eslint.config.js 自身は下の JavaScript 用ブロックの対象に入るため除外する */
+  globalIgnores(['dist', 'eslint.config.js']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -23,6 +24,20 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'react-hooks/set-state-in-effect': 'off',
+    },
+  },
+  {
+    /*
+     * scripts/ のビルド用スクリプト（Node上で動くESM）。
+     * TypeScript用のブロックは files が .ts/.tsx のみのため、
+     * このブロックが無いと .mjs はルールが1つも適用されないまま素通りする。
+     */
+    files: ['**/*.{js,mjs}'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: globals.node,
     },
   },
 ])

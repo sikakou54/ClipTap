@@ -226,13 +226,6 @@ class PurchaseService {
   }
 
   /**
-   * 開発者オーバーライドの現在状態を取得
-   */
-  getDevSubscriptionOverride(): boolean | null {
-    return __DEV__ ? this.devSubscriptionOverride : null;
-  }
-
-  /**
    * 利用可能なサブスクリプションプランを取得
    *
    * @returns 現在のOffering（月額・年間プラン情報）、取得失敗時はnull
@@ -424,37 +417,29 @@ class PurchaseService {
     } catch (error) {
       Logger.error('[PurchaseService] Logout failed:', error);
       await this.tryRefreshCustomerInfo();
+    } finally {
+      /* 匿名化で権利が変わった場合に画面へ反映させる。同じ状態なら notifyIfChanged 側で抑止される */
+      this.notifyIfChanged();
     }
   }
 
   /**
    * 実際のログアウト処理を実行
+   *
+   * @remarks
+   * ログアウト後に購入復元を自動実行しない。本アプリはFirebaseによる自前のアカウント基盤を
+   * 持つため、RevenueCat SDKは restorePurchases の非明示な実行を推奨していない
+   * （ストアの認証入力を求め得るので、利用者の明示操作でのみ実行する）。
+   * 端末自身で購入したProは、ペイウォール／契約管理画面の購入復元か、再度の連携で回復する。
    */
   private async performLogout(): Promise<void> {
     try {
       await Purchases.logOut();
       Logger.info('[PurchaseService] Logged out from RevenueCat');
       this.customerInfo = await Purchases.getCustomerInfo();
-
-      if (!this.isSubscribed()) {
-        await this.tryRestoreAnonymousPurchases();
-      }
     } catch (error) {
       Logger.warn('[PurchaseService] Error during logout:', error);
       await this.tryRefreshCustomerInfo();
-    }
-  }
-
-  /**
-   * 匿名購入の復元を試行
-   */
-  private async tryRestoreAnonymousPurchases(): Promise<void> {
-    Logger.info('[PurchaseService] Trying restore anonymous purchases...');
-    try {
-      this.customerInfo = await Purchases.restorePurchases();
-      Logger.info('[PurchaseService] Anonymous restore completed');
-    } catch {
-      Logger.warn('[PurchaseService] Anonymous restore failed (non-critical)');
     }
   }
 

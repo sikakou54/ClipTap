@@ -28,7 +28,7 @@ ClipTapは、定型文をローカルで管理し、変数を展開してクリ�
 
 ## セットアップ
 
-必要環境はNode.js 20.19以上（または22.12以上）とnpmです。iOS開発にはXcode、Android開発にはAndroid StudioとJDK 17も必要です。
+必要環境はNode.js 22以上（`package.json` の `engines` と同じ。CI・Web配信ジョブも22で動く）とnpmです。iOS開発にはXcode、Android開発にはAndroid StudioとJDK 17も必要です。
 
 ```bash
 npm install

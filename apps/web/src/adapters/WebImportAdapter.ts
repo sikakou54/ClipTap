@@ -11,9 +11,8 @@
  * @module WebImportAdapter
  */
 
-import { type ImportAdapter, type FileIOAdapter, getMainDbAdapter, toOpfsPath } from '@cliptap/shared';
+import { type ImportAdapter, type FileIOAdapter, toOpfsPath } from '@cliptap/shared';
 import type { WebFileIOAdapter } from './WebFileIOAdapter';
-import type { WebDatabaseAdapter } from './WebDatabaseAdapter';
 import { base64ToUint8Array } from '@utils/base64';
 
 /**
@@ -46,25 +45,6 @@ export class WebImportAdapter implements ImportAdapter {
     const opfsPath = toOpfsPath(fileName);
     await (this.fileIO as WebFileIOAdapter).writeBytes(opfsPath, bytes);
     return opfsPath;
-  }
-
-  /**
-   * 本番データベースのパス（Blob URL）を取得
-   * WebではメモリDBからBlobを作成してURLを返す
-   */
-  async getDatabasePath(): Promise<string> {
-    const mainDbAdapter = getMainDbAdapter() as WebDatabaseAdapter;
-    const data = mainDbAdapter.exportDatabase();
-    const blob = new Blob([data.buffer as ArrayBuffer], { type: 'application/octet-stream' });
-    return URL.createObjectURL(blob);
-  }
-
-  /**
-   * ファイルをコピー
-   * OPFSまたはBlob URL間でコピー
-   */
-  async copyFile(source: string, destination: string): Promise<void> {
-    await (this.fileIO as WebFileIOAdapter).copyFile(source, destination);
   }
 
   /**

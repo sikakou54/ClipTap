@@ -14,7 +14,8 @@
 
 import { useState, useCallback } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { useProfiles, Profile } from '@cliptap/shared';
+import { useProfiles, useTranslation, Logger, Profile } from '@cliptap/shared';
+import { showErrorAlert } from '@utils/alerts';
 
 /**
  * useProfileSelectorのProps
@@ -50,6 +51,8 @@ export interface UseProfileSelectorReturn {
 export function useProfileSelector({
   onProfileChange,
 }: UseProfileSelectorProps): UseProfileSelectorReturn {
+  const { t } = useTranslation();
+
   /* 切替候補は有効なプロファイルだけとする（無効なものはプロファイル管理画面で扱う） */
   const { validProfiles: profiles, activeProfile, setActiveProfile, loading, refresh } = useProfiles();
 
@@ -78,10 +81,15 @@ export function useProfileSelector({
       setActiveProfile(profile.id);
       setShowModal(false);
       onProfileChange?.();
-    } catch {
-      /* setActiveProfile が失敗した場合は showModal を false にせず onProfileChange も呼ばないため、モーダルは開いたままになり利用者への通知も行わない（現行挙動）。 */
+    } catch (error) {
+      /* 切替に失敗した場合もモーダルを閉じてエラーを通知する。開いたままにすると
+         利用者には「タップしても何も起きない」ようにしか見えないため。
+         切替が成立していないので onProfileChange は呼ばない */
+      Logger.error('[useProfileSelector] Failed to set active profile:', error);
+      setShowModal(false);
+      showErrorAlert(t('error.generic'));
     }
-  }, [activeProfile?.id, setActiveProfile, onProfileChange]);
+  }, [activeProfile?.id, setActiveProfile, onProfileChange, t]);
 
   /**
    * モーダルを開く

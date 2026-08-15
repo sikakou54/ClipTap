@@ -2,8 +2,9 @@
 
 ## screens.csv の但し書き
 
-- `apps/mobile/app/**` の `.tsx` は27ファイルあるが、`_layout.tsx` と `settings/_layout.tsx` の
-  2件は画面ではなくナビゲーション定義のため、意図的に除外している（画面台帳は25→分割により26行）。
+- `apps/mobile/app/**` の `.tsx` は26ファイルあるが、`_layout.tsx` と `settings/_layout.tsx` の
+  2件は画面ではなくナビゲーション定義のため、意図的に除外している（画面台帳は24→`webview.tsx` を
+  利用規約とプライバシーポリシーの2行へ分割して25行）。
 - `Presentation` の `modal|card` は `_layout.tsx` の `tabletAwareModalOptions`
   （`isTabletDevice ? 'card' : 'modal'`）に対応する。iPhoneでは `modal`、iPadでは `card` になる。
   自動実行の対象はiPhoneシミュレータなので、実行時は `modal` として扱う。
@@ -36,9 +37,11 @@
 ## 未検証（初回実行で確定させる）
 
 SC-SEARCH / SC-SNIPPET-CREATE / SC-SNIPPET-TITLE-INPUT / SC-SNIPPET-CONTENT-INPUT /
-SC-SNIPPET-PROFILE-SELECT / SC-PROFILE-EDIT / SC-PROFILE-VARIABLE-EDIT / SC-VARIABLE-EDIT /
+SC-SNIPPET-PROFILE-SELECT / SC-PROFILE-EDIT / SC-VARIABLE-EDIT /
 SC-VARIABLE-PROFILE-VALUE-EDIT / SC-SETTINGS-EXPORT-IMPORT / SC-SETTINGS-SELECT-IMPORT-DATA /
 SC-SUBSCRIPTION-MANAGE / SC-SUBSCRIPTION-PAYWALL
+
+（`SC-PROFILE-VARIABLE-EDIT` は画面ごと削除したため対象外。`screens.csv` からも削除済み）
 
 `ASSERT_SCREEN` が落ちた場合は `AUTOMATION_ERROR` として一括で直す。
 アプリの不具合として登録しないこと。

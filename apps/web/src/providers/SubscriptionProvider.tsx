@@ -34,9 +34,12 @@ function createWebPlatformAdapter(userId: string | null): SubscriptionPlatformAd
     initialize: async () => { },
 
     /**
-     * サブスクリプション状態を確認
+     * 現在の加入状態を解決
+     *
+     * ClipTap APIへ問い合わせて検証する。検証に失敗した場合は例外を投げ、
+     * ProviderにFree表示へのフォールバックと警告表示を行わせる
      */
-    checkSubscription: async () => {
+    resolveSubscribed: async () => {
       if (!userId) {
         return false;
       }
@@ -57,40 +60,6 @@ function createWebPlatformAdapter(userId: string | null): SubscriptionPlatformAd
           throw new Error('Subscription verification failed');
         }
       }
-    },
-
-    /**
-     * 有効期限を取得
-     * Web版では未サポート（モバイルアプリでの購入のみ対応）
-     */
-    getExpirationDate: () => null,
-
-    /**
-     * 現在のプラン種別を取得
-     * Web版では未サポート（モバイルアプリでの購入のみ対応）
-     */
-    getCurrentPlanType: () => null,
-
-    /**
-     * 購入を復元
-     * Web版では未サポート（モバイルアプリでの購入のみ対応）
-     */
-    restorePurchases: async () => {
-      /* Web版では購入機能なし - 何もしない */
-    },
-
-    /**
-     * 購入可能なプランを取得
-     * Web版では未サポート（モバイルアプリでの購入のみ対応）
-     */
-    getOfferings: async () => null,
-
-    /**
-     * パッケージを購入
-     * Web版では未サポート（モバイルアプリでの購入のみ対応）
-     */
-    purchasePackage: async () => {
-      throw new Error('Web版では購入機能をサポートしていません。モバイルアプリからご購入ください。');
     },
 
     /**

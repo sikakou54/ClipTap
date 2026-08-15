@@ -19,6 +19,7 @@ import { useTranslation } from '@cliptap/shared';
 import { useSubscriptionService, type SubscriptionPlan } from '@cliptap/shared';
 import { showAlert, showErrorAlert } from '@utils/alerts';
 import { Logger } from '@cliptap/shared';
+import { toCurrentPlanType, type CurrentPlanType } from '@mobile-types/subscription';
 
 /* ======================================== */
 /* 型定義 */
@@ -26,9 +27,6 @@ import { Logger } from '@cliptap/shared';
 
 /** プラン選択の型 */
 export type PlanType = 'monthly' | 'yearly';
-
-/** 現在のプラン種別 */
-export type CurrentPlanType = 'monthly' | 'annual' | null;
 
 /** usePaywallScreen フックの返却値 */
 export interface UsePaywallScreenReturn {
@@ -101,7 +99,7 @@ export function usePaywallScreen(): UsePaywallScreenReturn {
   }, [refresh]);
 
   useEffect(() => {
-    const planType = status?.activePlanId as CurrentPlanType;
+    const planType = toCurrentPlanType(status?.activePlanId);
     setCurrentPlan(planType);
   }, [status]);
 

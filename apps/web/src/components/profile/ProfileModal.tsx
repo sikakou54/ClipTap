@@ -6,6 +6,7 @@
  */
 import { useTranslation } from '@cliptap/shared';
 import { INPUT_LIMITS } from '@cliptap/shared';
+import { useEscapeClose } from '@hooks/useEscapeClose';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -29,6 +30,9 @@ export function ProfileModal({
   onSubmit,
 }: ProfileModalProps) {
   const { t } = useTranslation();
+
+  /* onClose は未保存確認付きのハンドラ（useProfilesScreen.handleCloseModal）なので、ESCでも警告が出る */
+  useEscapeClose(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -77,7 +81,7 @@ export function ProfileModal({
             onChange={(e) => onNameChange(e.target.value)}
             placeholder={t('profile.name_placeholder')}
             maxLength={INPUT_LIMITS.PROFILE_NAME_MAX}
-            className="w-full px-4 py-3 border border-gray-300 dark:border-[#2A2A2A] rounded-xl focus:outline-none bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder-gray-400 dark:text-[#707070]"
+            className="w-full px-4 py-3 border border-gray-300 dark:border-[#2A2A2A] rounded-xl focus:outline-none bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#707070]"
           />
         </div>
 

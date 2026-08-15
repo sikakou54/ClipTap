@@ -12,8 +12,8 @@
  * - 画面フォーカス時のデータ更新
  *
  * @see app/index.tsx - UIコンポーネント
- * @see lib/hooks/useSnippets.ts - 定型文CRUD操作
- * @see lib/hooks/useCategories.ts - カテゴリCRUD操作
+ * @see packages/shared/src/providers/SnippetProvider.tsx - 定型文CRUD操作（useSnippets）
+ * @see packages/shared/src/providers/CategoryProvider.tsx - カテゴリCRUD操作（useCategories）
  */
 
 import { useState, useCallback, useMemo } from 'react';
@@ -71,16 +71,12 @@ export function useHomeScreen(): UseHomeScreenReturn {
   /* データ取得 */
   /* ======================================== */
   const { categories, refresh: refreshCategories } = useCategories();
-  const { profiles, profileVariables, defaultProfile, refresh: refreshProfiles } = useProfiles();
+  const { activeProfile, profileVariables, defaultProfile, refresh: refreshProfiles } = useProfiles();
   const { variables } = useVariables();
 
-  /* アクティブなプロファイルを取得（現在選択中の環境、isActive=trueのもの） */
-  /* ProfileProviderのactiveProfileは別クエリ由来で自動有効化を含み、この配列のisActiveと一時的に食い違うため、ここでは配列からの導出を維持する。 */
-  const activeProfile = useMemo(
-    () => profiles.find((p) => p.isActive) ?? null,
-    [profiles]
-  );
-
+  /* アクティブなプロファイル（現在選択中の環境）はProviderの値を使う。
+     検索画面・環境選択・Web版も同じ入口を使っており、ここだけ配列から導出すると
+     Provider側の自動有効化を取りこぼす */
   const activeProfileId = activeProfile?.id;
   const defaultProfileId = defaultProfile?.id;
 

@@ -24,7 +24,7 @@ import {
   ImportService,
   ClipTapError,
   Logger,
-  SystemVariableFormatMapper,
+  SystemVariableFormatService,
   getFileIOAdapter,
   toOpfsPath,
 } from '@cliptap/shared';
@@ -176,7 +176,7 @@ export function Home() {
         },
         finalizeDatabase: async () => {
           await database.finalizeInitialLoad();
-          SystemVariableFormatMapper.loadRegistry();
+          SystemVariableFormatService.loadRegistry();
           /* 通常インポートと同じく、プラン上限に応じた有効フラグを反映する */
           SharedSubscriptionService.updateValidFlags();
         },

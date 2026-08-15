@@ -3,14 +3,15 @@
  * @description システム変数書式管理画面
  *
  * 日付・時刻などのシステム変数（{{today}} 等）の表示書式を一覧表示・管理。
- * 画面フックを持たず、画面内から SystemVariableFormatMapper を直接呼ぶ現行構造。
+ * 画面フックを持たず、画面内から SystemVariableFormatService を直接呼ぶ現行構造。
+ * データアクセスはService層に閉じており、画面からMapperは参照しない。
  *
  * @features
  * - システム変数一覧の表示（現在の書式と、その書式で現在時刻を整形したプレビュー）
  * - 書式編集画面（/variable/format-edit）への遷移
  * - 保存済み書式の一括リセット
  *
- * @see packages/shared/src/mappers/SystemVariableFormatMapper.ts - 書式の保存・読込
+ * @see packages/shared/src/services/SystemVariableFormatService.ts - 書式の保存・読込
  * @see packages/shared/src/constants/systemVariableFormats.ts - 既定書式の定義
  */
 
@@ -21,7 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   DEFAULT_SYSTEM_VARIABLE_FORMATS,
   SYSTEM_VARIABLE_KEYS,
-  SystemVariableFormatMapper,
+  SystemVariableFormatService,
   UI_SYSTEM_VARIABLES,
   formatByPattern,
   normalizeLocale,
@@ -48,14 +49,14 @@ export default function SystemVariableFormatsScreen() {
   const [formats, setFormats] = useState<SystemVariableFormats>({});
 
   const reload = useCallback(() => {
-    setFormats(SystemVariableFormatMapper.loadRegistry());
+    setFormats(SystemVariableFormatService.loadRegistry());
   }, []);
 
   useFocusEffect(reload);
 
   const handleResetAll = useCallback(() => {
     showConfirm('variables.format_reset_all_confirm', () => {
-      SystemVariableFormatMapper.deleteAll();
+      SystemVariableFormatService.deleteAll();
       reload();
     }, undefined, 'danger');
   }, [reload]);

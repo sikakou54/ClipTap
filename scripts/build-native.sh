@@ -15,6 +15,7 @@
 #   ./scripts/build-native.sh                   # iOS + Android の両方
 #   ./scripts/build-native.sh ios               # iOSのみ（シミュレータ）
 #   ./scripts/build-native.sh ios --device      # iOSのみ（接続中の実機）
+#   ./scripts/build-native.sh ios --simulator   # 既定と同じ。npm run build:native:ios:device -- --simulator で --device を打ち消す
 #   ./scripts/build-native.sh android           # Androidのみ
 #   ./scripts/build-native.sh ios --no-install  # ビルドだけ（端末を触らない）
 #   ./scripts/build-native.sh ios --skip-build  # インストールだけ（前回の成果物を使う）
@@ -25,6 +26,7 @@
 #   DEVELOPMENT_TEAM  --device の署名チームID（既定: 開発用証明書から自動解決）
 #   ANDROID_AVD       使用するAVD名（既定: `emulator -list-avds` の先頭）
 #   METRO_PORT        adb reverse で転送するMetroのポート（既定: 8081）
+#   REQUIRED_FREE_GB  ビルド前に必要な空き容量GB（既定: 10。CIランナーなど狭い環境で下げる）
 #
 # 【iOSのシミュレータと実機の違い】
 # シミュレータはアドホック署名で足りるが、実機は開発者証明書とプロビジョニング
@@ -116,7 +118,7 @@ while [ $# -gt 0 ]; do
       ;;
     *)
       printf '不明な引数: %s\n' "$1" >&2
-      printf '使い方: %s [all|ios|android] [--device] [--skip-build] [--no-install]\n' "$0" >&2
+      printf '使い方: %s [all|ios|android] [--device] [--simulator] [--skip-build] [--no-install]\n' "$0" >&2
       exit 2
       ;;
   esac
@@ -164,7 +166,10 @@ print_ng() {
 # Androidのビルド生成物も加わる。
 # 途中で空き容量が尽きるとビルドの失敗としてではなく、
 # ログの書き込み失敗など分かりにくい形で現れるため、始める前に見る。
-readonly REQUIRED_FREE_GB=10
+#
+# CIランナーのように空き容量がローカルより小さい環境では、この閾値だけが理由で
+# ビルドに入れなくなるため、環境変数で下げられるようにしてある。
+readonly REQUIRED_FREE_GB="${REQUIRED_FREE_GB:-10}"
 
 check_free_space() {
   local free_gb

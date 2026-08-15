@@ -182,7 +182,7 @@ clipTap/
 - `SafeAreaView` を画面に直接書くこと、`Header` を直接置くことは禁止
 - 画面で `useSafeAreaInsets()` を使ってヘッダーの上部余白を計算しないこと
 - 理由: `useSafeAreaInsets()` はナビゲータ全体で1つの `SafeAreaProvider` の値（＝ウィンドウのインセット）を返すため、iOSのモーダル内では誤った値になる。画面ごとの実インセットを参照できるのはネイティブの `SafeAreaView` のみで、その責務者は `ScreenContainer` に一元化している
-- **例外**: `presentation: 'fullScreenModal'` の画面は `SafeAreaView` のインセットが0になるため、`ScreenContainer` に `fullScreenModal` を渡すこと（内部でウィンドウのインセットへ切り替える）。渡し忘れるとヘッダーがステータスバーに重なる
+- **例外**: 画面全体を覆うモーダル提示（`presentation: 'fullScreenModal'` と `'transparentModal'`）の画面は `SafeAreaView` のインセットが0になるため、`ScreenContainer` に `fullScreenModal` を渡すこと（内部でウィンドウのインセットへ切り替える）。渡し忘れるとヘッダーがステータスバーに重なる。`'modal'`（iOSのページシート）と `'card'` はステータスバーより下に出るため対象外
 - 画面ルート以外（RNの `Modal` 内など）で `useSafeAreaInsets()` を使うのは可
 
 ---
@@ -313,7 +313,7 @@ clipTap/
 
 #### ⚠️ `expo prebuild --clean` の実行禁止
 - `ios/`はBare Workflowのためコミット済み。`--clean`付きprebuildは`ios/`を再生成し、**ClipTapKeyboardターゲットごと手動設定が全て失われる**
-- **`apps/mobile`ディレクトリでの`npm run clean`**はこれを実行するため使用しないこと（依存関係のリセットは`rm -rf node_modules && npm install`で行う）
+- npm scriptからは実行されない構成になっている。`apps/mobile`の`clean`は`rm -rf node_modules && npm install`（依存関係のリセットのみ）で、prebuildを含まない。この構成を崩して`--clean`付きprebuildをscriptへ戻さないこと
 - リポジトリルートの`npm run prebuild`は`--clean`なしのため`ios/`は再生成されないが、不要な実行は避けること
 - ビルドは成功してしまい実行時に静かに壊れるため、失われたことに気付きにくい
 - EASビルドは`eas.json`の`prebuildCommand`でprebuildをスキップするため影響を受けない

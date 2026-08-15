@@ -14,7 +14,7 @@
  * - UIとビジネスロジックを完全分離
  * - 全ての状態・ロジックはuseTextInputScreenフックで管理
  *
- * @see lib/hooks/screens/useTextInputScreen.ts - ビジネスロジック
+ * @see hooks/screens/useTextInputScreen.ts - ビジネスロジック
  * @see SnippetFormScreen - 親コンポーネント
  * @see VariableToolbar - 変数挿入ツールバー
  */

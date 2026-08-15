@@ -134,7 +134,7 @@ export default function PaywallScreen() {
                   </View>
                   {!isCurrentYearlyPlan && (
                     <View style={[styles.badge, { backgroundColor: colors.success }]}>
-                      <Text style={[styles.badgeText, { fontSize: responsiveFontSizes.xs, lineHeight: responsiveLineHeights.xs }]}>{t('subscription.yearly_discount')}</Text>
+                      <Text style={[styles.badgeText, { color: colors.onPrimary, fontSize: responsiveFontSizes.xs, lineHeight: responsiveLineHeights.xs }]}>{t('subscription.yearly_discount')}</Text>
                     </View>
                   )}
                 </View>
@@ -199,9 +199,9 @@ export default function PaywallScreen() {
           disabled={purchasing}
         >
           {purchasing ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={colors.onPrimary} />
           ) : (
-            <Text style={[styles.purchaseButtonText, { fontSize: responsiveFontSizes.md, lineHeight: responsiveLineHeights.md }]}>
+            <Text style={[styles.purchaseButtonText, { color: colors.onPrimary, fontSize: responsiveFontSizes.md, lineHeight: responsiveLineHeights.md }]}>
               {t('subscription.subscribe')}
             </Text>
           )}
@@ -246,7 +246,7 @@ export default function PaywallScreen() {
         animationType="fade"
         statusBarTranslucent
       >
-        <View style={styles.loadingOverlay}>
+        <View style={[styles.loadingOverlay, { backgroundColor: colors.overlay }]}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </Modal>
@@ -364,8 +364,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
+  /** バッジのテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   badgeText: {
-    color: '#FFFFFF',
     fontWeight: '600',
   },
   activeBadge: {
@@ -387,8 +387,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  /** 購入ボタンのテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   purchaseButtonText: {
-    color: '#FFFFFF',
     fontWeight: '600',
   },
   restoreButton: {
@@ -412,9 +412,9 @@ const styles = StyleSheet.create({
   legalSeparator: {
     marginHorizontal: 4,
   },
+  /** 購入処理中の遮蔽（背景色は使用箇所でテーマの overlay を重ねる） */
   loadingOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },

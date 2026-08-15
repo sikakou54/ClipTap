@@ -11,7 +11,7 @@
  * - 保存処理（コールバック経由）
  *
  * @see app/snippet/profile-select.tsx - UIコンポーネント
- * @see lib/hooks/useProfiles.tsx - プロファイルCRUD操作
+ * @see packages/shared/src/providers/ProfileProvider.tsx - プロファイルCRUD操作（useProfiles）
  */
 
 import { useState, useCallback } from 'react';

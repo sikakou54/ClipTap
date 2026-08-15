@@ -3,10 +3,14 @@
  *
  * @description
  * カテゴリフィルターボタンのリストを表示するコンポーネント。
- * 内部で選択状態を管理し、即座にUIを更新。
- * 親へのコールバックはrequestAnimationFrameで次フレームに実行し、UIの応答性を保つ。
+ *
+ * 選択状態の扱いは次の3点で成り立っている。
+ * - 見た目は内部state（localSelected）が決めるため、クリックした瞬間にハイライトが移る
+ * - 親への通知は requestAnimationFrame で次フレームに逃がし、一覧の再計算で入力が詰まらないようにする
+ * - 親が持つ selectedCategory が変わったときは localSelected を追従させ、バー以外から選択が
+ *   変わった場合でも表示がずれないようにする
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Category } from '@cliptap/shared';
 
 interface CategoryFilterBarProps {
@@ -25,6 +29,11 @@ function CategoryFilterBarComponent({
   onSelectCategory,
 }: CategoryFilterBarProps) {
   const [localSelected, setLocalSelected] = useState(selectedCategory);
+
+  /* 親の選択値へ追従する。自身のクリック経由では同値の代入になるため、即時ハイライトは壊れない */
+  useEffect(() => {
+    setLocalSelected(selectedCategory);
+  }, [selectedCategory]);
 
   const handleSelect = (categoryId: string | null) => {
     /* 見た目（localSelected）を即時更新してから親へ通知する。
@@ -80,14 +89,11 @@ function CategoryFilterBarComponent({
 }
 
 /**
- * 比較対象は categories / allLabel / uncategorizedLabel のみ。
- * selectedCategory は localSelected の useState 初期値としてしか読まれず、選択表示は内部state（localSelected）が
- * 決めるため比較していない。親から選択カテゴリを変える経路が増えた場合はここも見直しが必要。
+ * 既定の浅い比較でメモ化する。
+ *
+ * @remarks
+ * 全propsを比較対象にするため、selectedCategory の変化も取りこぼさない。
+ * onSelectCategory は参照が安定した state setter、ラベルは t() の結果で言語ごとに固定のため、
+ * 比較項目を増やしても再レンダー回数は実質変わらない。
  */
-export const CategoryFilterBar = React.memo(CategoryFilterBarComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.categories === nextProps.categories &&
-    prevProps.allLabel === nextProps.allLabel &&
-    prevProps.uncategorizedLabel === nextProps.uncategorizedLabel
-  );
-});
+export const CategoryFilterBar = React.memo(CategoryFilterBarComponent);

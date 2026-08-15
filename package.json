@@ -34,11 +34,14 @@
     "type-check:mobile": "tsc --project apps/mobile/tsconfig.json --noEmit",
     "type-check:web": "tsc --project apps/web/tsconfig.app.json --noEmit",
     "type-check:shared": "tsc --project packages/shared/tsconfig.json --noEmit",
-    "lint": "npm run lint --workspace=@cliptap/mobile && npm run lint --workspace=@cliptap/web && npm run lint --workspace=@cliptap/shared",
-    "lint:fix": "npm run lint:fix --workspace=@cliptap/mobile && npm run lint:fix --workspace=@cliptap/web && npm run lint:fix --workspace=@cliptap/shared",
+    "lint": "npm run lint --workspace=@cliptap/mobile && npm run lint --workspace=@cliptap/web && npm run lint --workspace=@cliptap/shared && npm run lint --workspace=@cliptap/api && eslint store",
+    "lint:fix": "npm run lint:fix --workspace=@cliptap/mobile && npm run lint:fix --workspace=@cliptap/web && npm run lint:fix --workspace=@cliptap/shared && npm run lint:fix --workspace=@cliptap/api && eslint store --fix",
     "test": "npm test --workspace=@cliptap/shared"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
     "typescript": "^5.9.2"
   }
 }

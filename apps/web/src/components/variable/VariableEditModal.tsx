@@ -17,6 +17,7 @@ import { useProfiles, useVariables, INPUT_LIMITS } from '@cliptap/shared';
 import type { VariableIconName } from '@cliptap/shared';
 import { useUnsavedChangesWarning } from '@hooks/useUnsavedChangesWarning';
 import { useBodyScrollLock } from '@hooks/useBodyScrollLock';
+import { useEscapeClose } from '@hooks/useEscapeClose';
 import { VariableIcon } from '@components/common/VariableIcon';
 import { IconPickerModal } from './IconPickerModal';
 
@@ -66,6 +67,8 @@ export function VariableEditModal({ isOpen, variableId, onClose }: VariableEditM
   const handleClose = () => confirmClose(onClose);
 
   useBodyScrollLock(isOpen);
+  /* 未保存確認を挟むため handleClose を渡す。アイコン選択モーダルを開いている間はそちらが優先される */
+  useEscapeClose(isOpen, handleClose);
 
   /**
    * モーダル表示時の初期化処理

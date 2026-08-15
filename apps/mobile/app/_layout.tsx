@@ -8,7 +8,7 @@
  * @responsibility
  * - アダプター初期化処理（useAdapterInitialization）
  * - アプリデータ初期化処理（useAppInitialization、AuthProvider内）
- * - プロバイダー階層: ThemeProvider → AlertProvider → AuthProvider → SubscriptionProvider
+ * - プロバイダー階層: ThemeProvider → AuthProvider → SubscriptionProvider
  *   → DatabaseProvider → ProfileProvider → VariableProvider → CategoryProvider → SnippetProvider
  * - 全画面のナビゲーション設定（Stack Navigator）
  * - スプラッシュスクリーンの表示制御
@@ -19,7 +19,6 @@
 import { Stack } from 'expo-router';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { ThemeProvider } from '@lib/themeSystem';
-import { AlertProvider } from '@providers/AlertProvider';
 import { SubscriptionProvider } from '@providers/SubscriptionProvider';
 import { SplashScreen } from '@components/common/SplashScreen';
 import { AuthProvider, DatabaseProvider, ProfileProvider, VariableProvider, CategoryProvider, SnippetProvider } from '@cliptap/shared';
@@ -122,8 +121,6 @@ function AppContent({ isTabletDevice }: { isTabletDevice: boolean }) {
                 <Stack.Screen name="variable/format-edit" options={MODAL_SLIDE_OPTIONS} />
                 {/* プロファイル編集画面 */}
                 <Stack.Screen name="profile/edit" options={MODAL_SLIDE_OPTIONS} />
-                {/* プロファイル変数編集画面 */}
-                <Stack.Screen name="profile/variable-edit" options={MODAL_SLIDE_OPTIONS} />
                 {/* 設定画面 */}
                 <Stack.Screen name="settings" />
                 {/* サブスクリプション課金画面（フルスクリーンモーダル） */}
@@ -152,15 +149,13 @@ export default function RootLayout() {
       {/* アダプター初期化完了後のメインアプリコンテンツ */}
       {isAdaptersReady && (
         <View style={styles.rootContainer}>
-          {/* プロバイダー階層（テーマ → アラート → 認証 → サブスクリプション → Database → Profile → Variable → Category → Snippet） */}
+          {/* プロバイダー階層（テーマ → 認証 → サブスクリプション → Database → Profile → Variable → Category → Snippet） */}
           <ThemeProvider>
-            <AlertProvider>
-              <AuthProvider>
-                <SubscriptionProvider>
-                  <AppContent isTabletDevice={isTabletDevice} />
-                </SubscriptionProvider>
-              </AuthProvider>
-            </AlertProvider>
+            <AuthProvider>
+              <SubscriptionProvider>
+                <AppContent isTabletDevice={isTabletDevice} />
+              </SubscriptionProvider>
+            </AuthProvider>
           </ThemeProvider>
         </View>
       )}

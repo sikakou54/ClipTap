@@ -14,6 +14,10 @@
  * - タイポグラフィシステム
  * - デバイスタイプ（phone/tablet/iPad）の判定
  *
+ * レスポンシブ値（フォントサイズ・行高・余白・寸法・最大コンテンツ幅）は
+ * 起動時のウィンドウ幅で確定し、画面回転やiPadの分割表示では再計算しない。
+ * 詳細と、追従させる場合に同時に直す必要がある箇所はbuildThemeValueのコメントを参照。
+ *
  * 使用箇所:
  * - 全画面・コンポーネントでのスタイル適用
  *
@@ -21,10 +25,10 @@
  * @see ThemeProvider - テーマコンテキストを提供するプロバイダー
  */
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { useColorScheme, Platform } from 'react-native';
 import { Logger } from './logger';
-import { responsive, isTablet } from '@utils/responsive';
+import { responsive, isTablet, getMaxContentWidth } from '@utils/responsive';
 import {
   LIGHT_THEME_COLORS,
   DARK_THEME_COLORS,
@@ -155,6 +159,10 @@ const TYPOGRAPHY = SHARED_TYPOGRAPHY;
  * デバイスタイプに応じた寸法を返します。
  * タブレット・iPadでは大きめのサイズを適用します。
  *
+ * 参照されている値だけを定義する。ヘッダー高さやボタン寸法などは
+ * 各画面がスタイル側で持っており、ここへ重複定義すると
+ * どちらが効いているのか読み手が追えなくなるため置かない。
+ *
  * @returns レスポンシブ寸法オブジェクト
  */
 const getResponsiveDimensions = () => {
@@ -162,22 +170,10 @@ const getResponsiveDimensions = () => {
 
   return {
     header: {
-      height: isTabletDevice ? 90 : responsive.width(60, 80, 90),
-      paddingHorizontal: responsive.spacing(16, 24, 32),
-      paddingVertical: isTabletDevice ? 24 : 12,
       iconSize: isTabletDevice ? 32 : responsive.width(24, 28, 32),
     },
     card: {
-      minHeight: responsive.width(80, 100, 120),
       padding: responsive.spacing(16, 20, 24),
-    },
-    button: {
-      height: responsive.width(44, 52, 60),
-      paddingHorizontal: responsive.spacing(16, 24, 32),
-    },
-    fab: {
-      size: responsive.width(56, 64, 72),
-      right: responsive.spacing(24, 48, 64),
     },
   };
 };
@@ -229,6 +225,8 @@ interface ThemeContextType {
   isTablet: boolean;
   responsive: ReturnType<typeof getResponsiveDimensions>;
   responsiveSpacing: ReturnType<typeof getResponsiveSpacing>;
+  /** コンテンツの最大幅（電話サイズでは上限を設けないためundefined） */
+  maxContentWidth: number | undefined;
 }
 
 /** テーマコンテキスト */
@@ -244,6 +242,15 @@ const ThemeContext = createContext<ThemeContextType | null>(null);
  * ThemeProviderが提供する値と、useThemeがProvider外で返すフォールバック値は同じ内容である。
  * 両者がずれないよう、組み立てをこの関数へ集約している。
  *
+ * レスポンシブなフォントサイズ・余白・寸法・最大コンテンツ幅は、
+ * 起動時のウィンドウ幅で確定させる仕様であり、画面回転やiPadの分割表示では再計算しない。
+ * ThemeProviderはウィンドウ寸法を購読せず、isDarkが変わったときだけ組み立て直す。
+ *
+ * 回転へ追従させたくなった場合は、この関数だけでは足りない。
+ * app/_layout.tsx の presentation 切り替えと
+ * src/hooks/screens/useAdapterInitialization.ts の isTabletDevice も
+ * 同時にリアクティブ化しないと、モーダルの表示形式とヘッダーの見た目が食い違う。
+ *
  * @param isDark - ダークモードかどうか（カラーパレットの選択にのみ使用する）
  * @returns テーマコンテキストの値
  */
@@ -257,6 +264,7 @@ const buildThemeValue = (isDark: boolean): ThemeContextType => ({
   isTablet: isTablet(),
   responsive: getResponsiveDimensions(),
   responsiveSpacing: getResponsiveSpacing(),
+  maxContentWidth: getMaxContentWidth(),
 });
 
 /**
@@ -274,7 +282,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const isDark = colorScheme === 'dark' || (Platform.OS === 'web' && getWebDarkMode());
 
-  const value = buildThemeValue(isDark);
+  /*
+   * 依存はisDarkのみ。レスポンシブ値は起動時のウィンドウ幅で確定する仕様のため、
+   * ウィンドウ寸法は依存に含めない（含めても他の凍結値と整合しない）。
+   */
+  const value = useMemo(() => buildThemeValue(isDark), [isDark]);
 
   /* テーマプロバイダー（テーマコンテキストを提供） */
   return (

@@ -11,12 +11,12 @@
  * - 保存処理（新規作成/更新）
  *
  * @see app/category/edit.tsx - UIコンポーネント
- * @see lib/hooks/useCategories.ts - カテゴリCRUD操作
+ * @see packages/shared/src/providers/CategoryProvider.tsx - カテゴリCRUD操作（useCategories）
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'expo-router';
-import { useCategories, EmptyContentError, InvalidRgbValueError, CATEGORY_COLORS } from '@cliptap/shared';
+import { useCategories, EmptyContentError, InvalidRgbValueError, CATEGORY_COLORS, resolveCategoryColorForm } from '@cliptap/shared';
 import { showErrorAlert } from '@utils/alerts';
 import { translateError } from '@cliptap/shared';
 
@@ -155,24 +155,14 @@ export function useCategoryEditScreen(params: UseCategoryEditScreenParams): UseC
   useEffect(() => {
     if (category) {
       setCategoryName(category.name);
-      const categoryColor = category.color || CATEGORY_COLORS[0];
-      setSelectedColor(categoryColor);
 
-      /* カテゴリの色がプリセットにない場合はカスタムカラーとして扱う */
-      if (!(CATEGORY_COLORS as readonly string[]).includes(categoryColor)) {
-        setUseCustomColor(true);
-        const r = parseInt(categoryColor.slice(1, 3), 16);
-        const g = parseInt(categoryColor.slice(3, 5), 16);
-        const b = parseInt(categoryColor.slice(5, 7), 16);
-        setCustomR(r.toString());
-        setCustomG(g.toString());
-        setCustomB(b.toString());
-      } else {
-        setUseCustomColor(false);
-        setCustomR('0');
-        setCustomG('0');
-        setCustomB('0');
-      }
+      /* プリセット判定とRGBへの分解は共有の純関数に任せ、Web版と同じ規則で開く */
+      const colorForm = resolveCategoryColorForm(category.color, CATEGORY_COLORS);
+      setSelectedColor(colorForm.color);
+      setUseCustomColor(colorForm.useCustomColor);
+      setCustomR(colorForm.customR);
+      setCustomG(colorForm.customG);
+      setCustomB(colorForm.customB);
     } else {
       setCategoryName('');
       setSelectedColor(CATEGORY_COLORS[0]);

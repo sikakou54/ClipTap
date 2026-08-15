@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from '@cliptap/shared';
 import { Dialog } from '@headlessui/react';
 import {
@@ -13,6 +13,7 @@ import {
   type Category,
 } from '@cliptap/shared';
 import { showConfirm } from '@utils/alerts';
+import { CATEGORY_FALLBACK_COLOR } from '@utils/categoryColor';
 
 /**
  * インポート選択モーダルのProps型定義
@@ -102,6 +103,17 @@ export function ImportSelectionModal({
   const activeSelectedCount = selectedCounts[activeTab];
 
   /**
+   * モーダルを閉じる
+   *
+   * @remarks
+   * 取込処理中は閉じない。閉じると呼び出し側が実行中の一時DBを破棄してしまうため。
+   */
+  const handleClose = useCallback(() => {
+    if (isProcessing) return;
+    onClose();
+  }, [isProcessing, onClose]);
+
+  /**
    * インポート実行前に確認ダイアログを表示
    */
   const handleImport = async () => {
@@ -117,7 +129,7 @@ export function ImportSelectionModal({
 
   /* インポート選択モーダル（マージモード用、アイテム選択） */
   return (
-    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
+    <Dialog open={isOpen} onClose={handleClose} className="relative z-50">
       {/* オーバーレイ（背景暗転） */}
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 
@@ -126,10 +138,11 @@ export function ImportSelectionModal({
         <Dialog.Panel className="w-full max-w-3xl h-[80vh] bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-xl flex flex-col">
           {/* ヘッダー（閉じるボタン、タイトル、全選択ボタン） */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#2A2A2A]">
-            {/* 閉じるボタン */}
+            {/* 閉じるボタン（取込処理中は無効） */}
             <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              onClick={handleClose}
+              disabled={isProcessing}
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -206,9 +219,10 @@ export function ImportSelectionModal({
                     ? selectedCategoryIds.has(category.id) || isCategoryDisabled(category.name)
                     : false;
                   const displayCategoryName = isCategorySelectedOrDisabled ? (item.categoryName || t('common.uncategorized')) : t('common.uncategorized');
-                  /* カテゴリ未選択時・色未設定時はどちらも青（#3B82F6）で表示する。
-                     同ファイルのカテゴリタブの丸は #ccc、CategoryItem のカラーインジケーターは #6B7280 と値が揃っていない */
-                  const displayCategoryColor = isCategorySelectedOrDisabled && category ? (category.color || '#3B82F6') : '#3B82F6';
+                  /* カテゴリ未選択時・色未設定時はどちらも未設定フォールバック色で表示する */
+                  const displayCategoryColor = isCategorySelectedOrDisabled && category
+                    ? (category.color || CATEGORY_FALLBACK_COLOR)
+                    : CATEGORY_FALLBACK_COLOR;
 
                   /* 定型文アイテム（チェックボックス、タイトル、本文、カテゴリ・プロファイルバッジ、展開/折りたたみ） */
                   return (
@@ -401,7 +415,7 @@ export function ImportSelectionModal({
                       <div className="flex-1">
                         <div className="flex items-center">
                           {/* カテゴリカラーインジケーター */}
-                          <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: item.color || '#ccc' }}></span>
+                          <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: item.color || CATEGORY_FALLBACK_COLOR }}></span>
                           {/* カテゴリ名 */}
                           <h3 className="text-sm font-medium text-gray-900 dark:text-white">{item.name}</h3>
                         </div>
@@ -424,10 +438,11 @@ export function ImportSelectionModal({
               {t('backup.selected_count_total', { count: activeSelectedCount })}
             </span>
             <div className="flex gap-3">
-              {/* キャンセルボタン */}
+              {/* キャンセルボタン（取込処理中は無効） */}
               <button
-                onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#333] border border-gray-300 dark:border-[#444] rounded-lg hover:bg-gray-50 dark:hover:bg-[#444]"
+                onClick={handleClose}
+                disabled={isProcessing}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#333] border border-gray-300 dark:border-[#444] rounded-lg hover:bg-gray-50 dark:hover:bg-[#444] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {t('common.cancel')}
               </button>
@@ -448,7 +463,7 @@ export function ImportSelectionModal({
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Processing...
+                    {t('common.processing')}
                   </span>
                 ) : (
                   t('export_import.import')

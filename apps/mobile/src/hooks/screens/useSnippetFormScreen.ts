@@ -11,7 +11,7 @@
  * - バリデーション
  *
  * @see components/snippet/SnippetFormScreen.tsx - UIコンポーネント
- * @see lib/hooks/useSnippets.tsx - スニペットCRUD操作
+ * @see packages/shared/src/providers/SnippetProvider.tsx - 定型文CRUD操作（useSnippets）
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';

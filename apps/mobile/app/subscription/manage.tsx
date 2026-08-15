@@ -21,12 +21,12 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
-  Modal,
 } from 'react-native';
 import { useTranslation } from '@cliptap/shared'
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
 import { ScreenContainer } from '@components/common/ScreenContainer';
+import { KeyboardGuideModal } from '@components/settings';
 import { useManageSubscriptionScreen } from '@hooks/screens/useManageSubscriptionScreen';
 
 /**
@@ -42,8 +42,11 @@ const PRO_FEATURES = [
 ] as const;
 
 export default function ManageSubscriptionScreen() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
+
+  /* 次回更新日の書式ロケール。判定式は systemVariables.ts の normalizeLocale と揃えている */
+  const dateLocale = language.startsWith('ja') ? 'ja-JP' : 'en-US';
 
   const {
     isSubscribed,
@@ -87,7 +90,7 @@ export default function ManageSubscriptionScreen() {
                     {t('subscription.next_billing_date')}
                   </Text>
                   <Text style={[styles.statusValue, { color: colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
-                    {expirationDate.toLocaleDateString('ja-JP', {
+                    {expirationDate.toLocaleDateString(dateLocale, {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',
@@ -166,11 +169,11 @@ export default function ManageSubscriptionScreen() {
               style={[styles.actionButton, { backgroundColor: colors.primary }]}
               onPress={navigateToPaywall}
             >
-              <Ionicons name="star" size={24} color="#FFFFFF" />
-              <Text style={[styles.actionButtonText, { color: '#FFFFFF', fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
+              <Ionicons name="star" size={24} color={colors.onPrimary} />
+              <Text style={[styles.actionButtonText, { color: colors.onPrimary, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
                 {t('subscription.subscribe')}
               </Text>
-              <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+              <Ionicons name="chevron-forward" size={20} color={colors.onPrimary} />
             </TouchableOpacity>
           )}
         </View>
@@ -189,73 +192,11 @@ export default function ManageSubscriptionScreen() {
         )}
       </ScrollView>
 
-      {/* キーボード設定ガイドモーダル */}
-      <Modal
+      {/* キーボード設定ガイドモーダル（設定画面と同一の正本コンポーネントを再利用する） */}
+      <KeyboardGuideModal
         visible={showKeyboardGuide}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowKeyboardGuide(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
-            <View style={styles.modalHeader}>
-              <Ionicons name="keypad" size={48} color={colors.primary} />
-              <Text style={[styles.modalTitle, { color: colors.text, fontSize: responsiveFontSizes.lg }]}>
-                {t(Platform.OS === 'ios' ? 'subscription.keyboard_guide_title_ios' : 'subscription.keyboard_guide_title_android')}
-              </Text>
-            </View>
-
-            <View style={styles.guideSteps}>
-              <View style={styles.guideStep}>
-                <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.stepNumberText}>1</Text>
-                </View>
-                <Text style={[styles.stepText, { color: colors.text, fontSize: responsiveFontSizes.base }]}>
-                  {t(Platform.OS === 'ios' ? 'subscription.keyboard_guide_step1_ios' : 'subscription.keyboard_guide_step1_android')}
-                </Text>
-              </View>
-
-              <View style={styles.guideStep}>
-                <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.stepNumberText}>2</Text>
-                </View>
-                <Text style={[styles.stepText, { color: colors.text, fontSize: responsiveFontSizes.base }]}>
-                  {t(Platform.OS === 'ios' ? 'subscription.keyboard_guide_step2_ios' : 'subscription.keyboard_guide_step2_android')}
-                </Text>
-              </View>
-
-              <View style={styles.guideStep}>
-                <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.stepNumberText}>3</Text>
-                </View>
-                <Text style={[styles.stepText, { color: colors.text, fontSize: responsiveFontSizes.base }]}>
-                  {t(Platform.OS === 'ios' ? 'subscription.keyboard_guide_step3_ios' : 'subscription.keyboard_guide_step3_android')}
-                </Text>
-              </View>
-
-              <View style={styles.guideStep}>
-                <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.stepNumberText}>4</Text>
-                </View>
-                <Text style={[styles.stepText, { color: colors.text, fontSize: responsiveFontSizes.base }]}>
-                  {t(Platform.OS === 'ios' ? 'subscription.keyboard_guide_step4_ios' : 'subscription.keyboard_guide_step4_android')}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: colors.primary }]}
-                onPress={() => setShowKeyboardGuide(false)}
-              >
-                <Text style={[styles.modalButtonText, { fontSize: responsiveFontSizes.base }]}>
-                  {t('common.ok')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowKeyboardGuide(false)}
+      />
     </ScreenContainer>
   );
 }
@@ -346,64 +287,5 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    width: '100%',
-    maxWidth: 400,
-    borderRadius: 16,
-    padding: 24,
-  },
-  modalHeader: {
-    alignItems: 'center',
-    marginBottom: 24,
-    gap: 12,
-  },
-  modalTitle: {
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  guideSteps: {
-    gap: 16,
-    marginBottom: 24,
-  },
-  guideStep: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'flex-start',
-  },
-  stepNumber: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepNumberText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  stepText: {
-    flex: 1,
-    lineHeight: 24,
-  },
-  modalButtons: {
-    gap: 12,
-  },
-  modalButton: {
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  modalButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
   },
 });

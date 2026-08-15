@@ -13,11 +13,30 @@ export * from './database/migrations';
 export * from './schema';
 export * from './types';
 
+/* サブスク応答の形状検証スキーマ（types/index.ts は型のみを再輸出するため、値としてはここから公開する） */
+export { SubscriptionStatusSchema } from './types/Subscription';
+
 /* エラー */
 export * from './errors';
 
-/* Mappers */
-export * from './mappers';
+/*
+ * Mappers（データアクセス層）
+ *
+ * データアクセス層は公開APIから一括再エクスポートしない。
+ * 一括公開していると画面・コンポーネント（UI層）がMapperをそのまま呼べてしまい、
+ * CLAUDE.mdのアーキテクチャ（UI層 → Service層 → Mapper層）が崩れるため。
+ * ここで公開するのは、アプリのDB初期化・初期データ投入
+ * （apps/mobile/src/database/、apps/web/src/database/）が使う分だけに限定する。
+ * 画面・コンポーネントからはService層（SystemVariableFormatService等）を使うこと。
+ */
+export {
+  SnippetMapper,
+  CategoryMapper,
+  VariableMapper,
+  ProfileMapper,
+  ProfileVariableMapper,
+  SystemVariableFormatMapper,
+} from './mappers';
 
 /* Adapters */
 export type { SubscriptionAdapter, SubscriptionListener } from './adapters';
@@ -124,6 +143,7 @@ export {
   ImportService,                      /* インポートサービスクラス（静的メソッドでDB操作も提供） */
   AuthService,                        /* 認証サービス */
   SystemVariableFormatRegistry,
+  SystemVariableFormatService,        /* システム変数書式サービス（UI層からの入口） */
 } from './services';
 
 /* エクスポートサービス */
@@ -282,12 +302,4 @@ export {
   SnippetProvider,
   useSnippets,
   type SnippetContextValue,
-
-  /* アラートProvider */
-  AlertProvider,
-  useAlert,
-  type AlertContextType,
-  type AlertOptions,
-  type AlertPlatformAdapter,
-  type AlertProviderProps,
 } from './providers';

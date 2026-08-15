@@ -29,6 +29,7 @@
 # 【使い方】
 #   ./scripts/verify.sh ios                    # iOS（シミュレータ）
 #   ./scripts/verify.sh ios --device           # iOS（接続中の実機）
+#   ./scripts/verify.sh ios --simulator        # 既定と同じ。npm run verify:ios:device -- --simulator で --device を打ち消す
 #   ./scripts/verify.sh android                # Android
 #   ./scripts/verify.sh ios --no-install       # 検証だけ（端末を触らない）
 #   ./scripts/verify.sh ios --skip-checks      # 1〜3を飛ばす
@@ -108,7 +109,7 @@ print_ng() {
 
 # 使い方を表示する
 print_usage() {
-  printf '使い方: %s <ios|android> [--device] [--skip-checks] [--skip-build] [--no-install]\n' "$0" >&2
+  printf '使い方: %s <ios|android> [--device] [--simulator] [--skip-checks] [--skip-build] [--no-install]\n' "$0" >&2
 }
 
 # --- 引数解析 -------------------------------------------------------------

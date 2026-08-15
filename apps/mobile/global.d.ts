@@ -13,7 +13,8 @@
  * 3. モーダル画面でグローバル変数のコールバックを呼び出し
  * 4. 親画面のコールバックが実行される
  *
- * @see text-editor.tsx - テキストエディターモーダル
+ * @see app/snippet/title-input.tsx - タイトル入力モーダル
+ * @see app/snippet/content-input.tsx - 本文入力モーダル
  */
 
 declare global {

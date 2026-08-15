@@ -18,7 +18,6 @@
  *     │   ├── VariableNameRequiredError
  *     │   ├── VariableNameInvalidError
  *     │   ├── VariableNameReservedError
- *     │   ├── VariableValueRequiredError
  *     │   └── InvalidRgbValueError
  *     ├── NotFoundError (リソース未検出。validation.ts にあるが ValidationError の配下ではない)
  *     ├── ImportExportError (インポート/エクスポート関連)
@@ -31,8 +30,7 @@
  *     │   ├── PasswordRequiredError
  *     │   ├── ExportFailedError
  *     │   ├── TempDbPathRequiredError
- *     │   ├── PartialImportError
- *     │   └── DatabasePathNotFoundError
+ *     │   └── PartialImportError
  *     └── EnvironmentError (実行環境関連)
  * ```
  */
@@ -61,7 +59,6 @@ export {
   VariableNameRequiredError,
   VariableNameInvalidError,
   VariableNameReservedError,
-  VariableValueRequiredError,
   InvalidRgbValueError,
 } from './validation';
 
@@ -80,7 +77,6 @@ export {
   ExportFailedError,
   TempDbPathRequiredError,
   PartialImportError,
-  DatabasePathNotFoundError,
 } from './importExport';
 
 /* ======================================== */

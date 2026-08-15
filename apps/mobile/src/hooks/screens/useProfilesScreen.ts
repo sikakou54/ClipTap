@@ -11,7 +11,7 @@
  * - 無料プラン制限チェック
  *
  * @see app/settings/profiles.tsx - UIコンポーネント
- * @see lib/hooks/useProfiles.tsx - プロファイルCRUD操作
+ * @see packages/shared/src/providers/ProfileProvider.tsx - プロファイルCRUD操作（useProfiles）
  */
 
 import { useState, useCallback } from 'react';
@@ -23,9 +23,9 @@ import {
   useProfiles,
   Logger,
   translateError,
+  useSharedSubscription,
   type Profile,
 } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
 import { useUpgradePrompt } from '@hooks/useUpgradePrompt';
 import { showConfirm, showErrorAlert } from '@utils/alerts';
 
@@ -59,7 +59,7 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
   const confirmUpgrade = useUpgradePrompt();
 
   const { refresh, setDefaultProfile, deleteProfile } = useProfiles();
-  const { canAddProfile } = useSubscription();
+  const { canAddProfile } = useSharedSubscription();
 
   /* ======================================== */
   /* 状態管理 */

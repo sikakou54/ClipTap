@@ -105,7 +105,7 @@ export function Header({
         headerStyles.header,
         {
           backgroundColor: backgroundColor || colors.background,
-          borderBottomColor: colors.border,
+          /* 区切り線は引かない（headerStyles.headerにborderBottomWidthを持たせていないため、色だけ指定しても描画されない） */
           /* セーフエリアはScreenContainerが確保するため、ここは内部余白のみ */
           paddingTop: isModal || isTablet ? UI_CONSTANTS.GAP.BASE : 0,
           paddingBottom: UI_CONSTANTS.GAP.MD,

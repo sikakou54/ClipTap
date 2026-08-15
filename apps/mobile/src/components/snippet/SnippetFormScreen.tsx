@@ -16,9 +16,9 @@
  * - UIとビジネスロジックを完全分離
  * - 全ての状態・ロジックはuseSnippetFormScreenフックで管理
  *
- * @see lib/hooks/screens/useSnippetFormScreen.ts - ビジネスロジック
- * @see app/snippet/new.tsx - 新規作成ルート
- * @see app/snippet/[id]/edit.tsx - 編集ルート
+ * @see hooks/screens/useSnippetFormScreen.ts - ビジネスロジック
+ * @see app/snippet/create.tsx - 新規作成ルート
+ * @see app/snippet/edit.tsx - 編集ルート
  */
 
 import {

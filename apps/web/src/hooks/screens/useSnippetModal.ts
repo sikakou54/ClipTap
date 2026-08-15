@@ -10,6 +10,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import {
+  Logger,
   useSnippets,
   type Snippet,
   type SnippetProfile,
@@ -106,7 +107,7 @@ export function useSnippetModal({
       /* 親のuseSnippetsも更新するため、コールバックを呼び出す */
       onSnippetsChange?.();
     } catch (err) {
-      console.error('Failed to create:', err);
+      Logger.error('Failed to create:', err);
     }
   }, [createSnippet, onSnippetsChange]);
 
@@ -137,7 +138,7 @@ export function useSnippetModal({
       /* 親のuseSnippetsも更新するため、コールバックを呼び出す */
       onSnippetsChange?.();
     } catch (err) {
-      console.error('Failed to update:', err);
+      Logger.error('Failed to update:', err);
     }
   }, [editingSnippet, updateSnippet, onSnippetsChange]);
 
@@ -148,7 +149,7 @@ export function useSnippetModal({
       /* 親のuseSnippetsも更新するため、コールバックを呼び出す */
       onSnippetsChange?.();
     } catch (err) {
-      console.error('Failed to delete:', err);
+      Logger.error('Failed to delete:', err);
     }
   }, [deleteSnippet, onSnippetsChange]);
 

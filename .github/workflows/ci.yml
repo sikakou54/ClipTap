@@ -56,4 +56,22 @@ jobs:
       - run: npm ci
         working-directory: .
       - run: pod install
-      - run: xcodebuild build -workspace ClipTap.xcworkspace -scheme ClipTap -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO
+      # ビルドは scripts/build-native.sh へ寄せる。ここで xcodebuild を直接呼ぶと
+      # 拡張キーボード（ClipTapKeyboard.appex）の埋め込み検査が抜け、ターゲットが
+      # project.pbxproj から失われてもCIが緑のまま通ってしまう。
+      # CODE_SIGNING_ALLOWED=NO も使わない。エンタイトルメントが埋め込まれず
+      # App Group（group.com.sikakou.cliptap）が無効なビルドを検証したことになるため。
+      # シミュレータ向けはアドホック署名で足りるので開発者アカウントは不要。
+      - run: npm run build:native:ios -- --no-install
+        working-directory: .
+        env:
+          # ランナーの空き容量はローカルの想定（10GB）より小さい。
+          # この事前チェックだけを理由にビルドへ入れなくならないよう下げる。
+          REQUIRED_FREE_GB: 5
+      # build-native.sh は詳細を .build-logs/ へ落とし、標準出力にはエラー行だけを出す。
+      # 失敗時に原因を追えるようログを残す。
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: ios-build-logs
+          path: .build-logs/

@@ -11,6 +11,7 @@
 
 import { useCallback } from 'react';
 import {
+  Logger,
   translateError,
   useSnippets,
   useProfiles,
@@ -76,7 +77,7 @@ export function useImportScreen({
 
   /* エラーハンドラ */
   const handleError = useCallback((error: Error) => {
-    console.error('Import error:', error);
+    Logger.error('Import error:', error);
     const translatedMessage = translateError(error);
     showErrorAlert(translatedMessage);
   }, []);
@@ -107,16 +108,6 @@ export function useImportScreen({
     webImport.setShowFileSelect(false);
   }, [webImport]);
 
-  /* モード選択モーダルを閉じる */
-  const closeModeSelectModal = useCallback(() => {
-    webImport.setShowModeSelect(false);
-  }, [webImport]);
-
-  /* 項目選択モーダルを閉じる */
-  const closeSelectionModal = useCallback(() => {
-    webImport.setShowItemSelect(false);
-  }, [webImport]);
-
   /* 復元前の確認ダイアログ */
   const handleRestoreBackup = useCallback(async () => {
     showConfirm('backup.restore_confirm', () => {
@@ -136,8 +127,9 @@ export function useImportScreen({
     /* ハンドラ */
     openFileModal,
     closeFileModal,
-    closeModeSelectModal,
-    closeSelectionModal,
+    /* 一時DBの破棄と取込処理中のガードはuseWebImport側へ集約している */
+    closeModeSelectModal: webImport.closeModeSelect,
+    closeSelectionModal: webImport.closeItemSelect,
     handleFileSelected: webImport.handleFileSelected,
     handleRestoreBackup,
     handleSelectMergeMode: webImport.handleSelectMergeMode,

@@ -83,9 +83,9 @@ export function SortMenu({ currentSort, onSortChange }: SortMenuProps) {
         onRequestClose={handleClose}
       >
         {/* オーバーレイ（背景タップで閉じる） */}
-        <Pressable style={styles.overlay} onPress={handleClose}>
+        <Pressable style={[styles.overlay, { backgroundColor: colors.overlay }]} onPress={handleClose}>
           {/* モーダルコンテンツ */}
-          <Pressable style={[styles.modal, { backgroundColor: colors.surface }]} onPress={(e) => e.stopPropagation()}>
+          <Pressable style={[styles.modal, { backgroundColor: colors.surface, shadowColor: colors.shadow }]} onPress={(e) => e.stopPropagation()}>
             {/* モーダルタイトル */}
             <Text style={[styles.modalTitle, { color: colors.text, fontSize: responsiveFontSizes.lg, lineHeight: responsiveLineHeights.lg }]}>
               {t('sort.title')}
@@ -157,18 +157,18 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 100,
   },
+  /** オーバーレイ（背景色は使用箇所でテーマの overlay を重ねる） */
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  /** モーダル本体（背景色と影の色は使用箇所でテーマから重ねる） */
   modal: {
     width: '80%',
     maxWidth: 360,
     borderRadius: UI_CONSTANTS.BORDER_RADIUS.LG,
     padding: UI_CONSTANTS.SPACING.LG,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

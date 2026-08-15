@@ -7,10 +7,6 @@
     "skipLibCheck": true,
     "strict": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "paths": {
-      "@cliptap/shared": ["./packages/shared/src/index.ts"],
-      "@cliptap/shared/*": ["./packages/shared/src/*"]
-    }
+    "allowSyntheticDefaultImports": true
   }
 }

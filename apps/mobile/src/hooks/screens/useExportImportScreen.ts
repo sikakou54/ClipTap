@@ -212,6 +212,8 @@ export function useExportImportScreen(): UseExportImportScreenReturn {
           );
 
           setShowImportModeModal(false);
+          /* 復元済みの一時DBはもう使わないため、キャッシュ領域に残さず削除する */
+          ImportService.cleanupTempDatabase(handle.tempDbPath);
           tempDbHandleRef.current = null;
           setPassword('');
           setSelectedBackupFileUri(null);

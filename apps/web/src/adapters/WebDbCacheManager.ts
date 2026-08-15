@@ -8,7 +8,7 @@
  * @module WebDbCacheManager
  */
 
-import { DatabaseError, getMainDbAdapter, getSystemDbAdapter } from '@cliptap/shared';
+import { Logger, DatabaseError, getMainDbAdapter, getSystemDbAdapter } from '@cliptap/shared';
 import { CacheService } from '@services/CacheService';
 import { subscriptionService } from '@services/SubscriptionService';
 import type { WebDatabaseAdapter } from '@adapters/WebDatabaseAdapter';
@@ -86,7 +86,7 @@ export class WebDbCacheManager {
       await this.saveOrThrow();
     } catch (err) {
       /* エラーが発生した場合はログを出力（アプリの動作は止めない） */
-      console.error('[WebDbCacheManager] Failed to save cache:', err);
+      Logger.error('[WebDbCacheManager] Failed to save cache:', err);
     }
   }
 

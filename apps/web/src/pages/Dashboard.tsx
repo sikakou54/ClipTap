@@ -222,6 +222,7 @@ export function Dashboard() {
       <ImportModeSelectModal
         isOpen={importScreen.showModeSelectModal}
         onClose={importScreen.closeModeSelectModal}
+        isProcessing={importScreen.isProcessing}
         onSelectMode={(mode) => {
           if (mode === 'restore') {
             /* 復元モード: 既存データを全て置き換え */

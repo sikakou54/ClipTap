@@ -11,6 +11,56 @@ import * as VariableParser from '../variables/parser';
 import { SystemVariableFormatRegistry } from '../services/SystemVariableFormatRegistry';
 
 /**
+ * 展開済みテキストをクリップボード用に連結する際のオプション
+ */
+interface JoinSnippetTextOptions {
+  /** 展開済みタイトル */
+  title?: string | null;
+  /** 展開済み本文 */
+  content?: string | null;
+  /** タイトルも一緒にコピーするかどうか（デフォルト: false） */
+  copyWithTitle?: boolean;
+}
+
+/**
+ * 展開済みのタイトルと本文をクリップボード用の1つのテキストへ連結する
+ *
+ * @param options - 連結オプション
+ *
+ * @returns 連結済みテキスト（連結対象がない場合は空文字）
+ *
+ * @remarks
+ * タイトルと本文の連結規則はこの関数を唯一の正本とします。
+ * モバイル・Webのプレビューコピーと一覧コピーがすべてここを呼ぶことで、
+ * 同じ定型文であれば経路によらず同じ文字列がクリップボードへ渡ることを保証します。
+ *
+ * 規則は「非空の要素だけを改行で連結する」です。
+ * 空判定はtrim後の空文字で行いますが、連結する値そのものはtrimしません。
+ * 本文の先頭・末尾の空白や改行が利用者の意図した書式である場合を壊さないためです。
+ * 本文が空のときにタイトルの後ろへ改行を付けないのは、
+ * 区切る相手がない区切り文字を出力しないためです。
+ */
+export const joinSnippetTextForClipboard = ({
+  title,
+  content,
+  copyWithTitle = false,
+}: JoinSnippetTextOptions): string => {
+  const parts: string[] = [];
+
+  /* タイトルはcopyWithTitleがONで、かつ空白のみでない場合だけ連結対象にする */
+  if (copyWithTitle && title && title.trim() !== '') {
+    parts.push(title);
+  }
+
+  /* 本文が空白のみの場合はコピーする内容がないものとして扱う */
+  if (content && content.trim() !== '') {
+    parts.push(content);
+  }
+
+  return parts.join('\n');
+};
+
+/**
  * スニペットをクリップボードにコピーする際のオプション
  */
 interface CopySnippetOptions {
@@ -34,10 +84,11 @@ interface CopySnippetOptions {
  * @remarks
  * この関数は以下の処理を行います:
  * 1. 変数展開が有効な場合、本文とタイトルの変数（{{今日}}、{{カスタム変数}}等）を展開
- * 2. スニペットのcopyWithTitleフラグがtrueの場合、タイトルと本文を結合
+ * 2. 展開済みのタイトルと本文をjoinSnippetTextForClipboardの規則で連結
  * 3. 最終的なコピー用テキストを返す
  *
  * 変数展開はVariableParserモジュールを使用して行われます。
+ * 連結規則はjoinSnippetTextForClipboardが正本で、ここでは独自に組み立てません。
  */
 export const prepareSnippetForClipboard = async ({
   snippet,
@@ -61,12 +112,12 @@ export const prepareSnippetForClipboard = async ({
     }
   }
 
-  /* copyWithTitleフラグがtrueでタイトルが存在する場合、タイトルと本文を結合 */
-  if (snippet.copyWithTitle && title) {
-    return `${title}\n${content}`;
-  }
-  /* それ以外の場合は本文のみを返す */
-  return content;
+  /* 連結規則は共有正本へ集約し、プレビューや一覧コピーと同じ出力にする */
+  return joinSnippetTextForClipboard({
+    title,
+    content,
+    copyWithTitle: snippet.copyWithTitle,
+  });
 };
 
 /**
