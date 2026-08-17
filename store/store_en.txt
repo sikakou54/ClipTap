@@ -16,43 +16,15 @@ ClipTap: Text Snippet Keyboard
 【Google Play｜短い説明】（80 chars max）
 Stop retyping: a snippet keyboard and text expander for canned replies.
 
-【最新情報（App Store／4,000 chars max）】
-Version 1.3.0
-
-Choose how dates and times look (new, free)
-Pick an output format for each of the 7 system variables from 94 presets in total, 34 for the date alone: 2026/08/04, 08/04/2026 (US), 04/08/2026 (EU), 09:05, Tue, Tuesday. Preview against the real date, and every template using that variable follows at once, in the app and on the keyboard.
-
-Title and body, handled separately (free)
-The keyboard now has a title button and a line-break button, so you can fill a subject line and then the body without leaving the field. In the app, tap a title in the list to copy just the title.
-
-Default profile
-Mark any profile as the default from the profile list, and it moves to the top.
-
-Start on the web without the app
-The web version now hands you a starter file, so you can try ClipTap in a PC browser before installing anything.
-
-Older files open again
-A .cliptap file exported by an older version is migrated automatically when you import it, and large libraries load far faster.
-
-Fewer permissions
-The location, camera, photo and microphone permission requests are gone. ClipTap no longer asks for any of them.
-
-Keyboard
-The usage-count setting is gone; Full Access is now detected automatically. You can sort by usage without it, and keyboard use is counted once Full Access is granted. The keyboard also sits closer to the system one and scrolls more smoothly.
-
-Fixes
-Dark mode contrast, English screens that stayed Japanese, purchases and cancellations showing right away, stray spaces in variable values, and web version import problems.
-
 【リリースノート（Google Play／500 chars max）】
 Version 1.3.0
 
 - Date and time formats (free): 94 presets across the 7 system variables.
 - Title and line-break buttons on the keyboard: fill a subject, then the body.
 - Mark any profile as the default from the list.
-- No more location, camera, photo or microphone permission requests.
 - Try the web version in a PC browser without installing the app.
 - Older .cliptap files are migrated on import; large libraries load faster.
-- Fixes: dark mode, English screens stuck in Japanese, purchase status.
+- Improvements were made to the UI and the program.
 
 【説明文（App Store・Google Play 共通／4,000 chars max）】
 Stop retyping the same messages.
