@@ -19,22 +19,10 @@
         "copyWithTitle": true
       },
       {
-        "key": "progress_report",
-        "categoryKey": "work",
-        "title": "進捗報告（{{today}}）",
-        "content": "{{client_name}}\nいつもお世話になっております。\n{{company}} の {{sender_name}} です。\n\n担当案件の進捗をご報告いたします。\n\n【本日の実施内容】\n・\n・\n\n【次回予定】\n・\n・\n\n以上です。ご不明点などありましたらお知らせください。"
-      },
-      {
         "key": "daily_progress",
         "categoryKey": "sns",
         "title": "今日の積み上げ",
         "content": "# 今日の積み上げ\n\n## 🎯 今日やること\n- [ ]\n- [ ]\n- [ ]"
-      },
-      {
-        "key": "research_prompt",
-        "categoryKey": "prompt",
-        "title": "調査プロンプト",
-        "content": "以下について調査してください。\n\n# 調査対象\n- \n\n# 調査目的\n- \n\n# 調査項目\n- \n\n# 出力条件\n- 初心者にも分かるように説明する\n- 必要に応じて表で比較する\n- 出典となるURLを添える"
       },
       {
         "key": "summary_prompt",
@@ -64,22 +52,10 @@
         "copyWithTitle": true
       },
       {
-        "key": "progress_report",
-        "categoryKey": "work",
-        "title": "Progress report ({{today}})",
-        "content": "Hi {{client_name}},\n\nThis is {{sender_name}} from {{company}}.\n\nHere is where your project stands.\n\n[Done today]\n- \n- \n\n[Coming next]\n- \n- \n\nLet me know if anything is unclear."
-      },
-      {
         "key": "daily_progress",
         "categoryKey": "sns",
         "title": "Daily progress post",
         "content": "# Today's progress\n\n## 🎯 Plan for today\n- [ ]\n- [ ]\n- [ ]"
-      },
-      {
-        "key": "research_prompt",
-        "categoryKey": "prompt",
-        "title": "Research prompt",
-        "content": "Please research the following.\n\n# Subject\n- \n\n# Purpose\n- \n\n# Points to cover\n- \n\n# Output rules\n- Explain it so a beginner can follow\n- Use a table where a comparison helps\n- Include the source URLs"
       },
       {
         "key": "summary_prompt",

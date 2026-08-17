@@ -26,10 +26,9 @@ const SLIDES = [
   { slug: '00-hero', tone: 'light' },
   { slug: '01-keyboard', tone: 'light' },
   { slug: '02-scenes', tone: 'light' },
-  { slug: '03-onetap', tone: 'light' },
-  { slug: '04-variables', tone: 'light' },
-  { slug: '05-profiles', tone: 'light' },
-  { slug: '06-pricing', tone: 'poster' },
+  { slug: '03-variables', tone: 'light' },
+  { slug: '04-profiles', tone: 'light' },
+  { slug: '05-pricing', tone: 'poster' },
 ];
 
 /**
