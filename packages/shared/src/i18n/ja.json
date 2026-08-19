@@ -40,6 +40,8 @@
     "title_input_placeholder": "タイトルを入力...",
     "content": "内容",
     "content_placeholder": "内容を入力してください",
+    "content_input": "内容を入力",
+    "content_input_placeholder": "内容を入力...",
     "search_placeholder": "定型文を検索...",
     "category": "カテゴリ",
     "select_category": "カテゴリを選択",

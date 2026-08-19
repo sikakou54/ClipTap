@@ -40,6 +40,8 @@
     "title_input_placeholder": "Enter title...",
     "content": "Content",
     "content_placeholder": "Enter content...",
+    "content_input": "Enter Content",
+    "content_input_placeholder": "Enter content...",
     "search_placeholder": "Search templates...",
     "category": "Category",
     "select_category": "Select category",
