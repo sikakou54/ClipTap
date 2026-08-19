@@ -38,7 +38,6 @@ export {
   type CryptoAdapter,
   setCryptoAdapter,
   getCryptoAdapter,
-  hasCryptoAdapter,
 } from './CryptoAdapter';
 
 /* ======================================== */
@@ -52,7 +51,6 @@ export {
   hasMainDbAdapter,
   setSystemDbAdapter,
   getSystemDbAdapter,
-  hasSystemDbAdapter,
   setTempDbAdapter,
   getTempDbAdapter,
   hasTempDbAdapter,
@@ -76,30 +74,12 @@ export {
   type FileInfo,
   setFileIOAdapter,
   getFileIOAdapter,
-  hasFileIOAdapter,
 } from './FileIOAdapter';
 
 /* ======================================== */
 /* FileShareAdapter（ファイル共有） */
 /* ======================================== */
-export {
-  type FileShareAdapter,
-  setFileShareAdapter,
-  getFileShareAdapter,
-  hasFileShareAdapter,
-} from './FileShareAdapter';
-
-/* ======================================== */
-/* FilePickerAdapter（ファイル選択） */
-/* ======================================== */
-export {
-  type FilePickerAdapter,
-  type FilePickOptions,
-  type FilePickResult,
-  setFilePickerAdapter,
-  getFilePickerAdapter,
-  hasFilePickerAdapter,
-} from './FilePickerAdapter';
+export { type FileShareAdapter } from './FileShareAdapter';
 
 /* ======================================== */
 /* LocaleAdapter（ロケール・言語設定） */
@@ -151,13 +131,3 @@ export {
   getSortPreferenceAdapter,
   hasSortPreferenceAdapter,
 } from './SortPreferenceAdapter';
-
-/* ======================================== */
-/* UsageTrackingAdapter（使用頻度追跡設定） */
-/* ======================================== */
-export {
-  type UsageTrackingAdapter,
-  setUsageTrackingAdapter,
-  getUsageTrackingAdapter,
-  hasUsageTrackingAdapter,
-} from './UsageTrackingAdapter';

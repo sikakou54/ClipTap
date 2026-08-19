@@ -1,0 +1,2 @@
+RouteID,Route,ScreenID,EntryPoint,TransitionCondition,RequiredState,RequiredPermission,PatternID,TestID,Tested
+R-001,/,SC-HOME,アプリ起動,初期化完了,DB初期化済み,なし,P-F09-001;P-F11-001;P-F08-001;P-F02-001,TC-S001;TC-S002;TC-S003;TC-S004,

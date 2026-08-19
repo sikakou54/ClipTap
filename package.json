@@ -1,31 +1,39 @@
 {
   "name": "cliptap-monorepo",
   "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
     "dev:mobile": "npm run start --workspace=@cliptap/mobile",
-    "ios": "npm run ios --workspace=@cliptap/mobile",
-    "android": "npm run android --workspace=@cliptap/mobile",
-    "prebuild": "npm run prebuild --workspace=@cliptap/mobile",
-    "pod-install": "npm run pod-install --workspace=@cliptap/mobile",
     "dev:web": "npm run dev --workspace=@cliptap/web",
     "dev:api": "npm run dev --workspace=@cliptap/api",
     "deploy:api": "npm run deploy --workspace=@cliptap/api",
     "deploy:api:dev": "npm run deploy:dev --workspace=@cliptap/api",
-    "preview:mobile": "npm run preview --workspace=@cliptap/mobile",
-    "build:mobile": "npm run build --workspace=@cliptap/mobile",
+    "build:mobile": "npm run eas:prod --workspace=@cliptap/mobile",
+    "build:mobile:preview": "npm run eas:preview --workspace=@cliptap/mobile",
     "build:web": "npm run build --workspace=@cliptap/web",
+    "verify:ios": "./scripts/verify.sh ios",
+    "verify:ios:device": "./scripts/verify.sh ios --device",
+    "verify:android": "./scripts/verify.sh android",
     "type-check": "npm run type-check:mobile && npm run type-check:web && npm run type-check:shared && npm run type-check:api",
     "type-check:api": "npm run type-check --workspace=@cliptap/api",
     "type-check:mobile": "tsc --project apps/mobile/tsconfig.json --noEmit",
     "type-check:web": "tsc --project apps/web/tsconfig.app.json --noEmit",
     "type-check:shared": "tsc --project packages/shared/tsconfig.json --noEmit",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+    "lint": "npm run lint --workspace=@cliptap/mobile && npm run lint --workspace=@cliptap/web && npm run lint --workspace=@cliptap/shared && npm run lint --workspace=@cliptap/api && eslint store",
+    "lint:fix": "npm run lint:fix --workspace=@cliptap/mobile && npm run lint:fix --workspace=@cliptap/web && npm run lint:fix --workspace=@cliptap/shared && npm run lint:fix --workspace=@cliptap/api && eslint store --fix",
+    "test": "npm test --workspace=@cliptap/shared"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
     "typescript": "^5.9.2"
   }
 }

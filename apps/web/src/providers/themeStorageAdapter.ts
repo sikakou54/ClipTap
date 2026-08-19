@@ -9,9 +9,7 @@
  */
 
 import type { ThemeStorageAdapter, ThemeMode } from '@cliptap/shared';
-
-/** LocalStorageのキー名 */
-const STORAGE_KEY = 'cliptap-theme';
+import { THEME_STORAGE_KEY } from '@providers/themeStorage';
 
 /**
  * Web用テーマストレージアダプター
@@ -26,7 +24,7 @@ export const webThemeStorageAdapter: ThemeStorageAdapter = {
     }
 
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(THEME_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         /* Zustand persist形式から値を取得 */
@@ -46,10 +44,10 @@ export const webThemeStorageAdapter: ThemeStorageAdapter = {
     if (typeof localStorage === 'undefined') return;
 
     try {
-      const current = localStorage.getItem(STORAGE_KEY);
+      const current = localStorage.getItem(THEME_STORAGE_KEY);
       const parsed = current ? JSON.parse(current) : { state: {}, version: 0 };
       parsed.state = { ...parsed.state, themeMode: mode };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(parsed));
     } catch {
       /* ストレージエラーは無視 */
     }

@@ -11,10 +11,9 @@
  * @see components/snippet/VariableToolbar.tsx - UIコンポーネント
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useWindowDimensions, LayoutChangeEvent } from 'react-native';
-import { useTranslation, useProfiles } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
+import { useTranslation, useProfiles, useSharedSubscription } from '@cliptap/shared';
 import { loadVariableOptions } from '@utils/variableLoader';
 import { VariableOption } from '@mobile-types/variable';
 
@@ -42,38 +41,52 @@ export interface UseVariableToolbarReturn {
 export function useVariableToolbar(): UseVariableToolbarReturn {
   const { t } = useTranslation();
   const { profileVariables, defaultProfile } = useProfiles();
-  const { isSubscribed } = useSubscription();
+  const { isSubscribed } = useSharedSubscription();
   const { width: screenWidth } = useWindowDimensions();
 
-  const [allVariables, setAllVariables] = useState<VariableOption[]>([]);
   const [contentWidth, setContentWidth] = useState(0);
 
   /**
-   * カスタム変数を読み込み
+   * 再読み込みトリガー
+   *
+   * VariableServiceはReactの外にあるミュータブルストアで変更通知を持たないため、
+   * 10秒ごとにカウンタを進めて変数リストを再計算する。
    */
-  const loadCustomVariables = useCallback(() => {
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(
+      () => setRefreshTick((tick) => tick + 1),
+      VARIABLE_REFRESH_INTERVAL_MS
+    );
+    return () => clearInterval(interval);
+  }, []);
+
+  /**
+   * カスタム変数一覧
+   *
+   * 依存の変化（言語・課金状態・プロファイル）では即座に、
+   * VariableServiceの変更はrefreshTickの進行に合わせて反映される。
+   */
+  const allVariables = useMemo<VariableOption[]>(() => {
+    /*
+     * refreshTickはVariableService（React外のミュータブルストア）を
+     * 読み直すためだけのトリガーで、計算結果には使わない。
+     */
+    void refreshTick;
+
     try {
-      const options = loadVariableOptions({
+      return loadVariableOptions({
         t,
         isSubscribed,
         profileVariables,
         defaultProfile,
       });
-      setAllVariables(options);
     } catch {
-      /* エラー時は無視して動作継続 */
+      /* エラー時は空リストで動作継続（次回のリフレッシュで復帰する） */
+      return [];
     }
-  }, [t, isSubscribed, profileVariables, defaultProfile]);
-
-  /**
-   * 初回マウント時と10秒ごとに自動リフレッシュ
-   */
-  useEffect(() => {
-    loadCustomVariables();
-
-    const interval = setInterval(loadCustomVariables, VARIABLE_REFRESH_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [loadCustomVariables]);
+  }, [t, isSubscribed, profileVariables, defaultProfile, refreshTick]);
 
   /**
    * コンテンツ幅取得

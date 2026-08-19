@@ -97,6 +97,20 @@ export class DefaultProfileDeleteError extends ValidationError {
 }
 
 /**
+ * 無効プロファイルの標準化エラー
+ *
+ * 無効なプロファイルを標準に設定しようとした場合にスローされます。
+ * 無効なプロファイルは変数値のフォールバック先にも、無効プロファイル指定時の
+ * 振替先にもできないため、標準にはできません。
+ */
+export class InvalidProfileDefaultError extends ValidationError {
+  constructor(message: string = 'A disabled profile cannot be set as the default') {
+    super(message, 'error.cannot_set_invalid_profile_as_default');
+    this.name = 'InvalidProfileDefaultError';
+  }
+}
+
+/**
  * 変数名必須エラー
  *
  * 変数名が空の場合にスローされます。
@@ -105,29 +119,6 @@ export class VariableNameRequiredError extends ValidationError {
   constructor(message: string = 'Variable name is required') {
     super(message, 'error.variable_name_required');
     this.name = 'VariableNameRequiredError';
-  }
-}
-
-/**
- * 変数名長さエラー
- *
- * 変数名が最大長を超えている場合にスローされます。
- */
-export class VariableNameTooLongError extends ValidationError {
-  /** 許容される最大文字数 */
-  readonly maxLength: number;
-
-  /** 実際の文字数 */
-  readonly actualLength: number;
-
-  constructor(maxLength: number, actualLength: number) {
-    super(
-      `Variable name is too long (max: ${maxLength}, actual: ${actualLength})`,
-      'error.variable_name_too_long'
-    );
-    this.name = 'VariableNameTooLongError';
-    this.maxLength = maxLength;
-    this.actualLength = actualLength;
   }
 }
 
@@ -167,18 +158,6 @@ export class VariableNameReservedError extends ValidationError {
     );
     this.name = 'VariableNameReservedError';
     this.reservedName = name;
-  }
-}
-
-/**
- * 変数値必須エラー
- *
- * プロファイル変数の値が空の場合にスローされます。
- */
-export class VariableValueRequiredError extends ValidationError {
-  constructor(message: string = 'Variable value is required') {
-    super(message, 'error.variable_value_required');
-    this.name = 'VariableValueRequiredError';
   }
 }
 

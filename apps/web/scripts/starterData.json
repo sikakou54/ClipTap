@@ -1,0 +1,68 @@
+{
+  "ja": {
+    "categories": [
+      { "key": "work", "name": "仕事", "color": "#3B82F6" },
+      { "key": "sns", "name": "SNS", "color": "#10B981" },
+      { "key": "prompt", "name": "プロンプト", "color": "#3B82F6" }
+    ],
+    "variables": [
+      { "name": "client_name", "label": "取引先担当者名", "icon": "person-outline", "value": "ご担当者様" },
+      { "name": "company", "label": "自社名", "icon": "business-outline", "value": "株式会社サンプル" },
+      { "name": "sender_name", "label": "送信者名", "icon": "person-circle-outline", "value": "山田" }
+    ],
+    "snippets": [
+      {
+        "key": "work_start",
+        "categoryKey": "work",
+        "title": "業務開始報告（{{today}}）",
+        "content": "お疲れ様です。\n{{today}} の業務を開始します。\n\n本日の予定：\n・\n・\n・\n\n以上、よろしくお願いいたします。",
+        "copyWithTitle": true
+      },
+      {
+        "key": "daily_progress",
+        "categoryKey": "sns",
+        "title": "今日の積み上げ",
+        "content": "# 今日の積み上げ\n\n## 🎯 今日やること\n- [ ]\n- [ ]\n- [ ]"
+      },
+      {
+        "key": "summary_prompt",
+        "categoryKey": "prompt",
+        "title": "要約プロンプト",
+        "content": "以下を要約してください。\n\n# 対象\n- \n\n# 出力条件\n- 結論から先に書く\n- 箇条書きで3点以内にまとめる\n- 原文にない情報は補わない"
+      }
+    ]
+  },
+  "en": {
+    "categories": [
+      { "key": "work", "name": "Work", "color": "#3B82F6" },
+      { "key": "sns", "name": "Social media", "color": "#10B981" },
+      { "key": "prompt", "name": "Prompt", "color": "#3B82F6" }
+    ],
+    "variables": [
+      { "name": "client_name", "label": "Contact", "icon": "person-outline", "value": "Alex" },
+      { "name": "company", "label": "Your company", "icon": "business-outline", "value": "Acme Inc." },
+      { "name": "sender_name", "label": "Your name", "icon": "person-circle-outline", "value": "Taylor" }
+    ],
+    "snippets": [
+      {
+        "key": "work_start",
+        "categoryKey": "work",
+        "title": "Start of day ({{today}})",
+        "content": "Morning.\nStarting my day, {{today}}.\n\nPlan for today:\n- \n- \n- \n\nPing me if anything comes up.",
+        "copyWithTitle": true
+      },
+      {
+        "key": "daily_progress",
+        "categoryKey": "sns",
+        "title": "Daily progress post",
+        "content": "# Today's progress\n\n## 🎯 Plan for today\n- [ ]\n- [ ]\n- [ ]"
+      },
+      {
+        "key": "summary_prompt",
+        "categoryKey": "prompt",
+        "title": "Summary prompt",
+        "content": "Please summarise the text below.\n\n# Target\n- \n\n# Output rules\n- Lead with the conclusion\n- Use no more than three bullet points\n- Do not add anything that is not in the source"
+      }
+    ]
+  }
+}

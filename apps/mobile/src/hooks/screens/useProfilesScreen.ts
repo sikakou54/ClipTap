@@ -11,7 +11,7 @@
  * - 無料プラン制限チェック
  *
  * @see app/settings/profiles.tsx - UIコンポーネント
- * @see lib/hooks/useProfiles.tsx - プロファイルCRUD操作
+ * @see packages/shared/src/providers/ProfileProvider.tsx - プロファイルCRUD操作（useProfiles）
  */
 
 import { useState, useCallback } from 'react';
@@ -22,9 +22,11 @@ import {
   FREE_PROFILES_LIMIT,
   useProfiles,
   Logger,
+  translateError,
+  useSharedSubscription,
   type Profile,
 } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
+import { useUpgradePrompt } from '@hooks/useUpgradePrompt';
 import { showConfirm, showErrorAlert } from '@utils/alerts';
 
 /**
@@ -32,14 +34,14 @@ import { showConfirm, showErrorAlert } from '@utils/alerts';
  */
 export interface UseProfilesScreenReturn {
   /* 状態 */
-  refreshing: boolean;
   allProfiles: Profile[];
 
   /* ハンドラ */
-  handleRefresh: () => Promise<void>;
+  handleRefresh: () => void;
   handleCreateProfile: () => void;
   handleEditProfile: (profile: Profile, enabled: boolean) => void;
   handleDeleteProfile: (profile: Profile) => void;
+  handleSetDefaultProfile: (profile: Profile) => void;
 
   /* ヘルパー */
   isProfileEnabled: (profile: Profile) => boolean;
@@ -54,13 +56,14 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const { refresh } = useProfiles();
-  const { canAddProfile } = useSubscription();
+  const confirmUpgrade = useUpgradePrompt();
+
+  const { refresh, setDefaultProfile, deleteProfile } = useProfiles();
+  const { canAddProfile } = useSharedSubscription();
 
   /* ======================================== */
   /* 状態管理 */
   /* ======================================== */
-  const [refreshing, setRefreshing] = useState(false);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
 
   /**
@@ -101,32 +104,27 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
    * Pull-to-refresh時のデータ更新
    * ユーザーの明示的な操作なのでrefresh()を呼んでContextを更新する
    */
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await refresh();
+  const handleRefresh = useCallback(() => {
+    refresh();
     setAllProfiles(ProfileService.getAllIncludingInvalid());
-    setRefreshing(false);
   }, [refresh]);
 
   /**
    * 新規プロファイル作成
-   * 無料プランの場合は有効なプロファイル数を制限（3つまで）
+   *
+   * @remarks
+   * 判定は無効なものも含む保存済み総数で行う。有効数で判定すると、上限超過で無効になった
+   * プロファイルを抱えたまま追加を許してしまい、編集画面の保存時に総数で拒否されて
+   * 入力が無駄になる。Web・編集画面・変数管理と同じ基準に揃える。
    */
   const handleCreateProfile = useCallback(() => {
-    const validProfilesCount = allProfiles.filter((p) => p.valid).length;
-
-    if (!canAddProfile(validProfilesCount)) {
-      showConfirm(
-        t('profile.limit_message', { limit: FREE_PROFILES_LIMIT }),
-        () => router.push('/subscription/paywall'),
-        undefined,
-        'warning'
-      );
+    if (!canAddProfile(allProfiles.length)) {
+      confirmUpgrade(t('profile.limit_message', { limit: FREE_PROFILES_LIMIT }));
       return;
     }
 
     router.push('/profile/edit');
-  }, [allProfiles, canAddProfile, router, t]);
+  }, [allProfiles, canAddProfile, confirmUpgrade, router, t]);
 
   /**
    * プロファイル編集画面への遷移
@@ -135,12 +133,7 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
   const handleEditProfile = useCallback(
     (profile: Profile, enabled: boolean) => {
       if (!enabled) {
-        showConfirm(
-          t('profile.disabled_message'),
-          () => router.push('/subscription/paywall'),
-          undefined,
-          'warning'
-        );
+        confirmUpgrade(t('profile.disabled_message'));
         return;
       }
 
@@ -149,12 +142,16 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
         params: { id: profile.id },
       });
     },
-    [router, t]
+    [confirmUpgrade, router, t]
   );
 
   /**
    * プロファイル削除処理
-   * アクティブなプロファイルを削除時は自動的にデフォルトプロファイルに切り替え
+   *
+   * @remarks
+   * Provider側でアクティブの振替、削除、有効フラグ再計算をトランザクションにまとめている。
+   * この画面はContext依存の無限ループを避けるためローカルstateを別に持つので、
+   * Provider経由の更新に加えてローカルstateも読み直す。
    */
   const handleDeleteProfile = useCallback(
     (profile: Profile) => {
@@ -165,20 +162,49 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
 
       showConfirm(
         t('profile.delete_confirm', { name: profile.name }),
-        async () => {
+        () => {
           try {
-            ProfileService.deleteWithAutoSwitch(profile.id);
-            refresh();
+            deleteProfile(profile.id);
             setAllProfiles(ProfileService.getAllIncludingInvalid());
           } catch (error) {
             Logger.error('[ProfileManagement] Failed to delete profile:', error);
+            showErrorAlert(translateError(error));
           }
         },
         undefined,
         'danger'
       );
     },
-    [refresh, t]
+    [deleteProfile, t]
+  );
+
+  /**
+   * 標準プロファイル切替処理
+   *
+   * @remarks
+   * 標準は変数の既定値の参照先であり、無効プロファイル指定時の振替先でもあるため確認を挟む。
+   * Provider側で切替と有効フラグ再計算をトランザクションにまとめている。
+   * この画面はContext依存の無限ループを避けるためローカルstateを別に持つので、
+   * Provider経由のrefreshに加えてローカルstateも読み直す。
+   */
+  const handleSetDefaultProfile = useCallback(
+    (profile: Profile) => {
+      showConfirm(
+        t('profile.set_default_confirm', { name: profile.name }),
+        () => {
+          try {
+            setDefaultProfile(profile.id);
+            setAllProfiles(ProfileService.getAllIncludingInvalid());
+          } catch (error) {
+            Logger.error('[ProfileManagement] Failed to set default profile:', error);
+            showErrorAlert(translateError(error));
+          }
+        },
+        undefined,
+        'warning'
+      );
+    },
+    [setDefaultProfile, t]
   );
 
   /* ======================================== */
@@ -186,7 +212,6 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
   /* ======================================== */
   return {
     /* 状態 */
-    refreshing,
     allProfiles,
 
     /* ハンドラ */
@@ -194,6 +219,7 @@ export function useProfilesScreen(): UseProfilesScreenReturn {
     handleCreateProfile,
     handleEditProfile,
     handleDeleteProfile,
+    handleSetDefaultProfile,
 
     /* ヘルパー */
     isProfileEnabled,

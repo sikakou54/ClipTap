@@ -8,19 +8,26 @@
  * @module types
  */
 
+/*
+ * Zodスキーマの公開方針:
+ * 他のスキーマの部品としてのみ使われるものは定義ファイル内に閉じ、ここへは出さない。
+ * z.infer で型を導出するだけのスキーマは ESLint の no-unused-vars が
+ * 「値なのに型としてしか使われていない」と判定するため export のまま残している。
+ * 実行時に safeParse しているのは ClipTapExportDataSchema の1つだけ
+ * （services/ImportParserService.ts）。
+ */
+
 /* ==================== Snippet ==================== */
 export {
   SnippetSortBySchema,
   SnippetSchema,
   CreateSnippetInputSchema,
   UpdateSnippetInputSchema,
-  SearchOptionsSchema,
   SnippetProfileSchema,
   type SnippetSortBy,
   type Snippet,
   type CreateSnippetInput,
   type UpdateSnippetInput,
-  type SearchOptions,
   type SnippetProfile,
 } from './snippet';
 
@@ -41,24 +48,18 @@ export {
   UpdateProfileInputSchema,
   ProfileVariableSchema,
   CreateProfileVariableInputSchema,
-  UpdateProfileVariableInputSchema,
-  ProfileWithVariablesSchema,
   type Profile,
   type CreateProfileInput,
   type UpdateProfileInput,
   type ProfileVariable,
   type CreateProfileVariableInput,
-  type UpdateProfileVariableInput,
-  type ProfileWithVariables,
 } from './profile';
 
 /* ==================== Variable ==================== */
 export {
-  VariableTypeSchema,
   VariableSchema,
   CreateVariableInputSchema,
   UpdateVariableInputSchema,
-  type VariableType,
   type Variable,
   type CreateVariableInput,
   type UpdateVariableInput,
@@ -73,22 +74,8 @@ export {
 
 /* ==================== Export/Import ==================== */
 export {
-  ImportCandidateSnippetProfileSchema,
-  ImportCandidateSnippetSchema,
-  ImportCandidateProfileSchema,
-  ImportCandidateVariableProfileValueSchema,
-  ImportCandidateVariableSchema,
-  ImportCandidateCategorySchema,
   ImportCandidatesSchema,
   ClipTapExportDataSchema,
-  PasswordVerifyResultSchema,
-  AppDataSchema,
-  SelectionSnippetProfileSchema,
-  SelectionSnippetDataSchema,
-  SelectionProfileDataSchema,
-  SelectionVariableProfileValueSchema,
-  SelectionVariableDataSchema,
-  SelectionCategoryDataSchema,
   SelectionCandidatesSchema,
   type ImportCandidateSnippetProfile,
   type ImportCandidateSnippet,
@@ -98,9 +85,6 @@ export {
   type ImportCandidateCategory,
   type ImportCandidates,
   type ClipTapExportData,
-  type PasswordVerifyResult,
-  type AppData,
-  type SelectionSnippetProfile,
   type SelectionSnippetData,
   type SelectionProfileData,
   type SelectionVariableProfileValue,
@@ -120,8 +104,6 @@ export type {
 /* ==================== Auth ==================== */
 export type {
   SharedUser,
-  AuthProviderType,
-  AuthError,
 } from './Auth';
 
 /* ==================== Alert ==================== */

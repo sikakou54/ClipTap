@@ -82,10 +82,8 @@ class _CacheService {
    * @param systemDbData - SQLiteバイナリデータ（systemDB、オプション）
    */
   async save(data: Uint8Array, customerId: string | null, systemDbData?: Uint8Array): Promise<void> {
-    /* 1. データベースインスタンスを取得 */
     const database = await this.getDB();
 
-    /* 2. 'cache'オブジェクトストアにデータを保存 */
     /* putメソッドは指定されたキーが存在すれば更新、なければ作成する */
     await database.put('cache', {
       data,
@@ -100,12 +98,9 @@ class _CacheService {
    * @returns キャッシュデータまたはnull
    */
   async load(): Promise<{ data: Uint8Array; systemDbData?: Uint8Array; customerId: string | null; schemaVersion?: number } | null> {
-    /* データベースインスタンスを取得 */
     const database = await this.getDB();
-    /* 'cache'オブジェクトストアから'sqlite-data'キーのデータを取得 */
     const cached = await database.get('cache', CACHE_KEY);
 
-    /* データが存在しない場合はnullを返す */
     if (!cached) {
       return null;
     }
@@ -120,92 +115,12 @@ class _CacheService {
   }
 
   /**
-   * キャッシュの存在確認
-   * @returns キャッシュが存在するかどうか
-   */
-  async has(): Promise<boolean> {
-    /* データベースインスタンスを取得 */
-    const database = await this.getDB();
-    /* 'cache'オブジェクトストアから'sqlite-data'キーのデータを取得 */
-    const cached = await database.get('cache', CACHE_KEY);
-    /* undefinedでなければtrue（存在する） */
-    return cached !== undefined;
-  }
-
-  /**
-   * キャッシュのタイムスタンプを取得
-   * @returns タイムスタンプまたはnull
-   */
-  async getTimestamp(): Promise<number | null> {
-    /* データベースインスタンスを取得 */
-    const database = await this.getDB();
-    /* 'cache'オブジェクトストアから'sqlite-data'キーのデータを取得 */
-    const cached = await database.get('cache', CACHE_KEY);
-    /* タイムスタンプを返す（存在しない場合はnull） */
-    return cached?.timestamp || null;
-  }
-
-  /**
    * キャッシュをクリア
    */
   async clear(): Promise<void> {
-    /* データベースインスタンスを取得 */
     const database = await this.getDB();
-    /* 'cache'オブジェクトストアから'sqlite-data'キーのデータを削除 */
     await database.delete('cache', CACHE_KEY);
   }
-
-  /**
-   * キャッシュのcustomerIdを更新
-   * @param customerId - 新しいユーザーID（nullでゲストモードに変更）
-   */
-  async updateCustomerId(customerId: string | null): Promise<void> {
-    /* データベースインスタンスを取得 */
-    const database = await this.getDB();
-    /* 既存のキャッシュデータを取得 */
-    const existing = await database.get('cache', CACHE_KEY);
-
-    /* 既存データがある場合のみ更新 */
-    if (existing) {
-      await database.put('cache', {
-        ...existing,
-        customerId, /* 新しいcustomerIdで上書き */
-        timestamp: Date.now(),
-      }, CACHE_KEY);
-    }
-  }
-
-  /**
-   * キャッシュを更新（SQLiteデータのみ）
-   * @param data - 新しいSQLiteバイナリデータ（mainDB）
-   * @param systemDbData - 新しいSQLiteバイナリデータ（systemDB、オプション）
-   */
-  async updateData(data: Uint8Array, systemDbData?: Uint8Array): Promise<void> {
-    /* データベースインスタンスを取得 */
-    const database = await this.getDB();
-    /* 既存のキャッシュデータを取得 */
-    const existing = await database.get('cache', CACHE_KEY);
-
-    /* 既存データがある場合 */
-    if (existing) {
-      /* 既存データのcustomerIdを保持しつつ、dataを更新 */
-      await database.put('cache', {
-        ...existing,
-        data,
-        systemDbData,
-        timestamp: Date.now(),
-      }, CACHE_KEY);
-    } else {
-      /* 既存データがない場合は新規作成 */
-      await database.put('cache', {
-        data,
-        systemDbData,
-        customerId: null,
-        timestamp: Date.now(),
-      }, CACHE_KEY);
-    }
-  }
-
 }
 
 /**

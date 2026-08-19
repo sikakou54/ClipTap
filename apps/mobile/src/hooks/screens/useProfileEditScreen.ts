@@ -11,7 +11,7 @@
  * - 保存処理（新規作成/更新）
  *
  * @see app/profile/edit.tsx - UIコンポーネント
- * @see lib/hooks/useProfiles.tsx - プロファイルCRUD操作
+ * @see packages/shared/src/providers/ProfileProvider.tsx - プロファイルCRUD操作（useProfiles）
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -22,14 +22,15 @@ import {
   useProfiles,
   EmptyContentError,
   translateError,
+  useSharedSubscription,
 } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
-import { showConfirm, showErrorAlert } from '@utils/alerts';
+import { useUpgradePrompt } from '@hooks/useUpgradePrompt';
+import { showErrorAlert } from '@utils/alerts';
 
 /**
  * useProfileEditScreenの引数の型
  */
-export interface UseProfileEditScreenParams {
+interface UseProfileEditScreenParams {
   /** 編集対象のプロファイルID（新規作成時はundefined） */
   profileId?: string;
 }
@@ -63,8 +64,10 @@ export function useProfileEditScreen(params: UseProfileEditScreenParams): UsePro
   const { t } = useTranslation();
   const router = useRouter();
 
+  const confirmUpgrade = useUpgradePrompt();
+
   const { profiles, createProfile, updateProfile } = useProfiles();
-  const { canAddProfile } = useSubscription();
+  const { canAddProfile } = useSharedSubscription();
 
   /* ======================================== */
   /* 状態管理 */
@@ -107,12 +110,7 @@ export function useProfileEditScreen(params: UseProfileEditScreenParams): UsePro
    */
   const handleSave = useCallback(async () => {
     if (!isEdit && !canAddProfile(profiles.length)) {
-      showConfirm(
-        t('profile.limit_message', { limit: FREE_PROFILES_LIMIT }),
-        () => router.push('/subscription/paywall'),
-        undefined,
-        'warning'
-      );
+      confirmUpgrade(t('profile.limit_message', { limit: FREE_PROFILES_LIMIT }));
       return;
     }
 
@@ -123,11 +121,11 @@ export function useProfileEditScreen(params: UseProfileEditScreenParams): UsePro
       }
 
       if (isEdit && profileId) {
-        await updateProfile(profileId, {
+        updateProfile(profileId, {
           name: profileName.trim(),
         });
       } else {
-        await createProfile({
+        createProfile({
           name: profileName.trim(),
         });
       }
@@ -143,6 +141,7 @@ export function useProfileEditScreen(params: UseProfileEditScreenParams): UsePro
     profileId,
     profiles.length,
     canAddProfile,
+    confirmUpgrade,
     updateProfile,
     createProfile,
     router,

@@ -11,18 +11,13 @@
  * - Pull-to-refresh処理
  *
  * @see app/search.tsx - UIコンポーネント
- * @see lib/hooks/useSearch.ts - 検索デバウンス処理
+ * @see packages/shared/src/hooks/useSearch.ts - 検索デバウンス処理
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { useTranslation } from '@cliptap/shared';
 import {
-  SnippetService,
-  ProfileService,
-  VariableService,
-  SubscriptionService,
-  FEATURE_LIMITS,
   useCategories,
   useProfiles,
   useSearch,
@@ -34,8 +29,6 @@ import {
   type SnippetWithDisplay,
   type Profile,
 } from '@cliptap/shared';
-import { copyToClipboard } from '@utils/clipboard';
-import i18next from '@i18n/config';
 import { Logger } from '@cliptap/shared';
 import { showErrorAlert } from '@utils/alerts';
 
@@ -49,10 +42,8 @@ export interface UseSearchScreenReturn {
 
   /* フィルター状態 */
   selectedProfileId: string | null;
+  /** 環境を明示選択する（nullを渡すとアクティブ環境への追従に戻る） */
   setSelectedProfileId: (id: string | null) => void;
-
-  /* UI状態 */
-  refreshing: boolean;
 
   /* データ */
   displaySnippets: SnippetWithDisplay[];
@@ -67,6 +58,7 @@ export interface UseSearchScreenReturn {
   /* ハンドラ */
   handleRefresh: () => void;
   handleCopySnippet: (snippet: SnippetWithDisplay) => Promise<void>;
+  handleCopySnippetTitle: (snippet: SnippetWithDisplay) => Promise<void>;
   handleEditSnippet: (snippet: SnippetWithDisplay) => void;
   handleDeleteSnippet: (snippet: SnippetWithDisplay) => void;
   handleClose: () => void;
@@ -78,18 +70,18 @@ export interface UseSearchScreenReturn {
  * @returns 画面に必要な全ての状態とハンドラ
  */
 export function useSearchScreen(): UseSearchScreenReturn {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const router = useRouter();
 
   /* ======================================== */
   /* データ取得 */
   /* ======================================== */
-  const { profiles, profileVariables, activeProfile } = useProfiles();
-  const defaultProfile = useMemo(() => profiles.find((p) => p.isDefault) ?? null, [profiles]);
+  /* 選択肢にはvalidProfilesを使う。profilesは無効なものも含む一覧として画面へそのまま返すためだけに受け取る（返却値の profiles）。 */
+  const { profiles, validProfiles, profileVariables, activeProfile, defaultProfile } = useProfiles();
   const defaultProfileId = defaultProfile?.id;
   const { categories } = useCategories();
   const { variables } = useVariables();
-  const { allSnippets, snippetProfiles, deleteSnippet, refresh: refreshSnippets } = useSnippets();
+  const { allSnippets, snippetProfiles, deleteSnippet, copySnippet, copySnippetTitle, refresh: refreshSnippets } = useSnippets();
 
   /* onErrorコールバックをメモ化（無限ループ防止） */
   const handleSearchError = useCallback((msg: string, err: unknown) => {
@@ -103,23 +95,25 @@ export function useSearchScreen(): UseSearchScreenReturn {
   /* ======================================== */
   /* 状態管理 */
   /* ======================================== */
-  const [refreshing, setRefreshing] = useState(false);
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
-    activeProfile?.id || null
-  );
-
-  /* ======================================== */
-  /* アクティブプロファイル変更時の同期 */
-  /* ======================================== */
-  useEffect(() => {
-    if (activeProfile?.id) {
-      setSelectedProfileId(activeProfile.id);
-    }
-  }, [activeProfile?.id]);
+  /* ユーザーがチップで明示選択した環境ID（null = アクティブ環境に追従） */
+  const [profileOverride, setProfileOverride] = useState<string | null>(null);
 
   /* ======================================== */
   /* 派生状態 */
   /* ======================================== */
+
+  /**
+   * フィルタに適用する環境ID
+   *
+   * 明示選択が現存する環境を指していればそれを使い、そうでなければアクティブ環境に追従する。
+   * effectで書き潰さないため、Provider読込前に画面へ入っても1レンダ分の空表示が発生しない。
+   */
+  const selectedProfileId = useMemo(() => {
+    if (profileOverride && validProfiles.some((p: Profile) => p.id === profileOverride)) {
+      return profileOverride;
+    }
+    return activeProfile?.id ?? null;
+  }, [profileOverride, validProfiles, activeProfile?.id]);
 
   /**
    * 検索ベースの定型文リスト（検索クエリがある場合は検索結果、ない場合は全スニペット）
@@ -147,10 +141,10 @@ export function useSearchScreen(): UseSearchScreenReturn {
    */
   const filteredProfiles = useMemo(() => {
     if (hasSearchQuery) {
-      return profiles.filter((p: Profile) => getProfileSnippetCountFn(p.id) > 0);
+      return validProfiles.filter((p: Profile) => getProfileSnippetCountFn(p.id) > 0);
     }
-    return profiles;
-  }, [profiles, hasSearchQuery, getProfileSnippetCountFn]);
+    return validProfiles;
+  }, [validProfiles, hasSearchQuery, getProfileSnippetCountFn]);
 
   /**
    * 画面表示用の定型文リスト（プロファイルフィルタリング適用、変数展開済み）
@@ -164,7 +158,7 @@ export function useSearchScreen(): UseSearchScreenReturn {
     defaultProfileId: defaultProfileId ?? null,
     variables,
     profileVariables,
-    locale: i18next.language,
+    locale: language,
   });
 
   /* ======================================== */
@@ -175,51 +169,39 @@ export function useSearchScreen(): UseSearchScreenReturn {
    * Pull-to-refresh処理
    */
   const handleRefresh = useCallback(() => {
-    setRefreshing(true);
     refreshSnippets();
-    setRefreshing(false);
   }, [refreshSnippets]);
 
   /**
    * 定型文コピー
-   * 変数展開失敗時は元のテキストをコピー
+   * 一覧と同じ共通コピー経路を使用する
    */
   const handleCopySnippet = useCallback(
     async (snippet: SnippetWithDisplay) => {
       try {
-        let textToCopy: string;
-        const profileId = selectedProfileId || undefined;
-
-        try {
-          const isSubscribed = SubscriptionService.isSubscribed();
-          const profileVariablesMap = profileId
-            ? ProfileService.getProfileVariablesMap(profileId)
-            : ProfileService.getActiveProfileVariablesMap();
-          const defaultProfileVariablesMap = ProfileService.getDefaultProfileVariablesMap();
-
-          const customResolver = VariableService.createCustomVariableResolver(
-            { isSubscribed, profileVariablesMap, defaultProfileVariablesMap },
-            { freeTierLimit: FEATURE_LIMITS.FREE_TIER_VARIABLES }
-          );
-
-          textToCopy = await SnippetService.prepareForClipboard(snippet.id, {
-            locale: i18next.language,
-            customResolver,
-            shouldReplaceVariables: true,
-          });
-        } catch (varError) {
-          Logger.warn('[useSearchScreen] Variable replacement failed, copying original content:', varError);
-          textToCopy = await SnippetService.prepareForClipboard(snippet.id, {
-            shouldReplaceVariables: false,
-          });
-        }
-
-        await copyToClipboard(textToCopy);
-      } catch (error) {
+        await copySnippet(snippet.id, selectedProfileId || undefined);
+      } catch {
         showErrorAlert(t('error.generic'));
       }
     },
-    [selectedProfileId, t]
+    [copySnippet, selectedProfileId, t]
+  );
+
+  /**
+   * タイトルのみコピー
+   * 一覧のタイトルタップ時に、件名と本文を別々に貼り付けられるようにする
+   */
+  const handleCopySnippetTitle = useCallback(
+    async (snippet: SnippetWithDisplay) => {
+      try {
+        await copySnippetTitle(snippet.id, selectedProfileId || undefined);
+      } catch (error) {
+        showErrorAlert(t('error.generic'));
+        /* カード側でコピー成功表示を出さないよう再スローする */
+        throw error;
+      }
+    },
+    [copySnippetTitle, selectedProfileId, t]
   );
 
   /**
@@ -242,7 +224,7 @@ export function useSearchScreen(): UseSearchScreenReturn {
     (snippet: SnippetWithDisplay) => {
       try {
         deleteSnippet(snippet.id);
-      } catch (error) {
+      } catch {
         showErrorAlert(t('error.generic'));
       }
     },
@@ -266,10 +248,7 @@ export function useSearchScreen(): UseSearchScreenReturn {
 
     /* フィルター状態 */
     selectedProfileId,
-    setSelectedProfileId,
-
-    /* UI状態 */
-    refreshing,
+    setSelectedProfileId: setProfileOverride,
 
     /* データ */
     displaySnippets,
@@ -284,6 +263,7 @@ export function useSearchScreen(): UseSearchScreenReturn {
     /* ハンドラ */
     handleRefresh,
     handleCopySnippet,
+    handleCopySnippetTitle,
     handleEditSnippet,
     handleDeleteSnippet,
     handleClose,

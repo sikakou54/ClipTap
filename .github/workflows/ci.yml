@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - 'release/**'
+
+jobs:
+  types-and-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run type-check
+      - run: npm run lint
+      - run: npm test
+
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile/android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # settings.gradle が node で react-native / expo のパスを解決するため、依存関係が必須
+      - run: npm ci
+        working-directory: .
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+      - run: ./gradlew assembleDebug
+
+  ios:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: apps/mobile/ios
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # Podfile が node で react-native / expo のパスを解決するため、依存関係が必須
+      - run: npm ci
+        working-directory: .
+      - run: pod install
+      # ビルドは scripts/build-native.sh へ寄せる。ここで xcodebuild を直接呼ぶと
+      # 拡張キーボード（ClipTapKeyboard.appex）の埋め込み検査が抜け、ターゲットが
+      # project.pbxproj から失われてもCIが緑のまま通ってしまう。
+      # CODE_SIGNING_ALLOWED=NO も使わない。エンタイトルメントが埋め込まれず
+      # App Group（group.com.sikakou.cliptap）が無効なビルドを検証したことになるため。
+      # シミュレータ向けはアドホック署名で足りるので開発者アカウントは不要。
+      - run: npm run build:native:ios -- --no-install
+        working-directory: .
+        env:
+          # ランナーの空き容量はローカルの想定（10GB）より小さい。
+          # この事前チェックだけを理由にビルドへ入れなくならないよう下げる。
+          REQUIRED_FREE_GB: 5
+      # build-native.sh は詳細を .build-logs/ へ落とし、標準出力にはエラー行だけを出す。
+      # 失敗時に原因を追えるようログを残す。
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: ios-build-logs
+          path: .build-logs/

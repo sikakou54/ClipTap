@@ -10,7 +10,7 @@
  * - 選択状態の視覚的フィードバック
  * - 水平スクロール対応
  *
- * @see app/(tabs)/index.tsx - メイン画面での使用
+ * @see app/index.tsx - メイン画面での使用
  */
 
 import React from 'react';
@@ -87,7 +87,7 @@ export function CategoryFilter({
                 style={[
                   styles.text,
                   {
-                    color: isSelected ? '#FFFFFF' : colors.text,
+                    color: isSelected ? colors.onPrimary : colors.text,
                     fontSize: responsiveFontSizes.xs,
                   },
                 ]}
@@ -114,6 +114,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: UI_CONSTANTS.SPACING.LG,
     gap: UI_CONSTANTS.GAP.MD,
   },
+  /**
+   * カテゴリチップ
+   *
+   * 角丸と左右余白は他のチップ実装（SortMenu / ProfileChipSelector / VariablePreview /
+   * settings/variables）と同一トークンに揃えている。
+   * height を固定しているのは、同じ ScrollView の先頭に差し込まれる SortMenu のボタンと
+   * 高さを合わせるため（SortMenu の button も同じ height / minWidth を持つ）。外すと横一列の高さがずれる。
+   * 文字サイズを xs のままにしているのも height 固定が理由で、sm へ上げるとタブレット（sm=18）で
+   * 行高が 32dp の枠を超えて文字がクリップされる。
+   */
   chip: {
     flexDirection: 'row',
     alignItems: 'center',

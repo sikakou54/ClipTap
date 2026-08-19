@@ -15,7 +15,14 @@ import type {
   CreateProfileInput,
   UpdateProfileInput,
 } from '../schema';
-import { NotFoundError, DefaultProfileDeleteError, DuplicateNameError, EmptyContentError } from '../errors';
+import {
+  NotFoundError,
+  DefaultProfileDeleteError,
+  DuplicateNameError,
+  EmptyContentError,
+  InvalidProfileDefaultError,
+} from '../errors';
+import { Logger } from '../utils/logger';
 
 /**
  * プロファイルサービス
@@ -104,7 +111,7 @@ export class ProfileService {
   static create(data: CreateProfileInput): Profile {
     /* プロファイル名の前後空白をトリム */
     const trimmedName = data.name.trim();
-    /* 空文字チェック（空白のみも不可） */
+    /* 空白のみの名前は一覧で識別できず重複判定もすり抜けるため、trim後の空文字を拒否する */
     if (!trimmedName) {
       throw new EmptyContentError();
     }
@@ -115,7 +122,7 @@ export class ProfileService {
       throw new DuplicateNameError('profile', trimmedName);
     }
 
-    /* バリデーション通過後、Mapper層に処理を委譲 */
+    /* 検証はService、SQLはMapperに集約する規約のため、検証済みデータをそのままMapperへ渡す */
     return ProfileMapper.create({ ...data, name: trimmedName });
   }
 
@@ -137,7 +144,7 @@ export class ProfileService {
     if (data.name !== undefined) {
       /* プロファイル名の前後空白をトリム */
       const trimmedName = data.name.trim();
-      /* 空文字チェック（空白のみも不可） */
+      /* 空白のみの名前は一覧で識別できず重複判定もすり抜けるため、trim後の空文字を拒否する */
       if (!trimmedName) {
         throw new EmptyContentError();
       }
@@ -154,7 +161,7 @@ export class ProfileService {
       updateData = { ...updateData, name: trimmedName };
     }
 
-    /* バリデーション通過後、Mapper層に処理を委譲 */
+    /* 検証はService、SQLはMapperに集約する規約のため、検証済みデータをそのままMapperへ渡す */
     return ProfileMapper.update(id, updateData);
   }
 
@@ -182,6 +189,11 @@ export class ProfileService {
 
   /**
    * アクティブプロファイルを切り替え
+   *
+   * @remarks
+   * アクティブにできるのは有効なプロファイルだけとする。
+   * プラン上限で無効になったプロファイルを指定された場合は、標準プロファイルへ切り替える。
+   *
    * @throws {NotFoundError} プロファイルが存在しない場合
    */
   static setActive(id: string): void {
@@ -191,14 +203,34 @@ export class ProfileService {
       throw new NotFoundError('profile', id);
     }
 
+    /* 無効なプロファイルは展開・絞り込みの基準にできないため標準プロファイルへ振り替える */
+    if (!profile.valid) {
+      const defaultProfile = ProfileMapper.getDefault();
+      if (defaultProfile && defaultProfile.id !== id) {
+        Logger.warn(
+          `[ProfileService] Invalid profile requested as active, falling back to default: ${id}`
+        );
+        ProfileMapper.setActive(defaultProfile.id);
+        return;
+      }
+    }
+
     /* Mapper層に処理を委譲（全プロファイルのisActiveをリセット後、指定プロファイルのみアクティブ化） */
     ProfileMapper.setActive(id);
   }
 
   /**
    * デフォルトプロファイルを設定
+   *
+   * @remarks
+   * 標準にできるのは有効なプロファイルだけとする。
+   * 標準は変数値のフォールバック先であり、無効プロファイルをアクティブ指定した際の
+   * 振替先でもあるため、無効なものを標準にすると両方の解決先が失われる。
+   * setActiveと違い振替先が存在しないため、フォールバックせずエラーとする。
+   *
    * @param id - デフォルトにするプロファイルID
    * @throws {NotFoundError} プロファイルが存在しない場合
+   * @throws {InvalidProfileDefaultError} プロファイルが無効な場合
    */
   static setDefault(id: string): void {
     /* デフォルトにするプロファイルが存在するか確認 */
@@ -207,44 +239,48 @@ export class ProfileService {
       throw new NotFoundError('profile', id);
     }
 
+    /* 無効なプロファイルはフォールバック先・振替先にできないため標準にしない */
+    if (!profile.valid) {
+      throw new InvalidProfileDefaultError();
+    }
+
     /* Mapper層に処理を委譲（全プロファイルのisDefaultをリセット後、指定プロファイルのみデフォルト化） */
     ProfileMapper.setDefault(id);
   }
 
   /**
-   * プロファイル数を取得
+   * 標準・アクティブプロファイルが欠けている場合に同じ対象で補完する
+   *
+   * @remarks
+   * 補完先は有効なプロファイルに限る。標準は値フォールバック先、アクティブは展開と
+   * 絞り込みの基準であり、無効なものを指定すると解決先が失われるため。
+   * getAll()は有効なもののみを返すので、取込元の標準が無効だった場合はそちらへ退避する。
+   * 有効なプロファイルが1件もない場合は補完しない。
    */
-  static count(): number {
-    return ProfileMapper.count();
-  }
+  static ensureDefaultAndActive(importedDefaultProfileId: string | null = null): void {
+    const defaultProfile = this.getDefault();
+    const activeProfile = this.getActive();
+    if (defaultProfile && activeProfile) return;
 
-  /**
-   * プランに応じてvalidフラグを更新
-   */
-  static updateValidFlags(limit: number): void {
-    ProfileMapper.updateValidFlags(limit);
+    const importedProfile = importedDefaultProfileId
+      ? this.getById(importedDefaultProfileId)
+      : null;
+    const targetProfileId = importedProfile?.valid
+      ? importedProfile.id
+      : this.getAll()[0]?.id;
+    if (!targetProfileId) {
+      Logger.warn('[ProfileService] No profile available for default/active state');
+      return;
+    }
+
+    if (!defaultProfile) this.setDefault(targetProfileId);
+    if (!activeProfile) this.setActive(targetProfileId);
   }
 
   /* ======================================== */
   /* ProfileVariable操作 */
   /* ======================================== */
 
-  /**
-   * プロファイル変数の値を設定
-   */
-  static setProfileVariable(profileId: string, variableId: string, value: string): ProfileVariable {
-    return ProfileVariableMapper.upsert({ profileId, variableId, value });
-  }
-
-  /**
-   * プロファイル変数の値を削除
-   */
-  static deleteProfileVariable(profileId: string, variableId: string): void {
-    const existing = ProfileVariableMapper.get(profileId, variableId);
-    if (existing) {
-      ProfileVariableMapper.delete(existing.id);
-    }
-  }
 
   /**
    * 全プロファイル変数を取得
@@ -255,13 +291,21 @@ export class ProfileService {
 
   /**
    * 変数の全プロファイル値を一括設定
+   *
+   * @remarks
+   * 値は前後空白を除去して保存する。インポート経路の
+   * VariableService.upsertValueForProfile と同じ正規化規則にそろえ、
+   * 保存経路によって同じ入力が違う値になることを防ぐ。
+   * 空白だけの値をそのまま保存すると、必須判定（前後空白を除去して判定する）では
+   * 空なのに解決時は非空として標準値を覆う、という矛盾が起きるため、
+   * 書き込み境界であるService層で正規化する。
    */
   static setVariableValuesForVariable(
     _variableId: string,
     values: { profileId: string; variableId: string; value: string }[]
   ): void {
     for (const v of values) {
-      ProfileVariableMapper.upsert(v);
+      ProfileVariableMapper.upsert({ ...v, value: v.value.trim() });
     }
   }
 
@@ -304,48 +348,23 @@ export class ProfileService {
   /* ======================================== */
 
   /**
-   * プロファイルIDで変数一覧を取得
-   * @param profileId - プロファイルID
-   * @returns プロファイル変数一覧
-   */
-  static getProfileVariables(profileId: string): ProfileVariable[] {
-    return ProfileVariableMapper.getByProfileId(profileId);
-  }
-
-  /**
-   * プロファイルを作成（最初のプロファイルは自動的にアクティブ化）
-   * @param input - 作成するプロファイルの情報
-   * @returns 作成されたプロファイル
-   *
-   * @remarks
-   * - 1つ目のプロファイルを作成した場合は自動的にアクティブ化する
-   */
-  static createWithAutoActivate(input: CreateProfileInput): Profile {
-    const profile = this.create(input);
-
-    const allProfiles = this.getAll();
-    if (allProfiles.length === 1) {
-      ProfileMapper.setActive(profile.id);
-      const updatedProfile = this.getById(profile.id);
-      return updatedProfile || profile;
-    }
-
-    return profile;
-  }
-
-  /**
    * プロファイルを削除（アクティブなプロファイルの自動切り替え付き）
+   *
    * @param id - 削除するプロファイルのID
-   * @param onAfterDelete - 削除後のコールバック（validフラグ更新等に使用）
-   * @returns 削除に成功した場合はtrue
    *
    * @remarks
    * - 削除対象がアクティブな場合、デフォルト（標準）プロファイルにアクティブを切り替える
    * - デフォルトプロファイルは削除不可なので、必ず切り替え先が存在する
+   * - 有効フラグの再計算は呼び出し側（ProfileProvider）がトランザクション内で行う
+   *
+   * @throws {NotFoundError} プロファイルが存在しない場合
+   * @throws {DefaultProfileDeleteError} デフォルトプロファイルを削除しようとした場合
    */
-  static deleteWithAutoSwitch(id: string, onAfterDelete?: () => void): boolean {
+  static deleteWithAutoSwitch(id: string): void {
     const profile = this.getById(id);
-    if (!profile) return false;
+    if (!profile) {
+      throw new NotFoundError('profile', id);
+    }
 
     /* アクティブなプロファイルを削除する場合は、デフォルトプロファイルに切り替え */
     if (profile.isActive) {
@@ -356,12 +375,6 @@ export class ProfileService {
     }
 
     this.delete(id);
-
-    if (onAfterDelete) {
-      onAfterDelete();
-    }
-
-    return true;
   }
 
   /**
@@ -371,8 +384,12 @@ export class ProfileService {
    * @returns 作成/更新されたプロファイル
    * @throws {EmptyContentError} プロファイル名が空の場合
    * @throws {DuplicateNameError} 同名のプロファイルが既に存在する場合（自分以外）
+   * @remarks
+   * 既存プロファイルの表示順は変更しない。無料プランの有効判定は標準優先かつ表示順で
+   * 行うため、同名プロファイルの更新で表示順を末尾へ動かすと、それまで有効だった
+   * プロファイルが上限超過分と入れ替わって無効になる。これを防ぐため表示順を引数に取らない。
    */
-  static upsert(data: CreateProfileInput): Profile {
+  static upsert(data: Omit<CreateProfileInput, 'sortOrder'>): Profile {
     const trimmedName = data.name.trim();
     if (!trimmedName) {
       throw new EmptyContentError();
@@ -380,14 +397,10 @@ export class ProfileService {
 
     const existing = ProfileMapper.getByName(trimmedName);
     if (existing) {
-      /* 既存プロファイルを更新（sortOrderが指定されている場合のみ更新） */
-      const updateData: UpdateProfileInput = {
+      /* 既存プロファイルを更新（表示順は据え置く） */
+      return this.update(existing.id, {
         name: trimmedName,
-      };
-      if (data.sortOrder !== undefined) {
-        updateData.sortOrder = data.sortOrder;
-      }
-      return this.update(existing.id, updateData);
+      });
     } else {
       /* 新規作成（sortOrderは自動採番） */
       return this.create({

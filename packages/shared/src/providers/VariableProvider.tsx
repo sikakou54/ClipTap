@@ -109,6 +109,8 @@ export function VariableProvider({ children }: VariableProviderProps) {
 
   /**
    * 変数作成
+   *
+   * 作成後に一覧を再読込し、Contextを参照する全画面へ即時反映する。
    */
   const createVariable = useCallback(
     (input: CreateVariableInput): Variable => {
@@ -121,6 +123,8 @@ export function VariableProvider({ children }: VariableProviderProps) {
 
   /**
    * 変数更新
+   *
+   * 更新後に一覧を再読込し、Contextを参照する全画面へ即時反映する。
    */
   const updateVariable = useCallback(
     (id: string, data: UpdateVariableInput): Variable => {
@@ -133,6 +137,9 @@ export function VariableProvider({ children }: VariableProviderProps) {
 
   /**
    * 変数削除
+   *
+   * 削除だけvalidフラグの更新を伴うのは、件数が減るとFreeの上限に空きが出て
+   * 無効だった変数が有効へ昇格しうるため。再読込前に反映して一覧の表示を揃える。
    */
   const deleteVariable = useCallback(
     (id: string): void => {
@@ -147,8 +154,11 @@ export function VariableProvider({ children }: VariableProviderProps) {
   /**
    * 変数の値を設定（全プロファイル分）
    *
-   * 注意: この操作はprofileVariablesも更新するため、ProfileProviderも更新が必要。
-   * 呼び出し元で useProfiles().refresh() を呼んでProfileProviderを更新すること。
+   * この操作は profile_variables を書き換えるため、こちらの再読込だけでは
+   * ProfileProvider が持つ profileVariables が古いまま残る。値を編集した画面は
+   * 続けて useProfiles().refresh() を呼び、両Providerのスナップショットを揃えること。
+   * 同じ処理を ProfileProvider 側にも置くと入口が2つになり、どちらを呼ぶのが正しいか
+   * 判断できなくなるため、変数値の一括設定はここを唯一の入口とする。
    */
   const setVariableValuesForVariable = useCallback(
     (variableId: string, values: { profileId: string; variableId: string; value: string }[]): void => {

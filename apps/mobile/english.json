@@ -6,6 +6,8 @@
     "android": {
         "app_name": "ClipTap",
         "accessibility_sort_button": "Sort button",
+        "accessibility_insert_title_button": "Insert title button",
+        "accessibility_insert_newline_button": "Insert newline button",
         "keyboard_sort_label": "Sort",
         "keyboard_sort_created": "Created",
         "keyboard_sort_updated": "Updated",

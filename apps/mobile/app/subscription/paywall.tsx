@@ -11,10 +11,9 @@
  * - 購入復元機能
  * - 利用規約/プライバシーポリシーへのリンク
  *
- * @see lib/hooks/screens/usePaywallScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/usePaywallScreen.ts - ビジネスロジック
  */
 
-import React from 'react';
 import {
   View,
   Text,
@@ -27,8 +26,7 @@ import {
 import { useTranslation } from '@cliptap/shared'
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { usePaywallScreen } from '@hooks/screens/usePaywallScreen';
 
 export default function PaywallScreen() {
@@ -49,21 +47,22 @@ export default function PaywallScreen() {
     navigateToPrivacy,
   } = usePaywallScreen();
 
+  /* 契約中プランの判定。ストア商品由来の currentPlan は年額を 'annual'、画面の選択状態 selectedPlan は 'yearly' と表すため、名称の食い違いをここで1度だけ吸収する */
+  const isCurrentYearlyPlan = currentPlan === 'annual';
+  const isCurrentMonthlyPlan = currentPlan === 'monthly';
+
   if (loading) {
     return (
-      <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-        <Header title="" backgroundColor={colors.background} />
+      <ScreenContainer title="" backgroundColor={colors.background} fullScreenModal>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
-      </View>
+      </ScreenContainer>
     );
   }
 
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      <Header title="" backgroundColor={colors.background} />
-
+    <ScreenContainer title="" backgroundColor={colors.background} fullScreenModal>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.titleSection}>
           <Ionicons name="diamond" size={48} color={colors.primary} />
@@ -77,36 +76,19 @@ export default function PaywallScreen() {
 
         <View style={styles.featuresSection}>
           <FeatureItem
-            icon="keypad-outline"
-            title={t('subscription.feature_keyboard_extension')}
-            description={t('subscription.feature_keyboard_extension_desc')}
-            colors={colors}
-            responsiveFontSizes={responsiveFontSizes}
-            responsiveLineHeights={responsiveLineHeights}
-          />
-          <FeatureItem
             icon="close-circle-outline"
             title={t('subscription.feature_no_ads')}
             description={t('subscription.feature_no_ads_desc')}
-            colors={colors}
-            responsiveFontSizes={responsiveFontSizes}
-            responsiveLineHeights={responsiveLineHeights}
           />
           <FeatureItem
             icon="options-outline"
             title={t('subscription.feature_unlimited_profiles')}
             description={t('subscription.feature_unlimited_profiles_desc')}
-            colors={colors}
-            responsiveFontSizes={responsiveFontSizes}
-            responsiveLineHeights={responsiveLineHeights}
           />
           <FeatureItem
             icon="code-slash-outline"
             title={t('subscription.feature_custom_variables')}
             description={t('subscription.feature_custom_variables_desc')}
-            colors={colors}
-            responsiveFontSizes={responsiveFontSizes}
-            responsiveLineHeights={responsiveLineHeights}
           />
         </View>
 
@@ -120,16 +102,16 @@ export default function PaywallScreen() {
                   borderColor: selectedPlan === 'yearly' ? colors.primary : colors.border,
                   borderWidth: selectedPlan === 'yearly' ? 2 : 1,
                 },
-                currentPlan === 'annual' && styles.disabledPlan,
+                isCurrentYearlyPlan && styles.disabledPlan,
               ]}
             >
-              {currentPlan === 'annual' && (
+              {isCurrentYearlyPlan && (
                 <View style={[styles.disabledOverlay, { backgroundColor: colors.background }]} />
               )}
               <TouchableOpacity
                 onPress={() => selectPlan('yearly')}
-                activeOpacity={currentPlan === 'annual' ? 1 : 0.7}
-                disabled={currentPlan === 'annual'}
+                activeOpacity={isCurrentYearlyPlan ? 1 : 0.7}
+                disabled={isCurrentYearlyPlan}
                 style={styles.planCardInner}
               >
                 <View style={styles.planHeader}>
@@ -137,12 +119,12 @@ export default function PaywallScreen() {
                     <Ionicons
                       name={selectedPlan === 'yearly' ? 'radio-button-on' : 'radio-button-off'}
                       size={24}
-                      color={currentPlan === 'annual' ? colors.textSecondary : (selectedPlan === 'yearly' ? colors.primary : colors.textSecondary)}
+                      color={isCurrentYearlyPlan ? colors.textSecondary : (selectedPlan === 'yearly' ? colors.primary : colors.textSecondary)}
                     />
-                    <Text style={[styles.planTitle, { color: currentPlan === 'annual' ? colors.textSecondary : colors.text, fontSize: responsiveFontSizes.md, lineHeight: responsiveLineHeights.md }]}>
+                    <Text style={[styles.planTitle, { color: isCurrentYearlyPlan ? colors.textSecondary : colors.text, fontSize: responsiveFontSizes.md, lineHeight: responsiveLineHeights.md }]}>
                       {t('subscription.yearly')}
                     </Text>
-                    {currentPlan === 'annual' && (
+                    {isCurrentYearlyPlan && (
                       <View style={[styles.activeBadge, { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}>
                         <Text style={[styles.activeBadgeText, { color: colors.primary, fontSize: responsiveFontSizes.xs, lineHeight: responsiveLineHeights.xs }]}>
                           {t('subscription.subscribed')}
@@ -150,13 +132,13 @@ export default function PaywallScreen() {
                       </View>
                     )}
                   </View>
-                  {currentPlan !== 'annual' && (
+                  {!isCurrentYearlyPlan && (
                     <View style={[styles.badge, { backgroundColor: colors.success }]}>
-                      <Text style={[styles.badgeText, { fontSize: responsiveFontSizes.xs, lineHeight: responsiveLineHeights.xs }]}>{t('subscription.yearly_discount')}</Text>
+                      <Text style={[styles.badgeText, { color: colors.onPrimary, fontSize: responsiveFontSizes.xs, lineHeight: responsiveLineHeights.xs }]}>{t('subscription.yearly_discount')}</Text>
                     </View>
                   )}
                 </View>
-                <Text style={[styles.planPrice, { color: currentPlan === 'annual' ? colors.textSecondary : colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
+                <Text style={[styles.planPrice, { color: isCurrentYearlyPlan ? colors.textSecondary : colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
                   {yearlyPackage.priceString}{t('subscription.per_year')}
                 </Text>
               </TouchableOpacity>
@@ -172,16 +154,16 @@ export default function PaywallScreen() {
                   borderColor: selectedPlan === 'monthly' ? colors.primary : colors.border,
                   borderWidth: selectedPlan === 'monthly' ? 2 : 1,
                 },
-                currentPlan === 'monthly' && styles.disabledPlan,
+                isCurrentMonthlyPlan && styles.disabledPlan,
               ]}
             >
-              {currentPlan === 'monthly' && (
+              {isCurrentMonthlyPlan && (
                 <View style={[styles.disabledOverlay, { backgroundColor: colors.background }]} />
               )}
               <TouchableOpacity
                 onPress={() => selectPlan('monthly')}
-                activeOpacity={currentPlan === 'monthly' ? 1 : 0.7}
-                disabled={currentPlan === 'monthly'}
+                activeOpacity={isCurrentMonthlyPlan ? 1 : 0.7}
+                disabled={isCurrentMonthlyPlan}
                 style={styles.planCardInner}
               >
                 <View style={styles.planHeader}>
@@ -189,12 +171,12 @@ export default function PaywallScreen() {
                     <Ionicons
                       name={selectedPlan === 'monthly' ? 'radio-button-on' : 'radio-button-off'}
                       size={24}
-                      color={currentPlan === 'monthly' ? colors.textSecondary : (selectedPlan === 'monthly' ? colors.primary : colors.textSecondary)}
+                      color={isCurrentMonthlyPlan ? colors.textSecondary : (selectedPlan === 'monthly' ? colors.primary : colors.textSecondary)}
                     />
-                    <Text style={[styles.planTitle, { color: currentPlan === 'monthly' ? colors.textSecondary : colors.text, fontSize: responsiveFontSizes.md, lineHeight: responsiveLineHeights.md }]}>
+                    <Text style={[styles.planTitle, { color: isCurrentMonthlyPlan ? colors.textSecondary : colors.text, fontSize: responsiveFontSizes.md, lineHeight: responsiveLineHeights.md }]}>
                       {t('subscription.monthly')}
                     </Text>
-                    {currentPlan === 'monthly' && (
+                    {isCurrentMonthlyPlan && (
                       <View style={[styles.activeBadge, { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}>
                         <Text style={[styles.activeBadgeText, { color: colors.primary, fontSize: responsiveFontSizes.xs, lineHeight: responsiveLineHeights.xs }]}>
                           {t('subscription.subscribed')}
@@ -203,7 +185,7 @@ export default function PaywallScreen() {
                     )}
                   </View>
                 </View>
-                <Text style={[styles.planPrice, { color: currentPlan === 'monthly' ? colors.textSecondary : colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
+                <Text style={[styles.planPrice, { color: isCurrentMonthlyPlan ? colors.textSecondary : colors.text, fontSize: responsiveFontSizes.base, lineHeight: responsiveLineHeights.base }]}>
                   {monthlyPackage.priceString}{t('subscription.per_month')}
                 </Text>
               </TouchableOpacity>
@@ -217,9 +199,9 @@ export default function PaywallScreen() {
           disabled={purchasing}
         >
           {purchasing ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={colors.onPrimary} />
           ) : (
-            <Text style={[styles.purchaseButtonText, { fontSize: responsiveFontSizes.md, lineHeight: responsiveLineHeights.md }]}>
+            <Text style={[styles.purchaseButtonText, { color: colors.onPrimary, fontSize: responsiveFontSizes.md, lineHeight: responsiveLineHeights.md }]}>
               {t('subscription.subscribe')}
             </Text>
           )}
@@ -264,11 +246,11 @@ export default function PaywallScreen() {
         animationType="fade"
         statusBarTranslucent
       >
-        <View style={styles.loadingOverlay}>
+        <View style={[styles.loadingOverlay, { backgroundColor: colors.overlay }]}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </Modal>
-    </View>
+    </ScreenContainer>
   );
 }
 
@@ -276,12 +258,11 @@ interface FeatureItemProps {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   description: string;
-  colors: any;
-  responsiveFontSizes: any;
-  responsiveLineHeights: any;
 }
 
-function FeatureItem({ icon, title, description, colors, responsiveFontSizes, responsiveLineHeights }: FeatureItemProps) {
+function FeatureItem({ icon, title, description }: FeatureItemProps) {
+  const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
+
   return (
     <View style={styles.featureItem}>
       <View style={[styles.featureIcon, { backgroundColor: colors.primary + '20' }]}>
@@ -352,6 +333,7 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
   },
+  /* 契約中プランのカードは、カード自体を opacity 0.4 にしたうえで背景色のオーバーレイを opacity 0.7 で重ねる2層構成でトーンダウンさせている */
   disabledPlan: {
     opacity: 0.4,
   },
@@ -382,8 +364,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
+  /** バッジのテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   badgeText: {
-    color: '#FFFFFF',
     fontWeight: '600',
   },
   activeBadge: {
@@ -405,8 +387,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  /** 購入ボタンのテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   purchaseButtonText: {
-    color: '#FFFFFF',
     fontWeight: '600',
   },
   restoreButton: {
@@ -430,9 +412,9 @@ const styles = StyleSheet.create({
   legalSeparator: {
     marginHorizontal: 4,
   },
+  /** 購入処理中の遮蔽（背景色は使用箇所でテーマの overlay を重ねる） */
   loadingOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },

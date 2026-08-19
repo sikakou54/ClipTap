@@ -13,7 +13,6 @@
  * @see SnippetFormScreen - フォーム内での使用
  */
 
-import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@lib/themeSystem';
 import { Category } from '@cliptap/shared';

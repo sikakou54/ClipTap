@@ -10,21 +10,12 @@
  * - Google/Apple Sign-In統合
  * - エラーハンドリング
  *
- * 使用例:
- * ```tsx
- * <AuthProvider>
- *   <App />
- * </AuthProvider>
- *
- * // コンポーネント内
- * const { user, signInWithGoogle, signOut } = useAuth();
- * ```
- *
  * @module AuthProvider
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { AuthService } from '../services/AuthService';
+import { useTranslation } from '../hooks/useTranslation';
 import type { SharedUser } from '../types/Auth';
 import { Logger } from '../utils/logger';
 
@@ -61,6 +52,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
  * @param props - AuthProviderProps
  */
 export function AuthProvider({ children }: AuthProviderProps) {
+  const { t } = useTranslation();
   const [user, setUser] = useState<SharedUser | null>(AuthService.getCurrentUser());
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,36 +74,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
     try {
       await AuthService.signInWithGoogle();
-    } catch (e: any) {
+    } catch (e: unknown) {
       Logger.error('[AuthProvider] Google sign-in failed', e);
-      setError(e.message || 'Google sign-in failed');
+      /* Firebase / Google Sign-In はプレーンオブジェクトを投げることがあるため、messageだけを構造的に取り出す */
+      const message = (e as { message?: string } | null)?.message;
+      setError(message || t('error.google_sign_in_failed'));
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const signInWithApple = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       await AuthService.signInWithApple();
-    } catch (e: any) {
+    } catch (e: unknown) {
       Logger.error('[AuthProvider] Apple sign-in failed', e);
-      setError(e.message || 'Apple sign-in failed');
+      /* Firebase / Apple Sign-In はプレーンオブジェクトを投げることがあるため、messageだけを構造的に取り出す */
+      const message = (e as { message?: string } | null)?.message;
+      setError(message || t('error.apple_sign_in_failed'));
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const signOut = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       await AuthService.signOut();
-    } catch (e: any) {
+    } catch (e: unknown) {
       Logger.error('[AuthProvider] Sign-out failed', e);
-      setError(e.message || 'Sign-out failed');
+      /* Firebase はプレーンオブジェクトを投げることがあるため、messageだけを構造的に取り出す */
+      const message = (e as { message?: string } | null)?.message;
+      setError(message || t('error.sign_out_failed'));
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const value = useMemo(() => ({
     user,

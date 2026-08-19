@@ -43,9 +43,13 @@ yarn-error.*
 xcode-build-*.log
 
 # Build artifacts (large files)
+android/build/
 android/app/build/
 android/app/.cxx/
 android/.gradle/
 android/.idea/
 ios/Pods/
 ios/build/
+
+# 開発者ごとのnode配置を書くファイル。versionedな ios/.xcode.env が既定値を持つ
+ios/.xcode.env.local

@@ -16,32 +16,26 @@
  * - 追加アイコン → /snippet/create（モーダル）
  * - 設定アイコン → /settings
  *
- * @see lib/hooks/screens/useHomeScreen.ts - ビジネスロジック
- * @see components/snippet/SnippetList.tsx - 一覧表示コンポーネント
+ * @see src/hooks/screens/useHomeScreen.ts - ビジネスロジック
+ * @see src/components/snippet/SnippetList.tsx - 一覧表示コンポーネント
  */
 
-import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@lib/themeSystem';
 import { useHomeScreen } from '@hooks/screens/useHomeScreen';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { SnippetList } from '@components/snippet/SnippetList';
 import { CategoryFilter } from '@components/category/CategoryFilter';
 import { ProfileSelector } from '@components/profile/ProfileSelector';
 import { SortMenu } from '@components/snippet/SortMenu';
 import { AdBanner } from '@components/ads/AdBanner';
-import { commonStyles } from '@lib/styles/commonStyles';
-import { getMaxContentWidth } from '@utils/responsive';
 
 export default function HomeScreen() {
-  const { colors, isTablet, responsive, responsiveSpacing } = useTheme();
-  const insets = useSafeAreaInsets();
-  const maxContentWidth = getMaxContentWidth();
+  const { colors, isTablet, responsive, responsiveSpacing, maxContentWidth } = useTheme();
 
   const {
     selectedCategoryId,
-    refreshing,
     activeProfileId,
     snippets,
     categories,
@@ -49,6 +43,7 @@ export default function HomeScreen() {
     handleCategorySelect,
     handleRefresh,
     handleCopySnippet,
+    handleCopySnippetTitle,
     handleEditSnippet,
     handleDeleteSnippet,
     handleNavigateToSettings,
@@ -60,74 +55,77 @@ export default function HomeScreen() {
     handleSortChange,
   } = useHomeScreen();
 
+  /* ヘッダー（プロファイル選択・アクションボタン）。上部インセットはScreenContainerが確保するため内部余白のみ持つ */
+  const header = (
+    <View
+      style={[
+        styles.header,
+        maxContentWidth !== undefined && { maxWidth: maxContentWidth, alignSelf: 'center', width: '100%' },
+        {
+          backgroundColor: colors.background,
+          paddingTop: isTablet ? 20 : 8,
+          paddingBottom: 12,
+          paddingHorizontal: responsiveSpacing.containerPadding,
+        },
+      ]}
+    >
+      <View style={styles.topRow}>
+        {/* プロファイル選択（環境切り替え） */}
+        <View style={styles.profileContainer}>
+          <ProfileSelector onProfileChange={handleProfileChange} />
+        </View>
+
+        {/* アクションボタン（設定・検索・追加） */}
+        <View style={styles.iconGroup}>
+          {/* 設定画面への遷移 */}
+          <TouchableOpacity onPress={handleNavigateToSettings} style={styles.iconButton}>
+            <Ionicons
+              name="settings-outline"
+              size={responsive.header.iconSize + 2}
+              color={colors.text}
+            />
+          </TouchableOpacity>
+
+          {/* バックアップ画面への遷移 */}
+          <TouchableOpacity onPress={handleNavigateToExportImport} style={styles.iconButton}>
+            <Ionicons
+              name="swap-horizontal-outline"
+              size={responsive.header.iconSize + 2}
+              color={colors.text}
+            />
+          </TouchableOpacity>
+
+          {/* 検索画面への遷移 */}
+          <TouchableOpacity onPress={handleNavigateToSearch} style={styles.iconButton}>
+            <Ionicons
+              name="search-outline"
+              size={responsive.header.iconSize + 2}
+              color={colors.text}
+            />
+          </TouchableOpacity>
+
+          {/* 新規作成画面への遷移 */}
+          <TouchableOpacity onPress={handleNavigateToCreate} style={styles.iconButton}>
+            <Ionicons
+              name="add-circle-outline"
+              size={responsive.header.iconSize + 8}
+              color={colors.primary}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
+    <ScreenContainer customHeader={header}>
       {/* メインコンテンツエリア（タブレットでは最大幅を制限） */}
       <View
         style={[
           styles.contentContainer,
-          maxContentWidth && { maxWidth: maxContentWidth, alignSelf: 'center', width: '100%' },
+          maxContentWidth !== undefined && { maxWidth: maxContentWidth, alignSelf: 'center', width: '100%' },
         ]}
       >
-        {/* ヘッダー（プロファイル選択・アクションボタン） */}
-        <View
-          style={[
-            styles.header,
-            {
-              backgroundColor: colors.background,
-              paddingTop: isTablet ? insets.top + 20 : insets.top + 8,
-              paddingBottom: 12,
-              paddingHorizontal: responsiveSpacing.containerPadding,
-            },
-          ]}
-        >
-          <View style={styles.topRow}>
-            {/* プロファイル選択（環境切り替え） */}
-            <View style={styles.profileContainer}>
-              <ProfileSelector onProfileChange={handleProfileChange} />
-            </View>
-
-            {/* アクションボタン（設定・検索・追加） */}
-            <View style={styles.iconGroup}>
-              {/* 設定画面への遷移 */}
-              <TouchableOpacity onPress={handleNavigateToSettings} style={styles.iconButton}>
-                <Ionicons
-                  name="settings-outline"
-                  size={responsive.header.iconSize + 2}
-                  color={colors.text}
-                />
-              </TouchableOpacity>
-
-              {/* バックアップ画面への遷移 */}
-              <TouchableOpacity onPress={handleNavigateToExportImport} style={styles.iconButton}>
-                <Ionicons
-                  name="swap-horizontal-outline"
-                  size={responsive.header.iconSize + 2}
-                  color={colors.text}
-                />
-              </TouchableOpacity>
-
-              {/* 検索画面への遷移 */}
-              <TouchableOpacity onPress={handleNavigateToSearch} style={styles.iconButton}>
-                <Ionicons
-                  name="search-outline"
-                  size={responsive.header.iconSize + 2}
-                  color={colors.text}
-                />
-              </TouchableOpacity>
-
-              {/* 新規作成画面への遷移 */}
-              <TouchableOpacity onPress={handleNavigateToCreate} style={styles.iconButton}>
-                <Ionicons
-                  name="add-circle-outline"
-                  size={responsive.header.iconSize + 8}
-                  color={colors.primary}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
         {/* カテゴリフィルター（横スクロール可能なカテゴリ一覧）+ ソートメニュー */}
         <CategoryFilter
           categories={filteredCategories}
@@ -145,7 +143,7 @@ export default function HomeScreen() {
             onPress={handleCopySnippet}
             onEdit={handleEditSnippet}
             onDelete={handleDeleteSnippet}
-            refreshing={refreshing}
+            onPressTitle={handleCopySnippetTitle}
             onRefresh={handleRefresh}
             categories={categories}
             overrideProfileId={activeProfileId}
@@ -156,7 +154,7 @@ export default function HomeScreen() {
 
       {/* 広告バナー（無料プランのみ表示） */}
       <AdBanner />
-    </View>
+    </ScreenContainer>
   );
 }
 

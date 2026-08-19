@@ -10,13 +10,12 @@
  * - 保存処理（既存変数の場合は直接保存、未作成の場合はコールバック）
  *
  * @see app/variable/profile-value-edit.tsx - UIコンポーネント
- * @see lib/hooks/useVariables.tsx - 変数CRUD操作
+ * @see packages/shared/src/providers/VariableProvider.tsx - 変数CRUD操作（useVariables）
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useTranslation } from '@cliptap/shared';
 import { useProfiles, useVariables } from '@cliptap/shared';
 import { showErrorAlert } from '@utils/alerts';
 import { Logger } from '@cliptap/shared';
@@ -25,7 +24,7 @@ import { translateError } from '@cliptap/shared';
 /**
  * useProfileValueEditScreenの引数の型
  */
-export interface UseProfileValueEditScreenParams {
+interface UseProfileValueEditScreenParams {
   /** 対象のプロファイルID */
   profileId: string;
   /** 変数名（表示用） */
@@ -65,7 +64,6 @@ export interface UseProfileValueEditScreenReturn {
 export function useProfileValueEditScreen(params: UseProfileValueEditScreenParams): UseProfileValueEditScreenReturn {
   const { profileId, variableName, profileName, isStandard, currentValue } = params;
 
-  const { t } = useTranslation();
   const router = useRouter();
 
   const { defaultProfile, refresh: refreshProfiles } = useProfiles();
@@ -167,7 +165,6 @@ export function useProfileValueEditScreen(params: UseProfileValueEditScreenParam
     setVariableValuesForVariable,
     refreshProfiles,
     router,
-    t,
   ]);
 
   /* ======================================== */

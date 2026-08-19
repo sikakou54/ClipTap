@@ -27,6 +27,7 @@
 "snippet.preview" = "プレビュー";
 "snippet.detail" = "詳細";
 "snippet.close" = "閉じる";
+"snippet_no_title" = "（タイトルなし）";
 
 /* 検索関連 */
 "search.placeholder" = "スニペットを検索";
@@ -72,6 +73,8 @@
 "accessibility.close_button" = "閉じるボタン";
 "accessibility.copy_button" = "コピーボタン";
 "accessibility.sort_button" = "並び替えボタン";
+"accessibility.insert_title_button" = "タイトル挿入ボタン";
+"accessibility.insert_newline_button" = "改行ボタン";
 
 /* ソート関連 */
 "sort.label" = "並順";
@@ -79,3 +82,11 @@
 "sort.updated" = "更新日時";
 "sort.title" = "タイトル";
 "sort.usage" = "使用頻度";
+
+/* 設定関連 */
+"settings.title" = "設定";
+"settings.usage_tracking" = "使用頻度の記録";
+"settings.usage_tracking_active" = "有効";
+"settings.usage_tracking_inactive" = "無効";
+"settings.usage_tracking_requires_full_access" = "キーボードからの挿入回数を記録するには、フルアクセスの許可が必要です。許可すると使用頻度順の並べ替えが使えます。";
+"settings.full_access_instructions" = "1. 設定アプリを開く\n2. 「一般」→「キーボード」→「キーボード」を選択\n3. 「ClipTap」をタップ\n4. 「フルアクセスを許可」をON";

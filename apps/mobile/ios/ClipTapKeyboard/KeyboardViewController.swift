@@ -35,11 +35,18 @@ import os.log
 
 // ログ出力用の設定（デバッグやエラー追跡に使用）
 // 開発中の動作確認や、本番環境でのトラブルシューティングに役立ちます
-let keyboardLog = OSLog(subsystem: "com.sikakou.cliptap.keyboard", category: "KeyboardViewController")
+let keyboardLog = OSLog.disabled
 
 /// カスタムキーボードのメインビューコントローラー
 /// UIInputViewControllerを継承することで、iOSのカスタムキーボード機能を実装できます
 class KeyboardViewController: UIInputViewController {
+
+    private enum ScreenState {
+        case loading
+        case list
+        case detail
+        case settings
+    }
 
     // MARK: - Services（サービス層：ビジネスロジックを担当）
     // 3層アーキテクチャを採用: UI層（ViewController） → ビジネスロジック層（Service） → データアクセス層（Mapper）
@@ -60,7 +67,6 @@ class KeyboardViewController: UIInputViewController {
     private let variableService = VariableService.shared
 
     /// サブスクリプション（有料機能）の管理を行うマネージャー
-    private let subscriptionManager = SubscriptionManager.shared
 
     // MARK: - State（状態管理：画面の現在の状態を保持）
 
@@ -81,6 +87,14 @@ class KeyboardViewController: UIInputViewController {
     /// プロファイル + カテゴリの両方でフィルタ済み
     private var filteredSnippets: [Snippet] = []
 
+    /**
+     * 一覧に描画済みの内容を表す署名
+     *
+     * 再取得した内容がこれと一致する場合は再描画しない。
+     * nilは「表示が外部要因で変わり得るため毎回描画する」ことを示す。
+     */
+    private var snippetListSignature: String?
+
     /// 全カテゴリのリスト（「すべて」ボタン + 各カテゴリボタンを作成するために使用）
     private var categories: [Category] = []
 
@@ -93,6 +107,7 @@ class KeyboardViewController: UIInputViewController {
     /// カスタム変数のマップ（変数名 → 値の辞書）
     /// 例: ["client_name": "田中", "company_name": "株式会社○○"]
     private var variablesMap: [String: String] = [:]
+    private var systemVariableFormats: [String: String] = [:]
 
     /// 詳細画面で表示中のスニペット
     /// ユーザーがスニペットをタップすると、このプロパティに保存されます
@@ -102,6 +117,9 @@ class KeyboardViewController: UIInputViewController {
     /// 値: "created" | "updated" | "title" | "usage"
     private var currentSortBy: String = "created"
 
+    /// 現在表示している画面
+    private var screenState: ScreenState = .list
+
     /// ソート設定を保存するUserDefaultsキー
     private let sortPreferenceKey = "keyboard_snippet_sort_by"
 
@@ -110,6 +128,21 @@ class KeyboardViewController: UIInputViewController {
 
     /// App Group識別子
     private let appGroupIdentifier = "group.com.sikakou.cliptap"
+
+    /**
+     * キーボード全体の高さ（pt）
+     *
+     * OS標準キーボードに近い高さにして、スニペット一覧の表示領域を確保する。
+     */
+    private static let keyboardHeight: CGFloat = 280
+
+    /**
+     * キーボードの高さ制約
+     *
+     * 表示のたびに新しい制約を追加すると矛盾した制約が増殖し、
+     * レイアウトが不定になって表示領域とタッチ領域がずれるため、1本だけ保持して使い回す。
+     */
+    private var keyboardHeightConstraint: NSLayoutConstraint?
 
     // MARK: - UI Components（画面を構成するUI部品）
 
@@ -133,9 +166,7 @@ class KeyboardViewController: UIInputViewController {
         button.contentHorizontalAlignment = .left
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 28)  // 右側にシェブロン用のスペースを確保
         button.layer.cornerRadius = 16
-        button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.systemGray.cgColor
-        button.backgroundColor = .systemGray6
+        button.backgroundColor = .secondarySystemFill
         button.setTitleColor(.label, for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
 
@@ -161,9 +192,7 @@ class KeyboardViewController: UIInputViewController {
         button.contentHorizontalAlignment = .left
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 28)
         button.layer.cornerRadius = 16
-        button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.systemGray.cgColor
-        button.backgroundColor = .systemGray6
+        button.backgroundColor = .secondarySystemFill
         button.setTitleColor(.label, for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -187,7 +216,7 @@ class KeyboardViewController: UIInputViewController {
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         let image = UIImage(systemName: "arrow.up.arrow.down", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = .secondaryLabel
+        button.tintColor = .label
         button.backgroundColor = .clear
         button.translatesAutoresizingMaskIntoConstraints = false
         button.showsMenuAsPrimaryAction = true
@@ -213,17 +242,11 @@ class KeyboardViewController: UIInputViewController {
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         let image = UIImage(systemName: "gearshape", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = .secondaryLabel
+        button.tintColor = .label
         button.backgroundColor = .clear
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
-
-    /// 使用頻度追跡を有効にするかどうかのUserDefaultsキー
-    private let usageTrackingKey = "usageTrackingEnabled"
-
-    /// 使用頻度追跡が有効かどうかを設定したことがあるかのUserDefaultsキー
-    private let usageTrackingEnabledSetKey = "usageTrackingEnabledSet"
 
     // === スニペット一覧エリア ===
 
@@ -231,7 +254,7 @@ class KeyboardViewController: UIInputViewController {
     /// 各行をタップすると、詳細画面（プレビュー）が表示されます
     private let tableView: UITableView = {
         let tv = UITableView()
-        tv.backgroundColor = .systemGroupedBackground  // iOS標準のグループ化された背景色
+        tv.backgroundColor = .clear
         tv.translatesAutoresizingMaskIntoConstraints = false
         return tv
     }()
@@ -243,7 +266,7 @@ class KeyboardViewController: UIInputViewController {
     /// 初期状態では非表示（isHidden = true）
     private let detailView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground  // システム標準の背景色（ライト/ダークモード対応）
+        view.backgroundColor = .clear
         view.translatesAutoresizingMaskIntoConstraints = false
         view.isHidden = true  // 最初は非表示
         return view
@@ -269,10 +292,37 @@ class KeyboardViewController: UIInputViewController {
     /// copyWithTitleフラグがfalseの場合は非表示になります
     private let detailTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = .boldSystemFont(ofSize: 14)  // 太字、14ポイント
+        label.font = .systemFont(ofSize: 16)  // 本文（detailContentLabel）と同じフォント
         label.numberOfLines = 0  // 複数行表示可能（改行を許可）
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+
+    /// タイトルだけを入力欄へ挿入するボタン（タイトル行の右端）
+    /// メールの件名と本文のように、タイトルと本文を別々の欄へ入れるために使用します
+    /// copyWithTitleがOFFのスニペット、またはタイトルが空のスニペットでは非表示になります
+    private let titleInsertButton: ExpandedHitAreaButton = {
+        let button = ExpandedHitAreaButton()
+        // アイコン設定（紙飛行機マーク。下部の挿入ボタンより一回り小さい）
+        let config = UIImage.SymbolConfiguration(pointSize: 13, weight: .medium)
+        let image = UIImage(systemName: "paperplane.fill", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.backgroundColor = .systemBlue  // 青い背景
+        button.tintColor = .white  // 白いアイコン
+        button.layer.cornerRadius = 16  // 丸ボタン（半径16で32x32の円形になる）
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.isHidden = true  // 初期状態は非表示（copyWithTitleがONのときだけ表示）
+        return button
+    }()
+
+    /// タイトルと本文の区切り線
+    /// タイトルと本文が別々に挿入できることを視覚的に伝えます
+    private let titleSeparatorView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .separator  // ライト/ダークに自動追従するシステム色
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isHidden = true  // 初期状態は非表示（copyWithTitleがONのときだけ表示）
+        return view
     }()
 
     /// スニペットの内容（本文）を表示するラベル
@@ -286,16 +336,21 @@ class KeyboardViewController: UIInputViewController {
         return label
     }()
 
-    // === ボタンエリア（詳細画面下部）===
+    // === 詳細画面の切り替え用制約 ===
 
-    /// コピーボタンと閉じるボタンを配置するコンテナビュー
-    /// 画面下部に固定表示されます
-    private let buttonContainerView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .clear  // 透明（背景を透過）
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
+    /// copyWithTitleがOFFのときに使う本文の上端制約（本文の上はタイトルラベル）
+    /// タイトルラベルは非表示かつ高さ0になるため、従来と同じ表示位置になります
+    private var contentTopToTitleConstraint: NSLayoutConstraint?
+
+    /// copyWithTitleがONのときに使う本文の上端制約（本文の上は区切り線）
+    private var contentTopToSeparatorConstraint: NSLayoutConstraint?
+
+    /// タイトル挿入ボタンを表示するときだけ有効にする区切り線の下限制約
+    /// 非表示のボタンもAuto Layout上は32ptを占めるため、常時有効にすると
+    /// タイトルラベルが引き伸ばされてOFF時の本文位置が下がってしまう
+    private var separatorTopToButtonConstraint: NSLayoutConstraint?
+
+    // === ボタンエリア（詳細画面下部）===
 
     /// コピーボタン（テキスト入力欄に挿入）
     /// 紙飛行機アイコンの青い丸ボタン
@@ -320,7 +375,34 @@ class KeyboardViewController: UIInputViewController {
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         let image = UIImage(systemName: "xmark", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.backgroundColor = .systemGray5  // 薄いグレーの背景
+        button.backgroundColor = .secondarySystemFill
+        button.tintColor = .label  // システム標準のテキスト色
+        button.layer.cornerRadius = 20  // 丸ボタン
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+
+    /// 改行挿入ボタン（閉じるボタンと挿入ボタンの間）
+    /// 改行マークのグレーの丸ボタン
+    ///
+    /// 【なぜ必要か】
+    /// タイトル挿入・本文挿入のどちらも改行を付けないため、同じ入力欄へ
+    /// 「タイトル → 改行 → 本文」と入れるには標準キーボードへの切り替えが必要でした。
+    /// このボタンにより、切り替えずに改行を入力できます。
+    ///
+    /// 【グレーにする理由】
+    /// 主要な操作は青い挿入ボタンであることを保つため、閉じるボタンと同じ副次配色にします。
+    ///
+    /// 【ExpandedHitAreaButtonを使う理由】
+    /// 隣接する2つのボタンと揃えた40x40の見た目のまま、
+    /// タップ領域だけを44x44へ広げてタップしやすさを確保します。
+    private let newlineButton: ExpandedHitAreaButton = {
+        let button = ExpandedHitAreaButton()
+        // アイコン設定（改行マーク）
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        let image = UIImage(systemName: "return", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.backgroundColor = .secondarySystemFill
         button.tintColor = .label  // システム標準のテキスト色
         button.layer.cornerRadius = 20  // 丸ボタン
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -349,7 +431,7 @@ class KeyboardViewController: UIInputViewController {
     /// ローディング画面全体を包むビュー
     private let loadingView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .clear
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -378,7 +460,7 @@ class KeyboardViewController: UIInputViewController {
     /// 設定画面全体を包むビュー（全画面表示）
     private let settingsView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .clear
         view.translatesAutoresizingMaskIntoConstraints = false
         view.isHidden = true
         return view
@@ -387,7 +469,7 @@ class KeyboardViewController: UIInputViewController {
     /// 設定画面のヘッダービュー
     private let settingsHeaderView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .clear
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -407,7 +489,7 @@ class KeyboardViewController: UIInputViewController {
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         let image = UIImage(systemName: "xmark", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.backgroundColor = .systemGray5
+        button.backgroundColor = .secondarySystemFill
         button.tintColor = .label
         button.layer.cornerRadius = 15
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -417,13 +499,13 @@ class KeyboardViewController: UIInputViewController {
     /// 使用頻度スイッチの行コンテナ
     private let usageTrackingRowView: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemBackground
+        view.backgroundColor = .tertiarySystemFill
         view.layer.cornerRadius = 10
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
 
-    /// 使用頻度ラベル
+    /// 使用頻度の記録状態の見出しラベル
     private let usageTrackingLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 15)
@@ -431,11 +513,13 @@ class KeyboardViewController: UIInputViewController {
         return label
     }()
 
-    /// 使用頻度スイッチ
-    private let usageTrackingSwitch: UISwitch = {
-        let switchControl = UISwitch()
-        switchControl.translatesAutoresizingMaskIntoConstraints = false
-        return switchControl
+    /// 使用頻度の記録が有効かどうかを示すラベル
+    /// フルアクセスの許可状態に応じて「有効」「フルアクセスが必要」を出し分ける
+    private let usageTrackingStatusLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 15, weight: .medium)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
 
     /// フルアクセス必要ヒントラベル
@@ -453,7 +537,7 @@ class KeyboardViewController: UIInputViewController {
     private let fullAccessInstructionsLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12)
-        label.textColor = .tertiaryLabel
+        label.textColor = .secondaryLabel
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
@@ -473,42 +557,22 @@ class KeyboardViewController: UIInputViewController {
         super.viewDidLoad()
 
         // デバッグ用のログ出力（開発中の動作確認用）
-        NSLog("============================================================")
-        NSLog("🎯🎯🎯 [KeyboardViewController] viewDidLoad CALLED 🎯🎯🎯")
-        NSLog("============================================================")
+        KeyboardLog.debug("============================================================")
+        KeyboardLog.debug("🎯🎯🎯 [KeyboardViewController] viewDidLoad CALLED 🎯🎯🎯")
+        KeyboardLog.debug("============================================================")
 
-        view.backgroundColor = .systemBackground  // 背景色を設定
+        applySystemKeyboardBackground()
 
-        /* フルアクセス状態をApp Group UserDefaultsに保存（メインアプリと共有） */
+        /* フルアクセス状態をApp Group UserDefaultsに保存（SnippetServiceと共有） */
         saveFullAccessState()
 
         /* ソート設定を初期読み込み（setupUIより前に実行する必要あり） */
+        /* 使用頻度順は読み取りだけで成立するため、フルアクセスの有無で制限しない */
         currentSortBy = loadSortPreference()
 
-        /* フルアクセスOFFで使用頻度ソートが選択されている場合はデフォルトにリセット */
-        if !self.hasFullAccess && currentSortBy == "usage" {
-            currentSortBy = "created"
-            saveSortPreference(currentSortBy)
-            NSLog("🔄 [Sort] Reset sort preference to 'created' because full access is OFF")
-        }
-
-        NSLog("🔄 [Sort] Initial sort preference loaded: %@", currentSortBy)
+        KeyboardLog.debug("🔄 [Sort] Initial sort preference loaded: %@", currentSortBy)
 
         setupUI()  // UI部品を画面に配置（即座に表示）
-
-        // キャッシュをクリアして最新状態を取得
-        subscriptionManager.invalidateCache()
-
-        // App Groupからサブスクリプション状態を取得
-        let status = subscriptionManager.getSubscriptionStatus()
-        NSLog("🔐 [KeyboardViewController] Subscription status from App Group: \(status)")
-
-        // データなし、期限切れの場合はメッセージを表示
-        // FREE版でも拡張キーボードを使えるように変更
-        if status == .noData || status == .expired {
-            showSubscriptionMessage(status: status)
-            return
-        }
 
         // ローディング画面を表示
         showLoading()
@@ -527,39 +591,95 @@ class KeyboardViewController: UIInputViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
-        NSLog("============================================================")
-        NSLog("👁️👁️👁️ [KeyboardViewController] viewWillAppear CALLED 👁️👁️👁️")
-        NSLog("============================================================")
+        KeyboardLog.debug("============================================================")
+        KeyboardLog.debug("👁️👁️👁️ [KeyboardViewController] viewWillAppear CALLED 👁️👁️👁️")
+        KeyboardLog.debug("============================================================")
 
-        // キャッシュをクリアして最新状態を取得
-        subscriptionManager.invalidateCache()
+        /* キーボードの高さを再適用する（制約は1本だけ保持するので増殖しない） */
+        applyKeyboardHeightConstraint()
 
-        // サブスクリプション状態をチェック
-        let status = subscriptionManager.getSubscriptionStatus()
-
-        if status == .noData || status == .expired {
-            // データなし or 期限切れの場合は何もしない（viewDidLoadで既にメッセージ表示済み）
-            NSLog("🔒 [KeyboardViewController] viewWillAppear - Status: \(status), skipping refresh")
-            return
-        }
-
-        // キーボードの高さを設定（コンパクトに）
-        let heightConstraint = NSLayoutConstraint(
-            item: view!,
-            attribute: .height,
-            relatedBy: .equal,
-            toItem: nil,
-            attribute: .notAnAttribute,
-            multiplier: 0,
-            constant: 260  // 260ptに制限
-        )
-        heightConstraint.priority = .required
-        view.addConstraint(heightConstraint)
+        applyHostKeyboardAppearance()
 
         // キーボードが表示される度に全データをリフレッシュ
         // これにより、メインアプリでの変更がキーボードにも即座に反映されます
-        NSLog("🔄 [KeyboardViewController] viewWillAppear - Refreshing all data...")
+        KeyboardLog.debug("🔄 [KeyboardViewController] viewWillAppear - Refreshing all data...")
         refreshAllData()
+    }
+
+    override func textDidChange(_ textInput: UITextInput?) {
+        super.textDidChange(textInput)
+        applyHostKeyboardAppearance()
+    }
+
+    /**
+     * OS標準キーボードの背景を適用する
+     *
+     * 独自の背景色を持たず、OSがキーボードに使う背景素材をそのまま使う。
+     * ルートビューがkeyboardスタイルのUIInputViewでない場合だけ、背面に
+     * UIInputViewを追加してキーボード素材を確実に描画する。
+     */
+    private func applySystemKeyboardBackground() {
+        view.backgroundColor = nil
+
+        if let inputView = view as? UIInputView, inputView.inputViewStyle == .keyboard {
+            KeyboardLog.debug("🎨 [Background] Root is UIInputView(.keyboard) - use system material as-is")
+            return
+        }
+
+        KeyboardLog.debug("🎨 [Background] Root is %@ - insert UIInputView backdrop",
+                          String(describing: type(of: view!)))
+        let backdrop = UIInputView(frame: .zero, inputViewStyle: .keyboard)
+        backdrop.translatesAutoresizingMaskIntoConstraints = false
+        view.insertSubview(backdrop, at: 0)
+        NSLayoutConstraint.activate([
+            backdrop.topAnchor.constraint(equalTo: view.topAnchor),
+            backdrop.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backdrop.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            backdrop.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+    }
+
+    /** 入力先アプリが要求するキーボード外観をビューとメニューへ反映する */
+    private func applyHostKeyboardAppearance() {
+        let style: UIUserInterfaceStyle
+        switch textDocumentProxy.keyboardAppearance {
+        case .dark:
+            style = .dark
+        case .light:
+            style = .light
+        default:
+            style = .unspecified
+        }
+
+        if view.overrideUserInterfaceStyle != style {
+            view.overrideUserInterfaceStyle = style
+        }
+        if let window = view.window, window.overrideUserInterfaceStyle != style {
+            window.overrideUserInterfaceStyle = style
+        }
+    }
+
+    /**
+     * キーボードの高さ制約を適用する
+     *
+     * 制約は1本だけ生成して保持し、2回目以降は定数の更新だけを行う。
+     * 表示のたびに制約を追加すると矛盾した必須制約が積み上がり、
+     * UIKitがレイアウトのたびに制約を破棄して復旧するため、
+     * ビューの実フレームが不定になって「見えているのに触れない領域」が生まれる。
+     *
+     * 優先度をrequiredより1段下げているのは、システム側が入力ビューへ付ける制約と
+     * 衝突したときにこちらを譲り、制約破棄によるレイアウト崩れを避けるため。
+     */
+    private func applyKeyboardHeightConstraint() {
+        if let constraint = keyboardHeightConstraint {
+            constraint.constant = Self.keyboardHeight
+            return
+        }
+
+        let constraint = view.heightAnchor.constraint(equalToConstant: Self.keyboardHeight)
+        constraint.priority = UILayoutPriority(999)
+        constraint.isActive = true
+        keyboardHeightConstraint = constraint
     }
 
     // MARK: - Data Loading（データ読み込み処理）
@@ -576,13 +696,17 @@ class KeyboardViewController: UIInputViewController {
     /// データ件数やIDが変わっていなければ、ボタンの再作成をスキップします
     /// これにより、無駄な処理を減らしてパフォーマンスを向上させています
     private func refreshAllData() {
-        NSLog("🔄🔄🔄 [refreshAllData] STARTED 🔄🔄🔄")
+        KeyboardLog.debug("🔄🔄🔄 [refreshAllData] STARTED 🔄🔄🔄")
         do {
             // データベースが初期化されているか確認
             try Database.shared.initialize()
 
+            /* 書式設定は表示のたびに再読込する。
+               変数値はプロファイル再読み込み後にまとめて取得するため、ここでは読まない */
+            systemVariableFormats = SystemVariableFormatMapper.shared.getAll()
+
             // プロファイルを再読み込み
-            NSLog("🔄 [Refresh] Loading profiles...")
+            KeyboardLog.debug("🔄 [Refresh] Loading profiles...")
             let newProfiles = profileService.getAllProfiles()
 
             // プロファイルが変更されたかチェック
@@ -590,7 +714,7 @@ class KeyboardViewController: UIInputViewController {
                                   profiles.map({ $0.id }) != newProfiles.map({ $0.id })
 
             if profilesChanged {
-                NSLog("📝 [Refresh] Profiles changed: %d → %d", profiles.count, newProfiles.count)
+                KeyboardLog.debug("📝 [Refresh] Profiles changed: %d → %d", profiles.count, newProfiles.count)
                 profiles = newProfiles
                 setupProfileDropdown()
 
@@ -601,40 +725,44 @@ class KeyboardViewController: UIInputViewController {
                     currentProfile = firstProfile
                 }
             } else {
-                NSLog("✓ [Refresh] Profiles unchanged: %d profiles", profiles.count)
+                KeyboardLog.debug("✓ [Refresh] Profiles unchanged: %d profiles", profiles.count)
+            }
+
+            if let profileId = currentProfile?.id {
+                variablesMap = variableService.getVariablesMap(for: profileId)
             }
 
             // カテゴリを再読み込み
-            NSLog("🔄 [Refresh] Loading categories...")
+            KeyboardLog.debug("🔄 [Refresh] Loading categories...")
             let newCategories = categoryService.getAll()
 
             let categoriesChanged = categories.count != newCategories.count ||
                                    categories.map({ $0.id }) != newCategories.map({ $0.id })
 
             if categoriesChanged {
-                NSLog("📝 [Refresh] Categories changed: %d → %d", categories.count, newCategories.count)
+                KeyboardLog.debug("📝 [Refresh] Categories changed: %d → %d", categories.count, newCategories.count)
                 categories = newCategories
                 setupCategoryDropdown()
             } else {
-                NSLog("✓ [Refresh] Categories unchanged: %d categories", categories.count)
+                KeyboardLog.debug("✓ [Refresh] Categories unchanged: %d categories", categories.count)
             }
 
             // スニペットを再読み込み
-            NSLog("🔄 [Refresh] Loading snippets...")
+            KeyboardLog.debug("🔄 [Refresh] Loading snippets...")
             let previousCount = allSnippets.count
             reloadSnippets()
             let newCount = allSnippets.count
 
             if previousCount != newCount {
-                NSLog("📝 [Refresh] Snippets changed: %d → %d", previousCount, newCount)
+                KeyboardLog.debug("📝 [Refresh] Snippets changed: %d → %d", previousCount, newCount)
             } else {
-                NSLog("✓ [Refresh] Snippets unchanged: %d snippets", newCount)
+                KeyboardLog.debug("✓ [Refresh] Snippets unchanged: %d snippets", newCount)
             }
 
-            NSLog("✅ [Refresh] All data refreshed successfully")
+            KeyboardLog.debug("✅ [Refresh] All data refreshed successfully")
 
         } catch {
-            NSLog("❌ [Refresh] Failed to refresh data: %@", error.localizedDescription)
+            KeyboardLog.debug("❌ [Refresh] Failed to refresh data: %@", error.localizedDescription)
         }
     }
 
@@ -660,10 +788,10 @@ class KeyboardViewController: UIInputViewController {
         settingsButton.addTarget(self, action: #selector(settingsButtonTapped), for: .touchUpInside)
 
         NSLayoutConstraint.activate([
-            /* フィルターコンテナ: 画面上部に配置 */
-            filterContainerView.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
-            filterContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
-            filterContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+            /* フィルターコンテナ: 画面上部に配置（横向き時のノッチ側を避けるためセーフエリア基準） */
+            filterContainerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            filterContainerView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 8),
+            filterContainerView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
             filterContainerView.heightAnchor.constraint(equalToConstant: 36),
 
             /* 環境ドロップダウンボタン: 左端に固定、固定幅100pt */
@@ -712,13 +840,27 @@ class KeyboardViewController: UIInputViewController {
         // TableView: フィルターコンテナの下に配置（+36ptの表示エリア拡大）
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
+        tableView.register(SnippetCell.self, forCellReuseIdentifier: SnippetCell.reuseIdentifier)
+
+        /* 行の高さを固定し、自動高さ計算（セルフサイジング）を無効化する。
+           推定高さのままだと行の実フレームが見た目とずれ、余白部分でタッチが拾えないことがある */
+        tableView.rowHeight = SnippetCell.rowHeight
+        tableView.estimatedRowHeight = 0
+
+        /* 内容が画面に収まっていてもドラッグに反応させる（無反応に見える状態をなくす） */
+        tableView.alwaysBounceVertical = true
+
+        /* セルの余白を読みやすさ優先の幅に合わせず、行を画面幅いっぱいに使う */
+        tableView.cellLayoutMarginsFollowReadableWidth = false
+
         view.addSubview(tableView)
+        /* 下端をセーフエリアに合わせる: ホームインジケータ帯に入るとOSのジェスチャがスワイプを奪い、
+           その領域から始めたドラッグがスクロールにならないため */
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: filterContainerView.bottomAnchor, constant: 8),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
 
         // Detail View (全画面表示)
@@ -726,10 +868,16 @@ class KeyboardViewController: UIInputViewController {
         detailView.addSubview(detailScrollView)
         detailScrollView.addSubview(detailContentView)
         detailContentView.addSubview(detailTitleLabel)
+        /* タイトル挿入ボタンと区切り線はスクロールされる中身なのでcontentViewへ追加する。
+           下部の挿入・閉じるボタンと違いdetailViewへ重ねないため、スクロール操作は奪わない */
+        detailContentView.addSubview(titleInsertButton)
+        detailContentView.addSubview(titleSeparatorView)
         detailContentView.addSubview(detailContentLabel)
-        detailView.addSubview(buttonContainerView)
-        buttonContainerView.addSubview(copyButton)
-        buttonContainerView.addSubview(closeButton)
+        /* ボタンは透明なコンテナに包まずdetailViewへ直接追加する。
+           全幅・透明のコンテナを重ねると、その範囲のスクロール操作をコンテナが奪ってしまう */
+        detailView.addSubview(copyButton)
+        detailView.addSubview(newlineButton)
+        detailView.addSubview(closeButton)
 
         NSLayoutConstraint.activate([
             // DetailView: 全画面表示
@@ -738,11 +886,11 @@ class KeyboardViewController: UIInputViewController {
             detailView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             detailView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            // ScrollView: 全画面（ボタンコンテナの下にパディングを追加）
-            detailScrollView.topAnchor.constraint(equalTo: detailView.topAnchor, constant: 8),
-            detailScrollView.leadingAnchor.constraint(equalTo: detailView.leadingAnchor),
-            detailScrollView.trailingAnchor.constraint(equalTo: detailView.trailingAnchor),
-            detailScrollView.bottomAnchor.constraint(equalTo: detailView.bottomAnchor),
+            // ScrollView: 全画面（下端はセーフエリアに合わせ、ホームインジケータ帯を避ける）
+            detailScrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            detailScrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            detailScrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            detailScrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
 
             // ContentView: ScrollViewのコンテンツ（ボタン分の下パディング追加）
             detailContentView.topAnchor.constraint(equalTo: detailScrollView.topAnchor),
@@ -754,34 +902,82 @@ class KeyboardViewController: UIInputViewController {
             // Title Label
             detailTitleLabel.topAnchor.constraint(equalTo: detailContentView.topAnchor, constant: 12),
             detailTitleLabel.leadingAnchor.constraint(equalTo: detailContentView.leadingAnchor, constant: 12),
-            detailTitleLabel.trailingAnchor.constraint(equalTo: detailContentView.trailingAnchor, constant: -12),
+            detailTitleLabel.trailingAnchor.constraint(equalTo: titleInsertButton.leadingAnchor, constant: -8),
+
+            // Title Insert Button（タイトル行の右端に置く32x32の丸ボタン）
+            titleInsertButton.topAnchor.constraint(equalTo: detailContentView.topAnchor, constant: 8),
+            titleInsertButton.trailingAnchor.constraint(equalTo: detailContentView.trailingAnchor, constant: -12),
+            titleInsertButton.widthAnchor.constraint(equalToConstant: 32),
+            titleInsertButton.heightAnchor.constraint(equalToConstant: 32),
+
+            // Title Separator（タイトル行と本文の区切り線）
+            titleSeparatorView.leadingAnchor.constraint(equalTo: detailContentView.leadingAnchor, constant: 12),
+            titleSeparatorView.trailingAnchor.constraint(equalTo: detailContentView.trailingAnchor, constant: -12),
+            titleSeparatorView.heightAnchor.constraint(equalToConstant: 0.5),
 
             // Content Label（ボタンエリア分の下マージン追加：60pt）
-            detailContentLabel.topAnchor.constraint(equalTo: detailTitleLabel.bottomAnchor, constant: 8),
             detailContentLabel.leadingAnchor.constraint(equalTo: detailContentView.leadingAnchor, constant: 12),
             detailContentLabel.trailingAnchor.constraint(equalTo: detailContentView.trailingAnchor, constant: -12),
             detailContentLabel.bottomAnchor.constraint(equalTo: detailContentView.bottomAnchor, constant: -72),
 
-            // Button Container: 画面下部に固定（半透明背景）
-            buttonContainerView.leadingAnchor.constraint(equalTo: detailView.leadingAnchor),
-            buttonContainerView.trailingAnchor.constraint(equalTo: detailView.trailingAnchor),
-            buttonContainerView.bottomAnchor.constraint(equalTo: detailView.bottomAnchor),
-            buttonContainerView.heightAnchor.constraint(equalToConstant: 64),
-
-            // Buttons: buttonContainerView内に配置（丸ボタン）
-            copyButton.bottomAnchor.constraint(equalTo: buttonContainerView.bottomAnchor, constant: -12),
-            copyButton.trailingAnchor.constraint(equalTo: buttonContainerView.trailingAnchor, constant: -12),
+            // Buttons: 画面右下に固定（丸ボタン、セーフエリア内に収める）
+            copyButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -12),
+            copyButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -12),
             copyButton.widthAnchor.constraint(equalToConstant: 40),
             copyButton.heightAnchor.constraint(equalToConstant: 40),
 
-            closeButton.bottomAnchor.constraint(equalTo: buttonContainerView.bottomAnchor, constant: -12),
-            closeButton.trailingAnchor.constraint(equalTo: copyButton.leadingAnchor, constant: -12),
+            // 改行ボタン（挿入ボタンと閉じるボタンの間）
+            newlineButton.bottomAnchor.constraint(equalTo: copyButton.bottomAnchor),
+            newlineButton.trailingAnchor.constraint(equalTo: copyButton.leadingAnchor, constant: -12),
+            newlineButton.widthAnchor.constraint(equalToConstant: 40),
+            newlineButton.heightAnchor.constraint(equalToConstant: 40),
+
+            closeButton.bottomAnchor.constraint(equalTo: copyButton.bottomAnchor),
+            closeButton.trailingAnchor.constraint(equalTo: newlineButton.leadingAnchor, constant: -12),
             closeButton.widthAnchor.constraint(equalToConstant: 40),
             closeButton.heightAnchor.constraint(equalToConstant: 40)
         ])
 
+        /* 区切り線はタイトルの直下に置きたいが、1行タイトルではタイトルより背の高い挿入ボタンがはみ出す。
+           優先度を下げた等式にすることで、複数行タイトルではタイトル基準、
+           1行タイトルでは下のseparatorTopToButtonConstraint（ボタン基準）が採用される */
+        let separatorTopToTitleConstraint = titleSeparatorView.topAnchor.constraint(
+            equalTo: detailTitleLabel.bottomAnchor,
+            constant: 8
+        )
+        separatorTopToTitleConstraint.priority = .defaultHigh
+        separatorTopToTitleConstraint.isActive = true
+
+        /* ボタンを表示するときだけ、その高さ分を区切り線の下限として効かせる。
+           常時有効にすると、非表示のボタン（Auto Layout上は32ptを占める）を避けるために
+           ソルバが優先度750の上記等式を満たそうとタイトルラベルを28ptへ引き伸ばし、
+           タイトル非表示時でも本文が押し下がってしまう */
+        let separatorTopToButton = titleSeparatorView.topAnchor.constraint(
+            greaterThanOrEqualTo: titleInsertButton.bottomAnchor,
+            constant: 8
+        )
+        separatorTopToButtonConstraint = separatorTopToButton  // 初期状態はボタン非表示のためactivateしない
+
+        /* 本文の上端はcopyWithTitleの状態で付け替える。
+           どちらも同じアンカーへの等式なので、必ず片方だけをactiveにする */
+        let contentTopToTitle = detailContentLabel.topAnchor.constraint(
+            equalTo: detailTitleLabel.bottomAnchor,
+            constant: 8
+        )
+        let contentTopToSeparator = detailContentLabel.topAnchor.constraint(
+            equalTo: titleSeparatorView.bottomAnchor,
+            constant: 12
+        )
+        contentTopToTitleConstraint = contentTopToTitle
+        contentTopToSeparatorConstraint = contentTopToSeparator
+        contentTopToTitle.isActive = true  // 初期状態はタイトル非表示（従来の表示位置）
+
         copyButton.addTarget(self, action: #selector(copyButtonTapped), for: .touchUpInside)
         closeButton.addTarget(self, action: #selector(closeDetailView), for: .touchUpInside)
+        titleInsertButton.addTarget(self, action: #selector(titleInsertButtonTapped), for: .touchUpInside)
+        titleInsertButton.accessibilityLabel = L10n.Accessibility.insertTitleButton
+        newlineButton.addTarget(self, action: #selector(newlineButtonTapped), for: .touchUpInside)
+        newlineButton.accessibilityLabel = L10n.Accessibility.insertNewlineButton
 
         // Empty Label
         view.addSubview(emptyLabel)
@@ -813,10 +1009,8 @@ class KeyboardViewController: UIInputViewController {
             loadingLabel.centerXAnchor.constraint(equalTo: loadingView.centerXAnchor)
         ])
 
-        // Keyboard height
-        NSLayoutConstraint.activate([
-            view.heightAnchor.constraint(equalToConstant: 280)
-        ])
+        /* キーボードの高さ（制約はapplyKeyboardHeightConstraintで一元管理する） */
+        applyKeyboardHeightConstraint()
 
         // Settings View (設定画面 - 全画面表示)
         view.addSubview(settingsView)
@@ -825,13 +1019,12 @@ class KeyboardViewController: UIInputViewController {
         settingsHeaderView.addSubview(settingsCloseButton)
         settingsView.addSubview(usageTrackingRowView)
         usageTrackingRowView.addSubview(usageTrackingLabel)
-        usageTrackingRowView.addSubview(usageTrackingSwitch)
+        usageTrackingRowView.addSubview(usageTrackingStatusLabel)
         settingsView.addSubview(fullAccessHintLabel)
         settingsView.addSubview(fullAccessInstructionsLabel)
 
         // 設定画面のアクションを設定
         settingsCloseButton.addTarget(self, action: #selector(closeSettingsView), for: .touchUpInside)
-        usageTrackingSwitch.addTarget(self, action: #selector(usageTrackingSwitchChanged(_:)), for: .valueChanged)
 
         NSLayoutConstraint.activate([
             // Settings View: 全画面表示
@@ -866,9 +1059,9 @@ class KeyboardViewController: UIInputViewController {
             usageTrackingLabel.leadingAnchor.constraint(equalTo: usageTrackingRowView.leadingAnchor, constant: 16),
             usageTrackingLabel.centerYAnchor.constraint(equalTo: usageTrackingRowView.centerYAnchor),
 
-            // Usage Tracking Switch: 行の右側
-            usageTrackingSwitch.trailingAnchor.constraint(equalTo: usageTrackingRowView.trailingAnchor, constant: -16),
-            usageTrackingSwitch.centerYAnchor.constraint(equalTo: usageTrackingRowView.centerYAnchor),
+            // Usage Tracking Status: 行の右側
+            usageTrackingStatusLabel.trailingAnchor.constraint(equalTo: usageTrackingRowView.trailingAnchor, constant: -16),
+            usageTrackingStatusLabel.centerYAnchor.constraint(equalTo: usageTrackingRowView.centerYAnchor),
 
             // Full Access Hint: 行の下
             fullAccessHintLabel.topAnchor.constraint(equalTo: usageTrackingRowView.bottomAnchor, constant: 8),
@@ -880,46 +1073,50 @@ class KeyboardViewController: UIInputViewController {
             fullAccessInstructionsLabel.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor, constant: 16),
             fullAccessInstructionsLabel.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor, constant: -16)
         ])
+
+        applyScreenState()
     }
 
     private func loadInitialData() {
         os_log("🚀 loadInitialData started", log: keyboardLog, type: .info)
-        NSLog("🚀 [KeyboardViewController] loadInitialData started")
+        KeyboardLog.debug("🚀 [KeyboardViewController] loadInitialData started")
 
         do {
             // データベースを初期化
             os_log("📦 Initializing database...", log: keyboardLog, type: .info)
-            NSLog("📦 [KeyboardViewController] Initializing database...")
+            KeyboardLog.debug("📦 [KeyboardViewController] Initializing database...")
             try Database.shared.initialize()
+            self.systemVariableFormats = SystemVariableFormatMapper.shared.getAll()
             os_log("✅ Database initialized successfully", log: keyboardLog, type: .info)
-            NSLog("✅ [KeyboardViewController] Database initialized successfully")
+            KeyboardLog.debug("✅ [KeyboardViewController] Database initialized successfully")
 
             // プロファイルを読み込み（Serviceを使用）
             os_log("📦 Loading profiles...", log: keyboardLog, type: .info)
-            NSLog("📦 [KeyboardViewController] Loading profiles...")
+            KeyboardLog.debug("📦 [KeyboardViewController] Loading profiles...")
             let loadedProfiles = profileService.getAllProfiles()
             os_log("✅ Loaded %d profiles", log: keyboardLog, type: .info, loadedProfiles.count)
-            NSLog("✅ [KeyboardViewController] Loaded %d profiles", loadedProfiles.count)
+            KeyboardLog.debug("✅ [KeyboardViewController] Loaded %d profiles", loadedProfiles.count)
 
             // カテゴリを読み込み（Serviceを使用）
             os_log("📦 Loading categories...", log: keyboardLog, type: .info)
-            NSLog("📦 [KeyboardViewController] Loading categories...")
+            KeyboardLog.debug("📦 [KeyboardViewController] Loading categories...")
             let loadedCategories = categoryService.getAll()
             os_log("✅ Loaded %d categories", log: keyboardLog, type: .info, loadedCategories.count)
-            NSLog("✅ [KeyboardViewController] Loaded %d categories", loadedCategories.count)
+            KeyboardLog.debug("✅ [KeyboardViewController] Loaded %d categories", loadedCategories.count)
 
             // 変数とスニペットを読み込み
             if let firstProfile = loadedProfiles.first {
                 os_log("✅ Setting current profile: %@", log: keyboardLog, type: .info, firstProfile.name)
-                NSLog("✅ [KeyboardViewController] Setting current profile: %@", firstProfile.name)
+                KeyboardLog.debug("✅ [KeyboardViewController] Setting current profile: %@", firstProfile.name)
                 self.currentProfile = firstProfile
 
                 // 現在のプロファイルの変数を読み込み
                 os_log("📦 Loading variables for profile...", log: keyboardLog, type: .info)
-                NSLog("📦 [KeyboardViewController] Loading variables for profile...")
+                KeyboardLog.debug("📦 [KeyboardViewController] Loading variables for profile...")
                 self.variablesMap = variableService.getVariablesMap(for: firstProfile.id)
+                self.systemVariableFormats = SystemVariableFormatMapper.shared.getAll()
                 os_log("✅ Loaded %d variables", log: keyboardLog, type: .info, self.variablesMap.count)
-                NSLog("✅ [KeyboardViewController] Loaded %d variables", self.variablesMap.count)
+                KeyboardLog.debug("✅ [KeyboardViewController] Loaded %d variables", self.variablesMap.count)
             }
 
             // データを設定
@@ -934,7 +1131,7 @@ class KeyboardViewController: UIInputViewController {
                 self.reloadSnippets()
             } else {
                 os_log("⚠️ No profiles found", log: keyboardLog, type: .error)
-                NSLog("⚠️ [KeyboardViewController] No profiles found")
+                KeyboardLog.debug("⚠️ [KeyboardViewController] No profiles found")
                 self.updateEmptyState()
             }
 
@@ -942,20 +1139,19 @@ class KeyboardViewController: UIInputViewController {
             self.hideLoading()
 
             os_log("🏁 loadInitialData completed", log: keyboardLog, type: .info)
-            NSLog("🏁 [KeyboardViewController] loadInitialData completed")
-            NSLog("📊 Final state: profiles=%d, categories=%d, snippets=%d",
+            KeyboardLog.debug("🏁 [KeyboardViewController] loadInitialData completed")
+            KeyboardLog.debug("📊 Final state: profiles=%d, categories=%d, snippets=%d",
                   self.profiles.count, self.categories.count, self.allSnippets.count)
 
         } catch {
             os_log("❌ Failed to load data: %@", log: keyboardLog, type: .error, error.localizedDescription)
-            NSLog("❌ [KeyboardViewController] Failed to load data: %@", error.localizedDescription)
+            KeyboardLog.debug("❌ [KeyboardViewController] Failed to load data: %@", error.localizedDescription)
 
             // ローディング画面を非表示
             self.hideLoading()
 
             // 多言語対応: "エラー: データの読み込みに失敗しました" / "Failed to load data"
             self.emptyLabel.text = L10n.Error.loadFailed
-            self.emptyLabel.isHidden = false
         }
     }
 
@@ -1075,7 +1271,8 @@ class KeyboardViewController: UIInputViewController {
 
         // プロファイル切り替え時に変数を再読み込み
         variablesMap = variableService.getVariablesMap(for: profile.id)
-        NSLog("✅ [KeyboardViewController] Reloaded %d variables for profile: %@", variablesMap.count, profile.name)
+        systemVariableFormats = SystemVariableFormatMapper.shared.getAll()
+        KeyboardLog.debug("✅ [KeyboardViewController] Reloaded %d variables for profile: %@", variablesMap.count, profile.name)
 
         reloadSnippets()
     }
@@ -1098,14 +1295,14 @@ class KeyboardViewController: UIInputViewController {
     ///              → 画面に表示
     private func reloadSnippets() {
         os_log("🔄 reloadSnippets started", log: keyboardLog, type: .info)
-        NSLog("🔄 [reloadSnippets] Started")
-        NSLog("  Current profile: %@ (id: %@)", currentProfile?.name ?? "nil", currentProfile?.id ?? "nil")
-        NSLog("  Current category: %@ (id: %@)", currentCategory?.name ?? "all", currentCategory?.id ?? "nil")
+        KeyboardLog.debug("🔄 [reloadSnippets] Started")
+        KeyboardLog.debug("  Current profile: %@ (id: %@)", currentProfile?.name ?? "nil", currentProfile?.id ?? "nil")
+        KeyboardLog.debug("  Current category: %@ (id: %@)", currentCategory?.name ?? "all", currentCategory?.id ?? "nil")
 
         // プロファイルが選択されていない場合は、何も表示しない
         guard let profileId = currentProfile?.id else {
             os_log("⚠️ No profile selected, clearing snippets", log: keyboardLog, type: .error)
-            NSLog("⚠️ [reloadSnippets] No profile selected, clearing snippets")
+            KeyboardLog.debug("⚠️ [reloadSnippets] No profile selected, clearing snippets")
             allSnippets = []
             filteredSnippets = []
             updateEmptyState()  // 空状態メッセージを表示
@@ -1117,39 +1314,60 @@ class KeyboardViewController: UIInputViewController {
         if let categoryId = currentCategory?.id {
             // カテゴリが選択されている場合
             os_log("🔍 Loading snippets for category: %@ with profile: %@ sortBy: %@", log: keyboardLog, type: .info, categoryId, profileId, currentSortBy)
-            NSLog("🔍 [reloadSnippets] Loading snippets for category: %@ with profile: %@ sortBy: %@", categoryId, profileId, currentSortBy)
+            KeyboardLog.debug("🔍 [reloadSnippets] Loading snippets for category: %@ with profile: %@ sortBy: %@", categoryId, profileId, currentSortBy)
             allSnippets = SnippetMapper.shared.getByCategoryId(categoryId, filterByProfileId: profileId, sortBy: currentSortBy)
         } else {
             // 「すべて」が選択されている場合（カテゴリフィルタなし）
             os_log("🔍 Loading all snippets with profile: %@ sortBy: %@", log: keyboardLog, type: .info, profileId, currentSortBy)
-            NSLog("🔍 [reloadSnippets] Loading all snippets with profile: %@ sortBy: %@", profileId, currentSortBy)
+            KeyboardLog.debug("🔍 [reloadSnippets] Loading all snippets with profile: %@ sortBy: %@", profileId, currentSortBy)
             allSnippets = SnippetMapper.shared.getAll(filterByProfileId: profileId, sortBy: currentSortBy)
         }
 
-        // デバッグ用：取得したスニペットの情報を出力
         os_log("✅ Loaded %d snippets", log: keyboardLog, type: .info, allSnippets.count)
-        NSLog("✅ [reloadSnippets] Loaded %d snippets", allSnippets.count)
-        for (index, snippet) in allSnippets.prefix(5).enumerated() {
-            let preview = String(snippet.content.prefix(30))
-            NSLog("  [%d] Snippet: id=%@, title=%@, content=%@...",
-                  index, snippet.id, snippet.title ?? "no title", preview)
-        }
-        if allSnippets.count > 5 {
-            NSLog("  ... and %d more snippets", allSnippets.count - 5)
-        }
+        KeyboardLog.debug("✅ [reloadSnippets] Loaded %d snippets", allSnippets.count)
 
         // MapperでORDER BYを使ってソート済みなので、そのまま表示用にコピー
         filteredSnippets = allSnippets
         os_log("✅ Loaded and sorted snippets: %d (sortBy: %@)", log: keyboardLog, type: .info, filteredSnippets.count, currentSortBy)
-        NSLog("✅ [reloadSnippets] Loaded and sorted snippets: %d (sortBy: %@)", filteredSnippets.count, currentSortBy)
+        KeyboardLog.debug("✅ [reloadSnippets] Loaded and sorted snippets: %d (sortBy: %@)", filteredSnippets.count, currentSortBy)
+
+        /* 表示内容が前回と同じなら再描画しない。
+           キーボードは表示のたびに全件再取得するため、無条件にreloadDataすると
+           スクロール中の再描画コストとスクロール位置の巻き戻りを招く */
+        let newSignature = makeSnippetListSignature(filteredSnippets)
+        if let newSignature, newSignature == snippetListSignature {
+            KeyboardLog.debug("✓ [reloadSnippets] List unchanged - skip reloadData()")
+            updateEmptyState()
+            return
+        }
+        snippetListSignature = newSignature
 
         // テーブルビューを更新（同期的に実行）
         // 注意: UIMenuのアクションは既にメインスレッドで実行されるため、非同期にする必要はない
         tableView.reloadData()
-        NSLog("✅ [reloadSnippets] tableView.reloadData() called")
+        KeyboardLog.debug("✅ [reloadSnippets] tableView.reloadData() called")
 
         // 空状態の表示/非表示を更新
         updateEmptyState()
+    }
+
+    /**
+     * 一覧の表示内容を表す署名を作る
+     *
+     * - Parameter snippets: 表示対象のスニペット
+     * - Returns: 署名。表示が外部要因で変わり得る場合はnil（＝必ず再描画する）
+     *
+     * セルはタイトルしか表示しないため、ID・タイトル・並び順が同じなら描画結果も同じになる。
+     * ただしタイトルに変数を含む場合は、データが同じでも時刻などで表示が変わるためnilを返す。
+     */
+    private func makeSnippetListSignature(_ snippets: [Snippet]) -> String? {
+        if snippets.contains(where: { variableReplacer.hasVariables(in: $0.title ?? "") }) {
+            return nil
+        }
+
+        return snippets
+            .map { "\($0.id)\u{1F}\($0.title ?? "")" }
+            .joined(separator: "\u{1E}")
     }
 
     private func filterSnippets() {
@@ -1165,10 +1383,22 @@ class KeyboardViewController: UIInputViewController {
     }
 
     private func updateEmptyState() {
-        let isEmpty = filteredSnippets.isEmpty
-        emptyLabel.isHidden = !isEmpty
-        tableView.isHidden = isEmpty
+        applyScreenState()
         /* 注意: tableView.reloadData() は reloadSnippets() でメインスレッドで直接呼び出すため、ここでは呼ばない */
+    }
+
+    /** 現在の画面状態に応じて、一覧と全画面ビューを排他的に表示する */
+    private func applyScreenState() {
+        let isList = screenState == .list
+        let isEmpty = filteredSnippets.isEmpty
+
+        filterContainerView.isHidden = !isList
+        tableView.isHidden = !isList || isEmpty
+        emptyLabel.isHidden = !isList || !isEmpty
+
+        detailView.isHidden = screenState != .detail
+        loadingView.isHidden = screenState != .loading
+        settingsView.isHidden = screenState != .settings
     }
 
     /// スニペットの詳細画面（プレビュー）を表示
@@ -1199,24 +1429,61 @@ class KeyboardViewController: UIInputViewController {
         // copyWithTitleフラグに応じてタイトル表示を制御
         // タイトルもコピーする設定の場合のみ、プレビューでもタイトルを表示
         if snippet.copyWithTitle {
-            // タイトルを変数置換して表示
-            let rawTitle = snippet.title ?? "（タイトルなし）"
-            let replacedTitle = variableReplacer.replace(in: rawTitle, variablesMap: variablesMap)
+            /* タイトルがNULLでも空文字でもプレースホルダーを表示する */
+            let title = snippet.title ?? ""
+            let rawTitle = title.isEmpty ? L10n.Snippet.noTitle : title
+            let replacedTitle = variableReplacer.replace(
+                in: rawTitle,
+                variablesMap: variablesMap,
+                formats: systemVariableFormats
+            )
             detailTitleLabel.text = replacedTitle
             detailTitleLabel.isHidden = false
+            /* タイトルが未設定のスニペットはプレースホルダー表示のみで、挿入するものがないためボタンは隠す */
+            titleInsertButton.isHidden = title.isEmpty
+            titleSeparatorView.isHidden = false
+            /* 同一アンカーへの等式のため、必ずdeactivateしてからactivateする */
+            if let contentTopToTitle = contentTopToTitleConstraint {
+                NSLayoutConstraint.deactivate([contentTopToTitle])
+            }
+            if let contentTopToSeparator = contentTopToSeparatorConstraint {
+                NSLayoutConstraint.activate([contentTopToSeparator])
+            }
+            /* ボタンを表示するときだけ、区切り線をボタンの下へ押し下げる制約を有効にする */
+            separatorTopToButtonConstraint?.isActive = !titleInsertButton.isHidden
         } else {
-            // タイトルを非表示（コピーしない設定の場合）
+            // タイトル行と区切り線を非表示（コピーしない設定の場合）
+            /* 非表示のラベルもテキストが残っていると高さを持つため、本文の位置がずれないようクリアする */
+            detailTitleLabel.text = nil
             detailTitleLabel.isHidden = true
+            titleInsertButton.isHidden = true
+            titleSeparatorView.isHidden = true
+            /* 非表示ボタン基準の制約が残るとタイトルラベルが引き伸ばされ本文が押し下がるため必ず外す */
+            separatorTopToButtonConstraint?.isActive = false
+            /* 同一アンカーへの等式のため、必ずdeactivateしてからactivateする */
+            if let contentTopToSeparator = contentTopToSeparatorConstraint {
+                NSLayoutConstraint.deactivate([contentTopToSeparator])
+            }
+            if let contentTopToTitle = contentTopToTitleConstraint {
+                NSLayoutConstraint.activate([contentTopToTitle])
+            }
         }
 
         // 内容を変数置換（{{today}} → 2025/11/17など）
-        let preview = variableReplacer.replace(in: snippet.content, variablesMap: variablesMap)
+        let preview = variableReplacer.replace(
+            in: snippet.content,
+            variablesMap: variablesMap,
+            formats: systemVariableFormats
+        )
         detailContentLabel.text = preview
 
+        /* 前に開いたスニペットのスクロール位置が残ると、最上部のタイトル行と
+           タイトル挿入ボタンが画面外になって見えないため先頭へ戻す */
+        detailScrollView.setContentOffset(.zero, animated: false)
+
         // アニメーションで詳細画面を表示
-        detailView.isHidden = false  // 詳細画面を表示
-        tableView.isHidden = true     // スニペット一覧を非表示
-        emptyLabel.isHidden = true    // 空状態メッセージを非表示
+        screenState = .detail
+        applyScreenState()
 
         // フェードインアニメーション（0.2秒かけて透明→不透明）
         detailView.alpha = 0
@@ -1237,9 +1504,10 @@ class KeyboardViewController: UIInputViewController {
             self.detailView.alpha = 0
         }) { _ in
             // アニメーション完了後の処理
-            self.detailView.isHidden = true  // 詳細画面を非表示
-            self.tableView.isHidden = self.filteredSnippets.isEmpty  // スニペット一覧を表示（空なら非表示）
-            self.emptyLabel.isHidden = !self.filteredSnippets.isEmpty  // 空状態メッセージの表示/非表示
+            if self.screenState == .detail {
+                self.screenState = .list
+                self.applyScreenState()
+            }
             self.selectedSnippet = nil  // 選択解除
         }
     }
@@ -1254,16 +1522,60 @@ class KeyboardViewController: UIInputViewController {
         guard let snippet = selectedSnippet else {
             // 選択中のスニペットがない場合（通常は発生しない）
             os_log("⚠️ Copy button tapped but no snippet selected", log: keyboardLog, type: .error)
-            NSLog("⚠️ [KeyboardViewController] Copy button tapped but no snippet selected")
+            KeyboardLog.debug("⚠️ [KeyboardViewController] Copy button tapped but no snippet selected")
             return
         }
 
-        os_log("🔥 Copy button tapped! Snippet: %@", log: keyboardLog, type: .info, snippet.title ?? "no title")
-        NSLog("🔥 [KeyboardViewController] Copy button tapped! Snippet: %@", snippet.title ?? "no title")
-        NSLog("🔥 [KeyboardViewController] Content: %@", snippet.content)
+        KeyboardLog.debug("[KeyboardViewController] Copy button tapped")
 
-        insertSnippet(snippet)  // スニペットを挿入
+        insertSnippet(snippet)  // スニペットの本文を挿入
         closeDetailView()  // 詳細画面を閉じる
+    }
+
+    /// タイトル挿入ボタンがタップされたときの処理
+    ///
+    /// 【処理の流れ】
+    /// 1. 選択中のスニペットを確認
+    /// 2. タイトルだけをテキスト入力欄に挿入
+    ///
+    /// 【詳細画面を閉じない理由】
+    /// メールの件名を入れたあと、続けて本文を別の欄へ入れられるようにするため、
+    /// タイトル挿入後も詳細画面は開いたままにします。
+    @objc private func titleInsertButtonTapped() {
+        guard let snippet = selectedSnippet else {
+            // 選択中のスニペットがない場合（通常は発生しない）
+            os_log("⚠️ Title insert button tapped but no snippet selected", log: keyboardLog, type: .error)
+            KeyboardLog.debug("⚠️ [KeyboardViewController] Title insert button tapped but no snippet selected")
+            return
+        }
+
+        KeyboardLog.debug("[KeyboardViewController] Title insert button tapped")
+
+        // タイトルのみを挿入（変数置換＋振動フィードバックはService側で実行）
+        snippetService.insertTitle(
+            snippet,
+            into: textDocumentProxy,  // iOSのテキスト入力API
+            profileId: currentProfile?.id  // 環境IDを渡して、環境専用の変数を使用
+        )
+    }
+
+    /// 改行ボタンがタップされたときの処理
+    ///
+    /// 【処理の流れ】
+    /// 1. 改行だけをテキスト入力欄に挿入
+    ///
+    /// 【スニペットを参照しない理由】
+    /// 挿入するのは改行のみで、変数置換もプロファイルも関与しないため、
+    /// 選択中のスニペットの有無に関わらず動作します。
+    ///
+    /// 【詳細画面を閉じない理由】
+    /// 「タイトル挿入 → 改行 → 本文挿入」と続けて操作できるようにするため、
+    /// 改行挿入後も詳細画面は開いたままにします。
+    @objc private func newlineButtonTapped() {
+        KeyboardLog.debug("[KeyboardViewController] Newline button tapped")
+
+        // 改行を挿入（振動フィードバックはService側で実行）
+        snippetService.insertNewline(into: textDocumentProxy)  // iOSのテキスト入力API
     }
 
     /// スニペットをテキスト入力欄に挿入（キーボードのメイン処理）
@@ -1273,7 +1585,7 @@ class KeyboardViewController: UIInputViewController {
     /// 【処理の流れ】
     /// 1. SnippetServiceに処理を委譲
     /// 2. Service内で以下の処理が実行されます：
-    ///    - copyWithTitleフラグに応じてタイトルも含めるか判定
+    ///    - 本文のみを挿入対象にする（タイトルはタイトル挿入ボタンから個別に挿入）
     ///    - 変数（{{today}}など）を実際の値に置き換え
     ///    - textDocumentProxy（iOSのテキスト入力API）を使ってテキストを挿入
     ///    - 振動フィードバック（Haptic Feedback）を実行
@@ -1284,8 +1596,8 @@ class KeyboardViewController: UIInputViewController {
     /// 例: LINEのメッセージ入力欄、メモアプリなど、どのアプリでも動作します
     private func insertSnippet(_ snippet: Snippet) {
         os_log("📝 insertSnippet called for snippet: %@", log: keyboardLog, type: .info, snippet.id)
-        NSLog("📝 [KeyboardViewController] insertSnippet called for snippet: %@", snippet.id)
-        NSLog("📝 [KeyboardViewController] Current profile: %@", currentProfile?.name ?? "nil")
+        KeyboardLog.debug("📝 [KeyboardViewController] insertSnippet called for snippet: %@", snippet.id)
+        KeyboardLog.debug("📝 [KeyboardViewController] Current profile: %@", currentProfile?.name ?? "nil")
 
         // Serviceを使用してスニペットを挿入（変数置換＋振動フィードバック）
         // ビジネスロジックはServiceに集約することで、コードの見通しが良くなります
@@ -1296,19 +1608,18 @@ class KeyboardViewController: UIInputViewController {
         )
 
         os_log("✅ insertSnippet completed", log: keyboardLog, type: .info)
-        NSLog("✅ [KeyboardViewController] insertSnippet completed")
+        KeyboardLog.debug("✅ [KeyboardViewController] insertSnippet completed")
     }
 
     // MARK: - Sort Methods（ソート関連メソッド）
 
     /// ソートボタンのメニューを設定
     /// iOS 14以降のUIMenuを使用して、タップ時にメニューを表示
-    /// フルアクセス許可かつ使用頻度追跡が有効な場合のみ「使用頻度」オプションを表示
+    /// 4種類の並び順はいずれもDBの読み取りだけで成立するため、常に全項目を表示する
     private func setupSortButtonMenu() {
         /* 注意: currentSortByは呼び出し元で設定済みのため、ここでは再読み込みしない
            viewDidLoad時にloadSortPreference()で初期化される */
-        NSLog("🔄 [Sort] Building menu with sort preference: %@, hasFullAccess: %@, isUsageTrackingEnabled: %@",
-              currentSortBy, self.hasFullAccess ? "true" : "false", isUsageTrackingEnabled ? "true" : "false")
+        KeyboardLog.debug("🔄 [Sort] Building menu with sort preference: %@", currentSortBy)
 
         // メニュー項目を作成
         let createdAction = UIAction(
@@ -1332,18 +1643,16 @@ class KeyboardViewController: UIInputViewController {
             self?.updateSortPreference("title")
         }
 
-        /* メニュー項目の配列を構築（フルアクセス許可かつ使用頻度追跡有効時のみ使用頻度を追加） */
-        var menuChildren: [UIAction] = [createdAction, updatedAction, titleAction]
-
-        if isUsageTrackingEnabled {
-            let usageAction = UIAction(
-                title: L10n.Sort.usage,
-                image: currentSortBy == "usage" ? UIImage(systemName: "checkmark") : nil
-            ) { [weak self] _ in
-                self?.updateSortPreference("usage")
-            }
-            menuChildren.append(usageAction)
+        /* 使用頻度順はDBの読み取りだけで成立するため、フルアクセスの有無に関わらず提供する
+           （フルアクセスなしでもアプリ本体が記録した使用回数で並べ替えできる） */
+        let usageAction = UIAction(
+            title: L10n.Sort.usage,
+            image: currentSortBy == "usage" ? UIImage(systemName: "checkmark") : nil
+        ) { [weak self] _ in
+            self?.updateSortPreference("usage")
         }
+
+        let menuChildren: [UIAction] = [createdAction, updatedAction, titleAction, usageAction]
 
         // メニューを作成してボタンに設定
         let menu = UIMenu(title: L10n.Sort.label, children: menuChildren)
@@ -1355,7 +1664,7 @@ class KeyboardViewController: UIInputViewController {
 
     /// ソート設定を更新
     private func updateSortPreference(_ sortBy: String) {
-        NSLog("🔄 [Sort] Updating sort preference: %@ → %@", currentSortBy, sortBy)
+        KeyboardLog.debug("🔄 [Sort] Updating sort preference: %@ → %@", currentSortBy, sortBy)
         currentSortBy = sortBy
         saveSortPreference(sortBy)
 
@@ -1374,7 +1683,7 @@ class KeyboardViewController: UIInputViewController {
     /// ソート設定を保存（UserDefaults）
     private func saveSortPreference(_ sortBy: String) {
         UserDefaults.standard.set(sortBy, forKey: sortPreferenceKey)
-        NSLog("💾 [Sort] Saved sort preference: %@", sortBy)
+        KeyboardLog.debug("💾 [Sort] Saved sort preference: %@", sortBy)
     }
 
     /// ソート設定を読み込み（UserDefaults）
@@ -1384,14 +1693,14 @@ class KeyboardViewController: UIInputViewController {
     }
 
     /// フルアクセス状態をApp Group UserDefaultsに保存
-    /// メインアプリからフルアクセス状態を参照できるようにする
+    /// UIInputViewControllerを継承しないSnippetServiceから参照できるようにする
     private func saveFullAccessState() {
         guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
-            NSLog("⚠️ [FullAccess] Failed to get App Group UserDefaults")
+            KeyboardLog.debug("⚠️ [FullAccess] Failed to get App Group UserDefaults")
             return
         }
         userDefaults.set(self.hasFullAccess, forKey: fullAccessStateKey)
-        NSLog("💾 [FullAccess] Saved full access state: %@", self.hasFullAccess ? "true" : "false")
+        KeyboardLog.debug("💾 [FullAccess] Saved full access state: %@", self.hasFullAccess ? "true" : "false")
     }
 
     /// バッジの表示/非表示を更新
@@ -1403,37 +1712,9 @@ class KeyboardViewController: UIInputViewController {
 
     // MARK: - Settings（設定関連）
 
-    /// 使用頻度追跡が有効かどうか
-    /// フルアクセスが許可されていて、かつ使用頻度追跡がONの場合にtrue
-    private var isUsageTrackingEnabled: Bool {
-        get {
-            guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
-                return false
-            }
-            /* フルアクセスがない場合はfalse */
-            if !self.hasFullAccess {
-                return false
-            }
-            /* 設定されていない場合はデフォルトtrue */
-            let usageEnabledSet = userDefaults.bool(forKey: usageTrackingEnabledSetKey)
-            if !usageEnabledSet {
-                return true
-            }
-            return userDefaults.bool(forKey: usageTrackingKey)
-        }
-        set {
-            guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
-                return
-            }
-            userDefaults.set(newValue, forKey: usageTrackingKey)
-            userDefaults.set(true, forKey: usageTrackingEnabledSetKey)
-            NSLog("💾 [Settings] Saved usage tracking enabled: %@", newValue ? "true" : "false")
-        }
-    }
-
     /// 設定ボタンがタップされた時のアクション
     @objc private func settingsButtonTapped() {
-        NSLog("⚙️ [Settings] Settings button tapped")
+        KeyboardLog.debug("⚙️ [Settings] Settings button tapped")
         showSettingsView()
     }
 
@@ -1442,18 +1723,14 @@ class KeyboardViewController: UIInputViewController {
         // タイトルを設定
         settingsTitleLabel.text = L10n.Settings.title
 
-        // ラベルを設定
-        usageTrackingLabel.text = L10n.Settings.usageTrackingEnabled
+        // 見出しラベルを設定
+        usageTrackingLabel.text = L10n.Settings.usageTracking
 
-        // スイッチの状態を更新
-        // フルアクセスがない場合はfalseを表示するが、
-        // フルアクセスがある場合は設定値を表示
-        if self.hasFullAccess {
-            usageTrackingSwitch.isOn = isUsageTrackingEnabled
-        } else {
-            usageTrackingSwitch.isOn = false
-        }
-        usageTrackingSwitch.isEnabled = self.hasFullAccess
+        /* 記録状態を表示（フルアクセスなしでは共有DBへ書き込めないため記録できない） */
+        usageTrackingStatusLabel.text = self.hasFullAccess
+            ? L10n.Settings.usageTrackingActive
+            : L10n.Settings.usageTrackingInactive
+        usageTrackingStatusLabel.textColor = self.hasFullAccess ? .systemGreen : .secondaryLabel
 
         // フルアクセスヒントの表示/非表示
         fullAccessHintLabel.text = L10n.Settings.usageTrackingRequiresFullAccess
@@ -1463,34 +1740,21 @@ class KeyboardViewController: UIInputViewController {
         fullAccessInstructionsLabel.text = L10n.Settings.fullAccessInstructions
         fullAccessInstructionsLabel.isHidden = self.hasFullAccess
 
-        // ラベルとスイッチの色を更新
+        // 見出しの色を更新
         usageTrackingLabel.textColor = self.hasFullAccess ? .label : .secondaryLabel
 
         // 設定画面を表示
-        settingsView.isHidden = false
+        screenState = .settings
+        applyScreenState()
     }
 
     /// 設定画面を閉じる
     @objc private func closeSettingsView() {
-        NSLog("⚙️ [Settings] Closing settings view")
-        settingsView.isHidden = true
+        KeyboardLog.debug("⚙️ [Settings] Closing settings view")
+        screenState = .list
+        applyScreenState()
     }
 
-    /// 使用頻度スイッチが変更された時のアクション
-    @objc private func usageTrackingSwitchChanged(_ sender: UISwitch) {
-        NSLog("⚙️ [Settings] Usage tracking switch changed: %@", sender.isOn ? "ON" : "OFF")
-
-        // 設定を保存
-        isUsageTrackingEnabled = sender.isOn
-
-        // 使用頻度がOFFになった場合、ソートをリセット
-        if !sender.isOn && currentSortBy == "usage" {
-            updateSortPreference("created")
-        }
-
-        // ソートメニューを再構築
-        setupSortButtonMenu()
-    }
 }
 
 extension KeyboardViewController: UITableViewDataSource {
@@ -1499,19 +1763,24 @@ extension KeyboardViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        guard let cell = tableView.dequeueReusableCell(
+            withIdentifier: SnippetCell.reuseIdentifier,
+            for: indexPath
+        ) as? SnippetCell else {
+            return UITableViewCell()
+        }
+
         let snippet = filteredSnippets[indexPath.row]
 
-        var config = cell.defaultContentConfiguration()
-
         // タイトルを変数置換する
-        let rawTitle = snippet.title ?? "（タイトルなし）"
-        let replacedTitle = variableReplacer.replace(in: rawTitle, variablesMap: variablesMap)
+        let rawTitle = snippet.title ?? L10n.Snippet.noTitle
+        let replacedTitle = variableReplacer.replace(
+            in: rawTitle,
+            variablesMap: variablesMap,
+            formats: systemVariableFormats
+        )
 
-        config.text = replacedTitle
-        config.textProperties.font = .systemFont(ofSize: 15)
-        cell.contentConfiguration = config
-        cell.accessoryType = .disclosureIndicator
+        cell.configure(title: replacedTitle)
 
         return cell
     }
@@ -1520,13 +1789,12 @@ extension KeyboardViewController: UITableViewDataSource {
 extension KeyboardViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         os_log("👆 Snippet tapped at index: %d", log: keyboardLog, type: .info, indexPath.row)
-        NSLog("👆 [KeyboardViewController] Snippet tapped at index: %d", indexPath.row)
+        KeyboardLog.debug("👆 [KeyboardViewController] Snippet tapped at index: %d", indexPath.row)
 
         tableView.deselectRow(at: indexPath, animated: true)
         let snippet = filteredSnippets[indexPath.row]
 
-        os_log("👆 Showing detail for snippet: %@", log: keyboardLog, type: .info, snippet.title ?? "no title")
-        NSLog("👆 [KeyboardViewController] Showing detail for snippet: %@", snippet.title ?? "no title")
+        KeyboardLog.debug("[KeyboardViewController] Showing snippet detail")
 
         showSnippetDetail(snippet)
     }
@@ -1536,174 +1804,130 @@ extension KeyboardViewController: UITableViewDelegate {
     /// ローディング画面を表示
     /// データ読み込み開始時に呼び出されます
     private func showLoading() {
-        loadingView.isHidden = false
+        screenState = .loading
+        applyScreenState()
         activityIndicator.startAnimating()
     }
 
     /// ローディング画面を非表示
     /// データ読み込み完了時に呼び出されます
     private func hideLoading() {
-        loadingView.isHidden = true
+        if screenState == .loading {
+            screenState = .list
+            applyScreenState()
+        }
         activityIndicator.stopAnimating()
     }
 
-    // MARK: - Premium Required Message
+}
 
-    /// Pro版未加入の場合に表示する制限メッセージ
-    ///
-    /// 拡張キーボード機能はPro版限定のため、
-    /// 無料版ユーザーには「Pro版へアップグレード」を促すメッセージを表示します。
-    ///
-    /// 【表示内容】
-    /// - バッジ: 🔒 Pro版限定
-    private func showPremiumRequiredMessage() {
-        let status = subscriptionManager.getSubscriptionStatus()
-        showSubscriptionMessage(status: status)
+// MARK: - ExpandedHitAreaButton
+
+/**
+ * 見た目より広い当たり判定を持つ丸ボタン
+ *
+ * 【なぜ必要か】
+ * タイトル行に置く挿入ボタンは、タイトル文字と釣り合う32ptの見た目にしたい。
+ * 一方でタップ領域は最低44x44ptを確保する必要があるため、
+ * 描画サイズはそのままに、当たり判定だけを44x44ptへ広げる。
+ *
+ * 【ファイル配置について】
+ * 新しいSwiftファイルを追加するとproject.pbxprojの更新が必要になるため、
+ * KeyboardViewControllerと同じファイルに定義している。
+ */
+final class ExpandedHitAreaButton: UIButton {
+
+    /// 確保する最小タップ領域（pt）
+    private static let minimumHitSize: CGFloat = 44
+
+    /// タップ判定の範囲を最小タップ領域まで広げる
+    /// - Parameters:
+    ///   - point: 自身の座標系でのタッチ位置
+    ///   - event: 対象のイベント
+    /// - Returns: タップ領域に含まれる場合はtrue
+    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        /* 32ptなら上下左右に6ptずつ広げて44ptにする。既に44pt以上なら広げない */
+        let horizontalInset = min(0, (bounds.width - Self.minimumHitSize) / 2)
+        let verticalInset = min(0, (bounds.height - Self.minimumHitSize) / 2)
+        return bounds.insetBy(dx: horizontalInset, dy: verticalInset).contains(point)
+    }
+}
+
+// MARK: - SnippetCell
+
+/**
+ * スニペット一覧の行セル
+ *
+ * 【なぜ専用セルにするか】
+ * defaultContentConfigurationは内部ビューの大きさを文字量に合わせて決めるため、
+ * 行のどこを触ってもタッチが拾える保証がない。
+ * ラベルをcontentViewいっぱいに広げ、行全体を確実にタップ・ドラッグ対象にする。
+ *
+ * 【ファイル配置について】
+ * 新しいSwiftファイルを追加するとproject.pbxprojの更新が必要になるため、
+ * KeyboardViewControllerと同じファイルに定義している。
+ */
+final class SnippetCell: UITableViewCell {
+
+    /// 再利用識別子
+    static let reuseIdentifier = "SnippetCell"
+
+    /// 行の高さ（pt）。自動高さ計算を使わず固定値で確定させる
+    static let rowHeight: CGFloat = 44
+
+    /// スニペットのタイトルを表示するラベル
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 15)
+        label.textColor = .label
+        label.lineBreakMode = .byTruncatingTail
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupCell()
     }
 
-    private func showSubscriptionMessage(status: SubscriptionStatus) {
-        // すべてのコンテンツを非表示
-        filterContainerView.isHidden = true
-        tableView.isHidden = true
-        loadingView.isHidden = true
-        detailView.isHidden = true
-        emptyLabel.isHidden = true
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupCell()
+    }
 
-        // ビューの背景を完全に隠すために、alphaも0に設定
-        filterContainerView.alpha = 0
-        tableView.alpha = 0
-        loadingView.alpha = 0
-        detailView.alpha = 0
-        emptyLabel.alpha = 0
+    /**
+     * セルの見た目とレイアウトを設定する
+     *
+     * ラベルはcontentViewの上下左右いっぱいに広げる。
+     * contentViewのタッチを無効にしているのは、行内のビューがタッチを横取りしないようにするため。
+     * 選択とスクロールはテーブルビュー側が処理するので、無効にしても行のタップは動作する。
+     */
+    private func setupCell() {
+        backgroundColor = .clear
+        accessoryType = .disclosureIndicator
+        contentView.isUserInteractionEnabled = false
 
-        NSLog("✅ [KeyboardViewController] All views hidden")
+        contentView.addSubview(titleLabel)
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
+            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor),
+            titleLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+        ])
 
-        // 背景色を白に設定
-        view.backgroundColor = .systemBackground
-        NSLog("✅ [KeyboardViewController] Background set to systemBackground")
+        let selectedBackground = UIView()
+        selectedBackground.backgroundColor = .secondarySystemFill
+        selectedBackgroundView = selectedBackground
+    }
 
-        // コンテナビューを作成（中央配置用）
-        let containerView = UIView()
-        containerView.translatesAutoresizingMaskIntoConstraints = false
-        containerView.backgroundColor = .clear
-
-        // ステータスに応じてメッセージを変更
-        let (iconName, title, message, backgroundColor) = getMessageContent(for: status)
-
-        // バッジ背景を作成
-        let badgeBackgroundView = UIView()
-        badgeBackgroundView.backgroundColor = backgroundColor
-        badgeBackgroundView.layer.cornerRadius = 14
-        badgeBackgroundView.clipsToBounds = true
-        badgeBackgroundView.translatesAutoresizingMaskIntoConstraints = false
-
-        // アイコン（SF Symbols）
-        let iconImageView = UIImageView()
-        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
-        iconImageView.image = UIImage(systemName: iconName, withConfiguration: config)
-        iconImageView.tintColor = .white
-        iconImageView.contentMode = .scaleAspectFit
-        iconImageView.translatesAutoresizingMaskIntoConstraints = false
-
-        // タイトルラベル
-        let titleLabel = UILabel()
+    /**
+     * 表示するタイトルを設定する
+     *
+     * - Parameter title: 変数置換済みのタイトル
+     */
+    func configure(title: String) {
         titleLabel.text = title
-        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
-        titleLabel.textColor = .white
-        titleLabel.textAlignment = .center
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-
-        // メッセージラベル
-        let messageLabel = UILabel()
-        messageLabel.text = message
-        messageLabel.font = .systemFont(ofSize: 14, weight: .regular)
-        messageLabel.textColor = .white
-        messageLabel.textAlignment = .center
-        messageLabel.numberOfLines = 0
-        messageLabel.translatesAutoresizingMaskIntoConstraints = false
-
-        // スタックビューでラベルを縦に配置
-        let stackView = UIStackView(arrangedSubviews: [iconImageView, titleLabel, messageLabel])
-        stackView.axis = .vertical
-        stackView.spacing = 8
-        stackView.alignment = .center
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-
-        // アイコンのサイズを固定
-        NSLayoutConstraint.activate([
-            iconImageView.widthAnchor.constraint(equalToConstant: 32),
-            iconImageView.heightAnchor.constraint(equalToConstant: 32)
-        ])
-
-        // 背景ビューにスタックビューを追加
-        badgeBackgroundView.addSubview(stackView)
-
-        // コンテナに追加
-        containerView.addSubview(badgeBackgroundView)
-
-        // ビューに追加（最前面に）
-        view.addSubview(containerView)
-        view.bringSubviewToFront(containerView)
-        NSLog("✅ [KeyboardViewController] Container brought to front")
-
-        // レイアウト制約を設定
-        NSLayoutConstraint.activate([
-            // コンテナを画面の中央に配置（幅を320ptに固定）
-            containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            containerView.widthAnchor.constraint(equalToConstant: 320),
-
-            // バッジ背景
-            badgeBackgroundView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            badgeBackgroundView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            badgeBackgroundView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            badgeBackgroundView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-
-            // スタックビュー（内側にパディング）
-            stackView.topAnchor.constraint(equalTo: badgeBackgroundView.topAnchor, constant: 16),
-            stackView.leadingAnchor.constraint(equalTo: badgeBackgroundView.leadingAnchor, constant: 24),
-            stackView.trailingAnchor.constraint(equalTo: badgeBackgroundView.trailingAnchor, constant: -24),
-            stackView.bottomAnchor.constraint(equalTo: badgeBackgroundView.bottomAnchor, constant: -16)
-        ])
-
-        NSLog("🔒 [KeyboardViewController] Showing subscription message: \(title)")
     }
-
-    private func getMessageContent(for status: SubscriptionStatus) -> (iconName: String, title: String, message: String, backgroundColor: UIColor) {
-        // 優先言語を取得（最初の優先言語を使用）
-        let preferredLanguage = Locale.preferredLanguages.first ?? ""
-        let isJapanese = preferredLanguage.hasPrefix("ja")
-
-        // デバッグ用：言語情報をログ出力
-        print("[KeyboardViewController] Preferred language: \(preferredLanguage), isJapanese: \(isJapanese)")
-        print("[KeyboardViewController] Locale.current.languageCode: \(Locale.current.languageCode ?? "nil")")
-
-        switch status {
-        case .free:
-            let title = isJapanese ? "Pro版限定機能" : "Pro Feature Only"
-            let message = isJapanese ? "拡張キーボードはPro版限定機能です" : "Keyboard extension is a Pro-only feature"
-            return ("lock.fill", title, message, UIColor.systemOrange)
-
-        case .expired:
-            let title = isJapanese ? "アプリを起動してください" : "Please Open the App"
-            let message = isJapanese
-                ? "拡張キーボードの状態を更新するため\nClipTapアプリを起動してください"
-                : "Please launch ClipTap app\nto update keyboard extension status"
-            return ("info.circle.fill", title, message, UIColor.systemBlue)
-
-        case .noData:
-            let title = isJapanese ? "定型文がありません" : "No Templates"
-            let message = isJapanese
-                ? "アプリからデータを登録してください"
-                : "Please add templates from the app"
-            return ("info.circle.fill", title, message, UIColor.systemBlue)
-
-        default:
-            // .active は通常のキーボードが表示されるため、このメソッドは呼ばれない
-            return ("", "", "", UIColor.clear)
-        }
-    }
-
 }
 
 // MARK: - UIColor Extension

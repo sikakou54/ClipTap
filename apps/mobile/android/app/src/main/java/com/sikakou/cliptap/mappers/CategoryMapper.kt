@@ -52,7 +52,7 @@ class CategoryMapper private constructor(context: Context) : BaseMapper(context)
             }
         }
 
-        Log.d(TAG, "Loaded ${categories.size} categories")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Loaded ${categories.size} categories")
         return categories
     }
 

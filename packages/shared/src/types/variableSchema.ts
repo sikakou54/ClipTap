@@ -15,12 +15,8 @@ import { z } from 'zod';
  * - 'system': システム変数（{{today}}, {{time}}等） - アプリ組み込み、削除不可
  * - 'custom': カスタム変数（{{name}}, {{email}}等） - ユーザー作成、編集・削除可能
  */
-export const VariableTypeSchema = z.enum(['system', 'custom']);
+const VariableTypeSchema = z.enum(['system', 'custom']);
 
-/**
- * 変数の種類
- */
-export type VariableType = z.infer<typeof VariableTypeSchema>;
 
 /* ==================== Variable ==================== */
 

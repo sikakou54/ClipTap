@@ -5,7 +5,6 @@
  * ログイン済み: メールアドレスとログアウトボタン
  * 未ログイン: Apple/Googleサインインボタン（iOSのみApple対応）
  */
-import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { useTranslation } from '@cliptap/shared';
 import { Ionicons } from '@expo/vector-icons';
@@ -40,6 +39,7 @@ export function AccountAuthSection({
   /* テーマ: 色・フォントサイズ・行高を取得 */
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
 
+  /* 認証処理中またはアカウント連携中は、ログアウト・サインインの各ボタンを押せなくする */
   const isDisabled = authLoading || isLinkingAccount;
 
   /* ========================================
@@ -90,7 +90,7 @@ export function AccountAuthSection({
                     },
                   ]}
                 >
-                  {t('settings.account_auth.title', 'アカウント連携')}
+                  {t('settings.account_auth.title')}
                 </Text>
                 {/* 認証状態バッジ（例: "Apple", "Google"） */}
                 <View
@@ -126,7 +126,7 @@ export function AccountAuthSection({
                   },
                 ]}
               >
-                {user.email || 'ログアウトするにはタップ'}
+                {user.email || t('settings.account_auth.tap_to_logout')}
               </Text>
             </View>
           </View>
@@ -149,7 +149,7 @@ export function AccountAuthSection({
                 },
               ]}
             >
-              {t('settings.account_auth.title', 'アカウント連携')}
+              {t('settings.account_auth.title')}
             </Text>
             {/* 説明文 */}
             <Text
@@ -162,10 +162,7 @@ export function AccountAuthSection({
                 },
               ]}
             >
-              {t(
-                'settings.account_auth.description',
-                'Web版や他端末でもProプランを利用できます。'
-              )}
+              {t('settings.account_auth.description')}
             </Text>
           </View>
 
@@ -195,7 +192,7 @@ export function AccountAuthSection({
                     },
                   ]}
                 >
-                  Apple でサインイン
+                  {t('auth.sign_in_apple')}
                 </Text>
               </TouchableOpacity>
 
@@ -228,7 +225,7 @@ export function AccountAuthSection({
                 },
               ]}
             >
-              Google でサインイン
+              {t('auth.sign_in_google')}
             </Text>
           </TouchableOpacity>
         </>
@@ -245,21 +242,21 @@ const styles = StyleSheet.create({
   menuGroup: {
     borderRadius: UI_CONSTANTS.BORDER_RADIUS.LG,
     borderWidth: UI_CONSTANTS.BORDER_WIDTH.THIN,
-    overflow: 'hidden', // 角丸を適用
+    overflow: 'hidden',
   },
   /** メニュー項目1行（ログイン済み時） */
   menuItem: {
-    flexDirection: 'row', // 横並び
-    justifyContent: 'space-between', // 両端揃え
-    alignItems: 'center', // 縦方向中央揃え
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: UI_CONSTANTS.GAP.LG,
   },
   /** 左側エリア（アイコン+テキスト） */
   menuLeft: {
-    flexDirection: 'row', // 横並び
+    flexDirection: 'row',
     alignItems: 'center',
     gap: UI_CONSTANTS.GAP.BASE,
-    flex: 1, // 残りスペースを使用
+    flex: 1,
   },
   /** テキストコンテナ（タイトル+説明） */
   menuTextContainer: {
@@ -276,10 +273,10 @@ const styles = StyleSheet.create({
   },
   /** アカウント状態行（タイトル+バッジ） */
   accountStatusRow: {
-    flexDirection: 'row', // 横並び
+    flexDirection: 'row',
     alignItems: 'center',
     gap: UI_CONSTANTS.GAP.SM,
-    flexWrap: 'wrap', // 折り返し可能
+    flexWrap: 'wrap',
   },
   /** アカウント状態バッジ */
   accountStatusBadge: {
@@ -287,9 +284,8 @@ const styles = StyleSheet.create({
     paddingVertical: UI_CONSTANTS.GAP.XXS,
     borderRadius: UI_CONSTANTS.BORDER_RADIUS.SM,
   },
-  /** バッジテキスト */
+  /** バッジテキスト（認証プロバイダ名。文字色は使用箇所でテーマ色を後から重ねる） */
   accountStatusBadgeText: {
-    color: '#FFFFFF',
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,
   },
   /** 認証セクションヘッダー（未ログイン時） */
@@ -308,9 +304,9 @@ const styles = StyleSheet.create({
   },
   /** 認証ボタン（Apple/Google） */
   authButton: {
-    flexDirection: 'row', // 横並び（アイコン+テキスト）
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center', // 中央揃え
+    justifyContent: 'center',
     padding: UI_CONSTANTS.GAP.LG,
     gap: UI_CONSTANTS.GAP.MD,
   },

@@ -12,13 +12,16 @@
 
 import { Dimensions } from 'react-native';
 
+/**
+ * ウィンドウサイズとデバイスタイプのキャッシュ
+ *
+ * 初回参照時の値を保持し、以降は破棄しない。
+ * レスポンシブ値は起動時のウィンドウ幅で確定する設計のため、回転には追従しない。
+ * themeSystemがレスポンシブ値をテーマ配色のみに依存してメモ化しているので、
+ * キャッシュだけを破棄しても画面には反映されず、両者の値がずれるだけになる。
+ */
 let cachedDimensions: { width: number; height: number } | null = null;
 let cachedDeviceType: 'phone' | 'tablet' | 'desktop' | null = null;
-
-Dimensions.addEventListener('change', () => {
-  cachedDimensions = null;
-  cachedDeviceType = null;
-});
 
 const getDimensions = () => {
   if (!cachedDimensions) {

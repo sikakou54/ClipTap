@@ -58,7 +58,8 @@ export class MobileFileIOAdapter implements FileIOAdapter {
   ): Promise<string> {
     try {
       const file = new File(Paths.cache, filename);
-      await file.write(content, { encoding: options?.encoding === 'base64' ? 'base64' : 'utf8' });
+      /* expo-file-systemのwrite/deleteは同期API。copyはSDK 56以降Promiseを返す */
+      file.write(content, { encoding: options?.encoding === 'base64' ? 'base64' : 'utf8' });
       return file.uri;
     } catch (error) {
       Logger.error('[MobileFileIOAdapter] Write failed:', error);
@@ -81,7 +82,7 @@ export class MobileFileIOAdapter implements FileIOAdapter {
     try {
       const file = new File(this.normalizeUri(uri));
       if (file.exists) {
-        await file.delete();
+        file.delete();
       }
     } catch (error) {
       Logger.error('[MobileFileIOAdapter] Delete failed:', error);

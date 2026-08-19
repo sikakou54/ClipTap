@@ -10,11 +10,14 @@
  * - 変数のリアルタイム展開
  * - プレビューコピーボタン
  */
-import { useEffect, useMemo, useState } from 'react';
-import { useTranslation, VariableService, type Profile, type ProfileVariable, type Variable } from '@cliptap/shared';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Logger, useTranslation, VariableService, getClipboardAdapter, joinSnippetTextForClipboard, FREE_VARIABLES_LIMIT, useSharedSubscription, useProfiles, type Profile, type ProfileVariable, type Variable } from '@cliptap/shared';
 import { PreviewHeader } from './PreviewHeader';
 import { ProfileTabs } from './ProfileTabs';
 import { PreviewContent } from './PreviewContent';
+
+/** コピー完了表示を出しておく時間（ミリ秒） */
+const COPY_SUCCESS_DURATION_MS = 2000;
 
 interface SnippetPreviewProps {
   title: string;
@@ -36,6 +39,8 @@ export function SnippetPreview({
   profileVariables,
 }: SnippetPreviewProps) {
   const { language } = useTranslation();
+  const { isSubscribed } = useSharedSubscription();
+  const { defaultProfile } = useProfiles();
   const validProfiles = useMemo(() => profiles.filter((profile) => profile.valid), [profiles]);
 
   const filteredProfiles = useMemo(() => {
@@ -45,42 +50,37 @@ export function SnippetPreview({
     return validProfiles.filter((profile) => selectedProfileIds.includes(profile.id));
   }, [selectedProfileIds, validProfiles]);
 
-  const defaultProfileId = useMemo(() => {
-    const profile = validProfiles.find((p) => p.isDefault);
-    return profile?.id || null;
-  }, [validProfiles]);
+  /**
+   * 変数のフォールバック元になる標準プロファイルID
+   *
+   * @remarks
+   * 候補タブに並べるのは有効なプロファイルだけだが（機能仕様書 §8.10）、
+   * 値が無い変数を補うフォールバック元の標準プロファイルは有効かどうかを問わない（同 §8.6）。
+   * そのため候補リストからは探さず、共有Providerの標準プロファイルをそのまま使う。
+   * モバイルの VariablePreview も同じ取得元のため、両者の展開結果が一致する。
+   */
+  const defaultProfileId = defaultProfile?.id || null;
 
   const [focusedProfileId, setFocusedProfileId] = useState<string | null>(null);
 
   /**
-   * プロファイル別の変数マップを構築
-   */
-  const buildProfileVariablesMap = (profileId: string | null): Record<string, string> => {
-    if (!profileId) return {};
-    const map: Record<string, string> = {};
-    for (const pv of profileVariables) {
-      if (pv.profileId === profileId) {
-        const variable = variables.find((v) => v.id === pv.variableId);
-        if (variable) {
-          map[variable.name] = pv.value;
-        }
-      }
-    }
-    return map;
-  };
-
-  /**
    * 変数リゾルバーを作成（変数展開処理で使用）
+   *
+   * プレビューの展開結果をコピーと一致させるため、実際のプラン状態と同じ上限で解決する。
+   * 標準プロファイル分のマップも渡すのは、対象プロファイルに値が無い変数を標準側で補うため。
    */
-  const createResolver = (profileId: string | null) => {
-    const profileVariablesMap = buildProfileVariablesMap(profileId);
-    const defaultProfileVariablesMap = buildProfileVariablesMap(defaultProfileId);
-    return VariableService.createCustomVariableResolver({
-      isSubscribed: true,
-      profileVariablesMap,
-      defaultProfileVariablesMap,
-    });
-  };
+  const createResolver = useCallback((profileId: string | null) => {
+    const profileVariablesMap = VariableService.buildProfileVariablesMapFromArrays(profileId, variables, profileVariables);
+    const defaultProfileVariablesMap = VariableService.buildProfileVariablesMapFromArrays(defaultProfileId, variables, profileVariables);
+    return VariableService.createCustomVariableResolver(
+      {
+        isSubscribed,
+        profileVariablesMap,
+        defaultProfileVariablesMap,
+      },
+      { freeTierLimit: FREE_VARIABLES_LIMIT }
+    );
+  }, [variables, profileVariables, defaultProfileId, isSubscribed]);
 
   useEffect(() => {
     if (filteredProfiles.length === 0) {
@@ -112,7 +112,6 @@ export function SnippetPreview({
         const result = await VariableService.resolvePreviewText(title, content, {
           locale,
           customResolver,
-          preserveUnknown: true,
         });
 
         if (!cancelled) {
@@ -120,7 +119,7 @@ export function SnippetPreview({
           setResolvedContent(result.content);
         }
       } catch (error) {
-        console.error('Failed to generate preview:', error);
+        Logger.error('Failed to generate preview:', error);
         if (!cancelled) {
           setResolvedTitle(title);
           setResolvedContent(content);
@@ -135,36 +134,57 @@ export function SnippetPreview({
     generatePreview();
 
     return () => { cancelled = true; };
-  }, [title, content, variables, profileVariables, focusedProfileId, defaultProfileId]);
+  }, [title, content, focusedProfileId, createResolver, language]);
 
   const [copied, setCopied] = useState(false);
+
+  /**
+   * クリップボードへ渡す展開済みテキスト
+   *
+   * @remarks
+   * 連結規則は共有の joinSnippetTextForClipboard を唯一の正本とする。
+   * 一覧のコピーも同じ関数を通るため、同じ定型文ならプレビューからコピーしても
+   * 一覧からコピーしても同じ文字列になる。
+   */
+  const copyText = useMemo(
+    () => joinSnippetTextForClipboard({ title: resolvedTitle, content: resolvedContent, copyWithTitle }),
+    [resolvedTitle, resolvedContent, copyWithTitle]
+  );
 
   /**
    * プレビューをクリップボードにコピー
    */
   const handleCopy = async () => {
-    const lines = [];
-    if (copyWithTitle && resolvedTitle) {
-      lines.push(resolvedTitle);
-    }
-    if (resolvedContent) {
-      lines.push(resolvedContent);
-    }
-
-    if (lines.length === 0) {
+    /* コピー対象が無いときはクリップボードAPIを呼ばない */
+    if (!copyText) {
       return;
     }
 
     try {
-      await navigator.clipboard.writeText(lines.join('\n'));
+      /* getClipboardAdapter() は未登録時に throw するため、この try の内側で呼ぶ */
+      await getClipboardAdapter().copy(copyText);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy preview:', error);
+      Logger.error('Failed to copy preview:', error);
     }
   };
 
-  const canCopy = !!(resolvedContent || (copyWithTitle && resolvedTitle));
+  /**
+   * コピー完了表示の自動リセット
+   *
+   * @remarks
+   * クリーンアップでタイマーを解除するのは、アンマウント後や次のコピーでフラグが立ち直した後に
+   * 前回のタイマーが発火して表示を戻してしまわないようにするため。
+   */
+  useEffect(() => {
+    if (!copied) return;
+
+    const timeoutId = setTimeout(() => setCopied(false), COPY_SUCCESS_DURATION_MS);
+
+    return () => clearTimeout(timeoutId);
+  }, [copied]);
+
+  const canCopy = !!copyText;
 
   /* スニペットプレビュー（変数展開後の表示内容、プロファイル切り替え対応） */
   return (
@@ -194,4 +214,3 @@ export function SnippetPreview({
     </div>
   );
 }
-

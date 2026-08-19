@@ -2,7 +2,8 @@
  * スニペットアクションボタンコンポーネント
  *
  * @description
- * スニペットカードのコピー、編集、削除ボタン
+ * スニペットカードの削除、編集、コピーボタン。
+ * 並び順はモバイル版のカード右下と揃えている（削除→編集→コピー）。
  */
 import { CopyButton } from './CopyButton';
 import { EditButton } from './EditButton';
@@ -16,13 +17,12 @@ interface SnippetActionButtonsProps {
 }
 
 export function SnippetActionButtons({ isCopied, onCopy, onEdit, onDelete }: SnippetActionButtonsProps) {
-  /* スニペットアクションボタン群（コピー・編集・削除） */
+  /* スニペットアクションボタン群（削除・編集・コピー） */
   return (
-    <div className="flex items-center gap-1">
-      <CopyButton isCopied={isCopied} onClick={onCopy} />
-      <EditButton onClick={onEdit} />
+    <div className="flex items-center gap-1.5">
       <DeleteButton onClick={onDelete} />
+      <EditButton onClick={onEdit} />
+      <CopyButton isCopied={isCopied} onClick={onCopy} />
     </div>
   );
 }
-

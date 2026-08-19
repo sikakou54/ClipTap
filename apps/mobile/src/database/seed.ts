@@ -6,7 +6,6 @@
  * 開発環境でのテスト・デモ用データを自動生成します。
  *
  * 主な機能:
- * - デフォルトプロファイルの自動作成（全環境）
  * - テストデータの生成（開発モード限定）
  * - 冪等性の保証（既存データがある場合はスキップ）
  *
@@ -14,22 +13,31 @@
  * - アプリ初回起動時
  * - データベースリセット後
  *
- * データ構成:
- * - カテゴリ: 4種類（メール、営業、サポート、プライベート）
- * - スニペット: 11種類（ビジネステンプレート）
- * - プロファイル: 4種類（取引先別）
- * - カスタム変数: 10種類（取引先情報、署名など）
+ * データ構成（LPの画面キャプチャに合わせた構成）:
+ * - カテゴリ: 3種類（仕事、SNS、プロンプト）
+ * - スニペット: 5種類（仕事2種類、SNS1種類、プロンプト2種類）
+ * - プロファイル: 2種類（取引先別。デフォルトの「Main」と合わせて無料プラン上限の3件）
+ * - カスタム変数: 3種類（取引先担当者名、自社名、送信者名）
+ *
+ * 定型文はLPの画面キャプチャに写っている文面を再現している。
+ * ただしtpl_003はキャプチャでは見出しに日付が入っているが、本文では日付を使わない。
+ * tpl_005はキャプチャに写っていないため、プロンプトの例として補ったもの。
+ *
+ * tpl_001とtpl_002はタイトルにシステム変数を含む。
+ * タイトルは本文と同様に変数展開の対象（一覧表示・コピー時の双方）。
+ * - tpl_001: copyWithTitleがtrueのため、タイトルが本文の1行目として一緒にコピーされる
+ * - tpl_002: 件名として使う（タイトルのみコピーで件名欄へ貼る）想定
  *
  * @see dummy.json - テストデータの定義ファイル
- * @see DatabaseManager - データベース初期化
+ * @see src/database/database.ts の setupDatabase / reset - データベース初期化
  */
 
 import {
-  SnippetMapper,            // スニペット（定型文）データ操作
-  CategoryMapper,           // カテゴリデータ操作
-  VariableMapper,           // カスタム変数データ操作
-  ProfileMapper,            // プロファイル（環境）データ操作
-  ProfileVariableMapper,    // プロファイル別変数値データ操作
+  SnippetMapper,            /* スニペット（定型文）データ操作 */
+  CategoryMapper,           /* カテゴリデータ操作 */
+  VariableMapper,           /* カスタム変数データ操作 */
+  ProfileMapper,            /* プロファイル（環境）データ操作 */
+  ProfileVariableMapper,    /* プロファイル別変数値データ操作 */
 } from '@cliptap/shared';
 import { Logger } from '@cliptap/shared';
 
@@ -119,33 +127,28 @@ async function hasTestData(): Promise<boolean> {
  * カテゴリ名→IDのマッピングを返す。
  * スニペット作成時にカテゴリを紐付けるために使用。
  *
+ * 1件の失敗で残りを諦めないため、ループ内で個別に catch して継続する。
+ *
  * @returns カテゴリ名とIDのMap
  */
 async function seedCategories(): Promise<Map<string, string>> {
-  /* カテゴリ名をキー、カテゴリIDを値とするMapを初期化 */
   /* スニペット作成時にカテゴリ名からIDを検索するために使用 */
   const categoryMap = new Map<string, string>();
 
-  /* TEST_CATEGORIESの各カテゴリを順番に処理 */
   for (const categoryData of TEST_CATEGORIES) {
     try {
-      /* CategoryMapperを使ってカテゴリを作成 */
-      /* 名前と色を設定（IDとタイムスタンプは自動生成される） */
+      /* IDとタイムスタンプは自動生成される */
       const category = CategoryMapper.create({
-        name: categoryData.name,      // カテゴリ名（例: "メール"）
-        color: categoryData.color,    // カテゴリの色（例: "#FF5733"）
+        name: categoryData.name,      /* カテゴリ名（例: "AIチャット"） */
+        color: categoryData.color,    /* カテゴリの色（例: "#FF5733"） */
       });
-      /* 作成したカテゴリの名前とIDをMapに追加 */
       categoryMap.set(categoryData.name, category.id);
-      /* 作成完了ログを出力 */
       Logger.info(`[Seed] Created category: ${categoryData.name}`);
     } catch (error) {
-      /* カテゴリ作成に失敗した場合はエラーログを出力（処理は継続） */
       Logger.error(`[Seed] Failed to create category ${categoryData.name}:`, error);
     }
   }
 
-  /* カテゴリ名とIDのマッピングを返す */
   return categoryMap;
 }
 
@@ -156,29 +159,26 @@ async function seedCategories(): Promise<Map<string, string>> {
  * カテゴリ名からIDを解決して紐付け。
  * profileIdsを空配列にすることで全プロファイルに表示。
  *
+ * 1件の失敗で残りを諦めないため、ループ内で個別に catch して継続する。
+ *
  * @param categoryMap - カテゴリ名とIDのマッピング
  */
 async function seedSnippets(categoryMap: Map<string, string>): Promise<void> {
-  /* TEST_SNIPPETSの各スニペットを順番に処理 */
   for (const snippetData of TEST_SNIPPETS) {
     try {
-      /* categoryMapからカテゴリ名に対応するIDを検索 */
       /* カテゴリが存在しない場合はundefinedになる */
       const categoryId = categoryMap.get(snippetData.categoryName);
 
-      /* SnippetMapperを使ってスニペットを作成 */
       SnippetMapper.create({
-        title: snippetData.title,                     // スニペットのタイトル
-        content: snippetData.content,                 // スニペットの本文内容
-        categoryId: categoryId || undefined,          // カテゴリID（なくてもOK）
-        copyWithTitle: snippetData.copyWithTitle,     // タイトルも一緒にコピーするか
-        profileIds: [],                               // 空配列 = 全プロファイルで表示
+        title: snippetData.title,                     /* スニペットのタイトル */
+        content: snippetData.content,                 /* スニペットの本文内容 */
+        categoryId: categoryId || undefined,          /* カテゴリID（なくてもOK） */
+        copyWithTitle: snippetData.copyWithTitle,     /* タイトルも一緒にコピーするか */
+        profileIds: [],                               /* 空配列 = 全プロファイルで表示 */
       });
 
-      /* 作成完了ログを出力 */
       Logger.info(`[Seed] Created snippet: ${snippetData.title}`);
     } catch (error) {
-      /* スニペット作成に失敗した場合はエラーログを出力（処理は継続） */
       Logger.error(`[Seed] Failed to create snippet ${snippetData.title}:`, error);
     }
   }
@@ -191,32 +191,27 @@ async function seedSnippets(categoryMap: Map<string, string>): Promise<void> {
  * プロファイル名→IDのマッピングを返す。
  * カスタム変数の値設定時にプロファイルを紐付けるために使用。
  *
+ * 1件の失敗で残りを諦めないため、ループ内で個別に catch して継続する。
+ *
  * @returns プロファイル名とIDのMap
  */
 async function seedProfiles(): Promise<Map<string, string>> {
-  /* プロファイル名をキー、プロファイルIDを値とするMapを初期化 */
   /* カスタム変数の値設定時にプロファイル名からIDを検索するために使用 */
   const profileMap = new Map<string, string>();
 
-  /* TEST_PROFILESの各プロファイルを順番に処理 */
   for (const profileData of TEST_PROFILES) {
     try {
-      /* ProfileMapperを使ってプロファイルを作成 */
       /* IDとタイムスタンプは自動生成される */
       const profile = ProfileMapper.create({
-        name: profileData.name,    // プロファイル名（例: "取引先A"）
+        name: profileData.name,    /* プロファイル名（例: "A社向け"） */
       });
-      /* 作成したプロファイルの名前とIDをMapに追加 */
       profileMap.set(profileData.name, profile.id);
-      /* 作成完了ログを出力（IDも表示） */
       Logger.info(`[Seed] Created profile: ${profileData.name} (${profile.id})`);
     } catch (error) {
-      /* プロファイル作成に失敗した場合はエラーログを出力（処理は継続） */
       Logger.error(`[Seed] Failed to create profile ${profileData.name}:`, error);
     }
   }
 
-  /* プロファイル名とIDのマッピングを返す */
   return profileMap;
 }
 
@@ -236,74 +231,65 @@ async function seedProfiles(): Promise<Map<string, string>> {
  * 2. デフォルトプロファイルに標準値を設定
  * 3. 各プロファイルに固有の値を設定
  *
+ * 1件の失敗で残りを諦めないため、ループ内で個別に catch して継続する。
+ * 値の設定（upsert）も変数ごとに catch するので、値の設定に失敗しても
+ * 変数メタデータの作成自体は残る。
+ *
  * @param {Map<string, string>} profileMap - プロファイル名とIDのマッピング
  */
 async function seedVariables(profileMap: Map<string, string>): Promise<void> {
-  /* デフォルトプロファイル（Main）を取得 */
-  /* 標準値はデフォルトプロファイルに格納される */
+  /* 標準値はデフォルトプロファイル（Main）に格納するため、先に取得しておく */
   const defaultProfile = ProfileMapper.getDefault();
   if (!defaultProfile) {
-    /* デフォルトプロファイルが存在しない場合はエラーログを出力して終了 */
-    Logger.error('[Seed] Default profile not found, cannot runSeed variables');
+    Logger.error('[Seed] Default profile not found, cannot seed variables');
     return;
   }
 
-  /* TEST_VARIABLESの各カスタム変数を順番に処理 */
   for (const variableData of TEST_VARIABLES) {
     try {
-      /* VariableMapperを使って変数メタデータを作成 */
       /* 変数の値はprofile_variablesテーブルに別途格納される */
       const variable = VariableMapper.create({
-        name: variableData.name,      // 変数名（例: "company_name"）
-        label: variableData.label,    // 表示ラベル（例: "会社名"）
-        icon: variableData.icon,      // アイコン名（例: "building"）
-        type: 'custom',               // 変数タイプ（カスタム変数として作成）
+        name: variableData.name,      /* 変数名（例: "company"） */
+        label: variableData.label,    /* 表示ラベル（例: "会社名"） */
+        icon: variableData.icon,      /* アイコン名（例: "business-outline"） */
+        type: 'custom',               /* 変数タイプ（カスタム変数として作成） */
       });
 
-      /* 変数作成完了ログを出力 */
       Logger.info(`[Seed] Created variable: ${variableData.name}`);
 
-      /* デフォルトプロファイルに標準値を設定 */
       /* profile_variablesテーブルに（デフォルトプロファイルID, 変数ID, 標準値）を挿入 */
       try {
         ProfileVariableMapper.upsert({
-          profileId: defaultProfile.id,           // デフォルトプロファイルのID
-          variableId: variable.id,                // 作成した変数のID
-          value: variableData.standardValue,      // 標準値（全プロファイル共通のデフォルト値）
+          profileId: defaultProfile.id,           /* デフォルトプロファイルのID */
+          variableId: variable.id,                /* 作成した変数のID */
+          value: variableData.standardValue,      /* 標準値（全プロファイル共通のデフォルト値） */
         });
-        /* 標準値設定完了ログを出力（値は20文字まで表示） */
+        /* 値はログが長くなりすぎないよう20文字までに切り詰めて出力する */
         Logger.info(`[Seed] Set standard value for ${variableData.name} = ${variableData.standardValue.substring(0, 20)}...`);
       } catch (error) {
-        /* 標準値設定に失敗した場合はエラーログを出力（処理は継続） */
         Logger.error(`[Seed] Failed to set standard value for ${variableData.name}:`, error);
       }
 
-      /* 各プロファイル固有の値を設定 */
-      /* profileValuesが定義されている場合のみ処理 */
+      /* profileValuesが定義されている場合のみ、プロファイル固有の値を設定する */
       if (variableData.profileValues) {
-        /* Object.entries()でプロファイル名と値のペアを取得 */
         for (const [profileName, value] of Object.entries(variableData.profileValues)) {
-          /* profileMapからプロファイル名に対応するIDを取得 */
           const profileId = profileMap.get(profileName);
+          /* プロファイル作成に失敗していると profileMap に無いため、その分の値設定は行わない */
           if (profileId) {
             try {
-              /* profile_variablesテーブルに（プロファイルID, 変数ID, 値）を挿入/更新 */
               ProfileVariableMapper.upsert({
-                profileId,              // プロファイルのID
-                variableId: variable.id, // 変数のID
-                value,                  // プロファイル固有の値
+                profileId,              /* プロファイルのID */
+                variableId: variable.id, /* 変数のID */
+                value,                  /* プロファイル固有の値 */
               });
-              /* プロファイル別値設定完了ログを出力（値は20文字まで表示） */
               Logger.info(`[Seed] Set variable value for ${profileName}: ${variableData.name} = ${value.substring(0, 20)}...`);
             } catch (error) {
-              /* プロファイル別値設定に失敗した場合はエラーログを出力（処理は継続） */
               Logger.error(`[Seed] Failed to set variable value for ${profileName}:`, error);
             }
           }
         }
       }
     } catch (error) {
-      /* 変数作成に失敗した場合はエラーログを出力（処理は継続） */
       Logger.error(`[Seed] Failed to create variable ${variableData.name}:`, error);
     }
   }
@@ -312,47 +298,44 @@ async function seedVariables(profileMap: Map<string, string>): Promise<void> {
 /**
  * データをシード
  *
- * アプリ初回起動時にテストデータとデフォルトプロファイルを作成します。
+ * アプリ初回起動時にテストデータを作成します。
  *
  * 実行条件:
- * - デフォルトプロファイル: 常に実行（本番環境含む）
- * - テストデータ: 開発モード（__DEV__）のみ実行
+ * - __DEV__ のときだけテストデータを投入する。本番ビルドでは何もしない。
  *
  * 冪等性:
  * - 既存データがある場合は自動的にスキップ
  * - 複数回実行しても安全
  *
  * 生成されるデータ:
- * 1. デフォルトプロファイル「Main」（全環境）
- * 2. カテゴリ 4種類（開発のみ）
- * 3. スニペット 11種類（開発のみ）
- * 4. プロファイル 4種類（開発のみ）
- * 5. カスタム変数 10種類 + 各プロファイル別の値（開発のみ）
+ * 1. カテゴリ 3種類
+ * 2. スニペット 5種類（仕事2種類、SNS1種類、プロンプト2種類）
+ * 3. プロファイル 2種類（デフォルトの「Main」と合わせて計3件）
+ * 4. カスタム変数 3種類 + 各プロファイル別の値
  *
- * @throws {Error} シード処理に失敗した場合（エラーログに記録）
+ * デフォルトプロファイル「Main」の作成はこの関数の責務ではなく、
+ * src/database/database.ts の setupDatabase / reset が担う。
+ *
+ * 失敗しても例外を投げず、エラーログのみ残す。
  */
 export async function runSeed(): Promise<void> {
   try {
 
-    /* シード処理開始ログを出力 */
     Logger.info('[Seed] Checking for existing test data...');
 
-    /* 開発モード（__DEV__）でない場合は本番環境なので何もせず終了 */
-    /* テストデータは開発環境でのみ生成する */
+    /* テストデータは開発環境でのみ生成する（本番ビルドではここで打ち切る） */
     if (!__DEV__) {
       return;
     }
 
-    /* 既存データの存在をチェック */
     const hasData = await hasTestData();
     if (hasData) {
       /* データが既に存在する場合はシードをスキップ（冪等性の保証） */
-      Logger.info('[Seed] Test data already exists, skipping runSeed');
+      Logger.info('[Seed] Test data already exists, skipping seed');
       return;
     }
 
-    /* シード処理開始ログを出力 */
-    Logger.info('[Seed] Starting to runSeed test data...');
+    Logger.info('[Seed] Starting to seed test data...');
 
     /* 1. カテゴリを作成し、カテゴリ名→IDのマッピングを取得 */
     const categoryMap = await seedCategories();
@@ -366,10 +349,9 @@ export async function runSeed(): Promise<void> {
     /* 4. カスタム変数を作成し、各プロファイル別の値も設定 */
     await seedVariables(profileMap);
 
-    /* シード処理完了ログを出力 */
     Logger.info('[Seed] Test data seeding completed successfully!');
   } catch (error) {
-    /* シード処理でエラーが発生した場合はエラーログを出力 */
-    Logger.error('[Seed] Failed to runSeed test data:', error);
+    /* 呼び出し元（アプリ起動処理）を止めないため、ここで握り潰してログのみ残す */
+    Logger.error('[Seed] Failed to seed test data:', error);
   }
 }

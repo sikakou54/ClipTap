@@ -6,9 +6,9 @@ import {
   signOut as firebaseSignOut,
   GoogleAuthProvider,
   AppleAuthProvider,
-  FirebaseAuthTypes,
   onAuthStateChanged,
 } from '@react-native-firebase/auth';
+import type { User as FirebaseUser } from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
@@ -48,7 +48,7 @@ function generateSecureNonce(length = 32): string {
   return result;
 }
 
-function mapUser(user: FirebaseAuthTypes.User | null): SharedUser | null {
+function mapUser(user: FirebaseUser | null): SharedUser | null {
   if (!user) return null;
   return {
     uid: user.uid,
@@ -78,7 +78,9 @@ export class MobileAuthAdapter implements AuthAdapter {
       /* 既存セッションをクリア（多重ログイン防止） */
       try {
         await GoogleSignin.signOut();
-      } catch {}
+      } catch {
+        /* 未サインイン時はエラーになるが、クリアが目的なので無視してよい */
+      }
 
       const response = await GoogleSignin.signIn();
       if (response.type !== 'success') {
@@ -152,7 +154,9 @@ export class MobileAuthAdapter implements AuthAdapter {
       try {
         ensureGoogleConfigured();
         await GoogleSignin.signOut();
-      } catch {}
+      } catch {
+        /* Firebaseのサインアウトは完了済み。Google側の失敗で全体を失敗にしない */
+      }
     } catch (error) {
       Logger.error('[MobileAuthAdapter] Sign-out failed:', error);
       throw error;

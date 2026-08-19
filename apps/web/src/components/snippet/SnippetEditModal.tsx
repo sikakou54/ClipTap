@@ -17,6 +17,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import type { Variable, Category, Profile, ProfileVariable } from '@cliptap/shared';
 import { useUnsavedChangesWarning } from '@hooks/useUnsavedChangesWarning';
 import { useBodyScrollLock } from '@hooks/useBodyScrollLock';
+import { useEscapeClose } from '@hooks/useEscapeClose';
 import type { SnippetFormValues } from '@hooks/screens/useSnippetModal';
 import { SnippetEditModalHeader } from './SnippetEditModalHeader';
 import { SnippetEditModalFooter } from './SnippetEditModalFooter';
@@ -88,6 +89,8 @@ export function SnippetEditModal({
   const handleClose = () => confirmClose(onClose);
 
   useBodyScrollLock(isOpen);
+  /* 未保存確認を挟むため handleClose を渡す */
+  useEscapeClose(isOpen, handleClose);
 
   useEffect(() => {
     if (isOpen) {
@@ -218,7 +221,10 @@ export function SnippetEditModal({
             }}
             onFieldBlur={() => {
               /* フィールドブラー時: 200ms遅延後にアクティブフィールドをクリア
-                  （変数挿入ボタンクリック時のフォーカス移動を考慮） */
+                  （変数挿入ボタンクリック時のフォーカス移動を考慮）。
+                  遅延の責務はここに一本化しており、SnippetEditForm 側では遅延させない。
+                  なお activeField は null か lastFocusedField と同値しか取らないため、
+                  クリアの時刻が挿入先（targetField）の判定結果を変えることはない。 */
               setTimeout(() => {
                 setActiveField(null);
               }, 200);

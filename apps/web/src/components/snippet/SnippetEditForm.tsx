@@ -79,14 +79,10 @@ export const SnippetEditForm = forwardRef<SnippetEditFormRef, SnippetEditFormPro
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
           onFocus={() => onFieldFocus('title')}
-          onBlur={() => {
-            setTimeout(() => {
-              onFieldBlur();
-            }, 200);
-          }}
+          onBlur={() => onFieldBlur()}
           placeholder={t('snippet.title_input_placeholder')}
           maxLength={INPUT_LIMITS.SNIPPET_TITLE_MAX}
-          className="w-full px-4 py-3 border border-gray-300 dark:border-[#2A2A2A] rounded-xl focus:outline-none bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder-gray-400 dark:text-[#707070]"
+          className="w-full px-4 py-3 border border-gray-300 dark:border-[#2A2A2A] rounded-xl focus:outline-none bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#707070]"
         />
       </div>
 
@@ -102,14 +98,10 @@ export const SnippetEditForm = forwardRef<SnippetEditFormRef, SnippetEditFormPro
           value={content}
           onChange={(e) => onContentChange(e.target.value)}
           onFocus={() => onFieldFocus('content')}
-          onBlur={() => {
-            setTimeout(() => {
-              onFieldBlur();
-            }, 200);
-          }}
+          onBlur={() => onFieldBlur()}
           placeholder={t('snippet.content_placeholder')}
           rows={12}
-          className="w-full px-4 py-3 border border-gray-300 dark:border-[#2A2A2A] rounded-xl focus:outline-none resize-none bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder-gray-400 dark:text-[#707070]"
+          className="w-full px-4 py-3 border border-gray-300 dark:border-[#2A2A2A] rounded-xl focus:outline-none resize-none bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#707070]"
         />
       </div>
 

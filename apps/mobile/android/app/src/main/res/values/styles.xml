@@ -1,15 +1,18 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
   <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
-    <item name="android:enforceNavigationBarContrast" tools:targetApi="29">true</item>
     <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
     <item name="colorPrimary">@color/colorPrimary</item>
-    <item name="android:statusBarColor">#1F2937</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
   </style>
   <style name="KeyboardTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
     <item name="colorPrimary">@color/colorPrimary</item>
     <item name="colorPrimaryDark">#1F2937</item>
     <item name="colorAccent">@color/colorPrimary</item>
     <item name="popupMenuStyle">@style/NoElevationPopupMenu</item>
+  </style>
+  <style name="ClipTapKeyboardWindowTheme" parent="@android:style/Theme.DeviceDefault.InputMethod">
+    <item name="android:windowBackground">@color/keyboardWindowBackground</item>
   </style>
   <style name="NoElevationPopupMenu" parent="Widget.AppCompat.PopupMenu">
     <item name="android:popupElevation">0dp</item>

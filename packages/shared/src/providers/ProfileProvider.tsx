@@ -11,6 +11,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { ProfileService } from '../services/ProfileService';
 import { SubscriptionService } from '../services/SubscriptionService';
+import { getMainDbAdapter } from '../adapters/DbAdapter';
 import { Logger } from '../utils/logger';
 import { useDatabase } from './DatabaseProvider';
 import type { Profile, ProfileVariable, CreateProfileInput, UpdateProfileInput } from '../schema';
@@ -23,8 +24,10 @@ import type { Profile, ProfileVariable, CreateProfileInput, UpdateProfileInput }
  * ProfileContextの型定義
  */
 export interface ProfileContextValue {
-  /** プロファイル一覧（無効なものも含む） */
+  /** プロファイル一覧（無効なものも含む。管理画面のように無効を明示する画面で使用する） */
   profiles: Profile[];
+  /** 有効なプロファイル一覧（切替・選択・展開など通常利用の選択肢はこちらを使用する） */
+  validProfiles: Profile[];
   /** プロファイル変数一覧 */
   profileVariables: ProfileVariable[];
   /** アクティブなプロファイル */
@@ -45,11 +48,8 @@ export interface ProfileContextValue {
   deleteProfile: (id: string) => void;
   /** アクティブプロファイルを設定 */
   setActiveProfile: (id: string) => void;
-  /** 変数値を一括設定 */
-  setVariableValuesForVariable: (
-    variableId: string,
-    values: { profileId: string; variableId: string; value: string }[]
-  ) => void;
+  /** 標準プロファイルを設定 */
+  setDefaultProfile: (id: string) => void;
 }
 
 /**
@@ -97,28 +97,35 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       setLoading(true);
       Logger.info('[ProfileProvider] loadProfiles called');
 
+      /* アクティブ未設定のときは標準プロファイルを昇格させる。DBのisActiveも書き換えるため、次回以降の読み込みでも同じプロファイルが選ばれる */
+      /* 昇格はstateへ反映する前に済ませる。読み込んだ後に書き換えると、profiles配列だけが
+         書き換え前のスナップショットのまま残り、全要素のisActiveがfalseの状態でactiveProfileと
+         食い違う。この食い違いを踏むと環境を指定した定型文が一覧から消えるため、
+         必ず「DB書込 → 読込 → state反映」の順にする */
+      if (!ProfileService.getActive()) {
+        const defaultProfileToActivate = ProfileService.getDefault();
+        if (defaultProfileToActivate) {
+          ProfileService.setActive(defaultProfileToActivate.id);
+          Logger.info('[ProfileProvider] Auto-activated default profile:', defaultProfileToActivate.id);
+        }
+      }
+
       const allProfiles = ProfileService.getAllIncludingInvalid();
       Logger.info('[ProfileProvider] Loaded profiles count:', allProfiles.length);
-      setProfiles(allProfiles);
 
       const allVars = ProfileService.getAllProfileVariables();
       Logger.info('[ProfileProvider] Loaded profile variables count:', allVars.length);
-      setProfileVariables(allVars);
 
       const defaultProf = ProfileService.getDefault();
       Logger.info('[ProfileProvider] Default profile:', defaultProf?.name ?? 'none');
-      setDefaultProfileState(defaultProf);
 
-      let active = ProfileService.getActive();
+      const active = ProfileService.getActive();
       Logger.info('[ProfileProvider] Active profile:', active?.name ?? 'none');
 
-      /* アクティブなプロファイルがない場合、デフォルトプロファイルを自動的にアクティブに設定 */
-      if (!active && defaultProf) {
-        ProfileService.setActive(defaultProf.id);
-        active = defaultProf;
-        Logger.info('[ProfileProvider] Auto-activated default profile:', defaultProf.id);
-      }
-
+      /* 同一スナップショットとして一括で反映する */
+      setProfiles(allProfiles);
+      setProfileVariables(allVars);
+      setDefaultProfileState(defaultProf);
       setActiveProfileState(active);
       setError(null);
     } catch (err) {
@@ -141,6 +148,8 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
 
   /**
    * プロファイル作成
+   *
+   * 作成後に一覧を再読込し、Contextを参照する全画面へ即時反映する。
    */
   const createProfile = useCallback(
     (input: CreateProfileInput): Profile => {
@@ -153,6 +162,8 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
 
   /**
    * プロファイル更新
+   *
+   * 更新後に一覧を再読込し、Contextを参照する全画面へ即時反映する。
    */
   const updateProfile = useCallback(
     (id: string, data: UpdateProfileInput): Profile => {
@@ -165,12 +176,18 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
 
   /**
    * プロファイル削除
+   *
+   * @remarks
+   * アクティブの振替、削除、有効フラグ再計算を1つのトランザクションにまとめる。
+   * 削除で件数が減るとFreeの上限に空きが出るため、無効→有効への昇格を即時反映する。
+   * ここを唯一の削除経路とし、モバイルとWebで挙動を揃える。
    */
   const deleteProfile = useCallback(
     (id: string): void => {
-      ProfileService.delete(id);
-      /* 削除後にvalidフラグを即時更新（無効→有効への昇格に対応） */
-      SubscriptionService.updateValidFlags();
+      getMainDbAdapter().transaction(() => {
+        ProfileService.deleteWithAutoSwitch(id);
+        SubscriptionService.updateValidFlags();
+      });
       loadProfiles();
     },
     [loadProfiles]
@@ -178,6 +195,8 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
 
   /**
    * アクティブプロファイルを設定
+   *
+   * 設定後に一覧を再読込し、activeProfileと一覧を同じスナップショットへ揃える。
    */
   const setActiveProfile = useCallback(
     (id: string): void => {
@@ -188,15 +207,34 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
   );
 
   /**
-   * 変数の全プロファイル値を一括設定
+   * 標準プロファイルを設定
+   *
+   * @remarks
+   * 標準の切替と有効フラグ再計算を1つのトランザクションにまとめる。
+   * 標準の切替は「isDefaultの一括リセット」と「対象のみ有効化」の2文で構成されるため、
+   * 途中で失敗すると標準0件になり変数値のフォールバック先が失われる。
+   * また有効判定は標準を最優先に表示順で行うため、切替でFreeの有効な集合が変わりうる。
+   * Mapper側でトランザクションを張らないのは、インポートの全復元・選択インポートが
+   * 既にトランザクション内からsetDefaultを呼んでおり、アダプタがネストに対応しないため。
    */
-  const setVariableValuesForVariable = useCallback(
-    (variableId: string, values: { profileId: string; variableId: string; value: string }[]): void => {
-      ProfileService.setVariableValuesForVariable(variableId, values);
+  const setDefaultProfile = useCallback(
+    (id: string): void => {
+      getMainDbAdapter().transaction(() => {
+        ProfileService.setDefault(id);
+        SubscriptionService.updateValidFlags();
+      });
       loadProfiles();
     },
     [loadProfiles]
   );
+
+  /**
+   * 有効なプロファイル一覧
+   *
+   * プラン上限を超えて無効になったプロファイルは、通常利用の選択肢・展開対象から
+   * 除外する。無効なものを明示的に扱う画面（プロファイル管理）だけがprofilesを使う。
+   */
+  const validProfiles = useMemo(() => profiles.filter((profile) => profile.valid), [profiles]);
 
   /* ======================================== */
   /* Context Value */
@@ -204,6 +242,7 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
   const value = useMemo<ProfileContextValue>(
     () => ({
       profiles,
+      validProfiles,
       profileVariables,
       activeProfile,
       defaultProfile,
@@ -214,10 +253,11 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       updateProfile,
       deleteProfile,
       setActiveProfile,
-      setVariableValuesForVariable,
+      setDefaultProfile,
     }),
     [
       profiles,
+      validProfiles,
       profileVariables,
       activeProfile,
       defaultProfile,
@@ -228,7 +268,7 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       updateProfile,
       deleteProfile,
       setActiveProfile,
-      setVariableValuesForVariable,
+      setDefaultProfile,
     ]
   );
 

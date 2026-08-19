@@ -21,10 +21,9 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "baseUrl": ".",
     "paths": {
-      "@cliptap/shared": ["../packages/shared/src/index"],
-      "@cliptap/shared/*": ["../packages/shared/src/*"]
+      "@cliptap/shared": ["../../packages/shared/src/index"],
+      "@cliptap/shared/*": ["../../packages/shared/src/*"]
     }
   },
   "include": ["vite.config.ts"]

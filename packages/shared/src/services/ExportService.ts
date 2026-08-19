@@ -19,10 +19,7 @@ import {
 } from '../utils/exportImportUtils';
 import { SCHEMA_VERSION } from '../database/schema';
 import { Logger } from '../utils/logger';
-import {
-  DatabasePathNotFoundError,
-  ExportFailedError,
-} from '../errors';
+import { ExportFailedError } from '../errors';
 import { ExportMapper, type ExportSelection } from '../mappers/ExportMapper';
 
 /**
@@ -49,16 +46,6 @@ interface ExportData {
 }
 
 /**
- * エクスポート結果（内部型）
- */
-interface ExportResult {
-  /** エクスポートデータ */
-  data: ExportData;
-  /** JSON文字列 */
-  json: string;
-}
-
-/**
  * エクスポートサービスクラス
  *
  * @description
@@ -76,9 +63,9 @@ export class ExportService {
    *
    * @param doubleBase64 - 二重Base64エンコード済みのデータベースバイナリ
    * @param password - エクスポートに使用するパスワード
-   * @returns エクスポート結果（データオブジェクトとJSON文字列）
+   * @returns エクスポートファイルへ書き出すJSON文字列
    */
-  private static async buildExportData(doubleBase64: string, password: string): Promise<ExportResult> {
+  private static async buildExportData(doubleBase64: string, password: string): Promise<string> {
     const exportDate = new Date().toISOString();
 
     const passwordHash = await ExportService.crypto.sha256(
@@ -102,10 +89,7 @@ export class ExportService {
       c: checksum,
     };
 
-    return {
-      data,
-      json: JSON.stringify(data),
-    };
+    return JSON.stringify(data);
   }
 
   /**
@@ -113,9 +97,9 @@ export class ExportService {
    *
    * @param dbBase64 - SQLiteデータベースのBase64文字列
    * @param password - エクスポートに使用するパスワード
-   * @returns エクスポート結果
+   * @returns エクスポートファイルへ書き出すJSON文字列
    */
-  private static async createExportDataFromBase64(dbBase64: string, password: string): Promise<ExportResult> {
+  private static async createExportDataFromBase64(dbBase64: string, password: string): Promise<string> {
     const doubleBase64 = base64ToDoubleBase64(dbBase64);
     return ExportService.buildExportData(doubleBase64, password);
   }
@@ -140,63 +124,16 @@ export class ExportService {
   }
 
   /**
-   * データベース全体をエクスポート
-   *
-   * @param password - エクスポートに使用するパスワード
-   * @returns エクスポート結果（ファイルパス）
-   * @throws DatabasePathNotFoundError データベースファイルが存在しない場合
-   * @throws ExportFailedError エクスポートに失敗した場合
-   */
-  static async exportDatabase(password: string): Promise<ExportExecutionResult> {
-    if (!hasExportAdapter()) {
-      throw new Error('ExportAdapter is required for exportDatabase. Call setExportAdapter() first.');
-    }
-
-    const adapter = getExportAdapter();
-    const fileIO = getFileIOAdapter();
-
-    try {
-      Logger.info('[ExportService] Starting database export...');
-
-      const dbPath = await adapter.getDatabasePath();
-      if (!(await fileIO.exists(dbPath))) {
-        throw new DatabasePathNotFoundError('Database file does not exist');
-      }
-
-      Logger.info(`[ExportService] Database file found: ${dbPath}`);
-
-      const dbFileBase64 = await fileIO.readBinary(dbPath);
-      Logger.info(`[ExportService] Database file loaded (${dbFileBase64.length} chars)`);
-
-      const { json } = await ExportService.createExportDataFromBase64(dbFileBase64, password);
-      const exportFileName = ExportService.generateFilename();
-
-      Logger.info(`[ExportService] Export data created, filename: ${exportFileName}`);
-
-      const exportFileUri = await adapter.saveExportFile(exportFileName, json);
-
-      Logger.info(`[ExportService] Export file created: ${exportFileUri}`);
-
-      return { filePath: exportFileUri };
-    } catch (error) {
-      Logger.error('[ExportService] Export failed:', error);
-      if (error instanceof DatabasePathNotFoundError) {
-        throw error;
-      }
-      throw new ExportFailedError(
-        error instanceof Error ? error.message : 'Unknown error',
-        error
-      );
-    }
-  }
-
-  /**
    * 選択されたデータのみをエクスポート（部分エクスポート）
    *
    * @param password - エクスポートに使用するパスワード
    * @param selection - エクスポートするデータのID選択
    * @returns エクスポート結果（ファイルパス）
    * @throws ExportFailedError エクスポートに失敗した場合
+   *
+   * @remarks
+   * 「全データのエクスポート」は選択画面が全候補を選択済みで開くことで実現しており、
+   * 全件専用の経路は持たない。
    */
   static async exportSelectedData(
     password: string,
@@ -233,7 +170,7 @@ export class ExportService {
 
       tempDbAdapter.close?.();
 
-      const { json } = await this.createExportDataFromBase64(filteredDbBase64, password);
+      const json = await this.createExportDataFromBase64(filteredDbBase64, password);
       const exportFileName = this.generateFilename();
 
       Logger.info(`[ExportService] Export data created, filename: ${exportFileName}`);

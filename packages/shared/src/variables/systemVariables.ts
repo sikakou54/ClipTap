@@ -14,7 +14,13 @@
  * - 常に最新の日時が使用されます
  */
 
-import { formatDate } from '../utils/dateHelpers';
+import {
+  DEFAULT_SYSTEM_VARIABLE_FORMATS,
+  sanitizeSystemVariableFormat,
+  type SystemVariableFormats,
+  type SystemVariableKey,
+} from '../constants/systemVariableFormats';
+import { formatByPattern } from '../utils/dateFormatter';
 
 /**
  * サポートされているロケール
@@ -27,22 +33,11 @@ export type SupportedLocale = 'ja' | 'en';
  * @constant
  * @private
  *
- * \x00-\x7F は ASCII 文字範囲（0x00～0x7F）を表す
+ * 非ASCII（U+0080以降）を1文字も含まないことを判定する。
+ * ASCII範囲（0x00～0x7F）の否定形で表現しており、判定結果は同一。
  * 英数字の場合は大文字小文字を正規化するために使用
  */
-const ASCII_PATTERN = /^[\x00-\x7F]+$/;
-
-/**
- * 曜日のロケール別表示名
- * @constant
- * @private
- *
- * Date.getDay() の戻り値（0=日曜、1=月曜、...、6=土曜）に対応するインデックス
- */
-const WEEKDAYS: Record<SupportedLocale, string[]> = {
-  ja: ['日', '月', '火', '水', '木', '金', '土'],
-  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-};
+const ASCII_PATTERN = /^[^\u0080-\uFFFF]+$/;
 
 /**
  * システム変数の定義
@@ -50,12 +45,15 @@ const WEEKDAYS: Record<SupportedLocale, string[]> = {
  * @interface SystemVariableDefinition
  * @property {string} key - 変数の識別子（内部用）
  * @property {string[]} aliases - 変数名のエイリアス（日本語・英語両対応）
- * @property {Function} getValue - 変数の値を生成する関数
+ *
+ * @remarks
+ * 値の生成はこの型に持たせない。書式は constants/systemVariableFormats.ts の
+ * SYSTEM_VARIABLE_FORMAT_PRESETS、実際の描画は utils/dateFormatter.ts の
+ * formatByPattern が担う。
  */
 export interface SystemVariableDefinition {
-  key: string;
+  key: SystemVariableKey;
   aliases: string[];
-  getValue: (locale: SupportedLocale, date: Date) => string;
 }
 
 /**
@@ -77,37 +75,30 @@ export const SYSTEM_VARIABLES: SystemVariableDefinition[] = [
   {
     key: 'today',
     aliases: ['today', '今日'],
-    getValue: (_locale, date) => formatDate(date, 'yyyy/MM/dd'),
   },
   {
     key: 'now',
     aliases: ['now', '現在'],
-    getValue: (_locale, date) => formatDate(date, 'yyyy/MM/dd HH:mm:ss'),
   },
   {
     key: 'time',
     aliases: ['time', '時刻'],
-    getValue: (_locale, date) => formatDate(date, 'HH:mm'),
   },
   {
     key: 'year',
     aliases: ['year', '年'],
-    getValue: (_locale, date) => formatDate(date, 'yyyy'),
   },
   {
     key: 'month',
     aliases: ['month', '月'],
-    getValue: (_locale, date) => formatDate(date, 'MM'),
   },
   {
     key: 'day',
     aliases: ['day', '日'],
-    getValue: (_locale, date) => formatDate(date, 'dd'),
   },
   {
     key: 'weekday',
     aliases: ['weekday', '曜日'],
-    getValue: (locale, date) => WEEKDAYS[locale][date.getDay()] ?? '',
   },
 ];
 
@@ -139,7 +130,7 @@ export const normalizeLocale = (locale?: string): SupportedLocale => {
  * これにより、大文字小文字を区別せずに変数を解決できます。
  * 例: "TODAY" と "today" は同じ変数として扱われます。
  */
-export const normalizeVariableName = (value: string): string => {
+const normalizeVariableName = (value: string): string => {
   const trimmed = value.trim();
   return ASCII_PATTERN.test(trimmed) ? trimmed.toLowerCase() : trimmed;
 };
@@ -164,7 +155,8 @@ export const normalizeVariableName = (value: string): string => {
 export const resolveSystemVariableValue = (
   rawName: string,
   locale?: string,
-  date: Date = new Date()
+  date: Date = new Date(),
+  formats?: SystemVariableFormats
 ): string | null => {
   const normalized = normalizeVariableName(rawName);
   const resolvedLocale = normalizeLocale(locale);
@@ -176,10 +168,13 @@ export const resolveSystemVariableValue = (
     });
 
     if (matches) {
-      return definition.getValue(resolvedLocale, date);
+      const pattern = sanitizeSystemVariableFormat(
+        definition.key,
+        formats?.[definition.key] ?? DEFAULT_SYSTEM_VARIABLE_FORMATS[definition.key]
+      );
+      return formatByPattern(date, pattern, resolvedLocale);
     }
   }
 
   return null;
 };
-

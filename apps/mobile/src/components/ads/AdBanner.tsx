@@ -15,18 +15,17 @@
  * - 無料プランのユーザーのみ
  * - トラッキングステータス取得完了後
  *
- * @see useSubscription - サブスクリプション状態管理
+ * @see useSharedSubscription - サブスクリプション状態管理
  * @see useTracking - ATTトラッキング管理
  */
 
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, StyleSheet, Platform, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { useTheme } from '@lib/themeSystem';
 import { useTracking } from '@hooks/useTracking';
-import { Logger } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
+import { Logger, useSharedSubscription } from '@cliptap/shared';
 
 /* ========================================
    Props定義
@@ -37,7 +36,7 @@ import { useSubscription } from '@providers/SubscriptionProvider';
  * @property style - カスタムスタイル（オプション）
  */
 interface AdBannerProps {
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 /* ========================================
@@ -56,29 +55,33 @@ const AD_UNIT_IDS = {
 export function AdBanner({ style }: AdBannerProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { shouldShowAds } = useSubscription();
+  const { shouldShowAds } = useSharedSubscription();
   const { getTrackingStatus } = useTracking();
 
-  const [trackingStatus, setTrackingStatus] = useState<string | null>(null);
+  /**
+   * ATT権限ステータス
+   * iOSのみ非同期取得が必要なため初期値をnullにする。
+   * AndroidにはATTが無いため初期化時点で'unknown'で確定する。
+   */
+  const [trackingStatus, setTrackingStatus] = useState<string | null>(() =>
+    Platform.OS === 'ios' ? null : 'unknown'
+  );
 
   /**
-   * ATT権限ステータスの取得
-   * iOS: ATTダイアログの結果を取得（パーソナライズ広告の可否を決定）
-   * Android: 'unknown'を設定（ATTなし、SDK側で自動制御）
+   * ATT権限ステータスの取得（iOSのみ）
+   * ATTダイアログの結果を取得し、パーソナライズ広告の可否を決定する
    */
   useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+
     async function checkTrackingStatus() {
       const status = await getTrackingStatus();
       setTrackingStatus(status);
     }
 
-    if (Platform.OS === 'ios') {
-      checkTrackingStatus().catch((error) =>
-        Logger.error('Check tracking status failed:', error)
-      );
-    } else {
-      setTrackingStatus('unknown');
-    }
+    checkTrackingStatus().catch((error) =>
+      Logger.error('Check tracking status failed:', error)
+    );
   }, [getTrackingStatus]);
 
   /**
@@ -106,6 +109,7 @@ export function AdBanner({ style }: AdBannerProps) {
       styles.container,
       {
         backgroundColor: colors.background,
+        borderTopColor: colors.border,
         paddingBottom: insets.bottom,
       },
       style
@@ -115,6 +119,10 @@ export function AdBanner({ style }: AdBannerProps) {
         unitId={adUnitId}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
         requestOptions={{
+          /*
+           * AndroidにはATTのgranted状態がないため、常に非パーソナライズ広告を要求する。
+           * EEA/UK向けCMP・UMP要件は配信地域に応じて法務確認する。
+           */
           requestNonPersonalizedAdsOnly: trackingStatus !== 'granted',
         }}
         onAdLoaded={() => {
@@ -132,11 +140,11 @@ export function AdBanner({ style }: AdBannerProps) {
    スタイル定義
    ======================================== */
 const styles = StyleSheet.create({
+  /** 広告コンテナ（背景色と上境界線の色は使用箇所でテーマから重ねる） */
   container: {
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.1)',
   },
 });

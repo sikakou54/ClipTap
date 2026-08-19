@@ -17,6 +17,8 @@ interface SnippetGridProps {
   gridColumns: 1 | 2 | 3;
   /** コピー済みスニペットのID */
   copiedId: string | null;
+  /** タイトルをコピー済みのスニペットのID */
+  copiedTitleId: string | null;
   /** カテゴリ一覧 */
   categories: Category[];
   /** カテゴリIDから色を取得する関数 */
@@ -25,6 +27,8 @@ interface SnippetGridProps {
   getCategoryName: (categoryId: string | null) => string;
   /** コピーボタンクリック時のコールバック */
   onCopy: (snippet: Snippet) => void;
+  /** タイトルコピーボタンクリック時のコールバック */
+  onCopyTitle: (snippet: Snippet) => void;
   /** 編集ボタンクリック時のコールバック */
   onEdit: (snippet: Snippet) => void;
   /** 削除ボタンクリック時のコールバック */
@@ -35,10 +39,12 @@ export function SnippetGrid({
   filteredSnippets,
   gridColumns,
   copiedId,
+  copiedTitleId,
   categories,
   getCategoryColor,
   getCategoryName,
   onCopy,
+  onCopyTitle,
   onEdit,
   onDelete,
 }: SnippetGridProps) {
@@ -46,10 +52,8 @@ export function SnippetGrid({
       メモ化により、categoriesやgetCategoryColor/getCategoryNameが変更された時のみ再計算。
       アコーディオン開閉時の不要な再計算を防止し、パフォーマンスを向上。 */
   const categoryInfoMap = useMemo(() => {
-    const map = new Map<string | null, { color: string | null; name: string }>();
-    /* 未分類カテゴリ（null）の情報を設定 */
-    map.set(null, { color: null, name: getCategoryName(null) });
-    /* 各カテゴリの色と名前をMapに登録 */
+    const map = new Map<string, { color: string | null; name: string }>();
+    /* 各カテゴリの色と名前をMapに登録（未分類はバッジを表示しないため登録しない） */
     categories.forEach((category) => {
       map.set(category.id, {
         color: getCategoryColor(category.id),
@@ -80,12 +84,10 @@ export function SnippetGrid({
   return (
     <div className={gridClass}>
       {filteredSnippets.map((snippet) => {
-        /* スニペットに紐づくカテゴリ情報を取得（未分類の場合はデフォルト値を使用）
-            categoryInfoMapから高速検索。見つからない場合は未分類のデフォルト値を使用。 */
-        const categoryInfo = categoryInfoMap.get(snippet.categoryId) || {
-          color: null,
-          name: getCategoryName(null),
-        };
+        /* スニペットに紐づくカテゴリ情報を取得
+            categoryInfoMapから高速検索。未分類および削除済みカテゴリはnullとし、
+            モバイル版と同じくカテゴリバッジを表示しない。 */
+        const categoryInfo = snippet.categoryId ? categoryInfoMap.get(snippet.categoryId) ?? null : null;
 
         /* スニペットカード
             各スニペットのタイトル・内容・カテゴリ情報を表示。
@@ -96,9 +98,11 @@ export function SnippetGrid({
             key={snippet.id}
             snippet={snippet}
             isCopied={copiedId === snippet.id}
-            categoryColor={categoryInfo.color}
-            categoryName={categoryInfo.name}
+            isTitleCopied={copiedTitleId === snippet.id}
+            categoryColor={categoryInfo?.color ?? null}
+            categoryName={categoryInfo?.name ?? null}
             onCopy={() => onCopy(snippet)}
+            onCopyTitle={() => onCopyTitle(snippet)}
             onEdit={() => onEdit(snippet)}
             onDelete={() => onDelete(snippet.id)}
           />

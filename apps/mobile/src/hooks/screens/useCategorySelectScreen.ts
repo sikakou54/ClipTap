@@ -10,7 +10,7 @@
  * - 新規カテゴリ作成画面への遷移
  *
  * @see app/category/select.tsx - UIコンポーネント
- * @see lib/hooks/useCategories.ts - カテゴリCRUD操作
+ * @see packages/shared/src/providers/CategoryProvider.tsx - カテゴリCRUD操作（useCategories）
  */
 
 import { useCallback, useMemo } from 'react';
@@ -32,7 +32,7 @@ export interface CategoryOption {
 /**
  * useCategorySelectScreenの引数の型
  */
-export interface UseCategorySelectScreenParams {
+interface UseCategorySelectScreenParams {
   /** 現在選択中のカテゴリID（'null'の場合はnullとして扱う） */
   selectedId?: string;
 }
@@ -50,8 +50,6 @@ export interface UseCategorySelectScreenReturn {
   responsiveFontSizes: ReturnType<typeof useTheme>['responsiveFontSizes'];
 
   /* ハンドラ */
-  handleSelect: (categoryId: string | null) => void;
-  handleCreateNew: () => void;
   handleItemPress: (item: CategoryOption) => void;
 }
 
@@ -146,8 +144,6 @@ export function useCategorySelectScreen(params: UseCategorySelectScreenParams): 
     selectedCategoryId,
     colors,
     responsiveFontSizes,
-    handleSelect,
-    handleCreateNew,
     handleItemPress,
   };
 }

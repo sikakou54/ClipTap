@@ -98,6 +98,17 @@ export interface DbAdapter {
   exportAsBase64?(): Promise<string>;
 
   /**
+   * メモリ上の変更をストレージへ書き戻す（オプション）
+   *
+   * @description
+   * open()でファイル全体をメモリへ複製する実装（Web: sql.js）向け。
+   * exec()やrun()による変更はメモリ上にしか存在しないため、
+   * close()の前にこれを呼ばないと変更が失われる。
+   * ファイルを直接操作する実装（Mobile: expo-sqlite）では不要のため未実装。
+   */
+  persist?(): Promise<void>;
+
+  /**
    * データベースが開かれているかを確認（オプション）
    *
    * @description
@@ -195,14 +206,6 @@ export function getSystemDbAdapter(): DbAdapter {
     throw new Error('SystemDbAdapter is not set. Call setSystemDbAdapter() at startup.');
   }
   return currentSystemDbAdapter;
-}
-
-/**
- * システムDB用DbAdapterが登録済みか確認
- * @returns 登録済みの場合true
- */
-export function hasSystemDbAdapter(): boolean {
-  return currentSystemDbAdapter !== null;
 }
 
 /* ======================================== */

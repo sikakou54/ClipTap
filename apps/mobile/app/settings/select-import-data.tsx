@@ -9,9 +9,8 @@
  * - 個別選択・全選択切り替え
  * - 重複データの検知・警告表示
  *
- * @see lib/hooks/screens/useSelectImportDataScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useSelectImportDataScreen.ts - ビジネスロジック
  */
-import React from 'react';
 import {
   View,
   Text,
@@ -27,7 +26,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { type ImportTabType } from '@cliptap/shared';
 import { useTheme } from '@lib/themeSystem';
 import { commonStyles } from '@lib/styles/commonStyles';
-import { Header } from '@components/common/Header';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { UI_CONSTANTS } from '@constants/ui';
 import {
   SelectionSnippetItem,
@@ -35,7 +34,6 @@ import {
   SelectionVariableItem,
   SelectionCategoryItem,
 } from '@components/selection';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelectImportDataScreen } from '@hooks/screens/useSelectImportDataScreen';
 
 const TAB_OPTIONS: ImportTabType[] = ['snippets', 'profiles', 'variables', 'categories'];
@@ -78,25 +76,21 @@ export default function SelectImportDataScreen() {
   }
 
   return (
-    <SafeAreaView
-      style={[commonStyles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}
+    <ScreenContainer
+      title={t('export_import.select_import_data')}
+      rightAction={
+        <TouchableOpacity onPress={() => toggleSelectAll(activeTab)}>
+          <Ionicons
+            name={isAllSelected(activeTab) ? 'checkbox' : 'square-outline'}
+            size={24}
+            color={colors.primary}
+          />
+        </TouchableOpacity>
+      }
+      backIcon="close"
+      isModal={true}
     >
-      <Header
-        title={t('export_import.select_import_data')}
-        rightAction={
-          <TouchableOpacity onPress={() => toggleSelectAll(activeTab)}>
-            <Ionicons
-              name={isAllSelected(activeTab) ? 'checkbox' : 'square-outline'}
-              size={24}
-              color={colors.primary}
-            />
-          </TouchableOpacity>
-        }
-        backIcon="close"
-        isModal={true}
-      />
-
+      {/* タブコンテナ */}
       <View style={[styles.tabContainer, { borderBottomColor: colors.border, backgroundColor: colors.surface }]}>
         {TAB_OPTIONS.map((tab) => (
           <Pressable
@@ -126,6 +120,7 @@ export default function SelectImportDataScreen() {
         ))}
       </View>
 
+      {/* コンテンツ（タブ別リスト） */}
       <View style={[styles.content, { backgroundColor: colors.background }]}>
         {activeTab === 'snippets' && (
           <FlatList
@@ -157,7 +152,7 @@ export default function SelectImportDataScreen() {
                 />
               );
             }}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
             style={{ backgroundColor: colors.background }}
           />
         )}
@@ -175,7 +170,7 @@ export default function SelectImportDataScreen() {
                 colors={colors}
               />
             )}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
             style={{ backgroundColor: colors.background }}
           />
         )}
@@ -206,7 +201,7 @@ export default function SelectImportDataScreen() {
                 />
               );
             }}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
             style={{ backgroundColor: colors.background }}
           />
         )}
@@ -224,12 +219,13 @@ export default function SelectImportDataScreen() {
                 colors={colors}
               />
             )}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
             style={{ backgroundColor: colors.background }}
           />
         )}
       </View>
 
+      {/* フッター（インポートボタン） */}
       <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
         <TouchableOpacity
           style={[styles.importButton, { backgroundColor: totalSelected > 0 ? colors.primary : colors.border }]}
@@ -237,13 +233,13 @@ export default function SelectImportDataScreen() {
           disabled={totalSelected === 0 || isProcessing}
         >
           {isProcessing ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={colors.onPrimary} />
           ) : (
-            <Text style={styles.importButtonText}>{t('export_import.import')}</Text>
+            <Text style={[styles.importButtonText, { color: colors.onPrimary }]}>{t('export_import.import')}</Text>
           )}
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 
@@ -270,6 +266,10 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  /* 一覧の下余白。フッター（styles.footer）が position:absolute で画面下端に重なるため、最終行が隠れないよう余白を確保する */
+  listContent: {
+    paddingBottom: 100,
+  },
   footer: {
     position: 'absolute',
     bottom: 0,
@@ -286,8 +286,8 @@ const styles = StyleSheet.create({
     minWidth: 100,
     alignItems: 'center',
   },
+  /** インポートボタンのテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   importButtonText: {
-    color: '#FFFFFF',
     fontWeight: '600',
   },
 });

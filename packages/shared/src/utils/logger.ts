@@ -8,9 +8,9 @@
  *
  * ログレベル:
  * - debug: 開発環境のみ出力（詳細なデバッグ情報）
- * - info: 全環境で出力（一般的な情報）
- * - warn: 全環境で出力（警告）
- * - error: 全環境で出力（エラー）
+ * - info: 開発環境のみ出力（一般的な情報）
+ * - warn: 全環境で出力（本番では追加引数を除外）
+ * - error: 全環境で出力（本番では追加引数を除外）
  * - success: 開発環境のみ出力（成功通知）
  *
  * 使用箇所:
@@ -106,14 +106,16 @@ export class Logger {
   /**
    * 情報ログを出力
    *
-   * 全環境で出力される一般的な情報メッセージ。
+   * 開発環境でのみ出力される一般的な情報メッセージ。
    * アプリの状態変化や重要なイベントの記録に使用します。
    *
    * @param message - ログメッセージ
    * @param args - 追加の引数
    */
   static info(message: string, ...args: unknown[]): void {
-    console.log(getPrefix('INFO') + message, ...args);
+    if (config.isDevelopment) {
+      console.log(getPrefix('INFO') + message, ...args);
+    }
   }
 
   /**
@@ -126,7 +128,7 @@ export class Logger {
    * @param args - 追加の引数
    */
   static warn(message: string, ...args: unknown[]): void {
-    console.warn(getPrefix('WARN') + message, ...args);
+    console.warn(getPrefix('WARN') + message, ...(config.isDevelopment ? args : []));
   }
 
   /**
@@ -139,7 +141,7 @@ export class Logger {
    * @param args - 追加の引数（通常はErrorオブジェクト）
    */
   static error(message: string, ...args: unknown[]): void {
-    console.error(getPrefix('ERROR') + message, ...args);
+    console.error(getPrefix('ERROR') + message, ...(config.isDevelopment ? args : []));
   }
 
   /**

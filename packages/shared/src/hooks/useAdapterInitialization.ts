@@ -12,7 +12,7 @@
  * @module useAdapterInitialization
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { init, isInitialized, type SharedInitOptions } from '../init';
 import { Logger } from '../utils/logger';
 
@@ -44,28 +44,26 @@ export interface UseAdapterInitializationReturn {
 export function useAdapterInitialization(
   options: SharedInitOptions
 ): UseAdapterInitializationReturn {
-  const [isAdaptersReady, setIsAdaptersReady] = useState(isInitialized());
-  const optionsRef = useRef(options);
-
-  useEffect(() => {
-    optionsRef.current = options;
-  }, [options]);
-
-  useEffect(() => {
+  /* init()は同期処理のため、初回レンダー時に初期化まで済ませる。
+     effectで初期化して状態を切り替えると、初期化に待ち時間がないにもかかわらず
+     1レンダー分だけ未完了状態が見えてしまう。
+     useStateの遅延初期化は初回レンダーで1度だけ評価され、
+     StrictModeの二重実行でもisInitialized()のガードで二重初期化を防げる */
+  const [isAdaptersReady] = useState(() => {
     if (isInitialized()) {
-      setIsAdaptersReady(true);
-      return;
+      return true;
     }
 
     try {
-      init(optionsRef.current);
+      init(options);
       Logger.success('🚀 App adapters initialized successfully');
-      setIsAdaptersReady(true);
     } catch (error) {
       Logger.error('App adapter initialization error:', error);
-      setIsAdaptersReady(true);
     }
-  }, []);
+
+    /* 初期化の成否にかかわらず画面を進める（失敗時は各機能側でエラーを扱う） */
+    return true;
+  });
 
   return { isAdaptersReady };
 }

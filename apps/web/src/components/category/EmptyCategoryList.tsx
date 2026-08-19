@@ -19,15 +19,13 @@ export function EmptyCategoryList({ onCreate }: EmptyCategoryListProps) {
     <div className="text-center text-gray-500 dark:text-[#A0A0A0] mt-12">
       {/* 空状態メッセージ */}
       <p>{t('category.no_categories')}</p>
-      {/* 新規作成ボタン（オプション） */}
-      {onCreate && (
-        <button
-          onClick={onCreate}
-          className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-        >
-          + {t('category.create')}
-        </button>
-      )}
+      {/* 新規作成ボタン（onCreate は必須propなので常に表示する） */}
+      <button
+        onClick={onCreate}
+        className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+      >
+        + {t('category.create')}
+      </button>
     </div>
   );
 }

@@ -8,17 +8,35 @@ export {
 /* データベース */
 export * from './database/schema';
 export * from './database/migrations';
-export { BaseDatabaseManager, type DatabaseInitOptions } from './database/BaseDatabaseManager';
 
 /* 型定義 */
 export * from './schema';
 export * from './types';
 
+/* サブスク応答の形状検証スキーマ（types/index.ts は型のみを再輸出するため、値としてはここから公開する） */
+export { SubscriptionStatusSchema } from './types/Subscription';
+
 /* エラー */
 export * from './errors';
 
-/* Mappers */
-export * from './mappers';
+/*
+ * Mappers（データアクセス層）
+ *
+ * データアクセス層は公開APIから一括再エクスポートしない。
+ * 一括公開していると画面・コンポーネント（UI層）がMapperをそのまま呼べてしまい、
+ * CLAUDE.mdのアーキテクチャ（UI層 → Service層 → Mapper層）が崩れるため。
+ * ここで公開するのは、アプリのDB初期化・初期データ投入
+ * （apps/mobile/src/database/、apps/web/src/database/）が使う分だけに限定する。
+ * 画面・コンポーネントからはService層（SystemVariableFormatService等）を使うこと。
+ */
+export {
+  SnippetMapper,
+  CategoryMapper,
+  VariableMapper,
+  ProfileMapper,
+  ProfileVariableMapper,
+  SystemVariableFormatMapper,
+} from './mappers';
 
 /* Adapters */
 export type { SubscriptionAdapter, SubscriptionListener } from './adapters';
@@ -39,7 +57,6 @@ export {
   type CryptoAdapter,
   setCryptoAdapter,
   getCryptoAdapter,
-  hasCryptoAdapter,
 
   /* DbAdapter関連（データベースアクセス） */
   type DbAdapter,
@@ -51,7 +68,6 @@ export {
   /* システムDB用（user_version管理・マイグレーション用） */
   setSystemDbAdapter,
   getSystemDbAdapter,
-  hasSystemDbAdapter,
   /* 一時DB用（エクスポート・インポート処理用） */
   setTempDbAdapter,
   getTempDbAdapter,
@@ -68,21 +84,9 @@ export {
   type FileInfo,
   setFileIOAdapter,
   getFileIOAdapter,
-  hasFileIOAdapter,
 
   /* FileShareAdapter関連（ファイル共有/ダウンロード） */
   type FileShareAdapter,
-  setFileShareAdapter,
-  getFileShareAdapter,
-  hasFileShareAdapter,
-
-  /* FilePickerAdapter関連（ファイル選択） */
-  type FilePickerAdapter,
-  type FilePickOptions,
-  type FilePickResult,
-  setFilePickerAdapter,
-  getFilePickerAdapter,
-  hasFilePickerAdapter,
 
   /* LocaleAdapter関連（ロケール取得） */
   type LocaleAdapter,
@@ -117,12 +121,6 @@ export {
   setSortPreferenceAdapter,
   getSortPreferenceAdapter,
   hasSortPreferenceAdapter,
-
-  /* UsageTrackingAdapter関連（使用頻度追跡設定） */
-  type UsageTrackingAdapter,
-  setUsageTrackingAdapter,
-  getUsageTrackingAdapter,
-  hasUsageTrackingAdapter,
 } from './adapters';
 
 /* ======================================== */
@@ -144,24 +142,26 @@ export {
   createValidFlagsUpdater,            /* ValidFlagsUpdater共通実装ファクトリ */
   ImportService,                      /* インポートサービスクラス（静的メソッドでDB操作も提供） */
   AuthService,                        /* 認証サービス */
+  SystemVariableFormatRegistry,
+  SystemVariableFormatService,        /* システム変数書式サービス（UI層からの入口） */
 } from './services';
 
 /* エクスポートサービス */
 export {
-  ExportService,                      // エクスポートサービスクラス
+  ExportService,                      /* エクスポートサービスクラス */
 } from './services/ExportService';
 
 /* インポートパーサーサービス */
 export {
-  ImportParserService,                // インポートパーサーサービスクラス
+  ImportParserService,                /* インポートパーサーサービスクラス */
 } from './services/ImportParserService';
 
 /* ======================================== */
 /* Variables */
 /* ======================================== */
 /* 変数解析とシステム変数関連の関数・型をエクスポート */
-export * from './variables/parser';           // 変数パース・展開エンジン
-export * from './variables/systemVariables';  // システム変数定義と解決関数
+export * from './variables/parser';           /* 変数パース・展開エンジン */
+export * from './variables/systemVariables';  /* システム変数定義と解決関数 */
 
 /* ======================================== */
 /* Export/Import utilities */
@@ -173,32 +173,31 @@ export * from './utils/exportImportUtils';
 /* Constants */
 /* ======================================== */
 /* 定数定義をエクスポート */
-export * from './constants/inputLimits';      // 入力値の制限（最大文字数等）
-export * from './constants/variables';        // 変数関連の定数
-export * from './constants/designTokens';     // デザイントークン（色、サイズ等）
-export * from './constants/componentTokens';  // コンポーネント用トークン（高さ、z-index、アニメーション等）
-export * from './constants/iconMapping';      // アイコンマッピング（Ionicons ↔ Heroicons）
-export * from './constants/themeTokens';      // テーマトークン（スペーシング、フォント、タイポグラフィ）
-export * from './constants/subscription';     // サブスクリプション定数（PRO_ENTITLEMENT_ID）
-export * from './constants/variableIcons';    // 変数アイコン定数
+export * from './constants/inputLimits';      /* 入力値の制限（最大文字数等） */
+export * from './constants/variables';        /* 変数関連の定数 */
+export * from './constants/designTokens';     /* デザイントークン（色、サイズ等） */
+export * from './constants/themeTokens';      /* テーマトークン（スペーシング、フォント、タイポグラフィ） */
+export * from './constants/subscription';     /* サブスクリプション定数（PRO_ENTITLEMENT_ID） */
+export * from './constants/variableIcons';    /* 変数アイコン定数 */
+export * from './constants/systemVariableFormats';
 
 /* ======================================== */
 /* Utils */
 /* ======================================== */
 /* ユーティリティ関数をエクスポート */
-export * from './utils/dateHelpers';      // 日付フォーマット関数
-export * from './utils/snippetUtils';     // スニペット関連ユーティリティ
-export * from './utils/logger';           // ロガー
-export * from './utils/pathUtils';        // パス操作ユーティリティ
-export * from './utils/categoryUtils';    // カテゴリ関連ユーティリティ
-export * from './utils/snippetFilterUtils'; // スニペットフィルタリングユーティリティ
-export * from './utils/errorUtils';      // エラーメッセージ翻訳ユーティリティ
+export * from './utils/dateHelpers';      /* 日付フォーマット関数 */
+export * from './utils/dateFormatter';
+export * from './utils/snippetUtils';     /* スニペット関連ユーティリティ */
+export * from './utils/logger';           /* ロガー */
+export * from './utils/pathUtils';        /* パス操作ユーティリティ */
+export * from './utils/categoryUtils';    /* カテゴリ関連ユーティリティ */
+export * from './utils/snippetFilterUtils'; /* スニペットフィルタリングユーティリティ */
+export * from './utils/errorUtils';      /* エラーメッセージ翻訳ユーティリティ */
 
 /* 認証エラー関連のユーティリティ */
 export {
-  AUTH_ERROR_CODES,          // 認証エラーコード定数
-  isAuthCancelledError,      // キャンセルエラー判定関数
-  getAuthErrorMessageKey,    // エラーメッセージキー取得関数
+  AUTH_ERROR_CODES,          /* 認証エラーコード定数 */
+  isAuthCancelledError,      /* キャンセルエラー判定関数 */
 } from './utils/authErrors';
 
 /* ======================================== */
@@ -215,16 +214,9 @@ export {
   useDebounce,
   DEFAULT_DEBOUNCE_DELAY,
 
-  /* Export/Import State（状態管理） */
-  useExportImportState,
-  type ExportImportStep,
-
   /* Selection (汎用版選択フック) */
   useSelection,
   type SelectionTabType,
-
-  /* Snippet Preview（スニペットプレビューフック） */
-  useSnippetPreview,
 
   /* Search（検索フック） */
   useSearch,
@@ -245,17 +237,11 @@ export {
   type UseAdapterInitializationReturn,
 
   /* App Initialization（アプリ初期化） */
-  useBaseAppInitialization,
   type UseAppInitializationReturn,
-  type AppInitializationOptions,
 
   /* Translation（翻訳） */
   useTranslation,
   type TranslationFunction,
-
-  /* Sort Preference（ソート設定） */
-  useSortPreference,
-  type UseSortPreferenceReturn,
 } from './hooks';
 
 /* ======================================== */
@@ -316,13 +302,4 @@ export {
   SnippetProvider,
   useSnippets,
   type SnippetContextValue,
-
-  /* アラートProvider */
-  AlertProvider,
-  useAlert,
-  type AlertContextType,
-  type AlertOptions,
-  type AlertType as SharedAlertType,
-  type AlertPlatformAdapter,
-  type AlertProviderProps,
 } from './providers';

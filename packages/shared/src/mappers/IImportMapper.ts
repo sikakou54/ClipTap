@@ -25,8 +25,9 @@ export interface SnippetImportRow {
   title: string | null;
   content: string;
   categoryId?: string | null;
-  categoryName: string | null; // LEFT JOINで取得
-  copyWithTitle?: number | boolean; // SQLiteでは0/1、JSではboolean
+  categoryName: string | null; /* LEFT JOINで取得 */
+  copyWithTitle?: number | boolean; /* SQLiteでは0/1、JSではboolean */
+  copyCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,9 +38,24 @@ export interface SnippetImportRow {
 export interface ProfileImportRow {
   id: string;
   name: string;
-  isDefault: number | boolean; // SQLiteでは0/1、JSではboolean
-  isActive?: number | boolean; // SQLiteでは0/1、JSではboolean
-  valid?: number | boolean; // SQLiteでは0/1、JSではboolean
+  isDefault: number | boolean; /* SQLiteでは0/1、JSではboolean */
+  isActive?: number | boolean; /* SQLiteでは0/1、JSではboolean */
+  valid?: number | boolean; /* SQLiteでは0/1、JSではboolean */
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * 変数行データ（DBから取得した生データ）
+ */
+export interface VariableImportRow {
+  id: string;
+  name: string;
+  label: string | null;
+  icon: string | null;
+  type: string;
+  valid?: number | boolean; /* SQLiteでは0/1、JSではboolean */
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
@@ -49,9 +65,12 @@ export interface ProfileImportRow {
  * プロファイル変数（profile_variablesテーブルの行）
  */
 export interface ProfileVariableRow {
+  id: string;
   profileId: string;
   variableId: string;
   value: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**

@@ -41,13 +41,6 @@ export interface I18nAdapter {
   getLanguage(): string;
 
   /**
-   * 言語を変更し、プラットフォーム固有のストレージに永続化
-   *
-   * @param language - 変更先の言語コード
-   */
-  changeLanguage(language: string): Promise<void>;
-
-  /**
    * 言語変更リスナーを登録
    *
    * @param listener - 言語変更時に呼び出されるコールバック
@@ -76,4 +69,3 @@ export function getI18nAdapter(): I18nAdapter {
 export function hasI18nAdapter(): boolean {
   return currentI18nAdapter !== null;
 }
-

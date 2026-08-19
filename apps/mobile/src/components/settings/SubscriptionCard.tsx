@@ -5,7 +5,6 @@
  * 購読中: ダイアモンドアイコン（塗りつぶし）+ プライマリカラー背景
  * 未購読: ダイアモンドアイコン（アウトライン）+ 通常背景
  */
-import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useTranslation } from '@cliptap/shared';
 import { Ionicons } from '@expo/vector-icons';
@@ -98,26 +97,33 @@ export function SubscriptionCard({ isSubscribed, isLoading, onPress }: Subscript
    スタイル定義
    ======================================== */
 const styles = StyleSheet.create({
-  /** サブスクリプションカード全体 */
+  /**
+   * サブスクリプションカード全体
+   *
+   * 枠線を THICK(2px) にしているのは、設定画面で唯一 Pro 購読状態によって
+   * 枠線色が colors.border と colors.primary に切り替わるカードであり、
+   * 状態の違いを色だけでなく太さでも認識できるようにするため。
+   * 他の設定カード（AccountAuthSection / DeveloperMenu）は THIN(1px) を使う。
+   */
   subscriptionCard: {
-    flexDirection: 'row', // 横並び（左: アイコン+テキスト、右: 矢印）
-    justifyContent: 'space-between', // 両端揃え
-    alignItems: 'center', // 縦方向中央揃え
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: UI_CONSTANTS.GAP.XL,
     borderRadius: UI_CONSTANTS.BORDER_RADIUS.XL,
-    borderWidth: UI_CONSTANTS.BORDER_WIDTH.THICK, // 太めのボーダー
+    borderWidth: UI_CONSTANTS.BORDER_WIDTH.THICK,
   },
   /** 左側エリア（アイコン+テキスト） */
   subscriptionLeft: {
-    flexDirection: 'row', // 横並び
+    flexDirection: 'row',
     alignItems: 'center',
     gap: UI_CONSTANTS.GAP.LG,
   },
   /** テキストエリア（タイトル+サブテキスト） */
   subscriptionText: {
-    gap: UI_CONSTANTS.GAP.XS, // テキスト間の余白
+    gap: UI_CONSTANTS.GAP.XS,
   },
-  /** タイトルテキスト */
+  /** カード見出しの文字（購読中 / Proプラン） */
   subscriptionTitle: {
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,
   },

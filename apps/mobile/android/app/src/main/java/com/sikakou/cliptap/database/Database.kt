@@ -114,7 +114,7 @@ class Database private constructor(private val context: Context) {
             // ディレクトリが存在しない場合は作成
             if (!sharedDir.exists()) {
                 sharedDir.mkdirs()
-                Log.d(TAG, "📁 Created shared database directory: ${sharedDir.absolutePath}")
+                if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Created shared database directory")
             }
 
             return java.io.File(sharedDir, DB_NAME).absolutePath
@@ -142,7 +142,7 @@ class Database private constructor(private val context: Context) {
     @Throws(Exception::class)
     fun initialize() {
         if (db != null && db!!.isOpen) {
-            Log.d(TAG, "✅ SharedDB already initialized")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ SharedDB already initialized")
             return
         }
 
@@ -154,7 +154,7 @@ class Database private constructor(private val context: Context) {
                 null,
                 SQLiteDatabase.OPEN_READWRITE or SQLiteDatabase.CREATE_IF_NECESSARY
             )
-            Log.d(TAG, "✅ SharedDB initialized successfully: $dbPath")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "SharedDB initialized successfully")
         } catch (e: Exception) {
             Log.e(TAG, "❌ Failed to initialize SharedDB", e)
             throw e
@@ -193,7 +193,7 @@ class Database private constructor(private val context: Context) {
                 null,
                 SQLiteDatabase.OPEN_READONLY
             )
-            Log.d(TAG, "✅ SharedDB opened (read-only): $dbPath")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "SharedDB opened (read-only)")
         } catch (e: Exception) {
             Log.e(TAG, "❌ Failed to open SharedDB", e)
             throw e
@@ -216,7 +216,7 @@ class Database private constructor(private val context: Context) {
     fun close() {
         db?.close()
         db = null
-        Log.d(TAG, "Database closed")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Database closed")
     }
 
     /**

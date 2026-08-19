@@ -33,7 +33,7 @@ export interface UseVariableExpansionReturn {
 export function useVariableExpansion({
   variables,
   profileVariables,
-  locale = 'ja',
+  locale = 'en',
 }: UseVariableExpansionParams): UseVariableExpansionReturn {
   /* validフラグがtrueの変数のみを変数展開の対象とする */
   const validVariables = useMemo(

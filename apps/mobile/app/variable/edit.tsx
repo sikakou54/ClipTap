@@ -10,10 +10,9 @@
  * - アイコンの選択（80種類以上のIonicons）
  * - プロファイルごとの値設定（テーブル形式）
  *
- * @see lib/hooks/screens/useVariableEditScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useVariableEditScreen.ts - ビジネスロジック
  */
 
-import React from 'react';
 import {
   View,
   Text,
@@ -22,10 +21,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Modal,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashList } from '@mobile-types/flashlist';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from '@cliptap/shared'
@@ -33,8 +29,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
 import { useVariableEditScreen } from '@hooks/screens/useVariableEditScreen';
 import { Profile } from '@cliptap/shared';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { UI_CONSTANTS, VARIABLE_ICONS } from '@constants/ui';
 
 export default function VariableEditModal() {
@@ -116,92 +111,34 @@ export default function VariableEditModal() {
   };
 
   return (
-    <SafeAreaView
-      style={[commonStyles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}
+    <ScreenContainer
+      title={isEdit ? t('settings.variable_edit') : t('settings.variable_add')}
+      isModal={true}
+      keyboardAvoiding
+      rightAction={
+        <TouchableOpacity onPress={handleSave} style={styles.saveButton} disabled={!canSave}>
+          <Text
+            style={[
+              styles.saveText,
+              {
+                color: canSave ? colors.primary : colors.textSecondary,
+                fontSize: responsiveFontSizes.base,
+              },
+            ]}
+          >
+            {t('common.save')}
+          </Text>
+        </TouchableOpacity>
+      }
     >
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={0}
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={{ paddingHorizontal: isTablet ? 32 : 12 }}
+        keyboardShouldPersistTaps="handled"
       >
-        <Header
-          title={isEdit ? t('settings.variable_edit') : t('settings.variable_add')}
-          isModal={true}
-          rightAction={
-            <TouchableOpacity onPress={handleSave} style={styles.saveButton} disabled={!canSave}>
-              <Text
-                style={[
-                  styles.saveText,
-                  {
-                    color: canSave ? colors.primary : colors.textSecondary,
-                    fontSize: responsiveFontSizes.base,
-                  },
-                ]}
-              >
-                {t('common.save')}
-              </Text>
-            </TouchableOpacity>
-          }
-        />
-
-        <ScrollView
-          style={styles.content}
-          contentContainerStyle={{ paddingHorizontal: isTablet ? 32 : 12 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.section}>
-            {/* ラベルと文字数カウンター */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    color: colors.text,
-                    fontSize: responsiveFontSizes.sm,
-                    lineHeight: responsiveLineHeights.sm,
-                  },
-                ]}
-              >
-                {t('settings.variable_name')} *
-              </Text>
-              <Text style={{ color: !isNameValid ? colors.error : colors.textSecondary, fontSize: responsiveFontSizes.xs }}>
-                {name.length}/{UI_CONSTANTS.INPUT_LIMITS.VARIABLE_NAME_MAX}
-              </Text>
-            </View>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.surface,
-                  color: colors.text,
-                  borderWidth: !isNameValid ? 2 : 0,
-                  borderColor: colors.error,
-                  fontSize: responsiveFontSizes.base,
-                  padding: isTablet ? 16 : 12,
-                },
-              ]}
-              value={name}
-              onChangeText={setName}
-              placeholder={t('settings.variable_name_placeholder')}
-              placeholderTextColor={colors.textSecondary}
-              autoCapitalize="none"
-              editable={true}
-              maxLength={UI_CONSTANTS.INPUT_LIMITS.VARIABLE_NAME_MAX}
-            />
-            {/* ヒント/エラーメッセージ */}
-            <Text
-              style={{
-                color: !isNameValid ? colors.error : colors.textSecondary,
-                fontSize: responsiveFontSizes.xs,
-                marginTop: UI_CONSTANTS.GAP.XS,
-              }}
-            >
-              {nameErrorMessage || t('settings.variable_usage_hint', { name: name || t('settings.variable_name') })}
-            </Text>
-          </View>
-
-          <View style={styles.section}>
+        <View style={styles.section}>
+          {/* ラベルと文字数カウンター */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text
               style={[
                 styles.label,
@@ -212,39 +149,161 @@ export default function VariableEditModal() {
                 },
               ]}
             >
-              {t('settings.variable_label')} *
+              {t('settings.variable_name')} *
             </Text>
-            <View style={styles.labelWithIconRow}>
-              <TouchableOpacity
-                style={[
-                  styles.iconSelectButton,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                    padding: isTablet ? 16 : 12,
-                  },
-                ]}
-                onPress={() => setShowIconModal(true)}
-              >
-                <Ionicons name={selectedIcon} size={isTablet ? 20 : 18} color={colors.primary} />
-              </TouchableOpacity>
-              <TextInput
-                style={[
-                  styles.input,
-                  styles.labelInput,
-                  {
-                    backgroundColor: colors.surface,
-                    color: colors.text,
-                    fontSize: responsiveFontSizes.base,
-                    padding: isTablet ? 16 : 12,
-                  },
-                ]}
-                value={label}
-                onChangeText={setLabel}
-                placeholder={t('settings.variable_label_placeholder')}
-                placeholderTextColor={colors.textSecondary}
-              />
+            <Text style={{ color: !isNameValid ? colors.error : colors.textSecondary, fontSize: responsiveFontSizes.xs }}>
+              {name.length}/{UI_CONSTANTS.INPUT_LIMITS.VARIABLE_NAME_MAX}
+            </Text>
+          </View>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.surface,
+                color: colors.text,
+                borderWidth: !isNameValid ? 2 : 0,
+                borderColor: colors.error,
+                fontSize: responsiveFontSizes.base,
+                padding: isTablet ? 16 : 12,
+              },
+            ]}
+            value={name}
+            onChangeText={setName}
+            placeholder={t('settings.variable_name_placeholder')}
+            placeholderTextColor={colors.textSecondary}
+            autoCapitalize="none"
+            editable={true}
+            maxLength={UI_CONSTANTS.INPUT_LIMITS.VARIABLE_NAME_MAX}
+          />
+          {/* ヒント/エラーメッセージ */}
+          <Text
+            style={{
+              color: !isNameValid ? colors.error : colors.textSecondary,
+              fontSize: responsiveFontSizes.xs,
+              marginTop: UI_CONSTANTS.GAP.XS,
+            }}
+          >
+            {nameErrorMessage || t('settings.variable_usage_hint', { name: name || t('settings.variable_name') })}
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text
+            style={[
+              styles.label,
+              {
+                color: colors.text,
+                fontSize: responsiveFontSizes.sm,
+                lineHeight: responsiveLineHeights.sm,
+              },
+            ]}
+          >
+            {t('settings.variable_label')}
+            <Text style={{ color: colors.textSecondary, fontSize: responsiveFontSizes.xs }}>
+              {' '}({label.length}/{UI_CONSTANTS.INPUT_LIMITS.VARIABLE_LABEL_MAX})
+            </Text>
+          </Text>
+          <View style={styles.labelWithIconRow}>
+            <TouchableOpacity
+              style={[
+                styles.iconSelectButton,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  padding: isTablet ? 16 : 12,
+                },
+              ]}
+              onPress={() => setShowIconModal(true)}
+            >
+              <Ionicons name={selectedIcon} size={isTablet ? 20 : 18} color={colors.primary} />
+            </TouchableOpacity>
+            <TextInput
+              style={[
+                styles.input,
+                styles.labelInput,
+                {
+                  backgroundColor: colors.surface,
+                  color: colors.text,
+                  fontSize: responsiveFontSizes.base,
+                  padding: isTablet ? 16 : 12,
+                },
+              ]}
+              value={label}
+              onChangeText={setLabel}
+              placeholder={t('settings.variable_label_placeholder')}
+              placeholderTextColor={colors.textSecondary}
+              maxLength={UI_CONSTANTS.INPUT_LIMITS.VARIABLE_LABEL_MAX}
+            />
+          </View>
+          <Text
+            style={[
+              styles.hint,
+              {
+                color: colors.textSecondary,
+                fontSize: responsiveFontSizes.xs,
+                lineHeight: responsiveLineHeights.xs,
+              },
+            ]}
+          >
+            {t('settings.variable_label_hint')}
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text
+            style={[
+              styles.label,
+              {
+                color: colors.text,
+                fontSize: responsiveFontSizes.sm,
+                lineHeight: responsiveLineHeights.sm,
+              },
+            ]}
+          >
+            {t('settings.variable_value')} *
+          </Text>
+
+          <View style={[styles.tableContainer, { borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.tableHeader,
+                { backgroundColor: colors.surface, borderBottomColor: colors.border },
+              ]}
+            >
+              <View style={styles.tableCell}>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: colors.text, fontSize: responsiveFontSizes.sm },
+                  ]}
+                >
+                  {t('variables.environment_header')}
+                </Text>
+              </View>
+              <View style={[styles.tableCell, styles.valueCell]}>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: colors.text, fontSize: responsiveFontSizes.sm },
+                  ]}
+                >
+                  {t('variables.value_header')}
+                </Text>
+              </View>
             </View>
+
+            <FlashList
+              data={profiles}
+              renderItem={renderProfileValueItem}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+              estimatedItemSize={60}
+              /* FlashList は data（profiles）の同一性しか監視しないため、profiles が変わらないまま value / profileValues だけ更新されたケースを extraData で再描画対象として明示している */
+              extraData={[value, profileValues]}
+            />
+          </View>
+
+          <View style={{ marginTop: 8 }}>
             <Text
               style={[
                 styles.hint,
@@ -255,147 +314,78 @@ export default function VariableEditModal() {
                 },
               ]}
             >
-              {t('settings.variable_label_hint')}
+              {t('variables.environment_values_hint_1')}
             </Text>
-          </View>
-
-          <View style={styles.section}>
             <Text
               style={[
-                styles.label,
+                styles.hint,
                 {
-                  color: colors.text,
-                  fontSize: responsiveFontSizes.sm,
-                  lineHeight: responsiveLineHeights.sm,
+                  color: colors.textSecondary,
+                  fontSize: responsiveFontSizes.xs,
+                  lineHeight: responsiveLineHeights.xs,
                 },
               ]}
             >
-              {t('settings.variable_value')} *
+              {t('variables.environment_values_hint_2')}
             </Text>
+          </View>
+        </View>
+      </ScrollView>
 
-            <View style={[styles.tableContainer, { borderColor: colors.border }]}>
-              <View
-                style={[
-                  styles.tableHeader,
-                  { backgroundColor: colors.surface, borderBottomColor: colors.border },
-                ]}
-              >
-                <View style={styles.tableCell}>
-                  <Text
-                    style={[
-                      styles.tableHeaderText,
-                      { color: colors.text, fontSize: responsiveFontSizes.sm },
-                    ]}
-                  >
-                    {t('variables.environment_header')}
-                  </Text>
-                </View>
-                <View style={[styles.tableCell, styles.valueCell]}>
-                  <Text
-                    style={[
-                      styles.tableHeaderText,
-                      { color: colors.text, fontSize: responsiveFontSizes.sm },
-                    ]}
-                  >
-                    {t('variables.value_header')}
-                  </Text>
-                </View>
-              </View>
-
-              <FlashList
-                data={profiles}
-                renderItem={renderProfileValueItem}
-                keyExtractor={(item) => item.id}
-                scrollEnabled={false}
-                estimatedItemSize={60}
-                extraData={[value, profileValues]}
-              />
-            </View>
-
-            <View style={{ marginTop: 8 }}>
+      <Modal
+        visible={showIconModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowIconModal(false)}
+      >
+        <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[styles.modalContent, { backgroundColor: colors.background, shadowColor: colors.shadow }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
               <Text
                 style={[
-                  styles.hint,
-                  {
-                    color: colors.textSecondary,
-                    fontSize: responsiveFontSizes.xs,
-                    lineHeight: responsiveLineHeights.xs,
-                  },
+                  styles.modalTitle,
+                  { color: colors.text, fontSize: responsiveFontSizes.lg },
                 ]}
               >
-                {t('variables.environment_values_hint_1')}
+                {t('settings.variable_icon')}
               </Text>
-              <Text
-                style={[
-                  styles.hint,
-                  {
-                    color: colors.textSecondary,
-                    fontSize: responsiveFontSizes.xs,
-                    lineHeight: responsiveLineHeights.xs,
-                  },
-                ]}
+              <TouchableOpacity
+                onPress={() => setShowIconModal(false)}
+                style={styles.modalCloseButton}
               >
-                {t('variables.environment_values_hint_2')}
-              </Text>
+                <Ionicons name="close" size={28} color={colors.text} />
+              </TouchableOpacity>
             </View>
-          </View>
-        </ScrollView>
 
-        <Modal
-          visible={showIconModal}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setShowIconModal(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-              <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-                <Text
-                  style={[
-                    styles.modalTitle,
-                    { color: colors.text, fontSize: responsiveFontSizes.lg },
-                  ]}
-                >
-                  {t('settings.variable_icon')}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setShowIconModal(false)}
-                  style={styles.modalCloseButton}
-                >
-                  <Ionicons name="close" size={28} color={colors.text} />
-                </TouchableOpacity>
+            <ScrollView style={styles.modalScrollView}>
+              <View style={styles.iconGrid}>
+                {VARIABLE_ICONS.map((icon) => (
+                  <TouchableOpacity
+                    key={icon}
+                    style={[
+                      styles.iconButton,
+                      {
+                        backgroundColor: selectedIcon === icon ? colors.primary : colors.surface,
+                        borderColor: colors.border,
+                        width: isTablet ? 64 : 56,
+                        height: isTablet ? 64 : 56,
+                      },
+                    ]}
+                    onPress={() => handleSelectIcon(icon)}
+                  >
+                    <Ionicons
+                      name={icon}
+                      size={isTablet ? 28 : 24}
+                      color={selectedIcon === icon ? colors.onPrimary : colors.text}
+                    />
+                  </TouchableOpacity>
+                ))}
               </View>
-
-              <ScrollView style={styles.modalScrollView}>
-                <View style={styles.iconGrid}>
-                  {VARIABLE_ICONS.map((icon) => (
-                    <TouchableOpacity
-                      key={icon}
-                      style={[
-                        styles.iconButton,
-                        {
-                          backgroundColor: selectedIcon === icon ? colors.primary : colors.surface,
-                          borderColor: colors.border,
-                          width: isTablet ? 64 : 56,
-                          height: isTablet ? 64 : 56,
-                        },
-                      ]}
-                      onPress={() => handleSelectIcon(icon)}
-                    >
-                      <Ionicons
-                        name={icon}
-                        size={isTablet ? 28 : 24}
-                        color={selectedIcon === icon ? '#fff' : colors.text}
-                      />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
+            </ScrollView>
           </View>
-        </Modal>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </View>
+      </Modal>
+    </ScreenContainer>
   );
 }
 
@@ -506,18 +496,18 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'left',
   },
+  /** モーダルオーバーレイ（背景色は使用箇所でテーマの overlay を重ねる） */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
+  /** モーダル本体（背景色と影の色は使用箇所でテーマから重ねる） */
   modalContent: {
     borderTopLeftRadius: UI_CONSTANTS.BORDER_RADIUS.XXL,
     borderTopRightRadius: UI_CONSTANTS.BORDER_RADIUS.XXL,
     minHeight: '60%',
     maxHeight: '80%',
     paddingBottom: 20,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.25,
     shadowRadius: UI_CONSTANTS.BORDER_RADIUS.BASE,

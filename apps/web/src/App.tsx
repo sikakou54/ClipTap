@@ -2,7 +2,7 @@
  * ルートアプリケーションコンポーネント
  *
  * プロバイダー階層:
- * WebThemeProvider → AlertProvider → AuthProvider → SubscriptionProvider
+ * WebThemeProvider → AuthProvider → SubscriptionProvider
  *
  * ルーティング:
  * - / (Home): 初回セットアップ画面（.cliptapファイル読み込み）
@@ -24,7 +24,6 @@ import { VariableManage } from '@pages/VariableManage';
 import { getThemeColors } from '@cliptap/shared';
 import { webThemeStorageAdapter } from '@providers/themeStorageAdapter';
 import { WebThemeProvider } from '@providers/WebThemeProvider';
-import { AlertProvider } from '@providers/AlertProvider';
 import { SubscriptionProvider } from '@providers/SubscriptionProvider';
 import { DatabaseProvider, useDatabase } from '@cliptap/shared';
 import { useAdapterInitialization } from '@hooks/useAdapterInitialization';
@@ -161,24 +160,21 @@ export default function App() {
     },
   };
 
-  /* プロバイダー階層（テーマ → アラート → 認証 → サブスクリプション → Main） */
+  /* プロバイダー階層（テーマ → 認証 → サブスクリプション → Main） */
   return (
     <WebThemeProvider
       storageAdapter={webThemeStorageAdapter}
       platformAdapter={webPlatformAdapter}
       getThemeColors={getThemeColors}
     >
-      {/* アラート表示管理（成功・エラー・警告メッセージの表示制御） */}
-      <AlertProvider>
-        {/* 認証管理（Google/Appleログイン、ユーザー状態管理） */}
-        <AuthProvider>
-          {/* サブスクリプション管理（Free/Proプランの状態管理） */}
-          <SubscriptionProvider>
-            {/* メインコンテンツ（Database → Profile → Variable → Category → Snippet → Router） */}
-            <Main />
-          </SubscriptionProvider>
-        </AuthProvider>
-      </AlertProvider>
+      {/* 認証管理（Google/Appleログイン、ユーザー状態管理） */}
+      <AuthProvider>
+        {/* サブスクリプション管理（Free/Proプランの状態管理） */}
+        <SubscriptionProvider>
+          {/* メインコンテンツ（Database → Profile → Variable → Category → Snippet → Router） */}
+          <Main />
+        </SubscriptionProvider>
+      </AuthProvider>
     </WebThemeProvider>
   );
 }

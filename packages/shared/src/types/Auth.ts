@@ -23,16 +23,4 @@ export interface SharedUser {
   getIdToken?: (forceRefresh?: boolean) => Promise<string>;
 }
 
-/**
- * 認証プロバイダーの種類
- */
-export type AuthProviderType = 'google' | 'apple';
-
-/**
- * 認証エラー情報
- */
-export interface AuthError {
-  code: string;
-  message: string;
-}
 

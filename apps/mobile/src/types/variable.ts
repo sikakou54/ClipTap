@@ -14,8 +14,6 @@ import {
   UI_SYSTEM_VARIABLES as SHARED_UI_SYSTEM_VARIABLES,
 } from '@cliptap/shared';
 
-export type { VariableReplacement } from '@cliptap/shared';
-
 type IoniconsName = keyof typeof Ionicons.glyphMap;
 
 /**

@@ -12,11 +12,11 @@
  * - 画面フォーカス時のデータ更新
  *
  * @see app/index.tsx - UIコンポーネント
- * @see lib/hooks/useSnippets.ts - 定型文CRUD操作
- * @see lib/hooks/useCategories.ts - カテゴリCRUD操作
+ * @see packages/shared/src/providers/SnippetProvider.tsx - 定型文CRUD操作（useSnippets）
+ * @see packages/shared/src/providers/CategoryProvider.tsx - カテゴリCRUD操作（useCategories）
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from '@cliptap/shared';
 import i18next from '@i18n/config';
@@ -29,7 +29,6 @@ import { showErrorAlert } from '@utils/alerts';
 export interface UseHomeScreenReturn {
   /* 状態 */
   selectedCategoryId: string | null;
-  refreshing: boolean;
   activeProfileId: string | undefined;
   currentSort: SnippetSortBy;
 
@@ -40,10 +39,11 @@ export interface UseHomeScreenReturn {
 
   /* ハンドラ */
   handleCategorySelect: (categoryId: string | null) => void;
-  handleRefresh: () => Promise<void>;
+  handleRefresh: () => void;
   handleCopySnippet: (snippet: SnippetWithDisplay) => Promise<void>;
+  handleCopySnippetTitle: (snippet: SnippetWithDisplay) => Promise<void>;
   handleEditSnippet: (snippet: SnippetWithDisplay) => void;
-  handleDeleteSnippet: (snippet: SnippetWithDisplay) => Promise<void>;
+  handleDeleteSnippet: (snippet: SnippetWithDisplay) => void;
   handleNavigateToSettings: () => void;
   handleNavigateToExportImport: () => void;
   handleNavigateToSearch: () => void;
@@ -64,24 +64,20 @@ export function useHomeScreen(): UseHomeScreenReturn {
   /* ======================================== */
   /* 状態管理 */
   /* ======================================== */
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  /* ユーザーが明示的に選択したカテゴリID（null = すべて） */
+  const [categoryOverride, setCategoryOverride] = useState<string | null>(null);
 
   /* ======================================== */
   /* データ取得 */
   /* ======================================== */
   const { categories, refresh: refreshCategories } = useCategories();
-  const { profiles, profileVariables, refresh: refreshProfiles } = useProfiles();
+  const { activeProfile, profileVariables, defaultProfile, refresh: refreshProfiles } = useProfiles();
   const { variables } = useVariables();
 
-  /* アクティブなプロファイルを取得（現在選択中の環境、isActive=trueのもの） */
-  const activeProfile = useMemo(
-    () => profiles.find((p) => p.isActive) ?? null,
-    [profiles]
-  );
-
+  /* アクティブなプロファイル（現在選択中の環境）はProviderの値を使う。
+     検索画面・環境選択・Web版も同じ入口を使っており、ここだけ配列から導出すると
+     Provider側の自動有効化を取りこぼす */
   const activeProfileId = activeProfile?.id;
-  const defaultProfile = useMemo(() => profiles.find((p) => p.isDefault) ?? null, [profiles]);
   const defaultProfileId = defaultProfile?.id;
 
   /* スニペットデータを取得（Providerから全データを取得） */
@@ -90,10 +86,22 @@ export function useHomeScreen(): UseHomeScreenReturn {
     snippetProfiles,
     refresh,
     copySnippet,
+    copySnippetTitle,
     deleteSnippet,
     sortBy: currentSort,
     setSortBy: handleSortChange,
   } = useSnippets();
+
+  /**
+   * 実際に適用するカテゴリID
+   *
+   * 選択中のカテゴリが削除された場合は自動的に「すべて」へフォールバックする。
+   * effectで書き潰さないため、カテゴリ一覧が一時的に空になっても選択は失われない。
+   */
+  const selectedCategoryId = useMemo(
+    () => (categoryOverride && categories.some((c) => c.id === categoryOverride) ? categoryOverride : null),
+    [categoryOverride, categories]
+  );
 
   /* 共通フィルタリングフックを使用（カテゴリフィルタ適用） */
   const { filteredSnippets: snippets } = useFilteredSnippets({
@@ -118,11 +126,8 @@ export function useHomeScreen(): UseHomeScreenReturn {
     defaultProfileId: defaultProfileId ?? null,
     variables,
     profileVariables,
-    locale: 'ja',
+    locale: i18next.language,
   });
-
-  /* 後方互換性のため、refreshAllSnippetsをrefreshにエイリアス */
-  const refreshAllSnippets = refresh;
 
   /* ======================================== */
   /* 派生状態 */
@@ -134,24 +139,14 @@ export function useHomeScreen(): UseHomeScreenReturn {
   );
 
   /* ======================================== */
-  /* カテゴリ削除検知 */
-  /* ======================================== */
-  useEffect(() => {
-    if (selectedCategoryId && !categories.find(c => c.id === selectedCategoryId)) {
-      setSelectedCategoryId(null);
-    }
-  }, [categories, selectedCategoryId]);
-
-  /* ======================================== */
   /* 画面フォーカス時のデータ更新 */
   /* ======================================== */
   useFocusEffect(
     useCallback(() => {
-      void refresh();
-      void refreshAllSnippets();
-      void refreshCategories();
-      void refreshProfiles();
-    }, [refresh, refreshAllSnippets, refreshCategories, refreshProfiles])
+      refresh();
+      refreshCategories();
+      refreshProfiles();
+    }, [refresh, refreshCategories, refreshProfiles])
   );
 
   /* ======================================== */
@@ -159,22 +154,31 @@ export function useHomeScreen(): UseHomeScreenReturn {
   /* ======================================== */
 
   const handleCategorySelect = useCallback((categoryId: string | null) => {
-    setSelectedCategoryId(categoryId);
+    setCategoryOverride(categoryId);
   }, []);
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await refresh();
-    setRefreshing(false);
+  const handleRefresh = useCallback(() => {
+    refresh();
   }, [refresh]);
 
   const handleCopySnippet = useCallback(async (snippet: SnippetWithDisplay) => {
     try {
       await copySnippet(snippet.id);
-    } catch (error) {
+    } catch {
       showErrorAlert(t('error.generic'));
     }
   }, [copySnippet, t]);
+
+  /* 一覧のタイトルタップ時はタイトルだけをコピーする（件名と本文を別々に貼り付ける用途） */
+  const handleCopySnippetTitle = useCallback(async (snippet: SnippetWithDisplay) => {
+    try {
+      await copySnippetTitle(snippet.id);
+    } catch (error) {
+      showErrorAlert(t('error.generic'));
+      /* カード側でコピー成功表示を出さないよう再スローする */
+      throw error;
+    }
+  }, [copySnippetTitle, t]);
 
   const handleEditSnippet = useCallback((snippet: SnippetWithDisplay) => {
     router.push({
@@ -183,14 +187,14 @@ export function useHomeScreen(): UseHomeScreenReturn {
     });
   }, [router]);
 
-  const handleDeleteSnippet = useCallback(async (snippet: SnippetWithDisplay) => {
+  /* deleteSnippetは内部で一覧を再読込するため、追加のrefreshは不要 */
+  const handleDeleteSnippet = useCallback((snippet: SnippetWithDisplay) => {
     try {
-      await deleteSnippet(snippet.id);
-      await refreshAllSnippets();
-    } catch (error) {
+      deleteSnippet(snippet.id);
+    } catch {
       showErrorAlert(t('error.generic'));
     }
-  }, [deleteSnippet, refreshAllSnippets, t]);
+  }, [deleteSnippet, t]);
 
   const handleNavigateToSettings = useCallback(() => {
     router.push('/settings');
@@ -209,14 +213,12 @@ export function useHomeScreen(): UseHomeScreenReturn {
   }, [router]);
 
   const handleProfileChange = useCallback(() => {
-    void refreshProfiles();
-    void refresh();
-    void refreshAllSnippets();
-  }, [refreshProfiles, refresh, refreshAllSnippets]);
+    refreshProfiles();
+    refresh();
+  }, [refreshProfiles, refresh]);
 
   return {
     selectedCategoryId,
-    refreshing,
     activeProfileId,
     currentSort,
     snippets,
@@ -225,6 +227,7 @@ export function useHomeScreen(): UseHomeScreenReturn {
     handleCategorySelect,
     handleRefresh,
     handleCopySnippet,
+    handleCopySnippetTitle,
     handleEditSnippet,
     handleDeleteSnippet,
     handleNavigateToSettings,

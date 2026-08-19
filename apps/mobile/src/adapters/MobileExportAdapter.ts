@@ -24,15 +24,11 @@ export class MobileExportAdapter implements ExportAdapter {
     this.fileShare = fileShare;
   }
 
-  async getDatabasePath(): Promise<string> {
-    return await getDatabasePath(this.fileIO);
-  }
-
   async saveExportFile(fileName: string, content: string): Promise<string> {
     const exportFileUri = await this.fileIO.writeFile(fileName, content);
 
     /* Mobile: システム共有シートで保存先選択（iOS/Android標準UI） */
-    await this.fileShare.shareFile(exportFileUri, 'エクスポートファイルを保存');
+    await this.fileShare.shareFile(exportFileUri, fileName);
 
     await this.fileIO.deleteFile(exportFileUri).catch(() => { });
 

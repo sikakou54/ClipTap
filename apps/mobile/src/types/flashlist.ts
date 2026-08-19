@@ -21,5 +21,5 @@ export const FlashList = OriginalFlashList as unknown as <T>(
   props: FlashListProps<T> & { estimatedItemSize: number; ref?: React.Ref<FlashListRef<T>> }
 ) => React.ReactElement;
 
-export type { FlashListProps, FlashListRef } from '@shopify/flash-list';
+export type { FlashListRef } from '@shopify/flash-list';
 export type { ListRenderItemInfo } from '@shopify/flash-list';

@@ -10,16 +10,15 @@
 
 import { VariableMapper } from '../mappers/VariableMapper';
 import { ProfileVariableMapper } from '../mappers/ProfileMapper';
-import { ProfileService } from './ProfileService';
 import type { Variable, CreateVariableInput, UpdateVariableInput } from '../schema';
 import type { VariableResolver } from '../variables/parser';
 import { hasVariables, replaceVariables, VARIABLE_TOKEN_PATTERN } from '../variables/parser';
 import { resolveSystemVariableValue } from '../variables/systemVariables';
+import { SystemVariableFormatRegistry } from './SystemVariableFormatRegistry';
 import {
   NotFoundError,
   DuplicateNameError,
   VariableNameRequiredError,
-  VariableNameTooLongError,
   VariableNameInvalidError,
   VariableNameReservedError,
   SystemVariableDeleteError,
@@ -38,9 +37,6 @@ export interface VariableResolverContext {
   defaultProfileVariablesMap: Record<string, string>;
 }
 
-/** 変数名の最大長 */
-const MAX_VARIABLE_NAME_LENGTH = 50;
-
 /** 変数名のパターン（英数字とアンダースコアのみ、先頭は英字またはアンダースコア） */
 const VARIABLE_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
@@ -52,10 +48,6 @@ function validateVariableName(name: string, currentId: string | null): void {
 
   if (!trimmedName) {
     throw new VariableNameRequiredError();
-  }
-
-  if (trimmedName.length > MAX_VARIABLE_NAME_LENGTH) {
-    throw new VariableNameTooLongError(MAX_VARIABLE_NAME_LENGTH, trimmedName.length);
   }
 
   if (!VARIABLE_NAME_PATTERN.test(trimmedName)) {
@@ -70,6 +62,32 @@ function validateVariableName(name: string, currentId: string | null): void {
   if (existing && existing.id !== currentId) {
     throw new DuplicateNameError('variable', trimmedName);
   }
+}
+
+/**
+ * プロファイル変数値の解決
+ *
+ * @param name - 変数名
+ * @param profileMap - 対象プロファイルの変数値マップ
+ * @param defaultMap - 標準プロファイルの変数値マップ
+ * @returns 解決した値。未設定なら null
+ *
+ * @remarks
+ * 解決順序は「対象プロファイルの非空値 → 標準プロファイルの非空値 → 未設定」。
+ * 空文字は「未設定」として扱う。値が空のときに空文字へ置換してしまうと、
+ * 利用者が値を入れ忘れたことに気づけなくなるため、未設定として扱って呼び出し側で
+ * トークンを保持させる。
+ * この順序は同期展開（expandTextSync＝一覧の見た目）とコピー経路
+ * （createCustomVariableResolver）で必ず一致させる必要がある。食い違うと
+ * 「一覧に見えている文字列とコピーされる文字列が違う」という利用者に直接見える不具合になる
+ * （tests/variables/expandTextSyncParity.test.ts がこの一致を固定している）。
+ */
+function resolveProfileValue(
+  name: string,
+  profileMap: Record<string, string>,
+  defaultMap: Record<string, string>
+): string | null {
+  return profileMap[name] || defaultMap[name] || null;
 }
 
 /**
@@ -91,39 +109,21 @@ export class VariableService {
   }
 
   /**
-   * カスタム変数のみ取得
-   */
-  static getCustomVariables(): Variable[] {
-    return VariableMapper.getCustomVariables();
-  }
-
-  /**
-   * IDで変数を取得
-   */
-  static getById(id: string): Variable | null {
-    return VariableMapper.getById(id);
-  }
-
-  /**
-   * 名前で変数を取得
-   */
-  static getByName(name: string): Variable | null {
-    return VariableMapper.getByName(name);
-  }
-
-  /**
    * 変数を作成
    * @throws {VariableNameRequiredError} 変数名が空の場合
-   * @throws {VariableNameTooLongError} 変数名が長すぎる場合
    * @throws {VariableNameInvalidError} 変数名の形式が無効な場合
    * @throws {VariableNameReservedError} システム変数名と衝突する場合
    * @throws {DuplicateNameError} 同名の変数が既に存在する場合
    */
   static create(data: CreateVariableInput): Variable {
-    /* 変数名のバリデーション（空文字、長さ、形式、予約語、重複チェック） */
+    /* 空文字→形式→予約語→重複の順で検証する。
+       長さ上限はUI層のフォームバリデーションで判定しており
+       （mobile: useVariableEditScreen / web: VariableEditModal、いずれも
+       INPUT_LIMITS.VARIABLE_NAME_MAX）、Service層では検査していない */
     validateVariableName(data.name, null);
 
-    /* バリデーション通過後、名前をトリムしてMapper層に処理を委譲 */
+    /* 検証はService、SQLはMapperに集約する規約のため、
+       トリム済みの検証済みデータをそのままMapperへ渡す */
     return VariableMapper.create({
       ...data,
       name: data.name.trim(),
@@ -134,7 +134,6 @@ export class VariableService {
    * 変数を更新
    * @throws {NotFoundError} 変数が存在しない場合
    * @throws {VariableNameRequiredError} 変数名が空の場合
-   * @throws {VariableNameTooLongError} 変数名が長すぎる場合
    * @throws {VariableNameInvalidError} 変数名の形式が無効な場合
    * @throws {VariableNameReservedError} システム変数名と衝突する場合
    * @throws {DuplicateNameError} 同名の変数が既に存在する場合
@@ -151,7 +150,8 @@ export class VariableService {
       validateVariableName(data.name, id);
     }
 
-    /* バリデーション通過後、名前をトリムしてMapper層に処理を委譲 */
+    /* 検証はService、SQLはMapperに集約する規約のため、
+       トリム済みの検証済みデータをそのままMapperへ渡す */
     return VariableMapper.update(id, {
       ...data,
       name: data.name?.trim(),
@@ -182,42 +182,6 @@ export class VariableService {
   }
 
   /**
-   * 変数数を取得
-   */
-  static count(): number {
-    return VariableMapper.count();
-  }
-
-  /**
-   * 有効なカスタム変数のみ取得
-   */
-  static getValidCustomVariables(): Variable[] {
-    return VariableMapper.getAll().filter((v) => v.type === 'custom');
-  }
-
-  /**
-   * 有効な変数数を取得
-   */
-  static countValid(): number {
-    return VariableMapper.getAll().filter((v) => v.type === 'custom').length;
-  }
-
-  /**
-   * プランに応じてvalidフラグを更新
-   */
-  static updateValidFlags(limit: number): void {
-    VariableMapper.updateValidFlags(limit);
-  }
-
-  /**
-   * 変数の標準値を取得
-   */
-  static getStandardValue(variableName: string): string {
-    const defaultVariablesMap = ProfileService.getDefaultProfileVariablesMap();
-    return defaultVariablesMap[variableName] || '';
-  }
-
-  /**
    * カスタム変数リゾルバーを作成
    */
   static createCustomVariableResolver(
@@ -241,76 +205,17 @@ export class VariableService {
         return null;
       }
 
-      /* 値の解決優先順位: 指定プロファイル → デフォルトプロファイル → 空文字 */
-      if (context.profileVariablesMap[name] !== undefined) {
-        return context.profileVariablesMap[name];
-      }
-
-      if (context.defaultProfileVariablesMap[name] !== undefined) {
-        return context.defaultProfileVariablesMap[name];
-      }
-
-      /* プロファイル変数に値が設定されていない場合は空文字を返す */
-      return '';
+      /* 値が引ければ文字列、引けなければnullを返す。
+         nullの場合は変数パーサーが元のトークンを保持する */
+      return resolveProfileValue(name, context.profileVariablesMap, context.defaultProfileVariablesMap);
     };
   }
 
-  /**
-   * プラットフォーム固有のコンテキストを注入してカスタム変数リゾルバーを作成
-   */
-  static createContextualVariableResolver(
-    subscriptionService: { isSubscribed(): boolean },
-    options?: { freeTierLimit?: number }
-  ): (profileId?: string) => VariableResolver {
-    return (profileId?: string): VariableResolver => {
-      const isSubscribed = subscriptionService.isSubscribed();
-      const profileVariablesMap = profileId
-        ? this.getProfileVariablesMap(profileId)
-        : this.getActiveProfileVariablesMap();
-      const defaultProfileVariablesMap = this.getDefaultProfileVariablesMap();
-
-      return this.createCustomVariableResolver(
-        { isSubscribed, profileVariablesMap, defaultProfileVariablesMap },
-        options
-      );
-    };
-  }
-
-  /**
-   * プロファイルの変数マップを取得
-   */
-  private static getProfileVariablesMap(profileId: string): Record<string, string> {
-    return ProfileService.getProfileVariablesMap(profileId);
-  }
-
-  /**
-   * アクティブプロファイルの変数マップを取得
-   */
-  private static getActiveProfileVariablesMap(): Record<string, string> {
-    return ProfileService.getActiveProfileVariablesMap();
-  }
-
-  /**
-   * デフォルトプロファイルの変数マップを取得
-   */
-  private static getDefaultProfileVariablesMap(): Record<string, string> {
-    return ProfileService.getDefaultProfileVariablesMap();
-  }
 
   /* ======================================== */
   /* 変数値の操作 */
   /* ======================================== */
 
-  /**
-   * 変数名の重複チェック
-   * @param name - チェックする変数名
-   * @param excludeId - 除外する変数ID（編集時に自分自身を除外）
-   * @returns 重複している場合はtrue
-   */
-  static isNameDuplicate(name: string, excludeId?: string): boolean {
-    const existing = VariableMapper.getByName(name);
-    return existing !== null && existing.id !== excludeId;
-  }
 
   /**
    * カスタム変数を作成または更新（名前ベースのupsert）
@@ -318,24 +223,23 @@ export class VariableService {
    * @param data - 変数の情報（nameで既存を検索、あれば更新、なければ新規作成）
    * @returns 作成/更新された変数
    * @throws {VariableNameRequiredError} 変数名が空の場合
-   * @throws {VariableNameTooLongError} 変数名が長すぎる場合
    * @throws {VariableNameInvalidError} 変数名の形式が無効な場合
    * @throws {VariableNameReservedError} システム変数名と衝突する場合
    * @throws {DuplicateNameError} 同名の変数が既に存在する場合（自分以外）
+   * @remarks
+   * 既存変数の表示順は変更しない。無料プランの有効判定は表示順で行うため、
+   * 同名変数の更新で表示順を末尾へ動かすと、それまで有効だった変数が
+   * 上限超過分と入れ替わって無効になる。これを防ぐため表示順を引数に取らない。
    */
-  static upsert(data: CreateVariableInput & { sortOrder?: number }): Variable {
+  static upsert(data: Omit<CreateVariableInput, 'sortOrder'>): Variable {
     const existing = VariableMapper.getByName(data.name);
     if (existing) {
-      /* 既存変数を更新（sortOrderが指定されている場合のみ更新） */
-      const updateData: UpdateVariableInput = {
+      /* 既存変数を更新（表示順は据え置く） */
+      return this.update(existing.id, {
         name: data.name,
         label: data.label,
         icon: data.icon,
-      };
-      if (data.sortOrder !== undefined) {
-        updateData.sortOrder = data.sortOrder;
-      }
-      return this.update(existing.id, updateData);
+      });
     } else {
       /* 新規作成（sortOrderは自動採番） */
       return this.create({
@@ -347,33 +251,16 @@ export class VariableService {
     }
   }
 
-  /**
-   * プロファイル別の変数値を一括で作成/更新
-   * @param variableId - 変数ID
-   * @param profileValues - プロファイルIDと値のマップ
-   */
-  static upsertValuesForProfiles(variableId: string, profileValues: Record<string, string>): void {
-    for (const [profileId, value] of Object.entries(profileValues)) {
-      const trimmedValue = value.trim();
-
-      /* 空文字の場合は削除してデフォルトプロファイルの値にフォールバック */
-      if (trimmedValue === '') {
-        this.deleteValueForProfile(profileId, variableId);
-      } else {
-        ProfileVariableMapper.upsert({
-          profileId,
-          variableId,
-          value: trimmedValue,
-        });
-      }
-    }
-  }
 
   /**
    * 単一プロファイルの変数値を作成/更新
    * @param profileId - プロファイルID
    * @param variableId - 変数ID
    * @param value - 変数値
+   *
+   * @remarks
+   * 値は前後空白を除去して保存する。
+   * UI経由の一括保存 ProfileService.setVariableValuesForVariable と同じ正規化規則。
    */
   static upsertValueForProfile(profileId: string, variableId: string, value: string): void {
     ProfileVariableMapper.upsert({
@@ -383,47 +270,26 @@ export class VariableService {
     });
   }
 
-  /**
-   * 単一プロファイルの変数値を削除
-   * @param profileId - プロファイルID
-   * @param variableId - 変数ID
-   * @returns 削除に成功した場合はtrue
-   */
-  static deleteValueForProfile(profileId: string, variableId: string): boolean {
-    const existing = ProfileVariableMapper.get(profileId, variableId);
-    if (existing) {
-      ProfileVariableMapper.delete(existing.id);
-      return true;
-    }
-    return false;
-  }
 
   /**
-   * 複数プロファイルの変数値を削除
-   * @param variableId - 変数ID
-   * @param profileIds - プロファイルIDの配列
-   */
-  static deleteValuesForProfiles(variableId: string, profileIds: string[]): void {
-    for (const profileId of profileIds) {
-      this.deleteValueForProfile(profileId, variableId);
-    }
-  }
-
-  /**
-   * 全カスタム変数の取得（sortOrder順でソート済み）
+   * 有効なカスタム変数の取得（無効化されたものは含まない）
    * @returns カスタム変数の配列
+   *
+   * @remarks
+   * VariableMapper.getByType は SELECT_BY_TYPE（ORDER BY sortOrder ASC）で返すため、ここで再ソートしない。
    */
   static getAllCustomVariablesSorted(): Variable[] {
-    // Mapper側で既にsortOrder ASCでソート済み
     return VariableMapper.getByType('custom');
   }
 
   /**
    * 全カスタム変数の取得（無効なものも含む、sortOrder順でソート済み）
    * @returns カスタム変数の配列
+   *
+   * @remarks
+   * VariableMapper.getAllIncludingInvalid は SELECT_ALL（ORDER BY sortOrder ASC）で返すため、ここで再ソートしない。
    */
   static getAllCustomVariablesIncludingInvalidSorted(): Variable[] {
-    // Mapper側で既にsortOrder ASCでソート済み
     return VariableMapper.getAllIncludingInvalid().filter((v) => v.type === 'custom');
   }
 
@@ -474,7 +340,12 @@ export class VariableService {
       const trimmedName = variableName.trim();
 
       /* システム変数を最優先で解決（ユーザー定義変数で上書き不可） */
-      const systemValue = resolveSystemVariableValue(trimmedName, locale);
+      const systemValue = resolveSystemVariableValue(
+        trimmedName,
+        locale,
+        new Date(),
+        SystemVariableFormatRegistry.getAll()
+      );
       if (systemValue !== null) {
         return systemValue;
       }
@@ -482,22 +353,12 @@ export class VariableService {
       /* validフラグがtrueのカスタム変数のみ展開対象 */
       const variable = validVariables.find((v) => v.name === trimmedName);
       if (!variable) {
-        return match; // 未知の変数はそのまま保持
+        return match; /* 定義のない変数はトークンのまま残す */
       }
 
-      /* 値の解決優先順位: プロファイル固有 → デフォルト → 未設定（トークン保持） */
-      const profileValue = profileVariablesMap[variable.name];
-      if (profileValue !== undefined) {
-        return profileValue;
-      }
-
-      const defaultValue = defaultProfileVariablesMap[variable.name];
-      if (defaultValue !== undefined) {
-        return defaultValue;
-      }
-
-      /* 値が未設定の場合はトークンを保持してユーザーに気づかせる */
-      return match;
+      /* 未設定ならトークンを保持して、値が入っていないことに気づかせる */
+      const resolved = resolveProfileValue(variable.name, profileVariablesMap, defaultProfileVariablesMap);
+      return resolved ?? match;
     });
   }
 
@@ -540,7 +401,6 @@ export class VariableService {
    * @param options - オプション
    * @param options.locale - ロケール（デフォルト: 'en'）
    * @param options.customResolver - カスタム変数リゾルバー
-   * @param options.preserveUnknown - 未知の変数をそのまま保持するか（デフォルト: true）
    * @returns 解決されたタイトルとコンテンツ
    */
   static async resolvePreviewText(
@@ -549,10 +409,9 @@ export class VariableService {
     options: {
       locale?: string;
       customResolver?: VariableResolver;
-      preserveUnknown?: boolean;
     } = {}
   ): Promise<{ title: string; content: string }> {
-    const { locale = 'en', customResolver, preserveUnknown = true } = options;
+    const { locale = 'en', customResolver } = options;
 
     const titleHasVars = hasVariables(title);
     const contentHasVars = hasVariables(content);
@@ -560,13 +419,21 @@ export class VariableService {
     const resolvedTitle = !title
       ? ''
       : titleHasVars
-        ? await replaceVariables(title, { locale, customResolver, preserveUnknown })
+        ? await replaceVariables(title, {
+            locale,
+            customResolver,
+            formats: SystemVariableFormatRegistry.getAll(),
+          })
         : title;
 
     const resolvedContent = !content
       ? ''
       : contentHasVars
-        ? await replaceVariables(content, { locale, customResolver, preserveUnknown })
+        ? await replaceVariables(content, {
+            locale,
+            customResolver,
+            formats: SystemVariableFormatRegistry.getAll(),
+          })
         : content;
 
     return { title: resolvedTitle, content: resolvedContent };

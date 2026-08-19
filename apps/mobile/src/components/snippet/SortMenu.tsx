@@ -14,7 +14,6 @@
  * @see app/index.tsx - メイン画面での使用例
  */
 
-import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '@cliptap/shared';
@@ -84,32 +83,28 @@ export function SortMenu({ currentSort, onSortChange }: SortMenuProps) {
         onRequestClose={handleClose}
       >
         {/* オーバーレイ（背景タップで閉じる） */}
-        <Pressable style={styles.overlay} onPress={handleClose}>
+        <Pressable style={[styles.overlay, { backgroundColor: colors.overlay }]} onPress={handleClose}>
           {/* モーダルコンテンツ */}
-          <Pressable style={[styles.modal, { backgroundColor: colors.surface }]} onPress={(e) => e.stopPropagation()}>
+          <Pressable style={[styles.modal, { backgroundColor: colors.surface, shadowColor: colors.shadow }]} onPress={(e) => e.stopPropagation()}>
             {/* モーダルタイトル */}
             <Text style={[styles.modalTitle, { color: colors.text, fontSize: responsiveFontSizes.lg, lineHeight: responsiveLineHeights.lg }]}>
               {t('sort.title')}
             </Text>
             {/* ソートオプション一覧 */}
             {sortOptions.map((option, index) => {
-              /* オプションの色を決定（disabled時はグレーアウト） */
-              const optionColor = option.disabled
-                ? colors.textSecondary
-                : currentSort === option.value
-                  ? colors.primary
-                  : colors.text;
+              const optionColor = currentSort === option.value
+                ? colors.primary
+                : colors.text;
 
               return (
                 <View key={option.value}>
                   <TouchableOpacity
                     style={[
                       styles.option,
-                      index < sortOptions.length - 1 && !option.disabled && styles.optionBorder,
+                      index < sortOptions.length - 1 && styles.optionBorder,
                       { borderBottomColor: colors.border },
                     ]}
-                    onPress={() => !option.disabled && handleSelect(option.value)}
-                    disabled={option.disabled}
+                    onPress={() => handleSelect(option.value)}
                   >
                     {/* オプションアイコン */}
                     <Ionicons name={option.icon} size={22} color={optionColor} />
@@ -127,32 +122,10 @@ export function SortMenu({ currentSort, onSortChange }: SortMenuProps) {
                       {option.label}
                     </Text>
                     {/* 選択中のチェックマーク */}
-                    {currentSort === option.value && !option.disabled && (
+                    {currentSort === option.value && (
                       <Ionicons name="checkmark" size={22} color={colors.primary} />
                     )}
-                    {/* disabled時はロックアイコンを表示 */}
-                    {option.disabled && (
-                      <Ionicons
-                        name="lock-closed-outline"
-                        size={18}
-                        color={colors.textSecondary}
-                      />
-                    )}
                   </TouchableOpacity>
-                  {/* 使用頻度オプションがdisabledの場合、説明文を表示 */}
-                  {option.value === 'usage' && option.disabled && (
-                    <Text
-                      style={[
-                        styles.disabledHint,
-                        {
-                          color: colors.textSecondary,
-                          fontSize: responsiveFontSizes.xs,
-                        },
-                      ]}
-                    >
-                      {t('sort.usage_requires_full_access')}
-                    </Text>
-                  )}
                 </View>
               );
             })}
@@ -184,18 +157,18 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 100,
   },
+  /** オーバーレイ（背景色は使用箇所でテーマの overlay を重ねる） */
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  /** モーダル本体（背景色と影の色は使用箇所でテーマから重ねる） */
   modal: {
     width: '80%',
     maxWidth: 360,
     borderRadius: UI_CONSTANTS.BORDER_RADIUS.LG,
     padding: UI_CONSTANTS.SPACING.LG,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -218,10 +191,5 @@ const styles = StyleSheet.create({
   optionText: {
     flex: 1,
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.MEDIUM,
-  },
-  disabledHint: {
-    paddingHorizontal: UI_CONSTANTS.GAP.MD,
-    paddingBottom: UI_CONSTANTS.GAP.MD,
-    marginLeft: UI_CONSTANTS.GAP.MD + 22,
   },
 });

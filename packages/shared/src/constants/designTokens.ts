@@ -10,9 +10,13 @@
  * BASE: 基本サイズ（デフォルト値）
  *
  * 使用箇所:
- * - apps/mobile: StyleSheetのサイズ・スペーシング定義
- * - apps/web: CSS-in-JSのスタイル定義
- * - 共通コンポーネント: ボタン、アイコン、カード等
+ * - DESIGN_TOKENS の参照は apps/mobile/src/constants/ui.ts の UI_CONSTANTS 経由のみ。
+ *   themeTokens.ts の SPACING とはスケールが異なるため混在させない。
+ * - CATEGORY_COLORS / DEFAULT_CATEGORY_COLOR はカテゴリの色選択UIで直接参照する。
+ *
+ * BORDER_WIDTH / HIT_SLOP / ANIMATION_DURATION はこのファイルには無く、
+ * apps/mobile/src/constants/ui.ts 側にのみ定義がある。
+ * Web で必要になった時点で mobile の値をそのまま shared へ引き上げる。
  */
 
 /**
@@ -123,18 +127,18 @@ export const DESIGN_TOKENS = {
  * ライト/ダークモード両方で視認性確保
  */
 export const CATEGORY_COLORS = [
-  '#3B82F6', // Blue
-  '#10B981', // Green
-  '#F59E0B', // Amber
-  '#EF4444', // Red
-  '#8B5CF6', // Purple
-  '#EC4899', // Pink
-  '#06B6D4', // Cyan
-  '#F97316', // Orange
-  '#6366F1', // Indigo
-  '#14B8A6', // Teal
-  '#84CC16', // Lime
-  '#F43F5E', // Rose
+  '#3B82F6', /* Blue */
+  '#10B981', /* Green */
+  '#F59E0B', /* Amber */
+  '#EF4444', /* Red */
+  '#8B5CF6', /* Purple */
+  '#EC4899', /* Pink */
+  '#06B6D4', /* Cyan */
+  '#F97316', /* Orange */
+  '#6366F1', /* Indigo */
+  '#14B8A6', /* Teal */
+  '#84CC16', /* Lime */
+  '#F43F5E', /* Rose */
 ] as const;
 
 /**

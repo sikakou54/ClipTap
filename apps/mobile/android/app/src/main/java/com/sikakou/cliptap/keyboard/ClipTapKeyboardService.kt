@@ -1,5 +1,6 @@
 package com.sikakou.cliptap.keyboard
 
+import android.graphics.drawable.ColorDrawable
 import android.inputmethodservice.InputMethodService
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,7 @@ import com.google.android.material.chip.ChipGroup
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ContextThemeWrapper
+import androidx.core.content.ContextCompat
 import com.sikakou.cliptap.R
 import com.sikakou.cliptap.models.Profile
 import com.sikakou.cliptap.models.Category
@@ -19,9 +21,9 @@ import com.sikakou.cliptap.services.ProfileService
 import com.sikakou.cliptap.services.CategoryService
 import com.sikakou.cliptap.services.SnippetService
 import com.sikakou.cliptap.services.VariableService
-import com.sikakou.cliptap.services.SubscriptionManager
-import com.sikakou.cliptap.services.SubscriptionStatus
 import com.sikakou.cliptap.database.Database
+import com.sikakou.cliptap.mappers.SystemVariableFormatMapper
+import com.sikakou.cliptap.utils.LocalizationHelper
 
 /**
  * ClipTap カスタムキーボードサービス
@@ -53,6 +55,7 @@ import com.sikakou.cliptap.database.Database
 class ClipTapKeyboardService : InputMethodService() {
 
     private lateinit var keyboardView: View
+    private lateinit var mainView: View
     private lateinit var profileChipGroup: ChipGroup
     private lateinit var categoryChipGroup: ChipGroup
     private lateinit var snippetRecyclerView: RecyclerView
@@ -62,9 +65,14 @@ class ClipTapKeyboardService : InputMethodService() {
 
     // 詳細画面のビュー
     private lateinit var detailView: View
+    private lateinit var detailScrollView: android.widget.ScrollView
+    private lateinit var titleRow: View
     private lateinit var detailTitleLabel: android.widget.TextView
+    private lateinit var insertTitleButton: View
+    private lateinit var titleSeparator: View
     private lateinit var detailContentLabel: android.widget.TextView
     private lateinit var copyButton: View
+    private lateinit var insertNewlineButton: View
     private lateinit var closeButton: View
 
     // 選択中のスニペット
@@ -75,7 +83,6 @@ class ClipTapKeyboardService : InputMethodService() {
     private lateinit var categoryService: CategoryService
     private lateinit var snippetService: SnippetService
     private lateinit var variableService: VariableService
-    private lateinit var subscriptionManager: SubscriptionManager
     private lateinit var database: Database
 
     // State
@@ -95,6 +102,15 @@ class ClipTapKeyboardService : InputMethodService() {
         private const val TAG = "ClipTapKeyboard"
         private const val SORT_PREFS_NAME = "ClipTapKeyboardPrefs"
         private const val SORT_PREFERENCE_KEY = "keyboard_snippet_sort_by"
+    }
+
+    /**
+     * IMEウィンドウのテーマを差し替える
+     * InputMethodService.setThemeはウィンドウ生成前にしか呼べないため、super.onCreate()より前に呼ぶ
+     */
+    override fun onCreate() {
+        setTheme(R.style.ClipTapKeyboardWindowTheme)
+        super.onCreate()
     }
 
     /**
@@ -122,20 +138,18 @@ class ClipTapKeyboardService : InputMethodService() {
      * - 他のキーボードからClipTapキーボードに切り替えた時
      */
     override fun onCreateInputView(): View {
-        Log.d(TAG, "============================================================")
-        Log.d(TAG, "🎯🎯🎯 onCreateInputView CALLED 🎯🎯🎯")
-        Log.d(TAG, "============================================================")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "============================================================")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "🎯🎯🎯 onCreateInputView CALLED 🎯🎯🎯")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "============================================================")
 
         // Servicesの初期化
         profileService = ProfileService.getInstance(applicationContext)
         categoryService = CategoryService.getInstance(applicationContext)
         snippetService = SnippetService.getInstance(applicationContext)
         variableService = VariableService.getInstance(applicationContext)
-        subscriptionManager = SubscriptionManager.getInstance(applicationContext)
         database = Database.getInstance(applicationContext)
 
         // キャッシュをクリアして最新状態を取得
-        subscriptionManager.invalidateCache()
 
         // MaterialComponentsテーマでContextThemeWrapperを作成（Chip用）
         themedContext = ContextThemeWrapper(this, R.style.KeyboardTheme)
@@ -154,8 +168,8 @@ class ClipTapKeyboardService : InputMethodService() {
             heightInPx
         )
 
-        Log.d(TAG, "✅ Keyboard view inflated: ${keyboardView.javaClass.simpleName}")
-        Log.d(TAG, "✅ Layout params: ${keyboardView.layoutParams}")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Keyboard view inflated: ${keyboardView.javaClass.simpleName}")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Layout params: ${keyboardView.layoutParams}")
 
         // ビューの初期化
         initializeViews()
@@ -186,6 +200,7 @@ class ClipTapKeyboardService : InputMethodService() {
      *    - SnippetAdapter: スニペットカードを表示
      * 3. 詳細画面のボタンにリスナーを設定
      *    - copyButton: スニペットを挿入
+     *    - insertNewlineButton: 改行を挿入
      *    - closeButton: 詳細画面を閉じる
      *
      * 【理由】
@@ -193,8 +208,9 @@ class ClipTapKeyboardService : InputMethodService() {
      * findViewById()でビューを取得する必要があります。
      */
     private fun initializeViews() {
-        Log.d(TAG, "🔧 initializeViews started")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "🔧 initializeViews started")
 
+        mainView = keyboardView.findViewById(R.id.mainView)
         profileChipGroup = keyboardView.findViewById(R.id.profileChipGroup)
         categoryChipGroup = keyboardView.findViewById(R.id.categoryChipGroup)
         snippetRecyclerView = keyboardView.findViewById(R.id.snippetRecyclerView)
@@ -204,19 +220,29 @@ class ClipTapKeyboardService : InputMethodService() {
 
         // 詳細画面のビューを初期化
         detailView = keyboardView.findViewById(R.id.detailView)
+        detailScrollView = keyboardView.findViewById(R.id.detailScrollView)
+        titleRow = keyboardView.findViewById(R.id.titleRow)
         detailTitleLabel = keyboardView.findViewById(R.id.detailTitleLabel)
+        insertTitleButton = keyboardView.findViewById(R.id.insertTitleButton)
+        titleSeparator = keyboardView.findViewById(R.id.titleSeparator)
         detailContentLabel = keyboardView.findViewById(R.id.detailContentLabel)
         copyButton = keyboardView.findViewById(R.id.copyButton)
+        insertNewlineButton = keyboardView.findViewById(R.id.insertNewlineButton)
         closeButton = keyboardView.findViewById(R.id.closeButton)
 
-        Log.d(TAG, "✅ Views found - profileChipGroup: $profileChipGroup")
-        Log.d(TAG, "✅ Views found - categoryChipGroup: $categoryChipGroup")
-        Log.d(TAG, "✅ Views found - snippetRecyclerView: $snippetRecyclerView")
-        Log.d(TAG, "✅ Views found - detailView: $detailView")
-        Log.d(TAG, "✅ Views found - sortButton: $sortButton")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Views found - profileChipGroup: $profileChipGroup")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Views found - categoryChipGroup: $categoryChipGroup")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Views found - snippetRecyclerView: $snippetRecyclerView")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Views found - detailView: $detailView")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Views found - sortButton: $sortButton")
 
         // RecyclerViewの設定
         snippetRecyclerView.layoutManager = LinearLayoutManager(this)
+
+        /* 一覧の表示枠は固定高さのため、行数が変わってもRecyclerView自体の大きさは変わらない。
+           これを伝えることでスクロール中のレイアウト再計算を省ける */
+        snippetRecyclerView.setHasFixedSize(true)
+
         snippetAdapter = SnippetAdapter { snippet ->
             onSnippetClicked(snippet)
         }
@@ -229,6 +255,12 @@ class ClipTapKeyboardService : InputMethodService() {
         closeButton.setOnClickListener {
             closeDetailView()
         }
+        insertTitleButton.setOnClickListener {
+            onInsertTitleButtonClicked()
+        }
+        insertNewlineButton.setOnClickListener {
+            onInsertNewlineButtonClicked()
+        }
 
         // ソートボタンの設定
         currentSortBy = loadSortPreference()
@@ -236,9 +268,9 @@ class ClipTapKeyboardService : InputMethodService() {
             showSortMenu(it)
         }
         updateSortBadgeVisibility()
-        Log.d(TAG, "✅ Sort button configured (currentSortBy: $currentSortBy)")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Sort button configured (currentSortBy: $currentSortBy)")
 
-        Log.d(TAG, "✅ RecyclerView configured")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ RecyclerView configured")
     }
 
     /**
@@ -264,37 +296,30 @@ class ClipTapKeyboardService : InputMethodService() {
      */
     private fun openDatabase() {
         try {
-            // パス情報をログ出力
-            val managePath = Database.getManageDatabasePath(applicationContext)
             val sharedPath = Database.getSharedDatabasePath(applicationContext)
 
-            Log.d(TAG, "============================================================")
-            Log.d(TAG, "📂 Database Paths:")
-            Log.d(TAG, "   ManageDB (version control): $managePath")
-            Log.d(TAG, "   SharedDB (app data):        $sharedPath")
-            Log.d(TAG, "============================================================")
-
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "============================================================")
             // SharedDBファイルの存在とサイズを確認
             val sharedFile = java.io.File(sharedPath)
-            Log.d(TAG, "📁 SharedDB exists: ${sharedFile.exists()}")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "📁 SharedDB exists: ${sharedFile.exists()}")
             if (sharedFile.exists()) {
-                Log.d(TAG, "📏 SharedDB size: ${sharedFile.length()} bytes")
+                if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "📏 SharedDB size: ${sharedFile.length()} bytes")
             }
 
             // SharedDBを読み書き可能モードで開く（WALファイルを読むため）
             database.initialize()
-            Log.d(TAG, "✅ SharedDB opened successfully")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ SharedDB opened successfully")
 
             // テーブルの存在確認
             val tables = database.getTableNames()
-            Log.d(TAG, "📋 Available tables: $tables")
-            Log.d(TAG, "📊 Number of tables: ${tables.size}")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "📋 Available tables: $tables")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "📊 Number of tables: ${tables.size}")
 
             if (tables.isEmpty() || !tables.contains("profiles")) {
                 Log.w(TAG, "⚠️ SharedDB not initialized by main app yet.")
                 Log.w(TAG, "   Please launch the main app first to initialize the database.")
             } else {
-                Log.d(TAG, "✅ SharedDB initialized and ready")
+                if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ SharedDB initialized and ready")
             }
         } catch (e: Exception) {
             Log.e(TAG, "❌ Failed to open SharedDB", e)
@@ -326,23 +351,12 @@ class ClipTapKeyboardService : InputMethodService() {
      * onCreateInputView()から呼ばれます。
      */
     private fun loadInitialData() {
-        Log.d(TAG, "🚀 loadInitialData started")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "🚀 loadInitialData started")
 
         try {
-            // サブスクリプション状態をチェック
-            val status = subscriptionManager.getSubscriptionStatus()
-            Log.d(TAG, "🔐 Subscription status from SharedPreferences: $status")
-
-            /* データなし、期限切れの場合はメッセージを表示 */
-            /* FREE版でも拡張キーボードを使えるように変更 */
-            if (status == SubscriptionStatus.NO_DATA || status == SubscriptionStatus.EXPIRED) {
-                showSubscriptionMessage(status)
-                return
-            }
-
             // プロファイルを読み込み（Serviceを使用）
             profiles = profileService.getAllProfiles()
-            Log.d(TAG, "✅ Loaded ${profiles.size} profiles")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Loaded ${profiles.size} profiles")
 
             if (profiles.isEmpty()) {
                 Log.w(TAG, "⚠️ No profiles found. Database may not be initialized.")
@@ -359,11 +373,11 @@ class ClipTapKeyboardService : InputMethodService() {
             if (currentProfile != null) {
                 // カテゴリを読み込み（Serviceを使用）
                 categories = categoryService.getAll()
-                Log.d(TAG, "✅ Loaded ${categories.size} categories")
+                if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Loaded ${categories.size} categories")
 
                 // 変数を読み込み（Serviceを使用）
                 variablesMap = variableService.getVariablesMap(currentProfile!!.id)
-                Log.d(TAG, "✅ Loaded ${variablesMap.size} variables")
+                if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Loaded ${variablesMap.size} variables")
 
                 // UIを更新
                 setupProfileChips()
@@ -373,7 +387,7 @@ class ClipTapKeyboardService : InputMethodService() {
                 Log.w(TAG, "⚠️ No profiles found")
             }
 
-            Log.d(TAG, "🏁 loadInitialData completed")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "🏁 loadInitialData completed")
         } catch (e: Exception) {
             Log.e(TAG, "❌ Failed to load data", e)
             // エラーが発生してもUIは空で表示する（クラッシュを防ぐ）
@@ -577,7 +591,7 @@ class ClipTapKeyboardService : InputMethodService() {
         if (currentProfile?.id != profile.id) {
             currentProfile = profile
             variablesMap = variableService.getVariablesMap(profile.id)
-            Log.d(TAG, "✅ Profile selected: ${profile.name}")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Profile selected: ${profile.name}")
 
             // プロファイルチップのテキストを更新
             if (profileChipGroup.childCount > 0) {
@@ -607,7 +621,7 @@ class ClipTapKeyboardService : InputMethodService() {
     private fun onCategorySelected(category: Category?) {
         if (currentCategory?.id != category?.id) {
             currentCategory = category
-            Log.d(TAG, "✅ Category selected: ${category?.name ?: "all"}")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Category selected: ${category?.name ?: "all"}")
 
             // チップのテキストを更新
             if (categoryChipGroup.childCount > 0) {
@@ -637,7 +651,7 @@ class ClipTapKeyboardService : InputMethodService() {
      * 表示するスニペットをフィルタリングして更新する必要があります。
      */
     private fun reloadSnippets() {
-        Log.d(TAG, "🔄 reloadSnippets started (sortBy: $currentSortBy)")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "🔄 reloadSnippets started (sortBy: $currentSortBy)")
 
         val profileId = currentProfile?.id
         if (profileId == null) {
@@ -655,10 +669,12 @@ class ClipTapKeyboardService : InputMethodService() {
             snippetService.getAllSnippets(profileId, currentSortBy)
         }
 
-        Log.d(TAG, "✅ Loaded ${allSnippets.size} snippets (sortBy: $currentSortBy)")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Loaded ${allSnippets.size} snippets (sortBy: $currentSortBy)")
 
-        // アダプターに変数マップを設定（タイトルの変数置換に使用）
+        // アダプターに変数マップと書式を設定（タイトルの変数置換に使用）
+        // 行の描画ごとにDBを読まないよう、ここでまとめて渡す
         snippetAdapter.variablesMap = variablesMap
+        snippetAdapter.systemVariableFormats = SystemVariableFormatMapper.getInstance(this).getAll()
 
         // アダプターに渡す
         snippetAdapter.submitList(allSnippets)
@@ -702,7 +718,7 @@ class ClipTapKeyboardService : InputMethodService() {
      * SnippetAdapterからのコールバックとして機能します。
      */
     private fun onSnippetClicked(snippet: Snippet) {
-        Log.d(TAG, "📝 Snippet clicked: ${snippet.title}")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Snippet selected")
         showSnippetDetail(snippet)
     }
 
@@ -725,22 +741,32 @@ class ClipTapKeyboardService : InputMethodService() {
     private fun showSnippetDetail(snippet: Snippet) {
         selectedSnippet = snippet
 
-        // タイトルの表示/非表示を制御
+        // タイトル行と区切り線の表示/非表示を制御
         if (snippet.copyWithTitle) {
             // タイトルも変数置換する（iOSと同じ動作）
-            val rawTitle = snippet.title ?: "（タイトルなし）"
+            /* タイトルがNULLでも空文字でもプレースホルダーを表示する */
+            val rawTitle = snippet.title?.takeIf { it.isNotEmpty() } ?: getString(R.string.snippet_no_title)
             val replacedTitle = snippetService.replaceVariables(rawTitle, variablesMap)
             detailTitleLabel.text = replacedTitle
-            detailTitleLabel.visibility = View.VISIBLE
+            titleRow.visibility = View.VISIBLE
+            titleSeparator.visibility = View.VISIBLE
+            /* タイトルが未設定のスニペットはプレースホルダー表示のみで、挿入するものがないためボタンは隠す */
+            insertTitleButton.visibility = if (snippet.title.isNullOrEmpty()) View.GONE else View.VISIBLE
         } else {
-            detailTitleLabel.visibility = View.GONE
+            titleRow.visibility = View.GONE
+            titleSeparator.visibility = View.GONE
         }
 
         // 内容を変数置換して表示
         val replacedContent = snippetService.replaceVariables(snippet.content, variablesMap)
         detailContentLabel.text = replacedContent
 
+        /* ScrollViewはonLayoutで前回のスクロール位置を復元するため、
+           別の定型文を開いたときに最上部のタイトル行と挿入ボタンが画面外に残る。毎回先頭へ戻す */
+        detailScrollView.scrollTo(0, 0)
+
         // 詳細画面を表示（フェードインアニメーション）
+        mainView.visibility = View.GONE
         detailView.visibility = View.VISIBLE
         detailView.alpha = 0f
         detailView.animate()
@@ -748,7 +774,7 @@ class ClipTapKeyboardService : InputMethodService() {
             .setDuration(200)
             .start()
 
-        Log.d(TAG, "✅ Detail view shown")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Detail view shown")
     }
 
     /**
@@ -773,23 +799,24 @@ class ClipTapKeyboardService : InputMethodService() {
             .setDuration(200)
             .withEndAction {
                 detailView.visibility = View.GONE
+                mainView.visibility = View.VISIBLE
                 selectedSnippet = null
             }
             .start()
 
-        Log.d(TAG, "✅ Detail view closed")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Detail view closed")
     }
 
     /**
      * コピーボタンクリック時の処理
      *
      * 【目的】
-     * スニペットをテキストフィールドに挿入します。
+     * スニペットの本文をテキストフィールドに挿入します。
      *
      * 【何をするか】
      * 1. selectedSnippetを取得
      * 2. currentInputConnectionを取得（テキストフィールドへの接続）
-     * 3. SnippetService.insertSnippet()を呼んでテキスト挿入
+     * 3. SnippetService.insertSnippet()を呼んで本文を挿入
      * 4. 挿入成功時は詳細画面を閉じる
      * 5. 挿入失敗時はトーストでエラーを表示
      *
@@ -801,251 +828,121 @@ class ClipTapKeyboardService : InputMethodService() {
     private fun onCopyButtonClicked() {
         val snippet = selectedSnippet ?: return
 
-        Log.d(TAG, "📝 Copy button clicked: ${snippet.title}")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Snippet insert requested")
 
         // テキストを挿入（Serviceに委譲）
         val ic = currentInputConnection
         if (ic != null) {
             snippetService.insertSnippet(snippet, ic, variablesMap)
-            Log.d(TAG, "✅ Text inserted successfully")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Text inserted successfully")
             closeDetailView()
         } else {
             Log.e(TAG, "❌ InputConnection is null")
-            Toast.makeText(this, "テキストの挿入に失敗しました", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.keyboard_insert_failed, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * タイトル挿入ボタンクリック時の処理
+     *
+     * 【目的】
+     * スニペットのタイトルだけをテキストフィールドに挿入します。
+     *
+     * 【何をするか】
+     * 1. selectedSnippetを取得
+     * 2. currentInputConnectionを取得（テキストフィールドへの接続）
+     * 3. SnippetService.insertTitle()を呼んでタイトルを挿入
+     * 4. 挿入失敗時はトーストでエラーを表示
+     *
+     * 【詳細画面を閉じない理由】
+     * メールの件名を入れたあと、続けて本文を別の欄へ入れられるようにするため、
+     * タイトル挿入後も詳細画面は開いたままにします。
+     */
+    private fun onInsertTitleButtonClicked() {
+        val snippet = selectedSnippet ?: return
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Title insert requested")
+
+        // タイトルを挿入（Serviceに委譲）
+        val ic = currentInputConnection
+        if (ic != null) {
+            snippetService.insertTitle(snippet, ic, variablesMap)
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Title inserted successfully")
+        } else {
+            Log.e(TAG, "❌ InputConnection is null")
+            Toast.makeText(this, R.string.keyboard_insert_failed, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * 改行ボタンクリック時の処理
+     *
+     * 【目的】
+     * 改行だけをテキストフィールドに挿入します。
+     *
+     * 【何をするか】
+     * 1. currentInputConnectionを取得（テキストフィールドへの接続）
+     * 2. SnippetService.insertNewline()を呼んで改行を挿入
+     * 3. 挿入失敗時はトーストでエラーを表示
+     *
+     * 【selectedSnippetを参照しない理由】
+     * 挿入するのは改行のみで、変数置換もプロファイルも関与しないため、
+     * 選択中のスニペットの有無に関わらず動作します。
+     *
+     * 【詳細画面を閉じない理由】
+     * 「タイトル挿入 → 改行 → 本文挿入」と続けて操作できるようにするため、
+     * 改行挿入後も詳細画面は開いたままにします。
+     */
+    private fun onInsertNewlineButtonClicked() {
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Newline insert requested")
+
+        // 改行を挿入（Serviceに委譲）
+        val ic = currentInputConnection
+        if (ic != null) {
+            snippetService.insertNewline(ic)
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Newline inserted successfully")
+        } else {
+            Log.e(TAG, "❌ InputConnection is null")
+            Toast.makeText(this, R.string.keyboard_insert_failed, Toast.LENGTH_SHORT).show()
         }
     }
 
     override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
-        Log.d(TAG, "============================================================")
-        Log.d(TAG, "👁️ onStartInputView CALLED")
-        Log.d(TAG, "   restarting: $restarting")
-        Log.d(TAG, "   inputType: ${info?.inputType}")
-        Log.d(TAG, "   keyboardView visibility: ${keyboardView.visibility}")
-        Log.d(TAG, "   keyboardView height: ${keyboardView.height}")
-        Log.d(TAG, "   keyboardView measuredHeight: ${keyboardView.measuredHeight}")
-        Log.d(TAG, "   keyboardView layoutParams: ${keyboardView.layoutParams}")
-        Log.d(TAG, "============================================================")
+        applyWindowBackground()
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "============================================================")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "👁️ onStartInputView CALLED")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "   restarting: $restarting")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "   inputType: ${info?.inputType}")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "   keyboardView visibility: ${keyboardView.visibility}")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "   keyboardView height: ${keyboardView.height}")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "   keyboardView measuredHeight: ${keyboardView.measuredHeight}")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "   keyboardView layoutParams: ${keyboardView.layoutParams}")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "============================================================")
 
         // ビューが測定されるまで待つ
         keyboardView.post {
-            Log.d(TAG, "📐 After layout:")
-            Log.d(TAG, "   keyboardView height: ${keyboardView.height}")
-            Log.d(TAG, "   keyboardView measuredHeight: ${keyboardView.measuredHeight}")
-            Log.d(TAG, "   keyboardView width: ${keyboardView.width}")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "📐 After layout:")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "   keyboardView height: ${keyboardView.height}")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "   keyboardView measuredHeight: ${keyboardView.measuredHeight}")
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "   keyboardView width: ${keyboardView.width}")
         }
+    }
+
+    /**
+     * IMEウィンドウの背景を現在の設定（ライト/ダーク）で再適用する
+     * ウィンドウは1度しか生成されないため、表示のたびに適用して切替に追従させる
+     */
+    private fun applyWindowBackground() {
+        val color = ContextCompat.getColor(this, R.color.keyboardWindowBackground)
+        window?.window?.setBackgroundDrawable(ColorDrawable(color))
     }
 
     override fun onDestroy() {
         super.onDestroy()
         database.close()
-        Log.d(TAG, "Keyboard service destroyed")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Keyboard service destroyed")
     }
-
-    /**
-     * サブスクリプション状態に応じたメッセージを表示
-     *
-     * 【目的】
-     * サブスクリプション状態（ACTIVE, EXPIRED, FREE, NO_DATA）に応じて
-     * 適切なメッセージをキーボード画面に表示します。
-     *
-     * 【表示内容】
-     * - ACTIVE: メッセージなし（通常動作）
-     * - EXPIRED: ⏰ サブスクリプション期限切れ
-     * - FREE: 🔒 Pro版限定
-     * - NO_DATA: 📱 メインアプリを起動してください
-     */
-    private fun showSubscriptionMessage(status: SubscriptionStatus) {
-        // mainViewを非表示にする
-        val mainLayout = keyboardView.findViewById<ViewGroup>(R.id.mainView)
-        if (mainLayout != null) {
-            mainLayout.visibility = View.GONE
-            Log.d(TAG, "✅ mainView set to GONE")
-        } else {
-            Log.e(TAG, "❌ mainView not found!")
-        }
-
-        // 詳細ビューも非表示にする
-        val detailView = keyboardView.findViewById<View>(R.id.detailView)
-        if (detailView != null) {
-            detailView.visibility = View.GONE
-            Log.d(TAG, "✅ detailView set to GONE")
-        }
-
-        // ルートのFrameLayoutの背景色を設定
-        val rootLayout = keyboardView as? android.widget.FrameLayout
-        if (rootLayout != null) {
-            rootLayout.setBackgroundColor(resources.getColor(android.R.color.white, null))
-            Log.d(TAG, "✅ Root background color set to white")
-        }
-
-        /* メッセージ内容を決定 */
-        val messageContent = getMessageContent(status)
-        val iconResId = messageContent.iconResId
-        val title = messageContent.title
-        val message = messageContent.message
-        val badgeColor = messageContent.badgeColor
-
-        // バッジ背景を作成
-        val badgeBackgroundView = android.widget.LinearLayout(themedContext)
-        badgeBackgroundView.orientation = android.widget.LinearLayout.VERTICAL
-        badgeBackgroundView.gravity = android.view.Gravity.CENTER
-        val density = resources.displayMetrics.density
-        val paddingH = (24 * density).toInt()
-        val paddingV = (16 * density).toInt()
-        badgeBackgroundView.setPadding(paddingH, paddingV, paddingH, paddingV)
-
-        // 角丸背景を設定
-        val badgeDrawable = android.graphics.drawable.GradientDrawable()
-        badgeDrawable.setColor(badgeColor)
-        badgeDrawable.cornerRadius = 28f
-        badgeBackgroundView.background = badgeDrawable
-
-        // アイコンを作成
-        val iconImageView = android.widget.ImageView(themedContext)
-        iconImageView.setImageResource(iconResId)
-        iconImageView.setColorFilter(android.graphics.Color.WHITE)
-        val iconSize = (32 * resources.displayMetrics.density).toInt()
-        val iconLayoutParams = android.widget.LinearLayout.LayoutParams(iconSize, iconSize)
-        iconLayoutParams.bottomMargin = (8 * resources.displayMetrics.density).toInt()
-        iconImageView.layoutParams = iconLayoutParams
-
-        // タイトルテキストを作成
-        val titleTextView = android.widget.TextView(themedContext)
-        titleTextView.text = title
-        titleTextView.textSize = 18f
-        titleTextView.setTextColor(android.graphics.Color.WHITE)
-        titleTextView.gravity = android.view.Gravity.CENTER
-        titleTextView.setTypeface(null, android.graphics.Typeface.BOLD)
-        val titleLayoutParams = android.widget.LinearLayout.LayoutParams(
-            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        titleLayoutParams.bottomMargin = (8 * resources.displayMetrics.density).toInt()
-        titleTextView.layoutParams = titleLayoutParams
-
-        // メッセージテキストを作成（メッセージがある場合のみ）
-        val messageTextView = if (message.isNotEmpty()) {
-            val textView = android.widget.TextView(themedContext)
-            textView.text = message
-            textView.textSize = 14f
-            textView.setTextColor(android.graphics.Color.WHITE)
-            textView.gravity = android.view.Gravity.CENTER
-            textView.maxLines = 3
-            textView.setLines(3)
-
-            val layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            layoutParams.topMargin = (8 * resources.displayMetrics.density).toInt()
-            textView.layoutParams = layoutParams
-            textView
-        } else {
-            null
-        }
-
-        // バッジにアイコン、タイトル、メッセージを追加
-        badgeBackgroundView.addView(iconImageView)
-        badgeBackgroundView.addView(titleTextView)
-
-        // メッセージTextViewを追加
-        messageTextView?.let { badgeBackgroundView.addView(it) }
-
-        // バッジのLayoutParamsを設定（幅を広く）
-        val badgeWidth = (320 * density).toInt() // 幅を320dpに設定
-        val badgeLayoutParams = android.widget.LinearLayout.LayoutParams(
-            badgeWidth,
-            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-
-        // 垂直レイアウトを作成
-        val linearLayout = android.widget.LinearLayout(themedContext)
-        linearLayout.orientation = android.widget.LinearLayout.VERTICAL
-        linearLayout.gravity = android.view.Gravity.CENTER
-
-        // バッジを追加
-        linearLayout.addView(badgeBackgroundView, badgeLayoutParams)
-
-        // ルートのFrameLayoutに追加（中央配置、最前面）
-        if (rootLayout != null) {
-            val layoutParams = android.widget.FrameLayout.LayoutParams(
-                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
-                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
-            )
-            layoutParams.gravity = android.view.Gravity.CENTER
-            rootLayout.addView(linearLayout, layoutParams)
-            linearLayout.bringToFront()
-            Log.d(TAG, "✅ Message layout added to root layout and brought to front")
-        }
-
-        Log.d(TAG, "🔒 Showing subscription message: $status")
-    }
-
-    /**
-     * サブスクリプション状態に応じたメッセージ内容を取得
-     *
-     * @return (iconResId, title, message, backgroundColor)
-     */
-    private fun getMessageContent(status: SubscriptionStatus): Quadruple {
-        // より確実な言語判定：複数の方法を試す
-        val locale = resources.configuration.locales[0]
-        val language = locale.language
-        val isJapanese = language == "ja" || language.startsWith("ja")
-
-        // デバッグ用：言語情報をログ出力
-        android.util.Log.d("ClipTapKeyboard", "Locale: $locale, Language: $language, isJapanese: $isJapanese")
-
-        return when (status) {
-            SubscriptionStatus.FREE -> {
-                val title = if (isJapanese) "Pro版限定機能" else "Pro Feature Only"
-                val message = if (isJapanese) "拡張キーボードはPro版限定機能です" else "Keyboard extension is a Pro-only feature"
-                Quadruple(
-                    android.R.drawable.ic_lock_lock,
-                    title,
-                    message,
-                    android.graphics.Color.rgb(255, 149, 0)
-                )
-            }
-            SubscriptionStatus.EXPIRED -> {
-                val title = if (isJapanese) "アプリを起動してください" else "Please Open the App"
-                val messageLine1 = if (isJapanese) "拡張キーボードの状態を更新するため" else "Please launch ClipTap app"
-                val messageLine2 = if (isJapanese) "ClipTapアプリを起動してください" else "to update keyboard extension status"
-                val message = messageLine1 + "\n" + messageLine2
-                android.util.Log.d("ClipTapKeyboard", "EXPIRED message: '$message', contains \\n: ${message.contains("\n")}, split count: ${message.split("\n").size}")
-                Quadruple(
-                    android.R.drawable.ic_dialog_info,
-                    title,
-                    message,
-                    android.graphics.Color.rgb(0, 122, 255)
-                )
-            }
-            SubscriptionStatus.NO_DATA -> {
-                val title = if (isJapanese) "定型文がありません" else "No Templates"
-                val message = if (isJapanese) "アプリからデータを登録してください" else "Please add templates from the app"
-                Quadruple(
-                    android.R.drawable.ic_dialog_info,
-                    title,
-                    message,
-                    android.graphics.Color.rgb(0, 122, 255)
-                )
-            }
-            else -> {
-                // ACTIVE は通常のキーボードが表示されるため、このメソッドは呼ばれない
-                Quadruple(android.R.drawable.ic_dialog_info, "", "", android.graphics.Color.TRANSPARENT)
-            }
-        }
-    }
-
-    /**
-     * サブスクリプションメッセージ表示用のデータクラス
-     */
-    private data class Quadruple(
-        val iconResId: Int,
-        val title: String,
-        val message: String,
-        val badgeColor: Int
-    )
 
     // MARK: - Sort Methods（ソート関連メソッド）
 
@@ -1084,7 +981,7 @@ class ClipTapKeyboardService : InputMethodService() {
      * ソート設定を更新
      */
     private fun updateSortPreference(sortBy: String) {
-        Log.d(TAG, "🔄 [Sort] Updating sort preference: $currentSortBy → $sortBy")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "🔄 [Sort] Updating sort preference: $currentSortBy → $sortBy")
         currentSortBy = sortBy
         saveSortPreference(sortBy)
 
@@ -1104,7 +1001,7 @@ class ClipTapKeyboardService : InputMethodService() {
     private fun saveSortPreference(sortBy: String) {
         val prefs = getSharedPreferences(SORT_PREFS_NAME, MODE_PRIVATE)
         prefs.edit().putString(SORT_PREFERENCE_KEY, sortBy).apply()
-        Log.d(TAG, "💾 [Sort] Saved sort preference: $sortBy")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "💾 [Sort] Saved sort preference: $sortBy")
     }
 
     /**
@@ -1113,7 +1010,7 @@ class ClipTapKeyboardService : InputMethodService() {
     private fun loadSortPreference(): String {
         val prefs = getSharedPreferences(SORT_PREFS_NAME, MODE_PRIVATE)
         val sortBy = prefs.getString(SORT_PREFERENCE_KEY, "created") ?: "created"
-        Log.d(TAG, "📂 [Sort] Loaded sort preference: $sortBy")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "📂 [Sort] Loaded sort preference: $sortBy")
         return sortBy
     }
 
@@ -1127,4 +1024,3 @@ class ClipTapKeyboardService : InputMethodService() {
     }
 
 }
-

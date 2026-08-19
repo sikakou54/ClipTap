@@ -9,7 +9,6 @@
  */
 
 import { type ImportAdapter, type FileIOAdapter } from '@cliptap/shared';
-import { getDatabasePath } from '@database/DatabaseFileManager';
 
 export class MobileImportAdapter implements ImportAdapter {
   private fileIO: FileIOAdapter;
@@ -30,14 +29,6 @@ export class MobileImportAdapter implements ImportAdapter {
   async writeTempDatabase(fileName: string, base64Data: string): Promise<string> {
     const fileUri = await this.fileIO.writeFile(fileName, base64Data, { encoding: 'base64' });
     return fileUri.replace('file://', '');
-  }
-
-  async getDatabasePath(): Promise<string> {
-    return await getDatabasePath(this.fileIO);
-  }
-
-  async copyFile(source: string, destination: string): Promise<void> {
-    await this.fileIO.copyFile(source, destination);
   }
 
   async deleteFile(path: string): Promise<void> {

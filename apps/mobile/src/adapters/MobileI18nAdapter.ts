@@ -21,16 +21,4 @@ export class MobileI18nAdapter implements I18nAdapter {
   getLanguage(): string {
     return i18next.language || 'en';
   }
-
-  /**
-   * 言語を変更
-   *
-   * @description
-   * Mobile: 端末の言語設定に依存するため、空実装
-   * （将来的にアプリ内言語切り替えを追加する場合はここに実装）
-   */
-  async changeLanguage(_language: string): Promise<void> {
-    /* No-op */
-  }
 }
-

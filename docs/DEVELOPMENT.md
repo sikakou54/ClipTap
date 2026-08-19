@@ -28,13 +28,13 @@
 ### 必須ツール
 
 #### Node.js & npm
-- **Node.js**: v20.19.0以上、またはv22.12.0以上（Vite 7の要件）
+- **Node.js**: v22以上（ルート `package.json` の `engines` に合わせる）
 - **npm**: 使用するNode.js同梱の現行版
 - インストール: [https://nodejs.org/](https://nodejs.org/)
 
 ```bash
 # バージョン確認
-node --version  # v20.19.0以上、またはv22.12.0以上
+node --version  # v22以上
 npm --version
 ```
 
@@ -229,6 +229,8 @@ cp path/to/google-services.json apps/mobile/
 1. [RevenueCat Dashboard](https://app.revenuecat.com/)でプロジェクトを作成
 2. 各プラットフォーム用の公開SDKキーを取得
 3. モバイルのネイティブ設定と、下記Web環境変数へ設定
+4. Restore Behaviorを「既存権利を維持し、同一App User IDへ統合する」製品方針に合わせて設定
+5. リリース前に購入サンドボックスで Free→Free、Free→Pro、Pro→Free、Pro→Pro の4組合せを確認し、採用された有効期限を記録
 
 秘密のREST APIキーやサービスアカウント資格情報はクライアントへ設定しないでください。
 
@@ -348,10 +350,20 @@ npm run android
 
 #### 実機でテスト
 
-1. 開発ビルドを実機にインストール（`npm run ios`または`npm run android`）
+1. 開発ビルドを実機にインストール（`npm run verify:ios:device` または `npm run android`）
 2. Expo Goアプリではなく、開発ビルドアプリを使用
 3. 同じWi-Fiネットワークに接続
 4. QRコードをスキャン、またはURLを直接入力
+
+拡張キーボードを実機で確認する場合は `npm run verify:ios:device` を使ってください（[4. ネイティブビルドとインストール](#4-ネイティブビルドとインストール)を参照）。`npm run ios` は毎回シミュレータへ入ります。
+
+リリース前の実機確認:
+
+- [ ] OTA無効化後も開発メニューの再読込がiOS/Androidで動く
+- [ ] 30文字を超える既存タイトルを編集画面で開いても、保存前に値が欠落しない
+- [ ] キーボードをFree状態で起動し、件数制限なく入力できる
+- [ ] iOSはフルアクセスのON/OFF両方、Androidは通常入力で使用回数が仕様どおり更新される（iOSはフルアクセスOFFでは加算されないこと、並べ替えは4種とも選択できることを確認）
+- [ ] チェックサムなし旧 `.cliptap` の非対応をリリースノートへ記載した
 
 #### ホットリロード
 
@@ -503,8 +515,8 @@ clipTap/
 React Native + Expoで構築されたモバイルアプリ。iOS/Android両対応。
 
 **主要技術**:
-- Expo SDK 54
-- React Native 0.81
+- Expo SDK 57
+- React Native 0.86.2
 - Expo Router（ファイルベースルーティング）
 - SQLite（expo-sqlite）
 - Firebase Authentication
@@ -693,6 +705,7 @@ export async function migrateV6ToV7(db: DbAdapter): Promise<void> {
 - リリース済みの移行ステップは原則変更せず、新しいバージョンとして追加する
 - 既存ステップの不具合修正が必要な場合は、対象旧版のfixtureと回帰テストを追加する
 - `packages/shared/src/database/schema.ts`でバージョンをインクリメント
+- `MIN_SUPPORTED_SCHEMA_VERSION` の据置可否と `migrateImportTempDb` の新しいcaseを確認
 
 #### ステップ2: Mapper作成
 
@@ -731,25 +744,188 @@ npm run type-check:shared
 #### 2. Linter実行
 
 ```bash
-# ESLint実行
+# ESLint実行（mobile → web → shared → api の順にワークスペースへ委譲し、最後に store/ を見る）
 npm run lint
+
+# ワークスペース単位で実行する場合
+npm run lint --workspace=@cliptap/mobile
+npm run lint --workspace=@cliptap/web
+npm run lint --workspace=@cliptap/shared
+npm run lint --workspace=@cliptap/api
+
+# ワークスペース外（store/screen/build.mjs）はルートの flat config で見る
+npx eslint store
 ```
 
 自動修正可能なエラーがある場合:
 
 ```bash
-npm run lint -- --fix
+npm run lint:fix
 ```
+
+lint の本体は各ワークスペースの flat config です（web は型情報を使わない設定で、mobile / shared / api は型情報付き lint のため設定が大きく異なる）。4ワークスペースすべてを CI の `npm run lint` で強制しています。
+
+ルートの `eslint.config.js` が受け持つのは `store/` だけです。`store/` は npm workspaces の定義（`apps/*` と `packages/*`）に含まれず、どのワークスペースの `eslint .` からも到達しないためです。**ワークスペース側（`apps/**`、`packages/**`）はルート設定で必ず ignore しています**。除外を外すと、ルートで `npx eslint` したときに型情報付きのルールが適用されないまま緑になります。
+
+各ワークスペースの config には TypeScript 用（`**/*.{ts,tsx}`）とは別に JavaScript 用のブロックを置いています。files が `.ts/.tsx` だけだと、`apps/web/scripts/*.mjs` や `apps/mobile/plugins/*.js` は「読み込まれるがルールが1つも適用されない」状態になり、静かに検査対象から漏れるためです。
+
+`packages/shared` の lint は `tsconfig.lint.json` を型情報のプロジェクトに使います。ビルド用の `tsconfig.json` が `src` のみを対象とするのに対し、こちらは `tests` も含めるためです。**`src` や `tests` の外に新しいディレクトリを追加する場合は `tsconfig.lint.json` の `include` も更新してください**（対象外のファイルは lint 時にパースエラーになります）。
 
 #### 3. フォーマット確認
 
 現行ルートには `format` スクリプトがありません。変更ファイルは既存の書式に合わせ、フォーマッターを導入する場合はルートスクリプトとCIを同じ変更で追加してください。
 
-#### 4. 動作確認
+#### 4. ネイティブビルドとインストール
 
-- iOS/Androidシミュレーター/エミュレーターで動作確認
+iOS拡張キーボード（Swift）とAndroid IME（Kotlin・レイアウト・リソース）は `npm run type-check` の対象外です。
+これらを変更した場合は、実際にコンパイルして壊れていないことを確認してください。
+
+```bash
+# iOS + Android の両方をビルドし、シミュレータ/エミュレータへインストール
+npm run build:native
+
+# 片方だけ実行する場合
+npm run build:native:ios          # iOS（ClipTapスキーム）→ シミュレータへインストール
+npm run build:native:ios:device   # iOS（ClipTapスキーム）→ 接続中の実機へインストール
+npm run build:native:android      # Android（:app:assembleDebug）→ adbが見ている端末へインストール
+
+# ビルドだけ行い、端末を触らない場合
+npm run build:native:ios -- --no-install
+
+# 実機向けのnpm scriptを使いつつ、今回だけシミュレータへ入れたい場合
+npm run build:native:ios:device -- --simulator
+```
+
+`--simulator` は既定値と同じですが、`build:native:ios:device` が `--device` を焼き込んでいるため、これを打ち消す唯一の手段です（npmは `--` 以降を末尾へ足すだけなので、後勝ちで上書きします）。
+
+実体は [scripts/build-native.sh](../scripts/build-native.sh) です。ビルドログは `.build-logs/` に出力され（gitignore済み）、失敗時はエラー行を抜き出して表示します。
+
+**インストールまで責務に含める理由**: ビルドしただけでは端末の中身は古いままです。拡張キーボードは別バンドル（`.appex`）で、アプリを起動しても更新されたように見えないため、「直したはずなのに直っていない」に陥りやすい。ビルドと端末への反映を一続きにして、この乖離を作らないようにしています。
+
+**ビルド範囲**: どちらのプラットフォームもアプリ本体ごとビルドします。
+
+| プラットフォーム | 生成物 | インストール先 | 備考 |
+|---|---|---|---|
+| iOS（既定） | `ClipTap.app` ＋ `PlugIns/ClipTapKeyboard.appex` | シミュレータ（`IOS_SIMULATOR` で指定可） | `ClipTap` スキームでビルドする。`ClipTapKeyboard` はターゲット依存として一緒にビルドされ、`Embed App Extensions` フェーズで `PlugIns/` へ埋め込まれる |
+| iOS（`--device`） | 同上（`Debug-iphoneos`） | 接続中の実機（`IOS_DEVICE` で指定可） | 開発者証明書で署名し、`xcrun devicectl` でインストールする |
+| Android | `app-debug.apk` | `adb devices` が見ている端末。無ければAVDを起動（`ANDROID_AVD` で指定可） | 拡張キーボード（IME）はアプリ本体と同じ `app` モジュールに含まれる |
+
+**注意**:
+
+- `ClipTapKeyboard` スキームは指定できません。Xcodeがローカルに自動生成するユーザースキーム（`xcuserdata/` 配下・gitignore対象）で、リポジトリには含まれないためです。
+- ビルド成功後に `ClipTap.app/PlugIns/ClipTapKeyboard.appex` の存在を検査します。ClipTapKeyboardターゲットが `project.pbxproj` から失われても `ClipTap.app` のビルド自体は成功してしまい、実行時にだけキーボードが選べなくなる（静かに壊れる）ためです。
+- iOSのシミュレータは上書きインストールの前に一度アンインストールします。`.appex` はアプリ本体と別バンドルのため、上書きだけでは古い拡張キーボードが残ることがあるためです。
+- インストール後、iOSは端末上の `.appex` の存在とApp Groupの有効性を、Androidは `adb shell ime list` でIMEが入力方式として認識されているかを確認します。
+- このスクリプトは `expo prebuild --clean` を実行しません。`ios/` が再生成されるとClipTapKeyboardターゲットの手動設定が失われるためです。
+- CIのiOSジョブもこのスクリプト（`npm run build:native:ios -- --no-install`）を使います。CI側で `xcodebuild` を直接呼ぶと `.appex` の埋め込み検査が抜け、ターゲットが失われてもCIが緑のまま通るためです。ビルドログは失敗時に `ios-build-logs` アーティファクトとして残ります。空き容量の事前チェックはランナー向けに `REQUIRED_FREE_GB` で下げています。
+- iOSビルドで `CODE_SIGNING_ALLOWED=NO` を使ってはいけません。エンタイトルメントが埋め込まれず、App Group（`group.com.sikakou.cliptap`）が無効になります。アプリと拡張キーボードは共有SQLiteをApp Group経由で読むため、署名を切るとDB初期化に失敗し（`App Group container not found`）、動作確認に使えないビルドになります。シミュレータ向けはアドホック署名（`CODE_SIGN_IDENTITY = -`）で足りるため、開発者アカウントは不要です。
+
+##### iOS実機（`--device`）
+
+拡張キーボードはシミュレータでは再現しない挙動があります（フルアクセスの許可ダイアログ、ハプティクス、実際のキーボード切り替え）。これらは実機で確認してください。
+
+```bash
+npm run build:native:ios:device            # ビルド → 実機へインストール
+IOS_DEVICE="iPhone 15" npm run build:native:ios:device   # 端末を名前かUDIDで指定
+DEVELOPMENT_TEAM=XXXXXXXXXX npm run build:native:ios:device  # 署名チームを明示
+```
+
+シミュレータとの違いは次のとおりです。
+
+| 項目 | シミュレータ | 実機（`--device`） |
+|---|---|---|
+| 署名 | アドホック（開発者アカウント不要） | 開発者証明書とプロビジョニングプロファイルが必須 |
+| 出力先 | `Debug-iphonesimulator` | `Debug-iphoneos` |
+| インストール | `xcrun simctl install` | `xcrun devicectl device install app` |
+| 事前アンインストール | する | **しない** |
+
+**チームIDは `project.pbxproj` に書きません。** 個人のチームIDをリポジトリへ残さないため、ビルド時に `DEVELOPMENT_TEAM=` としてコマンドラインから渡します。未指定の場合は開発用証明書（`Apple Development`）のOUから自動で求めます。複数チームに所属している場合は決められないため、`DEVELOPMENT_TEAM` で明示してください。
+
+**実機ではアンインストールしません。** アプリを消すと「設定 > 一般 > キーボード」の登録も外れ、毎回キーボードを追加し直すことになるためです。実機のインストールはバンドルごと置き換わるので、シミュレータのように古い `.appex` が残る問題は起きません。
+
+**インストール前に署名のエンタイトルメントを検査します。** プロビジョニングプロファイルにApp Groupが含まれていないと、ビルドもインストールも成功したうえで共有SQLiteを開くところだけが壊れます。`ClipTap.app` と `ClipTapKeyboard.appex` の両方に `group.com.sikakou.cliptap` が入っているかを `codesign -d --entitlements` で確認してから端末へ入れます。
+
+`devicectl device info apps` はApp Extensionを列挙しない（コンテナアプリしか出ない）ため、実機では拡張キーボードの存在をビルド成果物側（`PlugIns/ClipTapKeyboard.appex`）と署名で確認します。シミュレータのように端末上のバンドルを直接見ることはできません。
+
+**端末の解決**: `xcrun devicectl` が挙げるペアリング済み端末のうち、iOSの実機だけに絞ります。複数ある場合は直近に接続したものを選びます。`IOS_DEVICE` に端末名またはUDIDを指定すれば固定できます。ビルド前に疎通を確認するため、端末が見つからない・通信できない場合は長いビルドを始める前に止まります。
+
+**端末が無い場所で実機向けビルドだけ確認したい場合**は `--no-install` を付けます。`-destination generic/platform=iOS` に切り替わり、署名まで通ることだけを確かめます。
+
+```bash
+npm run build:native:ios:device -- --no-install
+```
+
+#### 5. 動作確認
+
+チェックから端末へのインストールまでを1コマンドで通す場合は `npm run verify:ios` / `npm run verify:android` を使います。
+
+```bash
+# 型チェック → テスト → Lint → ネイティブビルド → シミュレータ起動 → インストール
+npm run verify:ios
+npm run verify:android
+
+# 実機へインストールする場合（iOSのみ。Androidは verify:android がadbの端末へそのまま入る）
+npm run verify:ios:device
+
+# インストールせず検証だけ行う場合（コミット前の確認向け）
+npm run verify:ios -- --no-install
+
+# 検証を飛ばしてインストールだけしたい場合
+npm run verify:ios -- --skip-checks --skip-build
+npm run verify:ios:device -- --skip-checks --skip-build
+
+# 実機向けのnpm scriptを使いつつ、今回だけシミュレータへ入れたい場合
+npm run verify:ios:device -- --simulator
+```
+
+`--simulator` は既定値と同じですが、`verify:ios:device` が焼き込んでいる `--device` を打ち消す唯一の手段です（npmは `--` 以降を末尾へ足すだけなので、後勝ちで上書きします）。
+
+**iOSとAndroidは必ず分けて実行します。** プラットフォーム引数は必須で、同時指定はエラーになります。片方の環境不備（エミュレータのディスク不足など）でもう片方の確認が止まらないようにするためです。
+
+実体は [scripts/verify.sh](../scripts/verify.sh) です。処理の流れは次のとおりです。
+
+1. `npm run type-check` / `npm test` / `npm run lint`
+2. `scripts/build-native.sh`（指定したプラットフォームのみ）。ビルドと端末へのインストールはここで行われる
+3. Metroの起動方法とアプリの起動コマンドを案内して終了
+
+**インストール処理は `build-native.sh` が持ちます。** `verify.sh` は静的チェックと案内に専念し、ビルド・インストールは委譲します。同じ処理を二つのスクリプトに持たせると、片方だけ直したときに挙動がずれるためです。`--no-install` はそのまま `build-native.sh` へ渡ります。
+
+**Metro（`expo start`）はスクリプトに含めません。** 対話的に操作したい場面が多いため、`npm run dev:mobile` は各自で実行します。
+
+```bash
+# 1. Metroを起動
+npm run dev:mobile
+
+# 2. アプリを起動（Metro起動後）
+xcrun simctl launch booted com.sikakou.cliptap --initialUrl http://localhost:8081
+```
+
+iOSは `expo-dev-launcher` の `--initialUrl` 起動引数でMetroへ自動接続します。`xcrun simctl openurl` によるディープリンクは「"ClipTap" で開きますか？」の確認ダイアログが出てタップが必要になるため使いません。Androidは `adb reverse` でエミュレータ内の `localhost:8081` をホストへ転送済みなので、VIEWインテントでそのまま接続できます。
+
+実機（`--device`）の場合は `localhost` がMac自身を指さないため、案内にはMacのIPアドレスを埋めて表示します。Macと同じネットワークに端末を繋いでください。
+
+```bash
+# 2. アプリを起動（実機。UDIDとIPは verify.sh が実際の値を埋めて案内します）
+xcrun devicectl device process launch --device <UDID> -- com.sikakou.cliptap --initialUrl http://<MacのIP>:8081
+```
+
+環境変数で対象を切り替えられます。
+
+| 変数 | 既定値 | 用途 |
+|---|---|---|
+| `IOS_SIMULATOR` | 起動中のもの、なければ利用可能な最初のiPhone | 使用するシミュレータ名 |
+| `IOS_DEVICE` | 直近に接続した実機 | `--device` で使う実機の名前またはUDID |
+| `DEVELOPMENT_TEAM` | 開発用証明書のOUから自動解決 | `--device` の署名チームID |
+| `ANDROID_AVD` | `emulator -list-avds` の先頭 | 使用するAVD名 |
+| `METRO_PORT` | `8081` | 案内に表示するMetroのポート |
+
+エミュレータが起動できない場合（ディスク容量不足など）は、無限に待たずにエラーで停止し、`emulator.log` から `FATAL`/`ERROR` 行を抜き出して表示します。
+
+そのうえで、以下を目視で確認してください。
+
 - 追加した機能が正しく動作することを確認
 - 既存の機能が壊れていないことを確認
+- ダークモード、iOS/Android両方での表示崩れがないことを確認
 
 ### Gitコミットの規約
 
@@ -805,13 +981,15 @@ apps/mobile/app/index.tsx:23:5 - error TS2322: Type 'string' is not assignable t
 
 ### ユニットテストの実行
 
-共有パッケージには変数パーサーのVitestテストがあります。現行package scriptsには `test` がないため、次のように対象を明示して実行します。
+共有パッケージ（`packages/shared`）にVitestの回帰テストがあります。ルートから実行できます。
 
 ```bash
-npx vitest run packages/shared/tests/parser.test.ts
+npm test                                             # ルート（内部で @cliptap/shared の vitest run を実行）
+npm test --workspace=@cliptap/shared                 # 共有パッケージを直接実行
+npx vitest run packages/shared/tests/parser.test.ts  # 単一ファイルだけ実行したいとき
 ```
 
-新機能では同じテスト基盤へ回帰ケースを追加し、標準の `test` スクリプトを整備する場合はルートと対象ワークスペースを同時に更新してください。
+新機能では同じテスト基盤へ回帰ケースを追加し、コミット前に `npm test` がすべて成功することを確認してください（CLAUDE.md「コミット前の必須チェック」およびCIと同じ）。
 
 ### デバッグのベストプラクティス
 
@@ -1034,11 +1212,11 @@ npm run preview
 本番WebはGitHub Pagesへデプロイします。
 
 - `release/prod` ブランチへのpush、またはGitHub Actionsの手動実行で開始
-- Node.js 20で依存関係をインストールし、`npm run build:web` を実行
+- Node.js 22で依存関係をインストールし、`npm run build:web` を実行
 - `apps/web/dist` をGitHub Pagesへアップロード
 - `apps/web/public/CNAME` により `cliptap.net` を使用
 
-事前にGitHubリポジトリのPagesをGitHub Actions配信に設定し、Web環境変数のFirebase 6項目をActions Secretsへ登録してください。`VITE_API_BASE_URL` はワークフローから注入せず `apps/web/.env.production` を正とします。`apps/web/vercel.json` は現行配布では使わない残存設定です。
+事前にGitHubリポジトリのPagesをGitHub Actions配信に設定し、Web環境変数のFirebase 6項目をActions Secretsへ登録してください。`VITE_API_BASE_URL` はワークフローから注入せず `apps/web/.env.production` を正とします。Vercel向け設定は保持せず、GitHub Pagesのワークフローを配布設定の正本とします。
 
 ### API（Cloudflare Workers）
 
@@ -1392,7 +1570,7 @@ const expandedContent = variableParser.expand(snippet.content, profile);
 
 - 入力制約は [機能仕様書](./機能仕様書.md) を正とし、各画面へ同じ数値を重複定義しない
 - 共有の定数・検証処理を再利用し、モバイル、Web、インポートで同じ結果にする
-- タイトルは現行方針上必須・30文字、本文は必須、カテゴリは任意。ただし既知の実装差は機能仕様書の未確定事項に従って解消する
+- タイトルは現行方針上必須・30文字、本文は必須、カテゴリは任意。実装との差を見つけた場合は機能仕様書§1.1に従い、ソースコードを正として仕様書側を合わせる
 
 **2. SQLインジェクション対策**
 
@@ -1430,7 +1608,7 @@ await db.getAllAsync(
 ### プロジェクト内ドキュメント
 
 - **CLAUDE.md**: プロジェクト概要、アーキテクチャ、コーディング規約
-- **docs/機能仕様書.md**: 機能、画面、外部IF、ファイル、DB、非機能、未確定事項の正本
+- **docs/機能仕様書.md**: 機能、画面、外部IF、ファイル、DB、非機能の正本
 - **docs/DEVELOPMENT.md**: 開発セットアップガイド（このファイル）
 
 ### 外部ドキュメント

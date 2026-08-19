@@ -36,12 +36,10 @@ import { MobileLocaleAdapter } from '@adapters/MobileLocaleAdapter';
 import { MobileI18nAdapter } from '@adapters/MobileI18nAdapter';
 import { MobileFileIOAdapter } from '@adapters/MobileFileIOAdapter';
 import { MobileFileShareAdapter } from '@adapters/MobileFileShareAdapter';
-import { MobileFilePickerAdapter } from '@adapters/MobileFilePickerAdapter';
 import { MobileAuthAdapter } from '@adapters/MobileAuthAdapter';
 import { MobileExportAdapter } from '@adapters/MobileExportAdapter';
 import { MobileImportAdapter } from '@adapters/MobileImportAdapter';
 import { MobileSortPreferenceAdapter } from '@adapters/MobileSortPreferenceAdapter';
-import { MobileUsageTrackingAdapter } from '@adapters/MobileUsageTrackingAdapter';
 
 /* ======================================== */
 /* 型定義 */
@@ -96,13 +94,10 @@ export function useAdapterInitialization(): UseAdapterInitializationReturn {
         locale: new MobileLocaleAdapter(),
         i18n: new MobileI18nAdapter(),
         fileIO: fileIOAdapter,
-        fileShare: fileShareAdapter,
-        filePicker: new MobileFilePickerAdapter(),
         auth: new MobileAuthAdapter(),
         export: new MobileExportAdapter(fileIOAdapter, fileShareAdapter),
         import: new MobileImportAdapter(fileIOAdapter),
         sortPreference: new MobileSortPreferenceAdapter(),
-        usageTracking: new MobileUsageTrackingAdapter(),
       },
       adapterOptions: {
         subscription: {

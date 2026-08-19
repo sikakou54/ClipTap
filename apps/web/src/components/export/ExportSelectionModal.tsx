@@ -10,7 +10,7 @@
  * @see components/import/ImportSelectionModal.tsx - インポート版の参考実装
  */
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from '@cliptap/shared';
 import { Dialog } from '@headlessui/react';
 import {
@@ -18,8 +18,12 @@ import {
   useVariables,       /* 変数一覧取得フック */
   useCategories,      /* カテゴリ一覧取得フック */
   useSnippets,        /* 定型文一覧取得フック */
+  useSelection,       /* 選択・タブ・展開状態の共通管理フック */
   type ImportTabType, /* タブの種類（snippets/profiles/variables/categories） */
 } from '@cliptap/shared';
+import { showAlert } from '@utils/alerts';
+import { CATEGORY_FALLBACK_COLOR } from '@utils/categoryColor';
+import { ExportPasswordModal } from './ExportPasswordModal';
 
 /** タブオプションの定義（固定値） */
 const TAB_OPTIONS: ImportTabType[] = ['snippets', 'profiles', 'variables', 'categories'];
@@ -69,22 +73,6 @@ export function ExportSelectionModal({
   const { profiles, profileVariables } = useProfiles();  /* プロファイルとプロファイル変数値 */
   const { variables } = useVariables();                  /* 変数一覧 */
   const { categories } = useCategories();                /* カテゴリ一覧 */
-
-  /**
-   * UI状態の管理
-   */
-  const [activeTab, setActiveTab] = useState<ImportTabType>('snippets'); /* 現在のアクティブタブ */
-  const [expandedSnippetIds, setExpandedSnippetIds] = useState<Set<string>>(new Set()); /* 展開されている定型文のIDセット */
-  const [expandedVariableIds, setExpandedVariableIds] = useState<Set<string>>(new Set()); /* 展開されている変数のIDセット */
-
-  /**
-   * 選択状態の管理
-   * 各データ種別ごとに選択されているアイテムのIDをSetで管理
-   */
-  const [selectedSnippetIds, setSelectedSnippetIds] = useState<Set<string>>(new Set());
-  const [selectedProfileIds, setSelectedProfileIds] = useState<Set<string>>(new Set());
-  const [selectedVariableIds, setSelectedVariableIds] = useState<Set<string>>(new Set());
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(new Set());
 
   /**
    * パスワード入力モーダルの状態管理
@@ -192,164 +180,28 @@ export function ExportSelectionModal({
   }, [snippets, snippetProfiles, profiles, variables, categories, profileVariables, getCategory, getProfileName]);
 
   /**
-   * 初期選択状態の設定
-   * モーダルが開かれた時に全てのアイテムを選択状態にする
+   * 選択・タブ・展開状態の管理
+   *
+   * 共有フックへ委譲することで、モーダルを開いたまま候補データが再計算されても
+   * 初期化し直さない（isOpen の立ち上がりで1回だけ全選択する）。
+   * エクスポートは既存データとの重複判定が不要なため enableDuplicateCheck は false。
    */
-  useEffect(() => {
-    if (isOpen) {
-      /* 全ての定型文を選択 */
-      setSelectedSnippetIds(new Set(candidates.snippets.map((s) => s.id)));
-      /* 全てのプロファイルを選択 */
-      setSelectedProfileIds(new Set(candidates.profiles.map((p) => p.id)));
-      /* 全ての変数を選択 */
-      setSelectedVariableIds(new Set(candidates.variables.map((v) => v.id)));
-      /* 全てのカテゴリを選択 */
-      setSelectedCategoryIds(new Set(candidates.categories.map((c) => c.id)));
-      /* タブを定型文に設定 */
-      setActiveTab('snippets');
-      /* 展開状態をリセット */
-      setExpandedSnippetIds(new Set());
-      setExpandedVariableIds(new Set());
-      /* パスワードモーダルを非表示 */
-      setShowPasswordModal(false);
-      /* パスワードをクリア */
-      setPassword('');
-    }
-  }, [isOpen, candidates.snippets, candidates.profiles, candidates.variables, candidates.categories]);
-
-  /**
-   * 選択されているアイテムの総数（全タブ合計）
-   */
-  const totalSelected =
-    selectedSnippetIds.size +
-    selectedProfileIds.size +
-    selectedVariableIds.size +
-    selectedCategoryIds.size;
-
-  /**
-   * 個別アイテムの選択/非選択を切り替える
-   */
-  const toggleSelection = useCallback((id: string, type: ImportTabType) => {
-    /* データタイプごとのstate更新関数のマップ */
-    const setterMap: Record<ImportTabType, React.Dispatch<React.SetStateAction<Set<string>>>> = {
-      snippets: setSelectedSnippetIds,
-      profiles: setSelectedProfileIds,
-      variables: setSelectedVariableIds,
-      categories: setSelectedCategoryIds,
-    };
-
-    const setFunction = setterMap[type];
-    setFunction((prev) => {
-      const next = new Set(prev);
-      /* 既に選択されている場合は削除、そうでない場合は追加 */
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
-
-  /**
-   * 現在のタブ（または指定されたタブ）の全アイテムが選択されているか判定
-   */
-  const isAllSelected = useCallback(
-    (tab?: ImportTabType): boolean => {
-      const targetTab = tab ?? activeTab;
-      switch (targetTab) {
-        case 'snippets':
-          return candidates.snippets.length > 0 && selectedSnippetIds.size === candidates.snippets.length;
-        case 'profiles':
-          return candidates.profiles.length > 0 && selectedProfileIds.size === candidates.profiles.length;
-        case 'variables':
-          return candidates.variables.length > 0 && selectedVariableIds.size === candidates.variables.length;
-        case 'categories':
-          return candidates.categories.length > 0 && selectedCategoryIds.size === candidates.categories.length;
-      }
-    },
-    [activeTab, selectedSnippetIds, selectedProfileIds, selectedVariableIds, selectedCategoryIds, candidates]
-  );
-
-  /**
-   * 現在のタブ（または指定されたタブ）の全選択/全解除を切り替える
-   */
-  const toggleSelectAll = useCallback(
-    (tab?: ImportTabType) => {
-      const targetTab = tab ?? activeTab;
-      /* タブごとの設定マップ */
-      const config: Record<
-        ImportTabType,
-        {
-          currentSet: Set<string>;          /* 現在の選択状態 */
-          items: { id: string }[];          /* 候補アイテム */
-          setFunction: React.Dispatch<React.SetStateAction<Set<string>>>; /* state更新関数 */
-        }
-      > = {
-        snippets: {
-          currentSet: selectedSnippetIds,
-          items: candidates.snippets,
-          setFunction: setSelectedSnippetIds,
-        },
-        profiles: {
-          currentSet: selectedProfileIds,
-          items: candidates.profiles,
-          setFunction: setSelectedProfileIds,
-        },
-        variables: {
-          currentSet: selectedVariableIds,
-          items: candidates.variables,
-          setFunction: setSelectedVariableIds,
-        },
-        categories: {
-          currentSet: selectedCategoryIds,
-          items: candidates.categories,
-          setFunction: setSelectedCategoryIds,
-        },
-      };
-
-      const { currentSet, items, setFunction } = config[targetTab];
-      /* 全選択されている場合は全解除、そうでない場合は全選択 */
-      if (currentSet.size === items.length) {
-        setFunction(new Set());
-      } else {
-        setFunction(new Set(items.map((item) => item.id)));
-      }
-    },
-    [activeTab, selectedSnippetIds, selectedProfileIds, selectedVariableIds, selectedCategoryIds, candidates]
-  );
-
-  /**
-   * 定型文の展開/折りたたみを切り替える
-   */
-  const toggleSnippetExpand = useCallback((id: string) => {
-    setExpandedSnippetIds((prev) => {
-      const next = new Set(prev);
-      /* 既に展開されている場合は折りたたみ、そうでない場合は展開 */
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
-
-  /**
-   * 変数の展開/折りたたみを切り替える
-   */
-  const toggleVariableExpand = useCallback((id: string) => {
-    setExpandedVariableIds((prev) => {
-      const next = new Set(prev);
-      /* 既に展開されている場合は折りたたみ、そうでない場合は展開 */
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
+  const {
+    selectedSnippetIds,
+    selectedProfileIds,
+    selectedVariableIds,
+    selectedCategoryIds,
+    activeTab,
+    setActiveTab,
+    expandedSnippetIds,
+    expandedVariableIds,
+    toggleSelection,
+    toggleSelectAll,
+    isAllSelected,
+    toggleExpandSnippet,
+    toggleExpandVariable,
+    totalSelected,
+  } = useSelection({ candidates, isOpen, enableDuplicateCheck: false });
 
   /**
    * エクスポートボタン押下時の処理
@@ -358,7 +210,6 @@ export function ExportSelectionModal({
   const handleExportPress = useCallback(async () => {
     /* 何も選択されていない場合はエラー */
     if (totalSelected === 0) {
-      const { showAlert } = await import('@utils/alerts');
       showAlert('', t('backup.no_selection'));
       return;
     }
@@ -373,8 +224,7 @@ export function ExportSelectionModal({
   const handlePasswordSubmit = useCallback(async () => {
     /* パスワードが未入力の場合はエラー */
     if (!password.trim()) {
-      const { showAlert } = await import('@utils/alerts');
-      showAlert('', t('backup.password_required'));
+      showAlert('', t('error.password_required'));
       return;
     }
 
@@ -397,12 +247,17 @@ export function ExportSelectionModal({
   /**
    * モーダルを閉じる処理
    * パスワードモーダルも含めて全て閉じる
+   *
+   * @remarks
+   * 出力処理中は閉じない。処理中に閉じられると一時DBを使った出力の途中で
+   * 画面状態だけが先に戻り、利用者が二重に操作できてしまうため。
    */
   const handleClose = useCallback(() => {
+    if (isProcessing) return;
     setShowPasswordModal(false);
     setPassword('');
     onClose();
-  }, [onClose]);
+  }, [isProcessing, onClose]);
 
   /* メイン選択モーダル（z-50） */
   return (
@@ -417,9 +272,11 @@ export function ExportSelectionModal({
           <Dialog.Panel className="w-full max-w-3xl h-[80vh] bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-xl flex flex-col">
             {/* ヘッダー（タイトル、閉じるボタン、全選択ボタン） */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#2A2A2A]">
+              {/* 閉じるボタン（出力処理中は無効） */}
               <button
                 onClick={handleClose}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                disabled={isProcessing}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -489,7 +346,10 @@ export function ExportSelectionModal({
                     /* カテゴリが選択されているかチェック（選択されていない場合は未分類として表示） */
                     const isCategorySelected = item.categoryId ? selectedCategoryIds.has(item.categoryId) : false;
                     const displayCategoryName = isCategorySelected ? (item.categoryName || t('common.uncategorized')) : t('common.uncategorized');
-                    const displayCategoryColor = isCategorySelected ? (item.categoryColor || '#3B82F6') : '#3B82F6';
+                    /* カテゴリ未選択時・色未設定時はどちらも未設定フォールバック色で表示する */
+                    const displayCategoryColor = isCategorySelected
+                      ? (item.categoryColor || CATEGORY_FALLBACK_COLOR)
+                      : CATEGORY_FALLBACK_COLOR;
 
                     /* 定型文アイテム（チェックボックス、タイトル、本文、カテゴリ・プロファイルバッジ、展開/折りたたみ） */
                     return (
@@ -504,7 +364,7 @@ export function ExportSelectionModal({
                           />
                         </div>
                         {/* 定型文コンテンツ（クリックで展開/折りたたみ） */}
-                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleSnippetExpand(item.id)}>
+                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleExpandSnippet(item.id)}>
                           {/* タイトル行 */}
                           <div className="flex justify-between items-center mb-1">
                             {/* 定型文タイトル */}
@@ -601,7 +461,7 @@ export function ExportSelectionModal({
                           />
                         </div>
                         {/* 変数コンテンツ（クリックで展開/折りたたみ） */}
-                        <div className="flex-1 cursor-pointer" onClick={() => toggleVariableExpand(item.id)}>
+                        <div className="flex-1 cursor-pointer" onClick={() => toggleExpandVariable(item.id)}>
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2">
                               {/* 展開/折りたたみアイコン */}
@@ -663,7 +523,7 @@ export function ExportSelectionModal({
                       <div className="flex-1">
                         <div className="flex items-center">
                           {/* カテゴリカラーインジケーター */}
-                          <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: item.color || '#ccc' }}></span>
+                          <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: item.color || CATEGORY_FALLBACK_COLOR }}></span>
                           {/* カテゴリ名 */}
                           <h3 className="text-sm font-medium text-gray-900 dark:text-white">{item.name}</h3>
                         </div>
@@ -677,10 +537,11 @@ export function ExportSelectionModal({
             {/* フッター（キャンセル・エクスポートボタン） */}
             <div className="p-6 border-t border-gray-200 dark:border-[#2A2A2A] bg-gray-50 dark:bg-[#222] flex justify-end items-center">
               <div className="flex gap-3">
-                {/* キャンセルボタン */}
+                {/* キャンセルボタン（出力処理中は無効） */}
                 <button
                   onClick={handleClose}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#333] border border-gray-300 dark:border-[#444] rounded-lg hover:bg-gray-50 dark:hover:bg-[#444]"
+                  disabled={isProcessing}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#333] border border-gray-300 dark:border-[#444] rounded-lg hover:bg-gray-50 dark:hover:bg-[#444] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('common.cancel')}
                 </button>
@@ -701,7 +562,7 @@ export function ExportSelectionModal({
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                      Processing...
+                      {t('common.processing')}
                     </span>
                   ) : (
                     t('export_import.export')
@@ -714,62 +575,14 @@ export function ExportSelectionModal({
       </Dialog>
 
       {/* パスワード入力モーダル（z-60で選択モーダルより前面に表示） */}
-      <Dialog open={showPasswordModal} onClose={() => setShowPasswordModal(false)} className="relative z-[60]">
-        {/* 背景オーバーレイ */}
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        {/* モーダルコンテナ（中央配置） */}
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          {/* モーダルパネル */}
-          <Dialog.Panel className="w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-xl p-6">
-            {/* タイトル */}
-            <Dialog.Title className="text-lg font-bold text-gray-900 dark:text-white mb-2 text-center">
-              {t('export_import.password_title')}
-            </Dialog.Title>
-            {/* 説明文 */}
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 text-center">
-              {t('export_import.password_description')}
-            </p>
-            {/* パスワード入力欄（Enterキーでも送信可能） */}
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t('export_import.password_placeholder')}
-              autoFocus
-              className="w-full px-4 py-3 border border-gray-300 dark:border-[#2A2A2A] rounded-xl focus:outline-none mb-4 bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#707070]"
-              onKeyDown={(e) => {
-                /* Enterキーが押されたら送信 */
-                if (e.key === 'Enter' && password.trim()) {
-                  handlePasswordSubmit();
-                }
-              }}
-            />
-            {/* ボタン群（キャンセル・OK） */}
-            <div className="flex gap-3">
-              {/* キャンセルボタン */}
-              <button
-                onClick={() => setShowPasswordModal(false)}
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#333] border border-gray-300 dark:border-[#444] rounded-lg hover:bg-gray-50 dark:hover:bg-[#444]"
-              >
-                {t('common.cancel')}
-              </button>
-              {/* OKボタン（パスワード未入力または処理中は無効化） */}
-              <button
-                onClick={handlePasswordSubmit}
-                disabled={!password.trim() || isProcessing}
-                className={`flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${
-                  !password.trim() || isProcessing
-                    ? 'bg-blue-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700'
-                }`}
-              >
-                {/* 処理中は「処理中」、それ以外は「OK」 */}
-                {isProcessing ? t('common.processing') : t('common.ok')}
-              </button>
-            </div>
-          </Dialog.Panel>
-        </div>
-      </Dialog>
+      <ExportPasswordModal
+        isOpen={showPasswordModal}
+        password={password}
+        onPasswordChange={setPassword}
+        onSubmit={handlePasswordSubmit}
+        onCancel={() => setShowPasswordModal(false)}
+        isProcessing={isProcessing}
+      />
     </>
   );
 }

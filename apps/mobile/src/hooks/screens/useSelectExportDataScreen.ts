@@ -59,11 +59,7 @@ export interface UseSelectExportDataScreenReturn {
   selectedVariableIds: Set<string>;
   /** 選択されたカテゴリID */
   selectedCategoryIds: Set<string>;
-  /** タブ別の選択件数 */
-  selectedCounts: Record<SelectionTabType, number>;
-  /** 現在アクティブなタブの選択件数 */
-  activeSelectedCount: number;
-  /** 全選択されているか */
+  /** 選択された総件数（タブ横断） */
   totalSelected: number;
 
   /* チェック関数 */
@@ -237,26 +233,8 @@ export function useSelectExportDataScreen(): UseSelectExportDataScreenReturn {
   } = useSelection({
     candidates,
     isOpen,
-    enableDuplicateCheck: false, // エクスポートでは重複チェック不要
+    enableDuplicateCheck: false, /* エクスポートは自分のDBが出所で、既存名と突き合わせる相手がいないため重複チェックは不要 */
   });
-
-  /* ======================================== */
-  /* 派生状態 */
-  /* ======================================== */
-
-  /** タブ別の選択件数 */
-  const selectedCounts = useMemo<Record<SelectionTabType, number>>(
-    () => ({
-      snippets: selectedSnippetIds.size,
-      profiles: selectedProfileIds.size,
-      variables: selectedVariableIds.size,
-      categories: selectedCategoryIds.size,
-    }),
-    [selectedSnippetIds, selectedProfileIds, selectedVariableIds, selectedCategoryIds]
-  );
-
-  /** 現在アクティブなタブの選択件数 */
-  const activeSelectedCount = selectedCounts[activeTab];
 
   /* ======================================== */
   /* エクスポート処理 */
@@ -335,8 +313,6 @@ export function useSelectExportDataScreen(): UseSelectExportDataScreenReturn {
     selectedProfileIds,
     selectedVariableIds,
     selectedCategoryIds,
-    selectedCounts,
-    activeSelectedCount,
     totalSelected,
 
     /* チェック関数 */

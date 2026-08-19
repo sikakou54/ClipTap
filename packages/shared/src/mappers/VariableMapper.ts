@@ -35,7 +35,7 @@ const VariableQueries = {
   /* タイプ別に変数を取得（有効なもののみ） */
   SELECT_BY_TYPE: `SELECT * FROM variables WHERE type = ? AND valid = 1 ORDER BY sortOrder ASC`,
   /* 変数を新規作成 */
-  INSERT: `INSERT INTO variables (id, name, label, type, valid, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  INSERT: `INSERT INTO variables (id, name, label, icon, type, valid, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   /* 最大のsortOrderを取得（新規作成時に使用） */
   SELECT_MAX_SORT_ORDER: 'SELECT MAX(sortOrder) as maxOrder FROM variables',
   /* 変数を更新（名前、ラベル、アイコン、sortOrder） */
@@ -65,15 +65,15 @@ const VariableQueries = {
  * @returns Variable型のオブジェクト
  */
 const toEntity = (row: any): Variable => ({
-  id: row.id, // 変数ID
-  name: row.name, // 変数名（例: {{API_KEY}}）
-  label: row.label || null, // ラベル（UIに表示する名前）
-  icon: row.icon || null, // アイコン（オプション）
-  type: row.type || 'custom', // タイプ（custom: カスタム変数、それ以外はシステム変数）
-  valid: row.valid !== undefined ? Boolean(row.valid) : true, // 有効かどうか（Proプラン制限）
-  sortOrder: row.sortOrder ?? 0, // 並び順
-  createdAt: row.createdAt, // 作成日時
-  updatedAt: row.updatedAt, // 最終更新日時
+  id: row.id, /* 変数ID */
+  name: row.name, /* 変数名（例: {{API_KEY}}） */
+  label: row.label || null, /* ラベル（UIに表示する名前。未設定・空文字はnullに寄せる） */
+  icon: row.icon || null, /* アイコン（オプション。未設定・空文字はnullに寄せる） */
+  type: row.type || 'custom', /* タイプ（custom: カスタム変数、それ以外はシステム変数。未設定・空文字はcustom扱い） */
+  valid: Boolean(row.valid), /* 有効かどうか（Proプラン制限） */
+  sortOrder: row.sortOrder ?? 0, /* 並び順 */
+  createdAt: row.createdAt, /* 作成日時 */
+  updatedAt: row.updatedAt, /* 最終更新日時 */
 });
 
 /**
@@ -90,6 +90,21 @@ const toEntities = (rows: any[]): Variable[] => rows.map(toEntity);
  * 変数（カスタム変数）のCRUD操作を提供する静的メソッド群
  */
 export class VariableMapper {
+  /** バックアップ行をID・日時・有効状態・並び順ごと逐語復元する。 */
+  static restore(variable: Variable): void {
+    getMainDbAdapter().run(VariableQueries.INSERT, [
+      variable.id,
+      variable.name,
+      variable.label,
+      variable.icon,
+      variable.type,
+      variable.valid ? 1 : 0,
+      variable.sortOrder,
+      variable.createdAt,
+      variable.updatedAt,
+    ]);
+  }
+
   /**
    * 有効な全変数を取得
    * @returns 有効な変数一覧（作成日時順）
@@ -166,8 +181,9 @@ export class VariableMapper {
       id,
       data.name,
       data.label || null,
+      data.icon || null,
       data.type || 'custom',
-      1, // valid（初期値は有効）
+      1, /* valid（初期値は有効） */
       sortOrder,
       now,
       now,
@@ -243,18 +259,6 @@ export class VariableMapper {
     const db = getMainDbAdapter();
     const result = db.get<{ count: number }>(VariableQueries.SELECT_COUNT);
     return result?.count || 0;
-  }
-
-  /**
-   * 複数変数を一括作成
-   * @param variables - 変数データ一覧
-   * @description
-   * インポート機能で使用。各変数に対してcreate()を呼び出す。
-   */
-  static bulkCreate(variables: CreateVariableInput[]): void {
-    for (const variable of variables) {
-      this.create(variable);
-    }
   }
 
   /**

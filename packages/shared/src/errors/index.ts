@@ -3,6 +3,8 @@
  * @description ClipTapアプリ共通のカスタム例外クラス
  *
  * 例外階層:
+ * この図は base.ts / database.ts / validation.ts / importExport.ts / misc.ts の実装を写したもの。
+ * クラスを追加・削除したら同じ変更でこの図も更新する。
  * ```
  * Error
  * └── ClipTapError (基底クラス)
@@ -10,15 +12,25 @@
  *     ├── ValidationError (バリデーション関連)
  *     │   ├── EmptyContentError
  *     │   ├── DuplicateNameError
- *     │   └── Variable*Error
- *     ├── NotFoundError (リソース未検出)
- *     ├── AuthenticationError (認証関連)
- *     ├── PurchaseError (課金関連)
+ *     │   ├── SystemVariableDeleteError
+ *     │   ├── DefaultProfileDeleteError
+ *     │   ├── InvalidProfileDefaultError
+ *     │   ├── VariableNameRequiredError
+ *     │   ├── VariableNameInvalidError
+ *     │   ├── VariableNameReservedError
+ *     │   └── InvalidRgbValueError
+ *     ├── NotFoundError (リソース未検出。validation.ts にあるが ValidationError の配下ではない)
  *     ├── ImportExportError (インポート/エクスポート関連)
  *     │   ├── IncorrectPasswordError
  *     │   ├── ChecksumMismatchError
  *     │   ├── VersionMismatchError
- *     │   └── NewerVersionError
+ *     │   ├── NewerVersionError
+ *     │   ├── InvalidFileTypeError
+ *     │   ├── InvalidFileFormatError
+ *     │   ├── PasswordRequiredError
+ *     │   ├── ExportFailedError
+ *     │   ├── TempDbPathRequiredError
+ *     │   └── PartialImportError
  *     └── EnvironmentError (実行環境関連)
  * ```
  */
@@ -43,11 +55,10 @@ export {
   NotFoundError,
   SystemVariableDeleteError,
   DefaultProfileDeleteError,
+  InvalidProfileDefaultError,
   VariableNameRequiredError,
-  VariableNameTooLongError,
   VariableNameInvalidError,
   VariableNameReservedError,
-  VariableValueRequiredError,
   InvalidRgbValueError,
 } from './validation';
 
@@ -60,22 +71,13 @@ export {
   ChecksumMismatchError,
   VersionMismatchError,
   NewerVersionError,
-  FileReadError,
   InvalidFileTypeError,
   InvalidFileFormatError,
   PasswordRequiredError,
   ExportFailedError,
-  FileWriteError,
   TempDbPathRequiredError,
-  NoSelectionError,
   PartialImportError,
-  DatabasePathNotFoundError,
 } from './importExport';
-
-/* ======================================== */
-/* 認証・課金関連 */
-/* ======================================== */
-export { AuthenticationError, PurchaseError } from './auth';
 
 /* ======================================== */
 /* その他 */

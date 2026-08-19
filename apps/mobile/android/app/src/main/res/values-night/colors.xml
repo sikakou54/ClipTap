@@ -1,1 +1,8 @@
-<resources/>
+<resources>
+  <color name="keyboardWindowBackground">#FF121212</color>
+  <color name="keyboardSecondaryButtonBackground">#3A3A3C</color>
+  <color name="keyboardSecondaryButtonIcon">#FFFFFF</color>
+  <color name="keyboardAccent">#0A84FF</color>
+  <color name="keyboardOnAccent">#FFFFFF</color>
+  <color name="keyboardSeparator">#33FFFFFF</color>
+</resources>

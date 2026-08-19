@@ -11,7 +11,7 @@
  * - バリデーション
  *
  * @see components/snippet/SnippetFormScreen.tsx - UIコンポーネント
- * @see lib/hooks/useSnippets.tsx - スニペットCRUD操作
+ * @see packages/shared/src/providers/SnippetProvider.tsx - 定型文CRUD操作（useSnippets）
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -25,7 +25,7 @@ import { Logger } from '@cliptap/shared';
 /**
  * useSnippetFormScreenの引数
  */
-export interface UseSnippetFormScreenParams {
+interface UseSnippetFormScreenParams {
   mode: 'create' | 'edit';
   snippetId?: string;
 }
@@ -77,7 +77,8 @@ export function useSnippetFormScreen({
   /* ======================================== */
   const { createSnippet, updateSnippet, getById } = useSnippets();
   const { categories, refresh: refreshCategories } = useCategories();
-  const { profiles } = useProfiles();
+  /* 選択済みプロファイル名の表示は、選択肢と同じく有効なプロファイルだけを対象にする */
+  const { validProfiles: profiles } = useProfiles();
 
   /* ======================================== */
   /* 状態管理 */
@@ -120,7 +121,7 @@ export function useSnippetFormScreen({
       }
 
       try {
-        const snippet = await getById(snippetId);
+        const snippet = getById(snippetId);
         if (snippet) {
           setTitle(snippet.title || '');
           setContent(snippet.content);
@@ -224,7 +225,7 @@ export function useSnippetFormScreen({
     setSaving(true);
     try {
       if (isEditMode && snippetId) {
-        await updateSnippet({
+        updateSnippet({
           id: snippetId,
           title: title.trim(),
           content: content.trim(),
@@ -233,7 +234,7 @@ export function useSnippetFormScreen({
           copyWithTitle,
         });
       } else {
-        await createSnippet({
+        createSnippet({
           title: title.trim(),
           content: content.trim(),
           categoryId: selectedCategoryId,
@@ -242,7 +243,7 @@ export function useSnippetFormScreen({
         });
       }
       router.back();
-    } catch (error) {
+    } catch {
       showErrorAlert(t('error.generic'));
     } finally {
       setSaving(false);

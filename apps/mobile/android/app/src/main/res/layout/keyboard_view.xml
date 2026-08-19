@@ -12,7 +12,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?android:attr/colorBackground"
     android:padding="8dp">
 
     <!-- 統合フィルターエリア（環境ドロップダウン + カテゴリドロップダウン + ソートボタン） -->
@@ -90,7 +89,6 @@
             android:id="@+id/snippetRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="?android:attr/colorBackground"
             android:clipToPadding="false"
             android:scrollbars="vertical" />
 
@@ -102,7 +100,7 @@
             android:layout_gravity="center"
             android:text="@string/snippet_empty"
             android:textSize="16sp"
-            android:textColor="#999999"
+            android:textColor="?android:attr/textColorSecondary"
             android:visibility="gone" />
 
     </FrameLayout>

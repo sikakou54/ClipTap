@@ -20,6 +20,14 @@ declare const globalThis: {
   atob?: (data: string) => string;
 };
 
+/*
+ * btoa / atob / TextEncoder は呼び出しのたびに解決する。
+ * 対象ランタイム（iOS / Android の Hermes、主要ブラウザ）にはいずれも存在するため、
+ * ここの throw に到達するのは想定外の環境のみだが、モジュール評価時に解決すると
+ * このモジュールを再輸出しているバレル（src/index.ts）の読み込み全体が失敗し、
+ * エクスポート/インポートを使わない画面まで巻き込むため、使うときに解決する。
+ */
+
 /**
  * Base64エンコード関数を取得
  *
@@ -50,15 +58,20 @@ const getAtob = () => {
   throw new EnvironmentError('atob');
 };
 
-const btoa = getBtoa();
-const atob = getAtob();
-
-const textEncoder = typeof TextEncoder !== 'undefined' ? new TextEncoder() : null;
-const textDecoder = typeof TextDecoder !== 'undefined' ? new TextDecoder() : null;
-
-if (!textEncoder || !textDecoder) {
-  throw new EnvironmentError('TextEncoder/TextDecoder');
-}
+/**
+ * テキストエンコーダーを取得
+ *
+ * @returns 新しく生成したTextEncoder
+ * @throws {EnvironmentError} TextEncoderが利用できない環境の場合
+ *
+ * @internal
+ */
+const getTextEncoder = (): TextEncoder => {
+  if (typeof TextEncoder !== 'undefined') {
+    return new TextEncoder();
+  }
+  throw new EnvironmentError('TextEncoder');
+};
 
 /**
  * パスワードハッシュの入力文字列を構築
@@ -163,6 +176,7 @@ const uint8ArrayFromBinary = (binary: string): Uint8Array => {
  * 2. Base64文字列 → バイナリ文字列 → Uint8Array
  */
 export const decodeDoubleBase64ToUint8Array = (doubleBase64: string): Uint8Array => {
+  const atob = getAtob();
   const firstBase64 = atob(doubleBase64);
   const binary = atob(firstBase64);
   return uint8ArrayFromBinary(binary);
@@ -180,8 +194,8 @@ export const decodeDoubleBase64ToUint8Array = (doubleBase64: string): Uint8Array
  * エクスポートデータの難読化で使用されます。
  */
 export const base64ToDoubleBase64 = (base64: string): string => {
-  const bytes = textEncoder.encode(base64);
-  return btoa(binaryFromUint8Array(bytes));
+  const bytes = getTextEncoder().encode(base64);
+  return getBtoa()(binaryFromUint8Array(bytes));
 };
 
 /**
@@ -196,5 +210,5 @@ export const base64ToDoubleBase64 = (base64: string): string => {
  * SQLiteデータベースファイルなどのバイナリデータをファイルに書き出す際に使用されます。
  */
 export const uint8ArrayToBase64 = (bytes: Uint8Array): string => {
-  return btoa(binaryFromUint8Array(bytes));
+  return getBtoa()(binaryFromUint8Array(bytes));
 };

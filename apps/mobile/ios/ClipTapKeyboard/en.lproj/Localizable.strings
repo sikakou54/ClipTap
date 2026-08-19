@@ -27,6 +27,7 @@
 "snippet.preview" = "Preview";
 "snippet.detail" = "Details";
 "snippet.close" = "Close";
+"snippet_no_title" = "(No Title)";
 
 /* Search related */
 "search.placeholder" = "Search snippets";
@@ -72,6 +73,8 @@
 "accessibility.close_button" = "Close button";
 "accessibility.copy_button" = "Copy button";
 "accessibility.sort_button" = "Sort button";
+"accessibility.insert_title_button" = "Insert title button";
+"accessibility.insert_newline_button" = "Insert newline button";
 
 /* Sort related */
 "sort.label" = "Sort";
@@ -79,3 +82,11 @@
 "sort.updated" = "Updated";
 "sort.title" = "Title";
 "sort.usage" = "Frequency";
+
+/* Settings related */
+"settings.title" = "Settings";
+"settings.usage_tracking" = "Usage Tracking";
+"settings.usage_tracking_active" = "On";
+"settings.usage_tracking_inactive" = "Off";
+"settings.usage_tracking_requires_full_access" = "Full Access is required to record how often each snippet is inserted from the keyboard. Allowing it enables sorting by usage.";
+"settings.full_access_instructions" = "1. Open the Settings app\n2. Go to \"General\" → \"Keyboard\" → \"Keyboards\"\n3. Tap \"ClipTap\"\n4. Turn on \"Allow Full Access\"";

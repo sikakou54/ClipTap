@@ -9,10 +9,9 @@
  * - 複数選択によるプロファイル指定
  * - 「全ての環境」オプション（空配列=全プロファイルで表示）
  *
- * @see lib/hooks/screens/useProfileSelectScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useProfileSelectScreen.ts - ビジネスロジック
  */
 
-import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -20,10 +19,8 @@ import { useTranslation } from '@cliptap/shared'
 import { useTheme } from '@lib/themeSystem';
 import { useProfileSelectScreen } from '@hooks/screens/useProfileSelectScreen';
 import { Profile } from '@cliptap/shared';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { UI_CONSTANTS } from '@constants/ui';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProfileSelectScreen() {
   const { t } = useTranslation();
@@ -45,19 +42,19 @@ export default function ProfileSelectScreen() {
   } = useProfileSelectScreen({ selectedIds: Array.isArray(selectedIds) ? selectedIds : [] });
 
   return (
-    <SafeAreaView style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      <Header
-        title={t('snippet.select_profiles_title')}
-        isModal={!isTablet}
-        rightAction={
-          <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-            <Text style={[styles.saveText, { color: colors.primary, fontSize: responsiveFontSizes.base }]}>
-              {t('common.save')}
-            </Text>
-          </TouchableOpacity>
-        }
-      />
-
+    <ScreenContainer
+      title={t('snippet.select_profiles_title')}
+      isModal={!isTablet}
+      /* 画面下端まで一覧が伸びるため下辺のセーフエリアも確保する */
+      edges={['top', 'left', 'right', 'bottom']}
+      rightAction={
+        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+          <Text style={[styles.saveText, { color: colors.primary, fontSize: responsiveFontSizes.base }]}>
+            {t('common.save')}
+          </Text>
+        </TouchableOpacity>
+      }
+    >
       <ScrollView style={styles.content}>
         <Text style={[styles.description, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm }]}>
           {t('snippet.select_profiles_description')}
@@ -112,7 +109,7 @@ export default function ProfileSelectScreen() {
           })}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 

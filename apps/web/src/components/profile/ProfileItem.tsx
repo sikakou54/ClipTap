@@ -12,9 +12,11 @@ interface ProfileItemProps {
   isLast: boolean;
   onEdit: (profile: Profile) => void;
   onDelete: (id: string) => void;
+  /** 標準に設定するコールバック（プロファイルIDを渡す） */
+  onSetDefault: (id: string) => void;
 }
 
-export function ProfileItem({ profile, isLast, onEdit, onDelete }: ProfileItemProps) {
+export function ProfileItem({ profile, isLast, onEdit, onDelete, onSetDefault }: ProfileItemProps) {
   const { t } = useTranslation();
   const isEnabled = profile.valid;
 
@@ -59,6 +61,18 @@ export function ProfileItem({ profile, isLast, onEdit, onDelete }: ProfileItemPr
             </span>
           )}
         </div>
+        {/* 標準にするバッジ（標準以外かつ有効なプロファイルのみ表示）
+            背景なしの枠線で、状態表示のデフォルトバッジと区別する */}
+        {!profile.isDefault && isEnabled && (
+          <button
+            onClick={() => onSetDefault(profile.id)}
+            aria-label={t('profile.set_default_action')}
+            title={t('profile.set_default_action')}
+            className="shrink-0 px-2 py-0.5 text-gray-500 dark:text-[#A0A0A0] border border-gray-200 dark:border-gray-700 text-xs rounded-full hover:bg-gray-100 dark:hover:bg-[#2A2A2A] hover:text-gray-700 dark:hover:text-white transition-colors cursor-pointer"
+          >
+            {t('profile.set_default_action')}
+          </button>
+        )}
         {/* 編集ボタン */}
         <button
           onClick={() => onEdit(profile)}

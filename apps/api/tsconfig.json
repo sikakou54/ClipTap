@@ -13,7 +13,10 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@cliptap/shared/*": ["../../packages/shared/src/*"]
+    }
   },
   "include": ["src/**/*.ts"]
 }

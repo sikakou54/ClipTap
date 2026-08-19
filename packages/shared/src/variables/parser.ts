@@ -16,6 +16,7 @@
  */
 
 import { resolveSystemVariableValue, normalizeLocale } from './systemVariables';
+import type { SystemVariableFormats } from '../constants/systemVariableFormats';
 
 /**
  * カスタム変数リゾルバ型
@@ -51,15 +52,6 @@ const VARIABLE_PATTERN = /\{\{([^}]+)\}\}/g;
  */
 export const VARIABLE_TOKEN_PATTERN = VARIABLE_PATTERN;
 
-/**
- * 変数名を変数トークン形式にフォーマット
- *
- * @param {string} name - 変数名
- * @returns {string} フォーマットされた変数トークン
- */
-export const formatVariable = (name: string): string => {
-  return `{{${name}}}`;
-};
 
 /**
  * テキストに変数が含まれているかをチェック
@@ -122,7 +114,6 @@ const escapeRegExp = (value: string) => {
  * @param {Object} [options] - オプション
  * @param {string} [options.locale='en'] - ロケール（システム変数の表示用）
  * @param {VariableResolver} [options.customResolver] - カスタム変数リゾルバ
- * @param {boolean} [options.preserveUnknown=false] - 未知の変数を保持するか
  * @returns {Promise<string>} 展開後のテキスト
  *
  * @description
@@ -132,9 +123,7 @@ const escapeRegExp = (value: string) => {
  * 1. システム変数（{{today}}, {{time}} 等）
  * 2. カスタム変数（customResolver経由）
  *
- * 未知の変数の扱い:
- * - preserveUnknown=false（デフォルト）: {{変数}} のまま保持
- * - preserveUnknown=true: 変数トークンを削除（空文字に置換）
+ * 未知の変数は元のトークンのまま保持する。
  *
  * @remarks
  * - 非同期処理に対応（カスタムリゾルバがPromiseを返す場合）
@@ -148,10 +137,10 @@ export const replaceVariables = async (
   options: {
     locale?: string;
     customResolver?: VariableResolver;
-    preserveUnknown?: boolean;
+    formats?: SystemVariableFormats;
   } = {}
 ): Promise<string> => {
-  const { locale = 'en', customResolver, preserveUnknown = false } = options;
+  const { locale = 'en', customResolver, formats } = options;
   const normalizedLocale = normalizeLocale(locale);
   const matches = [...text.matchAll(new RegExp(VARIABLE_PATTERN))];
 
@@ -163,7 +152,12 @@ export const replaceVariables = async (
     const token = match[0];
     const variableName = match[1]?.trim() ?? '';
 
-    let replacement: string | null | undefined = resolveSystemVariableValue(variableName, normalizedLocale);
+    let replacement: string | null | undefined = resolveSystemVariableValue(
+      variableName,
+      normalizedLocale,
+      new Date(),
+      formats
+    );
 
     if ((replacement === null || replacement === undefined) && customResolver) {
       const resolved = customResolver(variableName);
@@ -171,9 +165,6 @@ export const replaceVariables = async (
     }
 
     if (replacement === null || replacement === undefined) {
-      if (preserveUnknown) {
-        continue;
-      }
       replacement = token;
     }
 
@@ -183,4 +174,3 @@ export const replaceVariables = async (
 
   return result;
 };
-

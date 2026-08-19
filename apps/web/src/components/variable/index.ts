@@ -8,4 +8,5 @@ export { CustomVariableSection } from './CustomVariableSection';
 export { CustomVariableItem } from './CustomVariableItem';
 export { SystemVariableSection } from './SystemVariableSection';
 export { SystemVariableItem } from './SystemVariableItem';
+export { SystemVariableFormatModal } from './SystemVariableFormatModal';
 export { EmptyVariableList } from './EmptyVariableList';

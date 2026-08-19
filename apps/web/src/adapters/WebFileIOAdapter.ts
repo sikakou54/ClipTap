@@ -12,11 +12,16 @@
  */
 
 import type { FileIOAdapter, FileInfo } from '@cliptap/shared';
-import { isOpfsPath, getOpfsFileName } from '@cliptap/shared';
+import { Logger, isOpfsPath, getOpfsFileName } from '@cliptap/shared';
+import { base64ToUint8Array } from '@utils/base64';
 
 /**
  * Web用FileIOAdapter実装クラス
  * Origin Private File System (OPFS) とBlob URLを使用してファイル操作を提供する
+ *
+ * @remarks
+ * 各メソッドはパスの形式で2通りに分岐する。tempFiles マップを使うのはBlob URL分岐だけで、
+ * OPFS分岐ではファイル自体がOPFSに残るためマップには何も入れない。
  */
 export class WebFileIOAdapter implements FileIOAdapter {
   /** 一時的なBlob URLを保持するマップ（ファイル名 -> Blob URL） */
@@ -36,6 +41,41 @@ export class WebFileIOAdapter implements FileIOAdapter {
   }
 
   /**
+   * OPFSパスからFileオブジェクトを取得
+   *
+   * @remarks
+   * OPFSはフラット構成で使っている（ディレクトリを作らない）ため、
+   * パスからファイル名を取り出せばルート直下のハンドルとして解決できる。
+   * ファイルが存在しない場合は getFileHandle() が例外を投げる。
+   *
+   * @param uri - opfs://で始まるパス
+   * @returns 読み取り用のFileオブジェクト
+   */
+  private async getOpfsFile(uri: string): Promise<File> {
+    const fileName = getOpfsFileName(uri);
+    const root = await this.getOpfsRoot();
+    const fileHandle = await root.getFileHandle(fileName);
+    return await fileHandle.getFile();
+  }
+
+  /**
+   * OPFSパスへの書き込みストリームを取得
+   *
+   * @remarks
+   * OPFSはフラット構成で使っているため、ファイル名だけでハンドルを解決できる。
+   * create: true なので、存在しない場合は空ファイルが作られる。
+   *
+   * @param path - opfs://で始まるパス
+   * @returns 書き込み用ストリーム（呼び出し側で close() すること）
+   */
+  private async getOpfsWritable(path: string): Promise<FileSystemWritableFileStream> {
+    const fileName = getOpfsFileName(path);
+    const root = await this.getOpfsRoot();
+    const fileHandle = await root.getFileHandle(fileName, { create: true });
+    return await fileHandle.createWritable();
+  }
+
+  /**
    * ファイルを読み込み（テキスト）
    *
    * @param uri - 読み込むファイルのパス（opfs://またはBlob URL）
@@ -45,10 +85,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
     try {
       /* OPFSパスの場合 */
       if (isOpfsPath(uri)) {
-        const fileName = getOpfsFileName(uri);
-        const root = await this.getOpfsRoot();
-        const fileHandle = await root.getFileHandle(fileName);
-        const file = await fileHandle.getFile();
+        const file = await this.getOpfsFile(uri);
         return await file.text();
       }
 
@@ -57,7 +94,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
       const text = await response.text();
       return text;
     } catch (error) {
-      console.error('[WebFileIOAdapter] Read failed:', error);
+      Logger.error('[WebFileIOAdapter] Read failed:', error);
       throw error;
     }
   }
@@ -74,11 +111,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
 
       /* OPFSパスの場合 */
       if (isOpfsPath(uri)) {
-        const fileName = getOpfsFileName(uri);
-        const root = await this.getOpfsRoot();
-        const fileHandle = await root.getFileHandle(fileName);
-        const file = await fileHandle.getFile();
-        blob = file;
+        blob = await this.getOpfsFile(uri);
       } else {
         /* Blob URLの場合 */
         const response = await fetch(uri);
@@ -98,7 +131,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
         reader.readAsDataURL(blob);
       });
     } catch (error) {
-      console.error('[WebFileIOAdapter] Read binary failed:', error);
+      Logger.error('[WebFileIOAdapter] Read binary failed:', error);
       throw error;
     }
   }
@@ -113,10 +146,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
     try {
       /* OPFSパスの場合 */
       if (isOpfsPath(uri)) {
-        const fileName = getOpfsFileName(uri);
-        const root = await this.getOpfsRoot();
-        const fileHandle = await root.getFileHandle(fileName);
-        const file = await fileHandle.getFile();
+        const file = await this.getOpfsFile(uri);
         const arrayBuffer = await file.arrayBuffer();
         return new Uint8Array(arrayBuffer);
       }
@@ -126,7 +156,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
       const arrayBuffer = await response.arrayBuffer();
       return new Uint8Array(arrayBuffer);
     } catch (error) {
-      console.error('[WebFileIOAdapter] Read bytes failed:', error);
+      Logger.error('[WebFileIOAdapter] Read bytes failed:', error);
       throw error;
     }
   }
@@ -147,18 +177,10 @@ export class WebFileIOAdapter implements FileIOAdapter {
     try {
       /* OPFSパスの場合 */
       if (isOpfsPath(path)) {
-        const fileName = getOpfsFileName(path);
-        const root = await this.getOpfsRoot();
-        const fileHandle = await root.getFileHandle(fileName, { create: true });
-        const writable = await fileHandle.createWritable();
+        const writable = await this.getOpfsWritable(path);
 
         if (options?.encoding === 'base64') {
-          const byteCharacters = atob(content);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
+          const byteArray = base64ToUint8Array(content);
           await writable.write(byteArray);
         } else {
           await writable.write(content);
@@ -172,12 +194,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
       let blob: Blob;
 
       if (options?.encoding === 'base64') {
-        const byteCharacters = atob(content);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
+        const byteArray = base64ToUint8Array(content);
         blob = new Blob([byteArray], { type: 'application/octet-stream' });
       } else {
         blob = new Blob([content], { type: 'application/json' });
@@ -188,7 +205,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
 
       return url;
     } catch (error) {
-      console.error('[WebFileIOAdapter] Write failed:', error);
+      Logger.error('[WebFileIOAdapter] Write failed:', error);
       throw error;
     }
   }
@@ -207,10 +224,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
 
       /* OPFSパスの場合 */
       if (isOpfsPath(path)) {
-        const fileName = getOpfsFileName(path);
-        const root = await this.getOpfsRoot();
-        const fileHandle = await root.getFileHandle(fileName, { create: true });
-        const writable = await fileHandle.createWritable();
+        const writable = await this.getOpfsWritable(path);
         await writable.write(arrayBuffer);
         await writable.close();
         return path;
@@ -222,7 +236,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
       this.tempFiles.set(path, url);
       return url;
     } catch (error) {
-      console.error('[WebFileIOAdapter] Write bytes failed:', error);
+      Logger.error('[WebFileIOAdapter] Write bytes failed:', error);
       throw error;
     }
   }
@@ -255,7 +269,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
       const newUrl = URL.createObjectURL(blob);
       this.tempFiles.set(targetUri, newUrl);
     } catch (error) {
-      console.error('[WebFileIOAdapter] Copy failed:', error);
+      Logger.error('[WebFileIOAdapter] Copy failed:', error);
       throw error;
     }
   }
@@ -284,7 +298,7 @@ export class WebFileIOAdapter implements FileIOAdapter {
       }
     } catch (error) {
       /* ファイルが存在しない場合のエラーは無視 */
-      console.error('[WebFileIOAdapter] Delete failed:', error);
+      Logger.error('[WebFileIOAdapter] Delete failed:', error);
     }
   }
 
@@ -361,7 +375,11 @@ export class WebFileIOAdapter implements FileIOAdapter {
   }
 
   /**
-   * ディレクトリを作成（Webではサポート外）
+   * ディレクトリを作成（Webでは何もしない）
+   *
+   * @remarks
+   * OPFSではファイルをフラットに持ちディレクトリ概念を使っていないため、
+   * FileIOAdapterインターフェースへ適合させる目的だけで何もしない実装にしている。
    */
   async makeDirectory(_uri: string): Promise<void> {
     return Promise.resolve();

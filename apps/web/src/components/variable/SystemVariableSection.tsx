@@ -5,8 +5,18 @@
  * システム提供の変数（DATE、TIME等）一覧を表示。
  * これらの変数は読み取り専用で、編集・削除不可。
  */
-import { useTranslation } from '@cliptap/shared';
+import { useState } from 'react';
+import {
+  DEFAULT_SYSTEM_VARIABLE_FORMATS,
+  SystemVariableFormatService,
+  formatByPattern,
+  normalizeLocale,
+  type SystemVariableFormats,
+  type SystemVariableKey,
+  useTranslation,
+} from '@cliptap/shared';
 import { SystemVariableItem } from './SystemVariableItem';
+import { SystemVariableFormatModal } from './SystemVariableFormatModal';
 import type { SystemVariable } from '@hooks/screens/useVariablesScreen';
 
 interface SystemVariableSectionProps {
@@ -15,6 +25,11 @@ interface SystemVariableSectionProps {
 
 export function SystemVariableSection({ systemVariables }: SystemVariableSectionProps) {
   const { t } = useTranslation();
+  const [formats, setFormats] = useState<SystemVariableFormats>(() => (
+    SystemVariableFormatService.loadRegistry()
+  ));
+  const [editingKey, setEditingKey] = useState<SystemVariableKey | null>(null);
+  const locale = normalizeLocale(navigator.language);
 
   /* システム変数セクション（タイトルと変数一覧） */
   return (
@@ -28,10 +43,24 @@ export function SystemVariableSection({ systemVariables }: SystemVariableSection
             key={variable.name}
             variable={variable}
             isLast={index === systemVariables.length - 1}
+            preview={formatByPattern(
+              new Date(),
+              formats[variable.name as SystemVariableKey]
+                ?? DEFAULT_SYSTEM_VARIABLE_FORMATS[variable.name as SystemVariableKey],
+              locale
+            )}
+            onFormat={() => setEditingKey(variable.name as SystemVariableKey)}
           />
         ))}
       </div>
+      <p className="mt-3 text-sm text-gray-500 dark:text-[#707070]">
+        {t('variables.format_desc')}
+      </p>
+      <SystemVariableFormatModal
+        variableKey={editingKey}
+        onClose={() => setEditingKey(null)}
+        onChanged={() => setFormats(SystemVariableFormatService.loadRegistry())}
+      />
     </div>
   );
 }
-

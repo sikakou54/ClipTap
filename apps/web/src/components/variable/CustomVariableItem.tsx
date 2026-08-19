@@ -11,7 +11,8 @@ import { VariableIcon } from '@components/common/VariableIcon';
 
 interface CustomVariableItemProps {
   variable: Variable;
-  value: string;
+  /** 変数の表示値。未設定の場合は null */
+  value: string | null;
   isLast: boolean;
   onEdit: (variableId: string) => void;
   onDelete: (variableId: string) => void;
@@ -20,6 +21,8 @@ interface CustomVariableItemProps {
 export function CustomVariableItem({ variable, value, isLast, onEdit, onDelete }: CustomVariableItemProps) {
   const { t } = useTranslation();
   const isEnabled = variable.valid;
+  /* 未設定はnullで表される。値として「未設定」という文字列を登録した変数と区別するため、表示文字列では判定しない */
+  const isNotSet = value === null;
 
   /* カスタム変数アイテム（アイコン、名前・ラベル、変数コード、値、削除ボタン） */
   return (
@@ -57,12 +60,12 @@ export function CustomVariableItem({ variable, value, isLast, onEdit, onDelete }
         {/* 変数の値（未設定の場合は斜体表示） */}
         <p
           className={`text-sm truncate mt-1 ${
-            value === t('common.not_set')
+            isNotSet
               ? 'text-gray-400 dark:text-[#707070] italic'
               : 'text-gray-500 dark:text-[#A0A0A0]'
           }`}
         >
-          {value}
+          {value ?? t('common.not_set')}
         </p>
       </div>
 

@@ -8,6 +8,7 @@
 import { useTranslation, VARIABLE_ICONS, type VariableIconName } from '@cliptap/shared';
 import { VariableIcon } from '@components/common/VariableIcon';
 import { useBodyScrollLock } from '@hooks/useBodyScrollLock';
+import { useEscapeClose } from '@hooks/useEscapeClose';
 
 interface IconPickerModalProps {
   /** モーダルの表示状態 */
@@ -24,6 +25,7 @@ export function IconPickerModal({ isOpen, selectedIcon, onSelect, onClose }: Ico
   const { t } = useTranslation();
 
   useBodyScrollLock(isOpen);
+  useEscapeClose(isOpen, onClose);
 
   if (!isOpen) return null;
 

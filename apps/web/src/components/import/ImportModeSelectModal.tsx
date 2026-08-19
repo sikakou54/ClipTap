@@ -11,15 +11,22 @@ interface ImportModeSelectModalProps {
   onClose: () => void;
   /** インポートモードが選択された時のコールバック（restore: 復元、merge: マージ） */
   onSelectMode: (mode: 'restore' | 'merge') => void;
+  /** 取込処理の実行中かどうか */
+  isProcessing: boolean;
 }
 
 /**
  * インポートモード選択モーダルコンポーネント
  *
  * バックアップからの復元（全削除して復元）か、
- * 選択的な追加（既存データと統合）かを選択させる
+ * 選択的な追加（既存データと統合）かを選択させる。
+ *
+ * @remarks
+ * 取込処理中はモード選択とキャンセルの両方を無効化する。
+ * 仕様書§9.4「読込処理を持つ画面では、処理中の重複操作を無効化する」に従う。
+ * 閉じる操作を止めるのは、閉じると一時DBが破棄されて実行中の取込が失敗するため。
  */
-export function ImportModeSelectModal({ isOpen, onClose, onSelectMode }: ImportModeSelectModalProps) {
+export function ImportModeSelectModal({ isOpen, onClose, onSelectMode, isProcessing }: ImportModeSelectModalProps) {
   const { t } = useTranslation();
 
   /* インポートモード選択モーダル（復元/マージ選択） */
@@ -41,7 +48,8 @@ export function ImportModeSelectModal({ isOpen, onClose, onSelectMode }: ImportM
             {/* 復元モード: 既存データを全削除して復元 */}
             <button
               onClick={() => onSelectMode('restore')}
-              className="w-full p-4 border-2 border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/10 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors flex items-start text-left gap-4 group"
+              disabled={isProcessing}
+              className="w-full p-4 border-2 border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/10 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors flex items-start text-left gap-4 group disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {/* 復元アイコン */}
               <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg text-red-600 dark:text-red-400">
@@ -58,13 +66,17 @@ export function ImportModeSelectModal({ isOpen, onClose, onSelectMode }: ImportM
                 <p className="text-xs text-red-600 dark:text-red-300 leading-relaxed">
                   {t('backup.restore_description')}
                 </p>
+                <p className="mt-1 text-xs text-red-600 dark:text-red-300 leading-relaxed">
+                  {t('export_import.restore_includes_formats')}
+                </p>
               </div>
             </button>
 
             {/* マージモード: 既存データを保持して選択的に追加 */}
             <button
               onClick={() => onSelectMode('merge')}
-              className="w-full p-4 border-2 border-blue-100 dark:border-blue-900/30 bg-blue-50 dark:bg-blue-900/10 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors flex items-start text-left gap-4 group"
+              disabled={isProcessing}
+              className="w-full p-4 border-2 border-blue-100 dark:border-blue-900/30 bg-blue-50 dark:bg-blue-900/10 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors flex items-start text-left gap-4 group disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {/* マージアイコン */}
               <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
@@ -81,6 +93,9 @@ export function ImportModeSelectModal({ isOpen, onClose, onSelectMode }: ImportM
                 <p className="text-xs text-blue-600 dark:text-blue-300 leading-relaxed">
                   {t('backup.select_and_add_description')}
                 </p>
+                <p className="mt-1 text-xs text-blue-600 dark:text-blue-300 leading-relaxed">
+                  {t('export_import.partial_excludes_formats')}
+                </p>
               </div>
             </button>
           </div>
@@ -89,7 +104,8 @@ export function ImportModeSelectModal({ isOpen, onClose, onSelectMode }: ImportM
           <div className="mt-6 flex justify-center">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+              disabled={isProcessing}
+              className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('common.cancel')}
             </button>
@@ -99,4 +115,3 @@ export function ImportModeSelectModal({ isOpen, onClose, onSelectMode }: ImportM
     </Dialog>
   );
 }
-

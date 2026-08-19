@@ -5,10 +5,6 @@
  */
 
 import { z } from 'zod';
-import { SnippetSchema, SnippetProfileSchema } from './snippet';
-import { CategorySchema } from './category';
-import { ProfileSchema, ProfileVariableSchema } from './profile';
-import { VariableSchema } from './variableSchema';
 
 /* ==================== Import Candidates ==================== */
 
@@ -19,7 +15,7 @@ import { VariableSchema } from './variableSchema';
  * - インポート画面でスニペットに紐付く環境情報を表示
  * - profileNameがnullの場合はIDから取得
  */
-export const ImportCandidateSnippetProfileSchema = z.object({
+const ImportCandidateSnippetProfileSchema = z.object({
   profileId: z.string(),
   profileName: z.string().nullable(),
 });
@@ -37,7 +33,7 @@ export type ImportCandidateSnippetProfile = z.infer<typeof ImportCandidateSnippe
  * - categoryNameはIDではなく名前を保持（プレビュー表示用）
  * - profilesが空の場合は全プロファイルで利用可能
  */
-export const ImportCandidateSnippetSchema = z.object({
+const ImportCandidateSnippetSchema = z.object({
   id: z.string(),
   title: z.string().nullable(),
   content: z.string(),
@@ -58,7 +54,7 @@ export type ImportCandidateSnippet = z.infer<typeof ImportCandidateSnippetSchema
  * - インポート画面でプレビュー表示用
  * - isDefaultはUI表示でバッジ表示に使用
  */
-export const ImportCandidateProfileSchema = z.object({
+const ImportCandidateProfileSchema = z.object({
   id: z.string(),
   name: z.string(),
   isDefault: z.boolean(),
@@ -78,7 +74,7 @@ export type ImportCandidateProfile = z.infer<typeof ImportCandidateProfileSchema
  * - 変数に紐付く環境ごとの値をプレビュー表示
  * - profileNameがnullの場合はIDから取得
  */
-export const ImportCandidateVariableProfileValueSchema = z.object({
+const ImportCandidateVariableProfileValueSchema = z.object({
   profileId: z.string(),
   profileName: z.string().nullable(),
   value: z.string(),
@@ -97,7 +93,7 @@ export type ImportCandidateVariableProfileValue = z.infer<typeof ImportCandidate
  * - labelがnullの場合はnameを使用
  * - iconがnullの場合はデフォルトアイコン
  */
-export const ImportCandidateVariableSchema = z.object({
+const ImportCandidateVariableSchema = z.object({
   id: z.string(),
   name: z.string(),
   label: z.string().nullable(),
@@ -122,7 +118,7 @@ export type ImportCandidateVariable = z.infer<typeof ImportCandidateVariableSche
  * - インポート画面でプレビュー表示用
  * - colorがnullの場合はデフォルト色
  */
-export const ImportCandidateCategorySchema = z.object({
+const ImportCandidateCategorySchema = z.object({
   id: z.string(),
   name: z.string(),
   color: z.string().nullable(),
@@ -165,11 +161,11 @@ export type ImportCandidates = z.infer<typeof ImportCandidatesSchema>;
  * - s: スキーマバージョン（互換性チェック）
  * - t: タイムスタンプ（ISO 8601）
  * - h: パスワードハッシュ（SHA-256）
- * - d: 暗号化されたデータ（JSON文字列）
+ * - d: 二重Base64で符号化されたSQLiteデータ（暗号化ではない）
  * - c: チェックサム（SHA-256、改竄検知）
  */
 export const ClipTapExportDataSchema = z.object({
-  s: z.number(),
+  s: z.number().int(),
   t: z.string(),
   h: z.string(),
   d: z.string(),
@@ -181,52 +177,6 @@ export const ClipTapExportDataSchema = z.object({
  */
 export type ClipTapExportData = z.infer<typeof ClipTapExportDataSchema>;
 
-/**
- * パスワード検証結果スキーマ
- *
- * @remarks
- * - 判別共用体で成功/失敗を型安全に表現
- * - エラー種別:
- *   - PASSWORD_INCORRECT: パスワード不正
- *   - CHECKSUM_MISMATCH: データ改竄検知
- *   - INVALID_FILE: ファイル形式不正
- *   - SCHEMA_VERSION_MISMATCH: スキーマバージョン不一致
- */
-export const PasswordVerifyResultSchema = z.discriminatedUnion('success', [
-  z.object({ success: z.literal(true) }),
-  z.object({
-    success: z.literal(false),
-    error: z.enum(['PASSWORD_INCORRECT', 'CHECKSUM_MISMATCH', 'INVALID_FILE', 'SCHEMA_VERSION_MISMATCH']),
-  }),
-]);
-
-/**
- * パスワード検証結果型
- */
-export type PasswordVerifyResult = z.infer<typeof PasswordVerifyResultSchema>;
-
-/**
- * アプリデータスキーマ
- *
- * @remarks
- * - データベース全体の完全バックアップ形式
- * - すべてのテーブルデータを含む
- * - profileVariables: 環境ごとのカスタム変数値
- * - snippetProfiles: スニペット-環境の紐付け（中間テーブル）
- */
-export const AppDataSchema = z.object({
-  snippets: z.array(SnippetSchema),
-  categories: z.array(CategorySchema),
-  profiles: z.array(ProfileSchema),
-  variables: z.array(VariableSchema),
-  profileVariables: z.array(ProfileVariableSchema),
-  snippetProfiles: z.array(SnippetProfileSchema),
-});
-
-/**
- * アプリデータ型
- */
-export type AppData = z.infer<typeof AppDataSchema>;
 
 /* ==================== Selection Data Types ==================== */
 
@@ -236,15 +186,11 @@ export type AppData = z.infer<typeof AppDataSchema>;
  * @remarks
  * - profileNameがnullの場合はIDから取得
  */
-export const SelectionSnippetProfileSchema = z.object({
+const SelectionSnippetProfileSchema = z.object({
   profileId: z.string(),
   profileName: z.string().nullable(),
 });
 
-/**
- * プロファイル紐付きデータ型（選択UI用）
- */
-export type SelectionSnippetProfile = z.infer<typeof SelectionSnippetProfileSchema>;
 
 /**
  * 選択スニペットデータスキーマ（選択UI用）
@@ -254,7 +200,7 @@ export type SelectionSnippetProfile = z.infer<typeof SelectionSnippetProfileSche
  * - categoryId, categoryName, categoryColorを保持（UI表示用）
  * - categoryColorはバッジ表示用
  */
-export const SelectionSnippetDataSchema = z.object({
+const SelectionSnippetDataSchema = z.object({
   id: z.string(),
   title: z.string().nullable(),
   content: z.string(),
@@ -272,7 +218,7 @@ export type SelectionSnippetData = z.infer<typeof SelectionSnippetDataSchema>;
 /**
  * 選択プロファイルデータスキーマ（選択UI用）
  */
-export const SelectionProfileDataSchema = z.object({
+const SelectionProfileDataSchema = z.object({
   id: z.string(),
   name: z.string(),
 });
@@ -288,7 +234,7 @@ export type SelectionProfileData = z.infer<typeof SelectionProfileDataSchema>;
  * @remarks
  * - profileNameがnullの場合はIDから取得
  */
-export const SelectionVariableProfileValueSchema = z.object({
+const SelectionVariableProfileValueSchema = z.object({
   profileId: z.string(),
   profileName: z.string().nullable(),
   value: z.string(),
@@ -306,7 +252,7 @@ export type SelectionVariableProfileValue = z.infer<typeof SelectionVariableProf
  * - labelがnullの場合はnameを使用
  * - iconがnullの場合はデフォルトアイコン
  */
-export const SelectionVariableDataSchema = z.object({
+const SelectionVariableDataSchema = z.object({
   id: z.string(),
   name: z.string(),
   label: z.string().nullable(),
@@ -325,7 +271,7 @@ export type SelectionVariableData = z.infer<typeof SelectionVariableDataSchema>;
  * @remarks
  * - colorがnullの場合はデフォルト色
  */
-export const SelectionCategoryDataSchema = z.object({
+const SelectionCategoryDataSchema = z.object({
   id: z.string(),
   name: z.string(),
   color: z.string().nullable(),

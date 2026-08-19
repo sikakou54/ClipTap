@@ -6,6 +6,7 @@
  * 利用規約やプライバシーポリシーなどの表示に使用。
  */
 import { useBodyScrollLock } from '@hooks/useBodyScrollLock';
+import { useEscapeClose } from '@hooks/useEscapeClose';
 
 interface WebPageModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface WebPageModalProps {
 
 export function WebPageModal({ isOpen, onClose, title, url }: WebPageModalProps) {
   useBodyScrollLock(isOpen);
+  useEscapeClose(isOpen, onClose);
 
   if (!isOpen) return null;
 

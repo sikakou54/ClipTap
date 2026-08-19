@@ -25,7 +25,7 @@ import UIKit
 import os.log
 
 // ログ出力用の設定（デバッグやエラー追跡に使用）
-let snippetServiceLog = OSLog(subsystem: "com.sikakou.cliptap.keyboard", category: "SnippetService")
+let snippetServiceLog = OSLog.disabled
 
 /// スニペットのビジネスロジックを管理するサービスクラス
 /// シングルトンパターンで実装されており、アプリ全体で1つのインスタンスを共有します
@@ -60,12 +60,6 @@ class SnippetService {
     /// フルアクセス状態を共有するUserDefaultsキー
     private let fullAccessStateKey = "keyboardHasFullAccess"
 
-    /// 使用頻度追跡設定のUserDefaultsキー
-    private let usageTrackingKey = "usageTrackingEnabled"
-
-    /// 使用頻度追跡設定が設定されたかどうかのUserDefaultsキー
-    private let usageTrackingEnabledSetKey = "usageTrackingEnabledSet"
-
     // MARK: - Initialization（初期化）
 
     /// プライベートイニシャライザ（外部からのインスタンス生成を禁止）
@@ -74,23 +68,17 @@ class SnippetService {
 
     // MARK: - Computed Properties（計算プロパティ）
 
-    /// 使用頻度追跡が有効かどうか
-    /// フルアクセス許可かつ使用頻度追跡設定がONの場合にtrue
+    /// 使用頻度の記録が有効かどうか
+    ///
+    /// iOSのサンドボックス制約により、フルアクセスが許可されていない拡張は
+    /// 共有コンテナへ書き込めないため、記録可否はフルアクセスの許可状態と一致する。
+    /// KeyboardViewControllerがviewDidLoadで保存した値を参照する
+    /// （UIInputViewControllerを継承しないため hasFullAccess を直接読めない）。
     private var isUsageTrackingEnabled: Bool {
         guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
             return false
         }
-        /* フルアクセスがない場合はfalse */
-        let hasFullAccess = userDefaults.bool(forKey: fullAccessStateKey)
-        if !hasFullAccess {
-            return false
-        }
-        /* 設定されていない場合はデフォルトtrue */
-        let usageEnabledSet = userDefaults.bool(forKey: usageTrackingEnabledSetKey)
-        if !usageEnabledSet {
-            return true
-        }
-        return userDefaults.bool(forKey: usageTrackingKey)
+        return userDefaults.bool(forKey: fullAccessStateKey)
     }
 
     // MARK: - Read Operations（読み取り操作）
@@ -149,35 +137,6 @@ class SnippetService {
         return snippetMapper.getByCategoryId(categoryId, filterByProfileId: activeProfile.id)
     }
 
-    /// スニペットを検索
-    ///
-    /// - Parameters:
-    ///   - query: 検索クエリ（スニペットのタイトルや内容を検索）
-    ///   - categoryId: カテゴリID（省略可、指定した場合はそのカテゴリ内で検索）
-    /// - Returns: 検索結果のスニペット配列
-    ///
-    /// 【検索の仕組み】
-    /// 1. クエリが空の場合は空配列を返す（無駄な検索を避ける）
-    /// 2. アクティブなプロファイルでフィルタ
-    /// 3. タイトルや内容にクエリが含まれるスニペットを検索
-    ///
-    /// 【使用例】
-    /// search(query: "挨拶") → タイトルや内容に「挨拶」を含むスニペットを検索
-    /// search(query: "会議", categoryId: "work") → 「仕事」カテゴリ内で「会議」を検索
-    func search(query: String, categoryId: String? = nil) -> [Snippet] {
-        // 空白のみのクエリは無視
-        if query.trimmingCharacters(in: .whitespaces).isEmpty {
-            return []
-        }
-
-        guard let activeProfile = profileService.getActiveProfile() else {
-            // アクティブなプロファイルがない場合
-            return snippetMapper.search(query: query, categoryId: categoryId, filterByProfileId: nil)
-        }
-        // プロファイルでフィルタして検索
-        return snippetMapper.search(query: query, categoryId: categoryId, filterByProfileId: activeProfile.id)
-    }
-
     // MARK: - Insert Operations（挿入操作）
 
     /// スニペットをキーボードに挿入（変数置換＋振動フィードバック）
@@ -190,7 +149,7 @@ class SnippetService {
     /// 【処理の流れ】
     /// 1. プロファイルIDを決定（引数で指定 > アクティブプロファイル）
     /// 2. プロファイルに紐づく変数マップを取得（例: client_name → 田中）
-    /// 3. copyWithTitleフラグをチェック → タイトルも含めるか判定
+    /// 3. 本文のみを挿入対象にする（タイトルは insertTitle で個別に挿入する）
     /// 4. 変数を実際の値に置換（{{today}} → 2025/11/17 など）
     /// 5. textDocumentProxyでテキストを挿入（LINEやメモアプリなどの入力欄に入力）
     /// 6. 振動フィードバック（Haptic Feedback）を実行
@@ -217,32 +176,27 @@ class SnippetService {
         }
 
         os_log("📝 Profile ID: %@", log: snippetServiceLog, type: .info, resolvedProfileId ?? "nil")
-        NSLog("📝 [SnippetService] Profile ID: %@", resolvedProfileId ?? "nil")
+        KeyboardLog.debug("📝 [SnippetService] Profile ID: %@", resolvedProfileId ?? "nil")
 
         // 変数マップを取得（プロファイルに紐づくカスタム変数）
         var variablesMap: [String: String] = [:]
         if let profileId = resolvedProfileId {
             variablesMap = variableService.getVariablesMap(for: profileId)
             os_log("📝 Variables map count: %d", log: snippetServiceLog, type: .info, variablesMap.count)
-            NSLog("📝 [SnippetService] Variables map: %@", variablesMap.description)
         }
 
-        // テキストを準備
-        // copyWithTitleフラグがtrueなら、タイトル + 改行 + 内容
-        var text = snippet.content
-        if snippet.copyWithTitle, let title = snippet.title, !title.isEmpty {
-            text = "\(title)\n\(text)"
-        }
-
-        os_log("📝 Original text: %@", log: snippetServiceLog, type: .info, text)
-        NSLog("📝 [SnippetService] Original text: %@", text)
+        /* テキストを準備（本文のみ）
+           タイトルはメール件名などの別フィールドへ入れられるよう insertTitle で個別に挿入する */
+        let text = snippet.content
 
         // 変数を置換
         // 例: "こんにちは{{client_name}}様" → "こんにちは田中様"
-        let resolvedText = variableReplacer.replace(in: text, variablesMap: variablesMap)
+        let resolvedText = variableReplacer.replace(
+            in: text,
+            variablesMap: variablesMap,
+            formats: SystemVariableFormatMapper.shared.getAll()
+        )
 
-        os_log("📝 Resolved text: %@", log: snippetServiceLog, type: .info, resolvedText)
-        NSLog("📝 [SnippetService] Resolved text: %@", resolvedText)
 
         /* キーボードからテキストを挿入
            この処理により、LINEやメモアプリなど、どのアプリの入力欄にもテキストが入力されます */
@@ -256,10 +210,102 @@ class SnippetService {
         /* 使用頻度追跡が有効な場合のみ、copyCountをインクリメント */
         if isUsageTrackingEnabled {
             snippetMapper.incrementCopyCount(for: snippet.id)
-            NSLog("📊 [SnippetService] Incremented copy count for snippet: %@", snippet.id)
+            KeyboardLog.debug("📊 [SnippetService] Incremented copy count for snippet: %@", snippet.id)
         } else {
-            NSLog("📊 [SnippetService] Skipped copy count increment (usage tracking disabled)")
+            KeyboardLog.debug("📊 [SnippetService] Skipped copy count increment (usage tracking disabled)")
         }
+    }
+
+    /// スニペットのタイトルだけをキーボードに挿入（変数置換＋振動フィードバック）
+    ///
+    /// - Parameters:
+    ///   - snippet: 挿入するスニペット
+    ///   - textDocumentProxy: iOSのテキスト入力API（カスタムキーボードが提供）
+    ///   - profileId: プロファイルID（省略時はアクティブなプロファイルを使用）
+    ///
+    /// 【用途】
+    /// メールの件名と本文のように、タイトルと本文を別々の入力欄へ入れたい場合に使用します。
+    /// 詳細画面のタイトル行にあるボタンから呼び出されます。
+    ///
+    /// 【処理の流れ】
+    /// 1. copyWithTitleがONかつタイトルが空でないことを確認（それ以外は何もしない）
+    /// 2. プロファイルIDを決定し、変数マップを取得
+    /// 3. タイトルの変数を実際の値に置換
+    /// 4. textDocumentProxyでタイトルを挿入
+    /// 5. 振動フィードバック（Haptic Feedback）を実行
+    ///
+    /// 【改行を付けない理由】
+    /// 別の入力欄へ入れることが主な用途のため、タイトル末尾に改行は付加しません。
+    ///
+    /// 【copyCountを加算しない理由】
+    /// タイトルと本文を続けて挿入すると1回の利用が2回分として数えられてしまいます。
+    /// 使用回数は本文挿入（insertSnippet）でのみ加算します。
+    func insertTitle(
+        _ snippet: Snippet,
+        into textDocumentProxy: UITextDocumentProxy,
+        profileId: String? = nil
+    ) {
+        /* タイトルを持たない、またはタイトルをコピーしない設定のスニペットは何もしない */
+        guard snippet.copyWithTitle, let title = snippet.title, !title.isEmpty else {
+            KeyboardLog.debug("📝 [SnippetService] Skipped title insert (no title or copyWithTitle is off)")
+            return
+        }
+
+        // プロファイルIDを決定（引数で指定されていれば優先、なければアクティブプロファイル）
+        let resolvedProfileId: String?
+        if let profileId = profileId {
+            resolvedProfileId = profileId
+        } else {
+            resolvedProfileId = profileService.getActiveProfile()?.id
+        }
+
+        // 変数マップを取得（プロファイルに紐づくカスタム変数）
+        var variablesMap: [String: String] = [:]
+        if let profileId = resolvedProfileId {
+            variablesMap = variableService.getVariablesMap(for: profileId)
+        }
+
+        // 変数を置換（本文と同じルールでタイトルも展開する）
+        let resolvedTitle = variableReplacer.replace(
+            in: title,
+            variablesMap: variablesMap,
+            formats: SystemVariableFormatMapper.shared.getAll()
+        )
+
+        /* キーボードからタイトルを挿入（改行は付けない） */
+        textDocumentProxy.insertText(resolvedTitle)
+
+        /* 振動フィードバック（本文挿入と同じ軽い振動） */
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+
+        KeyboardLog.debug("✅ [SnippetService] Inserted title for snippet: %@", snippet.id)
+    }
+
+    /// 改行だけをキーボードから挿入（振動フィードバック付き）
+    ///
+    /// - Parameter textDocumentProxy: iOSのテキスト入力API（カスタムキーボードが提供）
+    ///
+    /// 【用途】
+    /// タイトル挿入と本文挿入はどちらも改行を付けないため、同じ入力欄へ
+    /// 「タイトル → 改行 → 本文」と入れたい場合に標準キーボードへ切り替える必要がありました。
+    /// 詳細画面の改行ボタンからこのメソッドを呼ぶことで、切り替えずに改行を入力できます。
+    ///
+    /// 【スニペットを引数に取らない理由】
+    /// 挿入する文字は改行のみで、変数置換もプロファイルも関与しないためです。
+    ///
+    /// 【copyCountを加算しない理由】
+    /// 使用回数は本文挿入（insertSnippet）でのみ加算します。
+    /// 改行を挟むたびに加算すると、1回の利用が複数回として数えられてしまいます。
+    func insertNewline(into textDocumentProxy: UITextDocumentProxy) {
+        /* キーボードから改行を挿入 */
+        textDocumentProxy.insertText("\n")
+
+        /* 振動フィードバック（本文挿入と同じ軽い振動） */
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+
+        KeyboardLog.debug("✅ [SnippetService] Inserted newline")
     }
 
     /// プレビュー生成（変数置換後のテキスト）
@@ -280,9 +326,12 @@ class SnippetService {
     /// 【処理の流れ】
     /// 1. プロファイルIDを決定
     /// 2. 変数マップを取得
-    /// 3. copyWithTitleフラグをチェック
-    /// 4. 変数を置換
-    /// 5. 置換後のテキストを返す
+    /// 3. 変数を置換
+    /// 4. 置換後のテキストを返す
+    ///
+    /// 【タイトルを含めない理由】
+    /// insertSnippetが本文のみを挿入するため、プレビューも同じ契約に揃えています。
+    /// タイトルは詳細画面のタイトル行で別途表示されます。
     func getPreview(for snippet: Snippet, profileId: String? = nil) -> String {
         // プロファイルIDを決定
         let resolvedProfileId: String?
@@ -298,14 +347,15 @@ class SnippetService {
             variablesMap = variableService.getVariablesMap(for: profileId)
         }
 
-        // テキストを準備
-        var text = snippet.content
-        if snippet.copyWithTitle, let title = snippet.title, !title.isEmpty {
-            text = "\(title)\n\(text)"
-        }
+        /* テキストを準備（本文のみ。insertSnippetと同じ契約） */
+        let text = snippet.content
 
         // 変数を置換して返す
-        return variableReplacer.replace(in: text, variablesMap: variablesMap)
+        return variableReplacer.replace(
+            in: text,
+            variablesMap: variablesMap,
+            formats: SystemVariableFormatMapper.shared.getAll()
+        )
     }
 
     // MARK: - Helper Methods（ヘルパーメソッド）

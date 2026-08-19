@@ -9,9 +9,8 @@
  * - 個別選択・全選択切り替え
  * - パスワード入力後にエクスポート実行
  *
- * @see lib/hooks/screens/useSelectExportDataScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useSelectExportDataScreen.ts - ビジネスロジック
  */
-import React from 'react';
 import {
   View,
   Text,
@@ -30,7 +29,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { type ImportTabType } from '@cliptap/shared';
 import { useTheme } from '@lib/themeSystem';
 import { commonStyles } from '@lib/styles/commonStyles';
-import { Header } from '@components/common/Header';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { UI_CONSTANTS } from '@constants/ui';
 import {
   SelectionSnippetItem,
@@ -38,7 +37,6 @@ import {
   SelectionVariableItem,
   SelectionCategoryItem,
 } from '@components/selection';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelectExportDataScreen } from '@hooks/screens/useSelectExportDataScreen';
 
 const TAB_OPTIONS: ImportTabType[] = ['snippets', 'profiles', 'variables', 'categories'];
@@ -82,26 +80,20 @@ export default function SelectExportDataScreen() {
   }
 
   return (
-    <SafeAreaView
-      style={[commonStyles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}
+    <ScreenContainer
+      title={t('export_import.select_export_data')}
+      rightAction={
+        <TouchableOpacity onPress={() => toggleSelectAll(activeTab)}>
+          <Ionicons
+            name={isAllSelected(activeTab) ? 'checkbox' : 'square-outline'}
+            size={24}
+            color={colors.primary}
+          />
+        </TouchableOpacity>
+      }
+      backIcon="close"
+      isModal={true}
     >
-      {/* ヘッダー */}
-      <Header
-        title={t('export_import.select_export_data')}
-        rightAction={
-          <TouchableOpacity onPress={() => toggleSelectAll(activeTab)}>
-            <Ionicons
-              name={isAllSelected(activeTab) ? 'checkbox' : 'square-outline'}
-              size={24}
-              color={colors.primary}
-            />
-          </TouchableOpacity>
-        }
-        backIcon="close"
-        isModal={true}
-      />
-
       {/* タブコンテナ */}
       <View style={[styles.tabContainer, { borderBottomColor: colors.border, backgroundColor: colors.surface }]}>
         {TAB_OPTIONS.map((tab) => (
@@ -161,7 +153,7 @@ export default function SelectExportDataScreen() {
               ItemSeparatorComponent={() => (
                 <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border }} />
               )}
-              contentContainerStyle={{ paddingBottom: 100 }}
+              contentContainerStyle={styles.listContent}
               style={{ backgroundColor: colors.background }}
             />
         )}
@@ -177,7 +169,7 @@ export default function SelectExportDataScreen() {
                 colors={colors}
               />
             )}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
             style={{ backgroundColor: colors.background }}
           />
         )}
@@ -202,7 +194,7 @@ export default function SelectExportDataScreen() {
                 />
               );
             }}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
             style={{ backgroundColor: colors.background }}
           />
         )}
@@ -218,7 +210,7 @@ export default function SelectExportDataScreen() {
                 colors={colors}
               />
             )}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
             style={{ backgroundColor: colors.background }}
           />
         )}
@@ -232,9 +224,9 @@ export default function SelectExportDataScreen() {
           disabled={totalSelected === 0 || isProcessing}
         >
           {isProcessing ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={colors.onPrimary} />
           ) : (
-            <Text style={styles.exportButtonText}>{t('export_import.export')}</Text>
+            <Text style={[styles.exportButtonText, { color: colors.onPrimary }]}>{t('export_import.export')}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -247,7 +239,7 @@ export default function SelectExportDataScreen() {
         onRequestClose={closePasswordModal}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.modalOverlay}>
+          <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
             <TouchableWithoutFeedback>
               <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
                 <Text style={[styles.modalTitle, { color: colors.text }]}>
@@ -284,9 +276,9 @@ export default function SelectExportDataScreen() {
                     disabled={isProcessing}
                   >
                     {isProcessing ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
+                      <ActivityIndicator size="small" color={colors.onPrimary} />
                     ) : (
-                      <Text style={styles.submitButtonText}>
+                      <Text style={[styles.submitButtonText, { color: colors.onPrimary }]}>
                         {t('common.ok')}
                       </Text>
                     )}
@@ -297,7 +289,7 @@ export default function SelectExportDataScreen() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 
@@ -324,6 +316,10 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  /* 一覧の下余白。フッター（styles.footer）が position:absolute で画面下端に重なるため、最終行が隠れないよう余白を確保する */
+  listContent: {
+    paddingBottom: 100,
+  },
   footer: {
     position: 'absolute',
     bottom: 0,
@@ -340,13 +336,13 @@ const styles = StyleSheet.create({
     minWidth: 100,
     alignItems: 'center',
   },
+  /** エクスポートボタンのテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   exportButtonText: {
-    color: '#FFFFFF',
     fontWeight: '600',
   },
+  /** モーダルオーバーレイ（背景色は使用箇所でテーマの overlay を重ねる） */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -395,8 +391,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   submitButton: {},
+  /** 送信ボタンのテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   submitButtonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

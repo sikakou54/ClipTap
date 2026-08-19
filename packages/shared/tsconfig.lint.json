@@ -1,0 +1,14 @@
+{
+  /* lint専用のプロジェクト設定。
+     ビルド用のtsconfig.jsonはsrcのみを対象とするため、
+     テストも型情報付きでlintできるようincludeを広げている。 */
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false
+  },
+  "include": ["src/**/*", "tests/**/*", "vitest.config.ts"]
+}

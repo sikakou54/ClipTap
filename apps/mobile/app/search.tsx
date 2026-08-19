@@ -15,32 +15,26 @@
  * - 自動フォーカスでキーボード即時表示
  * - 検索結果がない場合のEmpty State表示
  *
- * @see lib/hooks/screens/useSearchScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useSearchScreen.ts - ビジネスロジック
  */
 
-import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@lib/themeSystem';
 import { useSearchScreen } from '@hooks/screens/useSearchScreen';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { SnippetList } from '@components/snippet/SnippetList';
 import { SearchBar } from '@components/snippet/SearchBar';
 import { ProfileChipSelector } from '@components/profile/ProfileChipSelector';
-import { commonStyles } from '@lib/styles/commonStyles';
-import { getMaxContentWidth } from '@utils/responsive';
 
 export default function SearchScreen() {
-  const { colors, isTablet, responsive, responsiveSpacing } = useTheme();
-  const insets = useSafeAreaInsets();
-  const maxContentWidth = getMaxContentWidth();
+  const { colors, isTablet, responsive, responsiveSpacing, maxContentWidth } = useTheme();
 
   const {
     query,
     setQuery,
     selectedProfileId,
     setSelectedProfileId,
-    refreshing,
     displaySnippets,
     profiles,
     filteredProfiles,
@@ -49,45 +43,49 @@ export default function SearchScreen() {
     hasSearchQuery,
     handleRefresh,
     handleCopySnippet,
+    handleCopySnippetTitle,
     handleEditSnippet,
     handleDeleteSnippet,
     handleClose,
   } = useSearchScreen();
 
+  /* ヘッダー（閉じるボタンと検索バー）。上部インセットはScreenContainerが確保するため内部余白のみ持つ */
+  const header = (
+    <View
+      style={[
+        styles.header,
+        maxContentWidth !== undefined && { maxWidth: maxContentWidth, alignSelf: 'center', width: '100%' },
+        {
+          backgroundColor: colors.background,
+          paddingTop: isTablet ? 20 : 8,
+          paddingBottom: 12,
+          paddingHorizontal: responsiveSpacing.containerPadding,
+        },
+      ]}
+    >
+      <View style={styles.searchRow}>
+        {/* 閉じるボタン */}
+        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+          <Ionicons name="close" size={responsive.header.iconSize} color={colors.text} />
+        </TouchableOpacity>
+        {/* 検索バー */}
+        <View style={styles.searchContainer}>
+          <SearchBar value={query} onChangeText={setQuery} autoFocus />
+        </View>
+      </View>
+    </View>
+  );
+
   /* 検索画面コンテナ */
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
+    <ScreenContainer customHeader={header} fullScreenModal>
       {/* メインコンテンツエリア（タブレットでは最大幅を制限） */}
       <View
         style={[
           styles.contentContainer,
-          maxContentWidth && { maxWidth: maxContentWidth, alignSelf: 'center', width: '100%' },
+          maxContentWidth !== undefined && { maxWidth: maxContentWidth, alignSelf: 'center', width: '100%' },
         ]}
       >
-        {/* ヘッダー（閉じるボタンと検索バー） */}
-        <View
-          style={[
-            styles.header,
-            {
-              backgroundColor: colors.background,
-              paddingTop: isTablet ? insets.top + 20 : insets.top + 8,
-              paddingBottom: 12,
-              paddingHorizontal: responsiveSpacing.containerPadding,
-            },
-          ]}
-        >
-          <View style={styles.searchRow}>
-            {/* 閉じるボタン */}
-            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-              <Ionicons name="close" size={responsive.header.iconSize} color={colors.text} />
-            </TouchableOpacity>
-            {/* 検索バー */}
-            <View style={styles.searchContainer}>
-              <SearchBar value={query} onChangeText={setQuery} autoFocus />
-            </View>
-          </View>
-        </View>
-
         {/* プロファイルチップセレクター（複数プロファイルがある場合のみ表示） */}
         {profiles.length > 1 && filteredProfiles.length > 0 && (
           <ProfileChipSelector
@@ -107,7 +105,7 @@ export default function SearchScreen() {
             onPress={handleCopySnippet}
             onEdit={handleEditSnippet}
             onDelete={handleDeleteSnippet}
-            refreshing={refreshing}
+            onPressTitle={handleCopySnippetTitle}
             onRefresh={handleRefresh}
             disableCopy={false}
             overrideProfileId={selectedProfileId}
@@ -115,7 +113,7 @@ export default function SearchScreen() {
           />
         </View>
       </View>
-    </View>
+    </ScreenContainer>
   );
 }
 

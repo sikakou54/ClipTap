@@ -4,10 +4,10 @@
  * スニペット検索用の入力フィールド。
  * 検索アイコン、入力フィールド、クリアボタンを含む。
  *
- * @see app/(tabs)/search.tsx - 検索画面での使用例
+ * @see app/search.tsx - 検索画面での使用例
  */
 
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '@cliptap/shared';

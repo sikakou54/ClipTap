@@ -41,6 +41,32 @@ export interface PurchaseServiceCallbacks {
 }
 
 /**
+ * getOfferingsが返すパッケージの最小構造
+ *
+ * @description
+ * RevenueCatのSDK型をsharedパッケージへ持ち込まないため、
+ * Adapter内で必要なフィールドだけを構造的に定義する。
+ */
+interface OfferingPackageLike {
+  identifier: string;
+  packageType: string;
+  product: {
+    identifier: string;
+    priceString: string;
+    currencyCode: string;
+    price: number;
+    description?: string;
+  };
+}
+
+/**
+ * getOfferingsが返すオファリングの最小構造
+ */
+interface OfferingLike {
+  availablePackages?: OfferingPackageLike[];
+}
+
+/**
  * Mobile用サブスクリプションアダプター
  *
  * @remarks
@@ -66,6 +92,8 @@ class MobileSubscriptionAdapterImpl implements SubscriptionAdapter {
 
   /**
    * ローディング中かどうか
+   *
+   * SubscriptionAdapter インターフェースを満たすための実装。
    *
    * @returns 常にfalse（PurchaseServiceには明示的なisLoading状態がない）
    */
@@ -95,16 +123,17 @@ class MobileSubscriptionAdapterImpl implements SubscriptionAdapter {
 
   /**
    * リスナーに通知
-   * SubscriptionProviderから呼び出される
+   *
+   * SubscriptionAdapter インターフェースの必須実装。
+   * mobile では SubscriptionProvider の onSubscriptionChange（PurchaseService の状態変更通知）から呼ばれ、
+   * useSubscriptionService を使うペイウォール／契約管理画面へ権利変更を配る。
+   * web は WebSubscriptionAdapter が自分自身から呼んでいる。
    */
   notifyListeners(): void {
     const isSubscribed = this.isSubscribed();
     this.listeners.forEach((listener) => listener(isSubscribed));
   }
 
-  cleanup(): void {
-    this.listeners.clear();
-  }
 
   /**
    * ユーザーアカウントと課金アカウントを紐付け
@@ -163,13 +192,13 @@ class MobileSubscriptionAdapterImpl implements SubscriptionAdapter {
 
     try {
       /* PurchaseService.getOfferings()は既にofferings.currentを返している */
-      const offering = await this.callbacks.getOfferings() as any;
+      const offering = (await this.callbacks.getOfferings()) as OfferingLike | null;
       if (!offering || !offering.availablePackages) {
         return [];
       }
 
       /* RevenueCat Package型 → SubscriptionPlan型変換 */
-      return offering.availablePackages.map((pkg: any) => ({
+      return offering.availablePackages.map((pkg): SubscriptionPlan => ({
         id: pkg.identifier,
         productId: pkg.product.identifier,
         priceString: pkg.product.priceString,
@@ -192,8 +221,8 @@ class MobileSubscriptionAdapterImpl implements SubscriptionAdapter {
 
     try {
       /* PurchaseService.getOfferings()は既にofferings.currentを返している */
-      const offering = await this.callbacks.getOfferings() as any;
-      const pkg = offering?.availablePackages?.find((p: any) => p.identifier === planId);
+      const offering = (await this.callbacks.getOfferings()) as OfferingLike | null;
+      const pkg = offering?.availablePackages?.find((p) => p.identifier === planId);
 
       if (!pkg) {
         return { success: false, isCancelled: false, error: 'Plan not found' };
@@ -205,8 +234,8 @@ class MobileSubscriptionAdapterImpl implements SubscriptionAdapter {
       const status = await this.getStatus();
       return { success: true, isCancelled: false, status };
 
-    } catch (error: any) {
-      if (error?.userCancelled) {
+    } catch (error: unknown) {
+      if ((error as { userCancelled?: boolean } | null)?.userCancelled) {
         return { success: false, isCancelled: true };
       }
       return { success: false, isCancelled: false, error: String(error) };

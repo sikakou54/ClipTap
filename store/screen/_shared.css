@@ -1,0 +1,540 @@
+/**
+ * ClipTap ストア掲載画像 — 共有スタイルシート。
+ *
+ * apps/web/lp/lp.css（Modernist direction）と同一のデザインシステム。
+ * 色トークンは lp.css の :root から逐語でコピーしている。
+ * 新しい色・グラデーション・ぼかし・カード・ピル・バッジは一切足さない。
+ * 角丸を持つのは端末フレームだけで、その比率も lp.css の .phone に従う。
+ *
+ * 単位について:
+ *   構図中のすべての長さは calc(N * var(--u)) で書く。N はマスター 1290x2796 上の値、
+ *   --u は canvas ごとに1つだけ定義する「長さ」で、マスターではちょうど 1px になる。
+ *   --u は必ず長さにすること。単位なしにすると calc(96 * 0.98) が数値になり
+ *   font-size 等で computed-value time に無効となって全滅する（無地の矩形だけが出る）。
+ *
+ * 縦の組み方:
+ *   .canvas は縦のフレックス。上から --head-y の余白、自然高の .head、そして .stage。
+ *   .stage は上下 auto マージンで、見出しの下に残った余白の中央に落ちる。
+ *   よって「リード（または注記）の下端から端末上端まで」と
+ *   「端末下端から canvas 下端まで」が、どの面でも必ず等しくなる。
+ *   面ごとの内容量の差は上下へ等分されるだけなので、端末の上端は面ごとに動く。
+ *   （かつては --stage-y で全面の端末上端を揃えていた。これは y776 の罫と
+ *     揃えるための設計だったが、その罫は削除済みで揃える相手がもういない。）
+ *   濃紺ポスターと OGP はこの機構を使わない。それぞれ末尾で明示的に上書きする。
+ *
+ * 不変条件（_wrapper.html のアサーションが実行時に検証する）:
+ *   - 端末フレームは canvas から絶対にはみ出さない（＝どのキャプチャも切り落とさない）
+ *   - 見出しの各行は折り返さない
+ *   - 見出し帯と端末が重ならない
+ *   - 端末の上下の余白が等しい（余白が足りないと auto マージンが潰れてここで落ちる）
+ */
+
+:root {
+  color-scheme: light;
+}
+
+.canvas {
+  /* — 色トークン: apps/web/lp/lp.css の :root から逐語コピー — */
+  --color-bg: #f3f2f2;
+  --color-surface: #eae9e9;
+  --color-text: #201e1d;
+  --color-accent: #212b3c;
+  --color-accent-400: #5d6f8b;
+  --color-accent-600: #1b2433;
+  --color-accent-700: #161d2a;
+  --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
+  --color-muted: color-mix(in srgb, #201e1d 70%, transparent);
+  --color-body: color-mix(in srgb, #201e1d 78%, transparent);
+  --color-faint: color-mix(in srgb, #201e1d 55%, transparent);
+
+  --font-heading: "Archivo", "Noto Sans JP", system-ui, sans-serif;
+  --font-body: "Archivo", "Noto Sans JP", system-ui, sans-serif;
+
+  /* 端末ベゼルの色。lp.css は .phone を --color-accent で塗る。
+     濃紺ポスター面では地と同化するため、.close .btn-ghost と同じ要領で反転させる。 */
+  --bezel: var(--color-accent);
+
+  /* — マスター構図（単位はマスター px）— */
+  --edge: 88;      /* 左右マージン */
+  --measure: 1114; /* テキスト版面 = 1290 - 88*2 */
+  --content: 1114; /* 全幅要素の幅。iPad だけ広がる */
+  --rule-h: 6;     /* 数字帯の罫。lp.css の 2px ヘアラインと見た目の太さを合わせた値 */
+
+  /* 面の上端から見出しまでの余白。縦で持つトークンはこれだけで、
+     残りは .stage の auto マージンが自動で等分する。
+     これを詰めれば端末に回せる余白が増える（最も内容が重い面でも
+     余白が端末の高さを下回らないことが条件）。 */
+  --head-y: 192;
+
+  /* — 級数（マスター px）— */
+  --fs-h1: 96;
+  --fs-sub: 52;
+  --fs-note: 26;
+  --fs-cap: 26;
+  --fs-stat: 96;
+  --fs-statlabel: 26;
+  --fs-tagline: 26;
+
+  /* 端末フレームの幅。.stage[data-shots] と canvas で上書きする */
+  --pw: 810;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+h1 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  margin: 0;
+}
+
+p,
+figure {
+  margin: 0;
+}
+
+img {
+  display: block;
+}
+
+/* 1ファイルに ja / en を併記し、<html lang> で出し分ける */
+[lang="ja"] .en,
+[lang="en"] .ja {
+  display: none;
+}
+
+/* =========================================================================
+   canvas 定義
+   --cw / --ch は実デバイス px のリテラル。よって html_to_png は scale 1 で
+   走らせられ、PNG の寸法が丸め誤差でずれることが構造的に起こらない。
+   iPad と OGP は「高さ基準」でリベースする。設計高さが保たれるため
+   端末が短い面で切れることがない。
+   ========================================================================= */
+.canvas {
+  position: relative;
+  overflow: hidden;
+  width: var(--cw);
+  height: var(--ch);
+  /* 縦のフレックス。.head を自然高で積み、.stage の auto マージンに
+     残りの余白を等分させるための土台。濃紺ポスターも同じ土台を使う。 */
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.8;
+  text-wrap: pretty;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A — App Store iPhone 6.9"  1290x2796 : 作図そのまま。--u = 1px */
+.canvas[data-canvas="ios69"] {
+  --cw: 1290px;
+  --ch: 2796px;
+  --u: calc(var(--cw) / 1290);
+}
+
+/* B — App Store iPad 13"     2064x2752 : 高さ基準。設計面 2097x2796
+   iPhone と同じ縦のリズム（見出し → 端末）を保ったまま、
+   広がった幅ぶんだけ版面と級数を上げる。左右2段組にすると端末の高さが
+   段の幅で頭打ちになり、上下に大きな空白が残るため単段で組む。 */
+.canvas[data-canvas="ipad13"] {
+  --cw: 2064px;
+  --ch: 2752px;
+  --u: calc(var(--ch) / 2796);
+  --measure: 1921; /* 2097 - 88*2 */
+  --content: 1921;
+
+  --fs-h1: 132;
+  --fs-sub: 70;
+  --fs-note: 34;
+  --fs-cap: 34;
+  --fs-stat: 134;
+  --fs-statlabel: 34;
+
+  /* 最も内容が重いのはアイキャッチ ja（h1 420 + 余白 44 + リード3行 420 = 884）。
+     2台組 576 の外接高 1390.8 を引いても 2796 - 220 - 884 - 1390.8 = 301.2 残り、
+     上下に 150.6 ずつ配られる。どの面でも端末は裁ち落とされない。 */
+  --head-y: 220;
+}
+
+/* C — OGP                    1200x630  : 高さ基準。設計面 1486x780 */
+.canvas[data-canvas="og"] {
+  --cw: 1200px;
+  --ch: 630px;
+  --u: calc(var(--ch) / 780);
+  --measure: 860;
+  --content: 860;
+  --fs-h1: 72;
+}
+
+/* =========================================================================
+   アイキャッチ（00-hero のみ）
+   lp.css では .hero h1 が clamp(34px,4.6vw,58px)、.section-title が
+   clamp(26px,3vw,40px) で、ヒーローだけ約1.45倍。英語は字数が多いので1段落とす。
+   canvas 別に書いているのは、canvas の上書きと詳細度が並ぶのを避けるため。
+   ========================================================================= */
+.canvas[data-canvas="ios69"][data-slide="00-hero"] {
+  --fs-h1: 120;
+}
+
+[lang="en"] .canvas[data-canvas="ios69"][data-slide="00-hero"] {
+  --fs-h1: 110;
+}
+
+.canvas[data-canvas="ipad13"][data-slide="00-hero"] {
+  --fs-h1: 168;
+}
+
+/* =========================================================================
+   濃紺ポスター（05-pricing のみ）
+   lp.css の .close をそのまま持ち込む。新しい -inv トークン族は作らず、
+   既存のトークン名をこのスコープ内で定義し直す。
+   ========================================================================= */
+.canvas[data-tone="poster"] {
+  --color-bg: #212b3c;
+  --color-text: #f3f2f2;
+  /* .close h2 の span はアクセント色を持たないので、見出しは2行とも明色 */
+  --color-accent: #f3f2f2;
+  --color-accent-700: #f3f2f2;
+  --color-divider: color-mix(in srgb, #f3f2f2 40%, transparent);
+  --color-muted: color-mix(in srgb, #f3f2f2 70%, transparent);
+  --color-body: color-mix(in srgb, #f3f2f2 78%, transparent);
+  --color-faint: color-mix(in srgb, #f3f2f2 55%, transparent);
+  --bezel: #f3f2f2;
+}
+
+/* =========================================================================
+   見出し帯 — lp.css の .hero h1 / .lead / .hero-note
+   ========================================================================= */
+/* 自然高。内容が増えれば下へ伸び、そのぶん .stage に配られる余白が減る。
+   潰れを止めているのは、フレックスアイテム既定の min-height: auto
+   （内容ベースの最小サイズ）であって flex: none ではない。flex: none は
+   「伸ばさない・縮めない」の意図表明で、外しても幾何は 1px も変わらない。
+   逆に min-height: 0 や overflow: hidden をここへ足すと最小サイズの床が外れ、
+   内容が重い面で見出しが黙って圧縮され、リードが端末を貫通して描画される。
+   その状態は _wrapper.html の (5)(6)(7) をすり抜けるため、
+   保険として (8) の .head あふれ検査を置いてある。両方を消さないこと。 */
+.head {
+  flex: none;
+  margin: calc(var(--head-y) * var(--u)) 0 0 calc(var(--edge) * var(--u));
+  width: calc(var(--measure) * var(--u));
+  display: flex;
+  flex-direction: column;
+}
+
+/* 行送りを級数から切り離して固定する。ja と en で見出しブロックの高さが
+   1px も変わらないため、英語に差し替えても下のものが動かない。 */
+.head h1 {
+  font-size: calc(var(--fs-h1) * var(--u));
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  height: calc(var(--fs-h1) * 2.5 * var(--u)); /* 1.25 行 x 2 */
+}
+
+.head h1 .line {
+  display: block;
+  white-space: nowrap;
+}
+
+.head h1 .accent {
+  color: var(--color-accent);
+}
+
+.sub {
+  font-size: calc(var(--fs-sub) * var(--u));
+  line-height: 2;
+  color: var(--color-body);
+  margin-top: calc(44 * var(--u));
+  /* 2行ぶんを下限にする。ほとんどの面は2行で揃い、収まらない一文だけが
+     3行へ伸びる。伸びたぶんは .head の高さに乗り、端末に配られる余白が
+     上下とも同じだけ減る（端末は余白の中央に留まる）。 */
+  min-height: calc(var(--fs-sub) * 4 * var(--u));
+}
+
+.note {
+  font-size: calc(var(--fs-note) * var(--u));
+  line-height: 1.8;
+  color: var(--color-muted);
+  margin-top: calc(28 * var(--u));
+}
+
+.note:empty {
+  display: none;
+}
+
+/* =========================================================================
+   タグライン（_wrapper.html が持つ共通要素）
+   ========================================================================= */
+.tagline {
+  display: none;
+}
+
+/* =========================================================================
+   端末フレーム — lp.css の .phone / .phone-inner を「フレーム幅に対する比」で表現
+   （lp.css は幅 250px の .phone に対して padding 6 / radius 36 / inner 30 /
+     island top 10 x height 18。それぞれ 0.024 / 0.144 / 0.12 / 0.04 / 0.072）
+   ========================================================================= */
+/* 見出しの下に残った余白の中央へ。.canvas は縦のフレックスなので主軸は縦で、
+   上下の auto マージンが残りの余白をちょうど半分ずつ吸う。
+   align-items は flex-start のままにすること。2台組の重なりは 2枚目の
+   margin-top で作っており、center にすると各 .shot が個別に中央化されて
+   重なり量がちょうど半分になる（lp.css 由来の構図が崩れる。実測で 0.500 倍）。
+
+   中央化は「要素ボックス基準」で、インク基準では上が 0〜47 だけ広く出る。
+   最終行の行送りの下半分が文字のない空きだからで、これを詰めていないのは
+   (1) 残差が知覚閾値以下であること、
+   (2) ja/en を1つの DOM に併記しているため構造上の最後の子は常に .en 側で、
+       .sub:last-child が ja 面で一度もマッチせず、正しく書くと見た目より
+       複雑になること、による。行送りの二重管理が理由ではない。 */
+.stage {
+  flex: none;
+  margin: auto 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* 1台 810 → フレーム高 1707.7。2台組 630 → 外接高 1521.2（キャプション込み 1592）。
+   最も内容が重い面（02-scenes / 04-profiles、.head 671）でも
+   2796 - 192 - 671 - 1592 = 341 残り、上下に 170.5 ずつ配られる。
+   外接幅も 630 x 1.7277 = 1088.4 で 1290 に収まる。 */
+.stage[data-shots="1"] {
+  --pw: 810;
+}
+
+.stage[data-shots="2"] {
+  --pw: 630;
+}
+
+.shot {
+  --pwpx: calc(var(--pw) * var(--u));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: none;
+}
+
+.phone {
+  width: var(--pwpx);
+  background: var(--bezel);
+  border-radius: calc(var(--pwpx) * 0.144);
+  padding: calc(var(--pwpx) * 0.024);
+  box-shadow: 0 calc(var(--pwpx) * 0.012) calc(var(--pwpx) * 0.04)
+    color-mix(in srgb, #2d2b2b 16%, transparent);
+}
+
+.phone-inner {
+  position: relative;
+  border-radius: calc(var(--pwpx) * 0.12);
+  overflow: hidden;
+  /* 画像の読み込み結果に依存させない。file:// の取りこぼしや遅いデコードで
+     高さ0の紺色の細片になって静かに壊れるのを防ぐ。 */
+  aspect-ratio: 1170 / 2532;
+}
+
+.phone-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ノッチピル */
+.phone-inner::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--pwpx) * 0.04);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30%;
+  height: calc(var(--pwpx) * 0.072);
+  background: #0b0f17;
+  border-radius: 999px;
+  z-index: 1;
+}
+
+/* 2台組の重ね方は lp.css の .split-shots .phone + .phone
+   （幅 235px に対して margin: 72px 0 -48px -64px = 0.30638 / -0.2723）*/
+.stage[data-shots="2"] .shot + .shot {
+  margin-left: calc(var(--pwpx) * -0.2723);
+  margin-top: calc(var(--pwpx) * 0.30638);
+}
+
+.stage[data-shots="2"] .shot + .shot .phone {
+  box-shadow: 0 calc(var(--pwpx) * 0.05106) calc(var(--pwpx) * 0.13617)
+    color-mix(in srgb, #2d2b2b 22%, transparent);
+}
+
+/* 2台組では手前の端末が奥のキャプションに重なるため、
+   lp.css の .stat-label と同じく端末の左端に寄せて逃がす。 */
+.stage[data-shots="2"] .cap {
+  align-self: flex-start;
+}
+
+.cap {
+  font-size: calc(var(--fs-cap) * var(--u));
+  line-height: 1.8;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  margin-top: calc(24 * var(--u));
+  text-align: center;
+  white-space: nowrap;
+}
+
+.cap:empty {
+  display: none;
+}
+
+/* =========================================================================
+   数字帯 — lp.css の .stats（05-pricing のみ）
+   ========================================================================= */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(56 * var(--u)) calc(28 * var(--u));
+  width: 100%;
+}
+
+.stat {
+  border-top: calc(var(--rule-h) * var(--u)) solid var(--color-divider);
+  padding-top: calc(28 * var(--u));
+}
+
+.stat-num {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: calc(var(--fs-stat) * var(--u));
+  line-height: 1.1;
+  color: var(--color-accent);
+  font-feature-settings: "tnum" 1;
+}
+
+.stat-label {
+  font-size: calc(var(--fs-statlabel) * var(--u));
+  line-height: 1.8;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  margin-top: calc(12 * var(--u));
+}
+
+/* =========================================================================
+   canvas 別の上書き
+   ========================================================================= */
+
+/* — iPad 13" —
+   1台 690 → フレーム高 1454.7、2台組 576 → 外接高 1390.8（+キャプション 85.2）。
+   最も内容が重いアイキャッチ ja でも余白が 301.2 残るので、
+   どのキャプチャも裁ち落とさない。 */
+.canvas[data-canvas="ipad13"] .stage[data-shots="1"] {
+  --pw: 690;
+}
+
+.canvas[data-canvas="ipad13"] .stage[data-shots="2"] {
+  --pw: 576;
+}
+
+/* — OGP 1200x630: 00-hero から生成する横長の面 — */
+.canvas[data-canvas="og"] .sub,
+.canvas[data-canvas="og"] .note,
+.canvas[data-canvas="og"] .cap {
+  display: none;
+}
+
+/* ストア面の「積んで余白を等分する」機構は使わず、左右2段の絶対配置で組む。
+   position / margin を明示して流れから抜くこと。これを省くと .head が
+   --head-y のぶん下がり、.stage の auto マージンで縦に流れてしまう。 */
+.canvas[data-canvas="og"] .head {
+  position: absolute;
+  left: calc(var(--edge) * var(--u));
+  top: 0;
+  margin: 0;
+  height: 100%;
+  justify-content: center;
+}
+
+.canvas[data-canvas="og"] .stage {
+  position: absolute;
+  left: auto;
+  right: calc(var(--edge) * var(--u));
+  width: calc(300 * var(--u));
+  top: 0;
+  margin: 0;
+  height: 100%;
+  align-items: center;
+}
+
+/* OGP は横長・リードなしの別構図で、位置・寸法・--pw をすべて自前で持つ。
+   よってストア面の縦の配分やリードの級数を変えても影響を受けない。 */
+.canvas[data-canvas="og"] .stage[data-shots="1"],
+.canvas[data-canvas="og"] .stage[data-shots="2"] {
+  --pw: 300;
+}
+
+/* 2台組でも OGP は1台だけ見せる */
+.canvas[data-canvas="og"] .shot + .shot {
+  display: none;
+}
+
+.canvas[data-canvas="og"] .tagline {
+  display: block;
+  position: absolute;
+  left: calc(var(--edge) * var(--u));
+  bottom: calc(72 * var(--u));
+  font-size: calc(var(--fs-tagline) * var(--u));
+  line-height: 1.8;
+  color: var(--color-muted);
+}
+
+/* =========================================================================
+   濃紺ポスター面の配置（05-pricing）
+   lp.css の .close と同じく、どの canvas でも中央揃えの単一列。
+   ========================================================================= */
+/* 見出しと数字帯を1つの塊として面の中央に置く。上下を割合で切ると
+   canvas の縦横比が変わったときに片側だけ大きな空きが残るため。 */
+.canvas[data-tone="poster"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ストア面の余白等分は使わない。塊ごと中央に置くため、
+   .head の --head-y と .stage の auto マージンをどちらも打ち消す。 */
+.canvas[data-tone="poster"] .head,
+.canvas[data-tone="poster"] .stage {
+  margin: 0;
+  width: calc(var(--content) * var(--u));
+}
+
+.canvas[data-tone="poster"] .head {
+  text-align: center;
+}
+
+.canvas[data-tone="poster"] .head h1,
+.canvas[data-tone="poster"] .sub {
+  height: auto;
+}
+
+.canvas[data-tone="poster"] .stage {
+  margin-top: calc(96 * var(--u));
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.canvas[data-tone="poster"] .stats {
+  text-align: left;
+}
+

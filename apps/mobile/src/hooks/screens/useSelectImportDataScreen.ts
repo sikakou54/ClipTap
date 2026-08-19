@@ -60,11 +60,7 @@ export interface UseSelectImportDataScreenReturn {
   selectedVariableIds: Set<string>;
   /** 選択されたカテゴリID */
   selectedCategoryIds: Set<string>;
-  /** タブ別の選択件数 */
-  selectedCounts: Record<ImportTabType, number>;
-  /** 現在アクティブなタブの選択件数 */
-  activeSelectedCount: number;
-  /** 全選択されているか */
+  /** 選択された総件数（タブ横断） */
   totalSelected: number;
 
   /* チェック関数 */
@@ -97,7 +93,7 @@ export interface UseSelectImportDataScreenReturn {
 /* ======================================== */
 
 /** useSelectImportDataScreen フックのパラメータ */
-export interface UseSelectImportDataScreenParams {
+interface UseSelectImportDataScreenParams {
   /** 一時データベースのパス */
   tempDbPath: string;
 }
@@ -194,32 +190,17 @@ export function useSelectImportDataScreen(
   });
 
   /* ======================================== */
-  /* 派生状態 */
-  /* ======================================== */
-
-  /**
-   * タブ別の選択件数
-   */
-  const selectedCounts = useMemo<Record<ImportTabType, number>>(
-    () => ({
-      snippets: selectedSnippetIds.size,
-      profiles: selectedProfileIds.size,
-      variables: selectedVariableIds.size,
-      categories: selectedCategoryIds.size,
-    }),
-    [selectedSnippetIds, selectedProfileIds, selectedVariableIds, selectedCategoryIds]
-  );
-
-  /** 現在アクティブなタブの選択件数 */
-  const activeSelectedCount = selectedCounts[activeTab];
-
-  /* ======================================== */
   /* 初期データ読み込み */
   /* ======================================== */
 
   /**
    * インポート候補データの初期読み込み
    * 一時DBから読み込み、全アイテムを初期選択状態に設定
+   *
+   * @remarks
+   * 依存配列の t は本文で使っていないが、言語を切り替えると一時DBへの再クエリが走る。
+   * 選択状態は useSelection が isOpen の立ち上がり1回だけ初期化する作りなので巻き戻らない。
+   * 不要な再実行に見えるものの、外すと再実行条件が変わるため現行の挙動をそのまま維持している。
    */
   useEffect(() => {
     const loadCandidates = async () => {
@@ -334,8 +315,6 @@ export function useSelectImportDataScreen(
     selectedProfileIds,
     selectedVariableIds,
     selectedCategoryIds,
-    selectedCounts,
-    activeSelectedCount,
     totalSelected,
 
     /* チェック関数 */

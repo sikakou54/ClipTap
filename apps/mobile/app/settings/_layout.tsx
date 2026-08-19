@@ -9,11 +9,12 @@
  * - categories: カテゴリ管理
  * - profiles: プロファイル（環境）管理
  * - variables: カスタム変数管理
+ * - system-variable-formats: システム変数書式管理
  * - export-import: バックアップ・復元
  * - select-export-data: エクスポートデータ選択（モーダル）
  * - select-import-data: インポートデータ選択（モーダル）
  *
- * @see docs/ARCHITECTURE.md - ナビゲーション構造
+ * @see docs/機能仕様書.md §9.1 モバイル画面
  */
 import { Stack } from 'expo-router';
 
@@ -29,23 +30,19 @@ export default function SettingsLayout() {
       <Stack.Screen name="profiles" />
       {/* 変数管理画面 */}
       <Stack.Screen name="variables" />
+      {/* システム変数書式管理画面 */}
+      <Stack.Screen name="system-variable-formats" />
       {/* エクスポート・インポート画面 */}
       <Stack.Screen name="export-import" />
       {/* エクスポートデータ選択モーダル */}
       <Stack.Screen
         name="select-export-data"
-        options={{
-          presentation: 'modal',
-          headerShown: false,
-        }}
+        options={{ presentation: 'modal' }}
       />
       {/* インポートデータ選択モーダル */}
       <Stack.Screen
         name="select-import-data"
-        options={{
-          presentation: 'modal',
-          headerShown: false,
-        }}
+        options={{ presentation: 'modal' }}
       />
     </Stack>
   );

@@ -13,7 +13,7 @@
  * - アクセシビリティ対応
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, ViewStyle, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -137,7 +137,7 @@ export function CommonButton({
       opacity: (disabled || loading) ? 0.6 : 1,
     };
 
-    let typeStyle: ViewStyle = {};
+    const typeStyle: ViewStyle = {};
 
     if (disabled || loading) {
       typeStyle.backgroundColor = colors.textTertiary;

@@ -21,16 +21,15 @@
  * - データベースリセット
  * - テストデータの再生成
  *
- * @see useSettingsScreen - ビジネスロジック
- * @see docs/ARCHITECTURE.md - 設定画面の構成
+ * @see src/hooks/screens/useSettingsScreen.ts - ビジネスロジック
+ * @see docs/機能仕様書.md §9.1 モバイル画面
  */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useTranslation } from '@cliptap/shared'
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { UI_CONSTANTS } from '@constants/ui';
 import { useSettingsScreen } from '@hooks/screens/useSettingsScreen';
 import {
@@ -61,16 +60,11 @@ export default function SettingsScreen() {
 
     handleDevSubscriptionToggle,
     handleResetDatabase,
-    handleDeleteDatabase,
-    handleChangeSchemaVersion,
   } = useSettingsScreen();
 
   /* 設定画面 */
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      {/* ヘッダー */}
-      <Header title={t('settings.title')} backIcon="arrow-back" />
-
+    <ScreenContainer title={t('settings.title')} backIcon="arrow-back">
       {/* スクロール可能なコンテンツエリア */}
       <ScrollView style={styles.content}>
         {/* メニューセクション */}
@@ -90,7 +84,7 @@ export default function SettingsScreen() {
                     {/* Proバッジ（Pro機能で未購読の場合） */}
                     {item.isPro && !isSubscribed && (
                       <View style={[styles.proBadge, { backgroundColor: colors.primary }]}>
-                        <Text style={[styles.proBadgeText, { fontSize: responsiveFontSizes.xs, lineHeight: responsiveLineHeights.xs }]}>Pro</Text>
+                        <Text style={[styles.proBadgeText, { color: colors.onPrimary, fontSize: responsiveFontSizes.xs, lineHeight: responsiveLineHeights.xs }]}>Pro</Text>
                       </View>
                     )}
                   </View>
@@ -132,8 +126,6 @@ export default function SettingsScreen() {
           <DeveloperMenu
             onSubscriptionToggle={handleDevSubscriptionToggle}
             onResetDatabase={handleResetDatabase}
-            onDeleteDatabase={handleDeleteDatabase}
-            onChangeSchemaVersion={handleChangeSchemaVersion}
           />
         )}
       </ScrollView>
@@ -143,7 +135,7 @@ export default function SettingsScreen() {
         visible={showKeyboardGuide}
         onClose={closeKeyboardGuide}
       />
-    </View>
+    </ScreenContainer>
   );
 }
 
@@ -184,8 +176,8 @@ const styles = StyleSheet.create({
     borderRadius: UI_CONSTANTS.BORDER_RADIUS.SM,
     marginLeft: UI_CONSTANTS.GAP.MD,
   },
+  /** Proバッジのテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   proBadgeText: {
-    color: '#FFFFFF',
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,
   },
 });

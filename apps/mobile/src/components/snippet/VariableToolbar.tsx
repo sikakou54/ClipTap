@@ -14,7 +14,6 @@
  * @see UI_SYSTEM_VARIABLES - システム変数定義
  */
 
-import React from 'react';
 import { View, ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@lib/themeSystem';
 import { Ionicons } from '@expo/vector-icons';

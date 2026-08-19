@@ -1,0 +1,6 @@
+TestID,PatternID,StepNo,Action,Result,Expected,Actual,Evidence,ExecutedAt
+TC-P010,P-PROBE,1,TAP,PASS,AXツリーが保存される,"tap 1498,187 hold=60ms",,2026-08-13T03:53:36.390Z
+TC-P010,P-PROBE,2,TAP,PASS,AXツリーが保存される,"tap 1477,293 hold=60ms",,2026-08-13T03:53:38.078Z
+TC-P010,P-PROBE,3,TAP,PASS,AXツリーが保存される,"tap 1623,179 hold=60ms",,2026-08-13T03:53:39.769Z
+TC-P010,P-PROBE,4,WAIT,PASS,AXツリーが保存される,waited 1500ms,,2026-08-13T03:53:41.877Z
+TC-P010,P-PROBE,5,DUMP_UI,PASS,AXツリーが保存される,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/probe3/evidence/TC-P010-5-varedit.txt,/Users/sasakikouhei/trunk/project/cliptap/docs/test/results/probe3/evidence/TC-P010-5-varedit.txt,2026-08-13T03:53:43.863Z

@@ -16,7 +16,6 @@
  * - カスタム比較関数で不要な再レンダリングを防止
  *
  * @see SnippetList - 親コンポーネント
- * @see useSnippetPreview - 変数解決フック
  */
 
 import React from 'react';
@@ -28,6 +27,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
+import { useTranslation } from '@cliptap/shared';
 import { SnippetWithDisplay, Category } from '@cliptap/shared';
 import { CategoryBadge } from '@components/category/CategoryBadge';
 import { UI_CONSTANTS } from '@constants/ui';
@@ -39,14 +39,16 @@ import { useSnippetCard } from '@hooks/components/useSnippetCard';
  * @property onPress - タップ時のコールバック（コピー処理）
  * @property onEdit - 編集ボタンタップ時のコールバック
  * @property onDelete - 削除ボタンタップ時のコールバック
+ * @property onPressTitle - タイトルタップ時のコールバック（タイトルのみコピー、省略可）
  * @property disableCopy - コピー機能を無効化（省略可、デフォルト: false）
  * @property category - カテゴリオブジェクト（省略可：親から渡される場合、パフォーマンス最適化のため）
  */
 interface SnippetCardProps {
   snippet: SnippetWithDisplay;
-  onPress: (snippet: SnippetWithDisplay) => void;
+  onPress: (snippet: SnippetWithDisplay) => void | Promise<void>;
   onEdit: (snippet: SnippetWithDisplay) => void;
   onDelete: (snippet: SnippetWithDisplay) => void;
+  onPressTitle?: (snippet: SnippetWithDisplay) => void | Promise<void>;
   disableCopy?: boolean;
   category?: Category | null;
 }
@@ -56,20 +58,26 @@ const SnippetCardComponent = ({
   onPress,
   onEdit,
   onDelete,
+  onPressTitle,
   disableCopy = false,
   category: categoryProp,
 }: SnippetCardProps) => {
   const { colors, isTablet, responsive, responsiveFontSizes, responsiveLineHeights } = useTheme();
+  const { t } = useTranslation();
 
   /* フックからロジックを取得 */
   const {
     isCopying,
     isCopied,
+    isCopyingTitle,
+    isTitleCopied,
+    canCopyTitle,
     isExpanded,
     category,
     displayTitle,
     displayContent,
     handleCopy,
+    handleCopyTitle,
     handleDelete,
     handleEdit,
     toggleExpanded,
@@ -78,8 +86,12 @@ const SnippetCardComponent = ({
     onPress,
     onEdit,
     onDelete,
+    onPressTitle,
     categoryProp,
   });
+
+  /* タイトルタップでコピーできるか（タイトルなし・コピー無効時は通常のテキスト表示に戻す） */
+  const isTitleCopyEnabled = canCopyTitle && !disableCopy;
 
   return (
     <View
@@ -99,7 +111,19 @@ const SnippetCardComponent = ({
           paddingBottom: 60,
         }
       ]}>
-        <View style={styles.titleContainer}>
+        {/* タイトル（タップでタイトルのみをコピー） */}
+        <TouchableOpacity
+          style={styles.titleContainer}
+          onPress={handleCopyTitle}
+          disabled={!isTitleCopyEnabled || isCopyingTitle}
+          activeOpacity={isTitleCopyEnabled ? 0.7 : 1}
+          hitSlop={UI_CONSTANTS.HIT_SLOP.SMALL}
+          /* TouchableOpacityはラベルを与えると子のテキストを読み上げなくなるため、
+             ラベルはタイトル本文のままにし、コピー操作はヒントで補足する */
+          accessibilityRole={isTitleCopyEnabled ? 'button' : undefined}
+          accessibilityLabel={displayTitle ?? undefined}
+          accessibilityHint={isTitleCopyEnabled ? t('snippet.copy_title') : undefined}
+        >
           <Text
             style={[
               styles.title,
@@ -113,7 +137,17 @@ const SnippetCardComponent = ({
           >
             {displayTitle}
           </Text>
-        </View>
+
+          {/* コピーアイコン（タップでコピーできることを示す。コピー完了時は2秒間チェックマーク） */}
+          {isTitleCopyEnabled && (
+            <Ionicons
+              name={isTitleCopied ? 'checkmark' : 'copy-outline'}
+              size={isTablet ? 18 : 14}
+              color={isTitleCopied ? colors.success : colors.textSecondary}
+              style={styles.titleCopyIcon}
+            />
+          )}
+        </TouchableOpacity>
 
         {/* カテゴリバッジ */}
         {category && (
@@ -186,7 +220,7 @@ const SnippetCardComponent = ({
           <Ionicons
             name="trash-outline"
             size={isTablet ? 22 : 18}
-            color="#FF3B30"
+            color={colors.error}
           />
         </TouchableOpacity>
 
@@ -211,10 +245,11 @@ const SnippetCardComponent = ({
           style={[
             styles.roundButton,
             {
-              borderColor: isCopied ? "#34C759" : colors.primary,
+              borderColor: isCopied ? colors.success : colors.primary,
               backgroundColor: colors.surface,
             },
-            disableCopy && styles.disabledButton
+            /* 無効時は枠線を中立色へ戻す。style配列は後勝ちのため、上の borderColor より後ろに置く */
+            disableCopy && [styles.disabledButton, { borderColor: colors.border }]
           ]}
           onPress={handleCopy}
           disabled={isCopying || disableCopy}
@@ -222,7 +257,7 @@ const SnippetCardComponent = ({
           <Ionicons
             name={isCopied ? "checkmark" : "copy-outline"}
             size={isTablet ? 22 : 18}
-            color={disableCopy ? colors.textSecondary : (isCopied ? "#34C759" : colors.primary)}
+            color={disableCopy ? colors.textSecondary : (isCopied ? colors.success : colors.primary)}
           />
         </TouchableOpacity>
       </View>
@@ -263,9 +298,15 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   title: {
+    flex: 1,
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,
+  },
+  titleCopyIcon: {
+    marginLeft: UI_CONSTANTS.GAP.XS,
   },
   categoryBadgeContainer: {
     marginTop: UI_CONSTANTS.GAP.XS,
@@ -293,6 +334,5 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.4,
-    borderColor: '#ccc',
   },
 });

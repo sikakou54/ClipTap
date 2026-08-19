@@ -3,8 +3,9 @@
  *
  * @description
  * Mobile版のサブスクリプション状態管理を提供するProvider。
- * sharedのSubscriptionProviderをラップし、Mobile固有のplatformAdapterを注入。
- * RevenueCat SDKを使用したサブスクリプション状態管理と購入処理を提供。
+ * sharedのSubscriptionProviderをラップし、Mobile固有のplatformAdapterを注入する。
+ * 加入状態の参照は shared の useSharedSubscription を各画面から直接使う。
+ * 購入・復元・プラン取得はここではなく SubscriptionService / MobileSubscriptionAdapter が担う。
  *
  * @module SubscriptionProvider
  */
@@ -12,16 +13,13 @@
 import { useMemo, type ReactNode } from 'react';
 import {
   SubscriptionProvider as SharedSubscriptionProvider,
-  useSharedSubscription,
   SubscriptionService,
   AuthService,
   Logger,
   type SubscriptionPlatformAdapter,
-  type SubscriptionContextValue,
 } from '@cliptap/shared';
 import { purchaseService } from '@services/PurchaseService';
 import { type MobileSubscriptionAdapter, type PurchaseServiceCallbacks } from '@adapters/MobileSubscriptionAdapter';
-import { keyboardExtensionService } from '@services/KeyboardExtensionService';
 import type { PurchasesPackage } from 'react-native-purchases';
 
 /* ========================================
@@ -69,11 +67,11 @@ function createMobilePlatformAdapter(): SubscriptionPlatformAdapter {
     /**
      * 初期化処理
      *
-     * 1. MobileSubscriptionAdapterにコールバックをセット
-     * 2. SubscriptionServiceに制限設定を注入
-     * 3. validフラグ更新用ヘルパー関数を注入
-     * 4. RevenueCat SDK初期化
-     * 5. アプリ再インストール後の認証状態復元時にRevenueCatと連携
+     * 1. 登録済みのMobileSubscriptionAdapterにPurchaseServiceへのコールバックをセット
+     * 2. RevenueCat SDK初期化
+     * 3. Firebase認証が既に復元済みなら、そのUIDをRevenueCatへ紐付け
+     *
+     * アダプター登録と無料プラン上限の設定は起動時のinit()で済んでいるため、ここでは行わない。
      */
     initialize: async () => {
       const adapter = SubscriptionService.getAdapter() as MobileSubscriptionAdapter | null;
@@ -98,9 +96,11 @@ function createMobilePlatformAdapter(): SubscriptionPlatformAdapter {
     },
 
     /**
-     * サブスクリプション状態を確認
+     * 現在の加入状態を解決
+     *
+     * RevenueCatのCustomerInfoは初期化時に取得済みのため、ここでは通信せずキャッシュを読む
      */
-    checkSubscription: async () => {
+    resolveSubscribed: async () => {
       return SubscriptionService.isSubscribed();
     },
 
@@ -112,56 +112,20 @@ function createMobilePlatformAdapter(): SubscriptionPlatformAdapter {
     },
 
     /**
-     * 有効期限を取得
-     */
-    getExpirationDate: () => purchaseService.getExpirationDate(),
-
-    /**
-     * 現在のプラン種別を取得
-     */
-    getCurrentPlanType: () => purchaseService.getCurrentPlanType(),
-
-    /**
-     * 購入を復元
-     */
-    restorePurchases: async () => {
-      await purchaseService.restorePurchases();
-    },
-
-    /**
-     * 購入可能なプランを取得
-     */
-    getOfferings: async () => purchaseService.getOfferings(),
-
-    /**
-     * パッケージを購入
-     */
-    purchasePackage: async (pkg: unknown) => {
-      await purchaseService.purchasePackage(pkg as PurchasesPackage);
-    },
-
-    /**
      * サブスク状態変更時のコールバックを登録
      */
     onSubscriptionChange: (callback: (isSubscribed: boolean) => void) => {
-      purchaseService.setOnSubscriptionChange(callback);
+      purchaseService.setOnSubscriptionChange((isSubscribed) => {
+        /* Context（useSharedSubscription）とService層リスナー（useSubscriptionService）の両方へ伝播させる。
+           片方だけに配ると、ペイウォールや契約管理画面を開いたままの権利変更が反映されない */
+        callback(isSubscribed);
+        const adapter = SubscriptionService.getAdapter() as MobileSubscriptionAdapter | null;
+        adapter?.notifyListeners();
+      });
       return () => {
         purchaseService.setOnSubscriptionChange(null);
       };
     },
-
-    /**
-     * サブスク状態変更時のMobile固有処理
-     * KeyboardExtensionへのサブスク状態同期
-     */
-    onSubscriptionStateChanged: (isSubscribed: boolean, expirationDate: Date | null) => {
-      keyboardExtensionService.saveSubscriptionStatus(isSubscribed, expirationDate);
-    },
-
-    /**
-     * 開発用: サブスク状態のオーバーライド値を取得
-     */
-    getDevSubscriptionOverride: () => purchaseService.getDevSubscriptionOverride(),
 
     /**
      * 開発用: サブスク状態をオーバーライド
@@ -190,16 +154,4 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       {children}
     </SharedSubscriptionProvider>
   );
-}
-
-/* ========================================
-   フック
-   ======================================== */
-
-/**
- * サブスクリプションコンテキストを取得するカスタムフック
- * sharedのuseSubscriptionをそのままエクスポート
- */
-export function useSubscription(): SubscriptionContextValue {
-  return useSharedSubscription();
 }

@@ -2,7 +2,6 @@
  * プロファイル選択コンポーネント
  *
  * ボトムシート形式でプロファイル一覧を表示し、切り替えを行う。
- * ProfileSwitcherより多くのプロファイルを一覧表示するのに適している。
  *
  * 主な機能:
  * - 現在のプロファイル名をタップでモーダル表示
@@ -10,11 +9,10 @@
  * - ラジオボタン形式の選択UI
  * - 選択中プロファイルのハイライト表示
  *
- * @see Drawer - サイドメニューでの使用
  * @see useProfiles - プロファイル管理フック
  */
 
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@mobile-types/flashlist';
@@ -48,16 +46,12 @@ export function ProfileSelector({ onProfileChange }: ProfileSelectorProps) {
     keyExtractor,
   } = useProfileSelector({ onProfileChange });
 
-  /* ========================================
-     早期リターン
-     ======================================== */
-
-  if (!loading && profiles.length === 0) {
-    return null;
-  }
-
   /**
    * FlashListのrenderItem
+   *
+   * 早期リターンより前に定義する。
+   * 早期リターンの後に置くとロード完了後に0件になった際にフックの呼び出し数が
+   * 変化してReactがクラッシュするため。
    */
   const renderProfileItem = useCallback(({ item }: { item: Profile }) => {
     const isActive = activeProfile?.id === item.id;
@@ -88,6 +82,14 @@ export function ProfileSelector({ onProfileChange }: ProfileSelectorProps) {
       </TouchableOpacity>
     );
   }, [activeProfile?.id, colors.primary, colors.text, colors.textSecondary, handleSelectProfile, responsiveFontSizes.base]);
+
+  /* ========================================
+     早期リターン
+     ======================================== */
+
+  if (!loading && profiles.length === 0) {
+    return null;
+  }
 
   /* ========================================
      レンダリング
@@ -122,7 +124,7 @@ export function ProfileSelector({ onProfileChange }: ProfileSelectorProps) {
         <View style={styles.modalOverlay}>
           {/* 背景オーバーレイ（タップで閉じる） */}
           <TouchableOpacity
-            style={styles.backdrop}
+            style={[styles.backdrop, { backgroundColor: colors.overlay }]}
             activeOpacity={1}
             onPress={closeModal}
           />
@@ -181,10 +183,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
-  /** 背景オーバーレイ（半透明黒） */
+  /** 背景オーバーレイ（背景色は使用箇所でテーマの overlay を重ねる）。RN 0.86でStyleSheet.absoluteFillObjectが削除されたため明示指定 */
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   /** ボトムシート本体 */
   bottomSheet: {

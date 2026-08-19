@@ -1,0 +1,2 @@
+ScreenID,Name,Route,File,Presentation,Signature,SpecRef
+SC-HOME,ホーム,/,apps/mobile/app/index.tsx,stack,label=すべて,§9.1

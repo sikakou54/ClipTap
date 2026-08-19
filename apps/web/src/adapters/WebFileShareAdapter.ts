@@ -8,6 +8,7 @@
  */
 
 import type { FileShareAdapter } from '@cliptap/shared';
+import { Logger } from '@cliptap/shared';
 
 /**
  * Web用FileShareAdapter実装クラス
@@ -26,7 +27,7 @@ export class WebFileShareAdapter implements FileShareAdapter {
       a.download = filename ?? 'download';
       a.click();
     } catch (error) {
-      console.error('[WebFileShareAdapter] Share (Download) failed:', error);
+      Logger.error('[WebFileShareAdapter] Share (Download) failed:', error);
       throw error;
     }
   }

@@ -14,15 +14,12 @@ import type { CryptoAdapter } from './CryptoAdapter';
 import type { DbAdapter } from './DbAdapter';
 import type { ClipboardAdapter } from './ClipboardAdapter';
 import type { FileIOAdapter } from './FileIOAdapter';
-import type { FileShareAdapter } from './FileShareAdapter';
-import type { FilePickerAdapter } from './FilePickerAdapter';
 import type { LocaleAdapter } from './LocaleAdapter';
 import type { I18nAdapter } from './I18nAdapter';
 import type { AuthAdapter } from './AuthAdapter';
 import type { ExportAdapter } from './ExportAdapter';
 import type { ImportAdapter } from './ImportAdapter';
 import type { SortPreferenceAdapter } from './SortPreferenceAdapter';
-import type { UsageTrackingAdapter } from './UsageTrackingAdapter';
 
 import { setCryptoAdapter } from './CryptoAdapter';
 import {
@@ -32,16 +29,12 @@ import {
 } from './DbAdapter';
 import { setClipboardAdapter } from './ClipboardAdapter';
 import { setFileIOAdapter } from './FileIOAdapter';
-import { setFileShareAdapter } from './FileShareAdapter';
-import { setFilePickerAdapter } from './FilePickerAdapter';
 import { setLocaleAdapter } from './LocaleAdapter';
 import { setI18nAdapter } from './I18nAdapter';
 import { setAuthAdapter } from './AuthAdapter';
 import { setExportAdapter } from './ExportAdapter';
 import { setImportAdapter } from './ImportAdapter';
 import { setSortPreferenceAdapter } from './SortPreferenceAdapter';
-import { setUsageTrackingAdapter } from './UsageTrackingAdapter';
-import { SubscriptionService } from '../services/SubscriptionService';
 
 /**
  * サブスクリプション設定オプション
@@ -49,6 +42,14 @@ import { SubscriptionService } from '../services/SubscriptionService';
  * @description
  * サブスクリプションアダプター登録時に指定する追加設定。
  * 無料プランとProプランの機能制限を定義する。
+ *
+ * 同じ上限値が constants/inputLimits.ts の FEATURE_LIMITS にも別名で存在し、用途が分かれている。
+ * FEATURE_LIMITS.FREE_TIER_VARIABLES は無料プランで有効化するカスタム変数の切り出しに使われる
+ * （providers/SnippetProvider.tsx、apps/mobile/src/utils/variableLoader.ts）。
+ * ここで設定する freeVariablesLimit / freeProfilesLimit は
+ * services/SubscriptionService.ts の追加可否判定（canAddVariable / canAddProfile）に使われる。
+ * 片方だけ変えると追加可否と実際に有効化される変数数が食い違うため、値は揃えて変更する。
+ * FEATURE_LIMITS.FREE_TIER_PROFILES は現在どこからも参照されていない。
  */
 export interface SubscriptionAdapterOptions {
   /**
@@ -57,7 +58,7 @@ export interface SubscriptionAdapterOptions {
    * @description
    * 無料プランで作成できる環境の最大数。
    * この上限を超える環境を作成する場合はProプラン契約が必要。
-   * デフォルト: 1（無料プランは1環境のみ）
+   * 未指定時は services/SubscriptionService.ts の FREE_PROFILES_LIMIT（現在3）が使われる。
    */
   freeProfilesLimit?: number;
 
@@ -67,17 +68,33 @@ export interface SubscriptionAdapterOptions {
    * @description
    * 無料プランで作成できるカスタム変数の最大数。
    * この上限を超える変数を作成する場合はProプラン契約が必要。
-   * デフォルト: 3（無料プランは3変数まで）
+   * 未指定時は services/SubscriptionService.ts の FREE_VARIABLES_LIMIT（現在5）が使われる。
    */
   freeVariablesLimit?: number;
 }
 
 /**
- * SubscriptionAdapterを設定
+ * 登録済みのSubscriptionAdapter（未登録時はnull）
  *
  * @description
- * サブスクリプションアダプターをSubscriptionServiceに登録。
- * 他のアダプターと異なり、SubscriptionServiceが内部でアダプターを管理する。
+ * 他のアダプターは自ファイル内に保持先を持つが、SubscriptionAdapterだけは
+ * 登録時に無料プラン上限（SubscriptionAdapterOptions）も同時に受け取るため、
+ * その型を定義しているこのファイルに保持先を置いている。
+ */
+let subscriptionAdapter: SubscriptionAdapter | null = null;
+
+/**
+ * 登録時に指定された無料プランの上限設定
+ *
+ * @description
+ * 未指定の項目はここに入らず、services/SubscriptionService.ts の既定値
+ * （FREE_PROFILES_LIMIT / FREE_VARIABLES_LIMIT）が使われる。
+ * 上限は業務ルールのためadapters層では解釈せず、値の保持だけを行う。
+ */
+const subscriptionLimits: SubscriptionAdapterOptions = {};
+
+/**
+ * SubscriptionAdapterを設定
  *
  * @param adapter - プラットフォーム固有のSubscriptionAdapter実装
  * @param options - オプション設定（無料プランの上限数等）
@@ -86,8 +103,41 @@ export function setSubscriptionAdapter(
   adapter: SubscriptionAdapter,
   options?: SubscriptionAdapterOptions
 ): void {
-  /* SubscriptionServiceにアダプターとオプションを登録 */
-  SubscriptionService.setAdapter(adapter, options);
+  subscriptionAdapter = adapter;
+
+  /* 指定された項目だけを上書きし、未指定の項目は既存の設定を保つ */
+  if (options?.freeProfilesLimit !== undefined) {
+    subscriptionLimits.freeProfilesLimit = options.freeProfilesLimit;
+  }
+  if (options?.freeVariablesLimit !== undefined) {
+    subscriptionLimits.freeVariablesLimit = options.freeVariablesLimit;
+  }
+}
+
+/**
+ * 登録済みのSubscriptionAdapterを取得
+ *
+ * @description
+ * shared内部（services/SubscriptionService.ts）専用。
+ * アプリ側の取得口は従来どおり SubscriptionService.getAdapter() のみで、
+ * この関数は adapters/index.ts からは公開しない。
+ *
+ * @returns 登録済みのSubscriptionAdapter、未登録の場合はnull
+ */
+export function getRegisteredSubscriptionAdapter(): SubscriptionAdapter | null {
+  return subscriptionAdapter;
+}
+
+/**
+ * 登録時に指定された無料プランの上限設定を取得
+ *
+ * @description
+ * shared内部（services/SubscriptionService.ts）専用。既定値の適用はservices層が行う。
+ *
+ * @returns 指定された上限設定（未指定の項目はundefined）
+ */
+export function getRegisteredSubscriptionLimits(): Readonly<SubscriptionAdapterOptions> {
+  return subscriptionLimits;
 }
 
 /**
@@ -112,10 +162,6 @@ export interface AllAdapters {
   clipboard?: ClipboardAdapter;
   /** ファイルI/Oアダプター（ファイル読み書きを抽象化） */
   fileIO?: FileIOAdapter;
-  /** ファイル共有アダプター（ファイル共有/ダウンロードを抽象化） */
-  fileShare?: FileShareAdapter;
-  /** ファイル選択アダプター（ファイル選択ダイアログを抽象化） */
-  filePicker?: FilePickerAdapter;
   /** ロケールアダプター（言語設定を抽象化） */
   locale?: LocaleAdapter;
   /** i18nアダプター（翻訳機能を抽象化） */
@@ -128,8 +174,6 @@ export interface AllAdapters {
   import?: ImportAdapter;
   /** ソート設定アダプター（ソート設定の保存・取得を抽象化） */
   sortPreference?: SortPreferenceAdapter;
-  /** 使用頻度追跡アダプター（使用頻度追跡設定を抽象化） */
-  usageTracking?: UsageTrackingAdapter;
 }
 
 /**
@@ -149,7 +193,8 @@ export interface SetAllAdaptersOptions {
  *
  * @description
  * プラットフォーム固有のアダプター実装をまとめて登録。
- * アプリ起動時（Mobile/Web各々の_layout.tsx等）で1回だけ呼び出される。
+ * 呼び出し元はinit()（init.ts）のみで、init()はMobile/Web双方のuseAdapterInitializationが
+ * アプリ起動時に1回だけ実行する。
  * これにより、sharedパッケージ内のビジネスロジックがプラットフォーム固有の機能（DB、暗号化等）を利用可能になる。
  *
  * @param adapters - 登録するアダプター群（すべてオプショナル）
@@ -180,12 +225,6 @@ export function setAllAdapters(
   if (adapters.fileIO) {
     setFileIOAdapter(adapters.fileIO);
   }
-  if (adapters.fileShare) {
-    setFileShareAdapter(adapters.fileShare);
-  }
-  if (adapters.filePicker) {
-    setFilePickerAdapter(adapters.filePicker);
-  }
   if (adapters.locale) {
     setLocaleAdapter(adapters.locale);
   }
@@ -203,8 +242,5 @@ export function setAllAdapters(
   }
   if (adapters.sortPreference) {
     setSortPreferenceAdapter(adapters.sortPreference);
-  }
-  if (adapters.usageTracking) {
-    setUsageTrackingAdapter(adapters.usageTracking);
   }
 }

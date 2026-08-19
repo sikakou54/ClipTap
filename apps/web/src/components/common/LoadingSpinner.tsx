@@ -52,7 +52,7 @@ export function LoadingSpinner({
 }: LoadingSpinnerProps) {
   const sizeClass = SIZE_CLASSES[size];
 
-  {/* スピナーSVG（アニメーション付き） */}
+  /* スピナーSVG（アニメーション付き） */
   const spinner = (
     <svg
       className={`animate-spin ${sizeClass} text-blue-600 dark:text-blue-400`}
@@ -77,7 +77,7 @@ export function LoadingSpinner({
     </svg>
   );
 
-  {/* スピナーとメッセージのコンテナ */}
+  /* スピナーとメッセージのコンテナ */
   const content = (
     <div className="flex flex-col items-center justify-center gap-2">
       {spinner}
@@ -88,7 +88,7 @@ export function LoadingSpinner({
     </div>
   );
 
-  {/* フルスクリーンモード（オーバーレイ表示） */}
+  /* フルスクリーンモード（オーバーレイ表示） */
   if (fullScreen) {
     /* フルスクリーンオーバーレイコンテナ */
     return (
@@ -98,7 +98,7 @@ export function LoadingSpinner({
     );
   }
 
-  {/* インラインモード（通常表示） */}
+  /* インラインモード（通常表示） */
   return <div className="flex items-center justify-center p-5">{content}</div>;
 }
 

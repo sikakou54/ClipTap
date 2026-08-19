@@ -4,7 +4,6 @@
  * キーボード拡張機能の設定方法を4ステップで案内。
  * iOS/Androidそれぞれに対応したガイドテキストを表示。
  */
-import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Platform } from 'react-native';
 import { useTranslation } from '@cliptap/shared';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,8 +38,8 @@ export function KeyboardGuideModal({ visible, onClose }: KeyboardGuideModalProps
       onRequestClose={onClose}
     >
       {/* モーダルオーバーレイ（背景暗転） */}
-      <View style={styles.modalOverlay}>
-        {/* モーダルコンテンツ（白背景のカード） */}
+      <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
+        {/* モーダルコンテンツ（背景色はテーマのsurfaceを適用） */}
         <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
           {/* ヘッダー: アイコンとタイトル */}
           <View style={styles.modalHeader}>
@@ -60,7 +59,7 @@ export function KeyboardGuideModal({ visible, onClose }: KeyboardGuideModalProps
               <View key={step} style={styles.guideStep}>
                 {/* ステップ番号（円形バッジ） */}
                 <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.stepNumberText}>{step}</Text>
+                  <Text style={[styles.stepNumberText, { color: colors.onPrimary }]}>{step}</Text>
                 </View>
                 {/* ステップ説明テキスト（iOS/Android別） */}
                 <Text style={[styles.stepText, { color: colors.text, fontSize: responsiveFontSizes.base }]}>
@@ -73,6 +72,18 @@ export function KeyboardGuideModal({ visible, onClose }: KeyboardGuideModalProps
             ))}
           </View>
 
+          {/* フルアクセスの補足（iOSのみ） */}
+          {/* キーボードからの挿入回数を記録するにはフルアクセスが必要だが、
+              未許可でもキーボード自体は使えることを明示する */}
+          {Platform.OS === 'ios' && (
+            <View style={[styles.noteBox, { backgroundColor: colors.background }]}>
+              <Ionicons name="information-circle-outline" size={18} color={colors.textSecondary} />
+              <Text style={[styles.noteText, { color: colors.textSecondary, fontSize: responsiveFontSizes.sm }]}>
+                {t('subscription.keyboard_guide_full_access_note')}
+              </Text>
+            </View>
+          )}
+
           {/* ボタンエリア */}
           <View style={styles.modalButtons}>
             {/* OKボタン（閉じる） */}
@@ -80,7 +91,7 @@ export function KeyboardGuideModal({ visible, onClose }: KeyboardGuideModalProps
               style={[styles.modalButton, { backgroundColor: colors.primary }]}
               onPress={onClose}
             >
-              <Text style={[styles.modalButtonText, { fontSize: responsiveFontSizes.base }]}>
+              <Text style={[styles.modalButtonText, { color: colors.onPrimary, fontSize: responsiveFontSizes.base }]}>
                 {t('common.ok')}
               </Text>
             </TouchableOpacity>
@@ -95,24 +106,23 @@ export function KeyboardGuideModal({ visible, onClose }: KeyboardGuideModalProps
    スタイル定義
    ======================================== */
 const styles = StyleSheet.create({
-  /** モーダルオーバーレイ（背景暗転レイヤー） */
+  /** モーダルオーバーレイ（背景暗転レイヤー。背景色は使用箇所でテーマの overlay を重ねる） */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // 半透明黒背景
-    justifyContent: 'center', // 縦方向中央揃え
-    alignItems: 'center', // 横方向中央揃え
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
-  /** モーダルコンテンツ（白背景のカード） */
+  /** モーダルコンテンツ（背景色は使用箇所でテーマのsurfaceを重ねる） */
   modalContent: {
     width: '100%',
-    maxWidth: 400, // 最大幅400px（大画面対応）
+    maxWidth: 400,
     borderRadius: 16,
     padding: 24,
   },
   /** モーダルヘッダー（アイコン+タイトル） */
   modalHeader: {
-    alignItems: 'center', // 中央揃え
+    alignItems: 'center',
     marginBottom: 24,
     gap: 12,
   },
@@ -123,33 +133,46 @@ const styles = StyleSheet.create({
   },
   /** ガイドステップリストコンテナ */
   guideSteps: {
-    gap: 16, // 各ステップ間の余白
+    gap: 16,
     marginBottom: 24,
   },
   /** 個別ガイドステップ（番号+テキスト） */
   guideStep: {
-    flexDirection: 'row', // 横並び
+    flexDirection: 'row',
     gap: 12,
-    alignItems: 'flex-start', // 上揃え
+    alignItems: 'flex-start',
   },
   /** ステップ番号バッジ（円形） */
   stepNumber: {
     width: 32,
     height: 32,
-    borderRadius: 16, // 完全な円形
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  /** ステップ番号テキスト */
+  /** ステップ番号テキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   stepNumberText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
   /** ステップ説明テキスト */
   stepText: {
-    flex: 1, // 残りスペースを使用
+    flex: 1,
     lineHeight: 24,
+  },
+  /** フルアクセス補足ボックス（iOSのみ表示） */
+  noteBox: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'flex-start',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 24,
+  },
+  /** フルアクセス補足テキスト */
+  noteText: {
+    flex: 1,
+    lineHeight: 20,
   },
   /** ボタンエリア */
   modalButtons: {
@@ -161,9 +184,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
-  /** ボタンテキスト */
+  /** ボタンテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   modalButtonText: {
-    color: '#FFFFFF',
     fontWeight: '600',
   },
 });

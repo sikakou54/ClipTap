@@ -21,7 +21,7 @@ import type {
 
 import { SUBSCRIPTION_API_BASE_URL } from '@constants/subscription';
 import { auth } from '@services/FirebaseService';
-import { Logger } from '@cliptap/shared';
+import { Logger, SubscriptionStatusSchema } from '@cliptap/shared';
 
 /**
  * 無料プラン（未契約）を示す既定のサブスクリプション状態
@@ -39,25 +39,29 @@ const FREE_STATUS: SubscriptionStatus = {
  * Web用サブスクリプションアダプター実装クラス
  * ClipTap API経由でProプランの購読状態を管理する
  */
-class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
+export class WebSubscriptionAdapter implements SubscriptionAdapter {
   /** 購読状態（Pro会員かどうか） */
   private _isSubscribed: boolean = false;
   /** ローディング中かどうか（サブスクリプション確認中） */
   private _isLoading: boolean = false;
-  /** 現在のユーザーID（RevenueCatのApp User IDに相当） */
+  /** checkSubscription() に渡された Firebase UID。getCustomerId() 経由でIndexedDBキャッシュのcustomerIdにも使う */
   private currentAppUserId: string | null = null;
   /** 購読状態の変更を監視するリスナーのセット */
   private listeners: Set<SubscriptionListener> = new Set();
 
   /** 最新のサブスクリプション状態（キャッシュ） */
   private _status: SubscriptionStatus = FREE_STATUS;
+  private verificationFailed = false;
+
+  hasVerificationFailed(): boolean {
+    return this.verificationFailed;
+  }
 
   /**
    * 購読状態を取得
    * @returns Pro会員の場合はtrue、無料会員の場合はfalse
    */
   isSubscribed(): boolean {
-    /* 現在の購読状態を返す */
     return this._isSubscribed;
   }
 
@@ -66,7 +70,6 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
    * @returns サブスクリプション確認中の場合はtrue、それ以外はfalse
    */
   isLoading(): boolean {
-    /* 現在のローディング状態を返す */
     return this._isLoading;
   }
 
@@ -75,7 +78,6 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
    * @returns ユーザーID、またはログアウト状態の場合はnull
    */
   getCustomerId(): string | null {
-    /* 現在のユーザーIDを返す */
     return this.currentAppUserId;
   }
 
@@ -89,6 +91,7 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
     /* 1. ユーザーIDが存在しない（ログアウト状態）場合 */
     if (!userId) {
       /* 状態をリセットして通知 */
+      this.verificationFailed = false;
       this.reset();
       return false;
     }
@@ -96,7 +99,8 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
     /* 2. APIベースURLが設定されていない場合 */
     if (!SUBSCRIPTION_API_BASE_URL) {
       Logger.warn('[WebSubscriptionAdapter] API base URL is not configured, treating as free user');
-      this.reset();
+      this.verificationFailed = true;
+      this.reset(false);
       return false;
     }
 
@@ -111,7 +115,8 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
       /* トークンが取得できない場合は無料ユーザーとして扱う */
       if (!idToken) {
         Logger.warn('[WebSubscriptionAdapter] ID token is unavailable, treating as free user');
-        this.reset();
+        this.verificationFailed = true;
+        this.reset(false);
         return false;
       }
 
@@ -126,12 +131,21 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
       /* レスポンスが正常でない場合は無料ユーザーとして扱う */
       if (!response.ok) {
         Logger.warn('[WebSubscriptionAdapter] API returned an error status:', response.status);
-        this.reset();
+        this.verificationFailed = true;
+        this.reset(false);
         return false;
       }
 
-      /* 6. サブスクリプション状態を取得（Proプランの判定はWorker側で完了している） */
-      const status = await response.json() as SubscriptionStatus;
+      /* 6. サブスクリプション状態を取得（Proプランの判定はWorker側で完了している）。
+            HTTP 200でも所定の形状を満たさない応答は、他の異常経路と同じく権利検証失敗として扱う */
+      const parsed = SubscriptionStatusSchema.safeParse(await response.json());
+      if (!parsed.success) {
+        Logger.warn('[WebSubscriptionAdapter] API returned an unexpected payload shape');
+        this.verificationFailed = true;
+        this.reset(false);
+        return false;
+      }
+      const status = parsed.data;
 
       Logger.debug('[WebSubscriptionAdapter] Subscription check result:', {
         userId,
@@ -141,6 +155,7 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
 
       /* 7. 状態を更新 */
       this._status = status;
+      this.verificationFailed = false;
       this._isSubscribed = status.isSubscribed;
       this._isLoading = false;
 
@@ -150,8 +165,9 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
       return status.isSubscribed;
     } catch (error) {
       Logger.error('[WebSubscriptionAdapter] Failed to verify subscription:', error);
+      this.verificationFailed = true;
       /* 安全のため、エラー時は無料ユーザーとして扱う */
-      this.reset();
+      this.reset(false);
       return false;
     }
   }
@@ -163,11 +179,8 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
    * @returns リスナーを解除する関数
    */
   subscribe(listener: SubscriptionListener): () => void {
-    /* リスナーをセットに追加 */
     this.listeners.add(listener);
-    /* リスナーを解除する関数を返す */
     return () => {
-      /* リスナーをセットから削除 */
       this.listeners.delete(listener);
     };
   }
@@ -177,22 +190,26 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
    * 登録されているすべてのリスナーに現在の購読状態を通知する
    */
   notifyListeners(): void {
-    /* すべてのリスナーに対して現在の購読状態を渡して呼び出す */
     this.listeners.forEach((listener) => listener(this._isSubscribed));
   }
 
   /**
    * 状態をリセット
    * ログアウト時などに呼び出され、購読状態を初期化する
+   *
+   * @param notify - リスナーへ通知するかどうか
+   *
+   * @remarks
+   * notify=false で呼ぶのは検証失敗の経路（APIベースURL未設定・IDトークン取得不可・
+   * APIエラー応答・通信例外）だけで、失敗は hasVerificationFailed() 経由で
+   * SubscriptionProvider が扱う。正常なログアウト（userIdなしでのcheckSubscription）は
+   * notify=true で通知する。
    */
-  reset(): void {
-    /* 購読状態を無料プランに戻す */
+  reset(notify = true): void {
     this._isSubscribed = false;
     this._status = FREE_STATUS;
-    /* ローディング状態をfalseに設定 */
     this._isLoading = false;
-    /* リスナーに通知 */
-    this.notifyListeners();
+    if (notify) this.notifyListeners();
   }
 
   /* ======================================== */
@@ -236,8 +253,3 @@ class WebSubscriptionAdapterImpl implements SubscriptionAdapter {
     return this.getStatus();
   }
 }
-
-/**
- * WebSubscriptionAdapterクラスを再エクスポート
- */
-export { WebSubscriptionAdapterImpl as WebSubscriptionAdapter };

@@ -12,7 +12,7 @@
  * @limits
  * - 無料プラン: 最大5つまで（超過分はvalid=0で無効化）
  *
- * @see lib/hooks/screens/useVariablesScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useVariablesScreen.ts - ビジネスロジック
  */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
@@ -21,7 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
 import { useVariablesScreen } from '@hooks/screens/useVariablesScreen';
 import { Profile } from '@cliptap/shared';
-import { Header } from '@components/common/Header';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { commonStyles, listStyles } from '@lib/styles/commonStyles';
 import { UI_CONSTANTS } from '@constants/ui';
 
@@ -43,18 +43,15 @@ export default function VariablesScreen() {
 
   /* カスタム変数管理画面 */
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      {/* ヘッダー（タイトルと追加ボタン） */}
-      <Header
-        title={t('settings.variables')}
-        backIcon="arrow-back"
-        rightAction={
-          <TouchableOpacity onPress={handleAdd} style={commonStyles.addButton}>
-            <Ionicons name="add" size={28} color={colors.primary} />
-          </TouchableOpacity>
-        }
-      />
-
+    <ScreenContainer
+      title={t('settings.variables')}
+      backIcon="arrow-back"
+      rightAction={
+        <TouchableOpacity onPress={handleAdd} style={commonStyles.addButton}>
+          <Ionicons name="add" size={28} color={colors.primary} />
+        </TouchableOpacity>
+      }
+    >
       {/* 空状態または変数一覧 */}
       {variables.length === 0 ? (
         /* 空状態（変数がない場合） */
@@ -71,7 +68,7 @@ export default function VariablesScreen() {
         <View style={{ flex: 1 }}>
           {/* プロファイルフィルター（複数プロファイルがある場合のみ表示） */}
           {profiles.length > 0 && (
-            <View style={[styles.filterSection, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+            <View style={[styles.filterSection, { backgroundColor: colors.background }]}>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -93,7 +90,7 @@ export default function VariablesScreen() {
                       <Text style={[
                         styles.filterChipText,
                         {
-                          color: isSelected ? '#FFFFFF' : colors.textSecondary,
+                          color: isSelected ? colors.onPrimary : colors.textSecondary,
                           fontSize: responsiveFontSizes.sm
                         }
                       ]}>
@@ -112,6 +109,8 @@ export default function VariablesScreen() {
               {variables.map((variable, index) => {
                 const enabled = isVariableEnabled(variable);
                 const value = getVariableValue(variable);
+                /* 未設定はnullで表される。値として「未設定」という文字列を登録した変数と区別するため、表示文字列では判定しない */
+                const isNotSet = value === null;
 
                 return (
                   <React.Fragment key={variable.id}>
@@ -157,14 +156,14 @@ export default function VariablesScreen() {
                             style={[
                               styles.valueText,
                               {
-                                color: value === t('common.not_set') ? colors.textSecondary + '80' : colors.textSecondary,
+                                color: isNotSet ? colors.textSecondary + '80' : colors.textSecondary,
                                 fontSize: responsiveFontSizes.sm,
-                                fontStyle: value === t('common.not_set') ? 'italic' : 'normal'
+                                fontStyle: isNotSet ? 'italic' : 'normal'
                               }
                             ]}
                             numberOfLines={UI_CONSTANTS.NUMBER_OF_LINES.DOUBLE}
                           >
-                            {value}
+                            {value ?? t('common.not_set')}
                           </Text>
                         </View>
                       </View>
@@ -190,7 +189,7 @@ export default function VariablesScreen() {
           </ScrollView>
         </View>
       )}
-    </View>
+    </ScreenContainer>
   );
 }
 
@@ -228,9 +227,6 @@ const styles = StyleSheet.create({
     borderRadius: UI_CONSTANTS.BORDER_RADIUS.XL,
     borderWidth: UI_CONSTANTS.BORDER_WIDTH.THIN,
     gap: UI_CONSTANTS.GAP.XS,
-  },
-  filterChipIcon: {
-    fontSize: UI_CONSTANTS.ICON_SIZE.XS,
   },
   filterChipText: {
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,

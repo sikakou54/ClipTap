@@ -13,11 +13,19 @@
  * - 認証連携（Firebase UID ↔ RevenueCat）
  *
  * アーキテクチャ:
- * - Adapterパターンで依存を注入（Mobile: RevenueCat, Web: NoOp）
+ * - Adapterパターンで依存を注入（Mobile: RevenueCat SDK, Web: ClipTap API経由のWebSubscriptionAdapter）
  * - ValidFlagsUpdaterでMapper操作を抽象化（shared→app依存を回避）
+ * - アダプター本体と無料プラン上限の保持先はadapters/AdapterRegistry.tsで、
+ *   本サービスはそこから読み出す（services→adaptersの一方向依存）
  */
 
+import { Logger } from '../utils/logger';
 import type { SubscriptionAdapter, SubscriptionListener } from '../adapters/SubscriptionAdapter';
+import {
+  setSubscriptionAdapter,
+  getRegisteredSubscriptionAdapter,
+  getRegisteredSubscriptionLimits,
+} from '../adapters/AdapterRegistry';
 import type { SubscriptionPlan, SubscriptionStatus, PurchaseResult } from '../types/Subscription';
 import type { Profile } from '../schema';
 
@@ -25,6 +33,17 @@ import type { Profile } from '../schema';
 export const FREE_PROFILES_LIMIT = 3;
 /** 無料プランで使用可能な変数数 */
 export const FREE_VARIABLES_LIMIT = 5;
+
+/**
+ * 上限なしを表す番兵値。
+ *
+ * @remarks
+ * Proプランでも updateValidFlags をスキップしてはならない。ProfileMapper.updateValidFlags /
+ * VariableMapper.updateValidFlags は RESET_VALID で全件を valid=0 にしてから
+ * SET_VALID_BY_LIMIT で上限件数だけ valid=1 に戻す実装のため、Pro加入・購入復元の直後に
+ * 「無料プラン上限で無効化されていた項目」を全件有効へ戻すには、この巨大な上限で更新を実行する必要がある。
+ */
+const UNLIMITED_LIMIT = 999999;
 
 /**
  * validフラグ更新用のコールバックインターフェース
@@ -60,14 +79,26 @@ export interface ValidFlagsUpdater {
  * Adapterパターンでプラットフォーム固有の実装を注入。
  */
 export class SubscriptionService {
-  /** プラットフォーム固有のアダプター */
-  private static adapter: SubscriptionAdapter | null = null;
-  /** 無料プランのプロファイル上限 */
-  private static freeProfilesLimit = FREE_PROFILES_LIMIT;
-  /** 無料プランの変数上限 */
-  private static freeVariablesLimit = FREE_VARIABLES_LIMIT;
   /** validフラグ更新用コールバック */
   private static validFlagsUpdater: ValidFlagsUpdater | null = null;
+
+  /**
+   * 無料プランのプロファイル上限
+   *
+   * @remarks 登録時に指定が無ければFREE_PROFILES_LIMITを使う。
+   */
+  private static get freeProfilesLimit(): number {
+    return getRegisteredSubscriptionLimits().freeProfilesLimit ?? FREE_PROFILES_LIMIT;
+  }
+
+  /**
+   * 無料プランの変数上限
+   *
+   * @remarks 登録時に指定が無ければFREE_VARIABLES_LIMITを使う。
+   */
+  private static get freeVariablesLimit(): number {
+    return getRegisteredSubscriptionLimits().freeVariablesLimit ?? FREE_VARIABLES_LIMIT;
+  }
 
   /**
    * サブスクリプションアダプターを設定
@@ -75,20 +106,18 @@ export class SubscriptionService {
    * @param adapter - プラットフォーム固有のアダプター
    * @param options - オプション（制限値のオーバーライド）
    * @remarks
-   * アプリ起動時に一度だけ呼び出す。
-   * Mobile: MobileSubscriptionAdapter, Web: NoOp実装を注入。
+   * 本番の登録経路はこのメソッドではない。Mobile/Webとも起動時に init()（shared/init.ts）へ
+   * アダプター群を渡し、init() が setAllAdapters() 経由で setSubscriptionAdapter() を呼ぶ。
+   * 注入される実装は Mobile: MobileSubscriptionAdapter、Web: WebSubscriptionAdapter。
+   * このメソッドは同じ setSubscriptionAdapter() への単体差し替え口で、
+   * 現在の呼び出し元は packages/shared/tests 配下のみ。
+   * いずれの経路でも実体の保持はadapters/AdapterRegistry.tsが行う。
    */
   static setAdapter(
     adapter: SubscriptionAdapter,
     options?: { freeProfilesLimit?: number; freeVariablesLimit?: number }
   ): void {
-    this.adapter = adapter;
-    if (options?.freeProfilesLimit !== undefined) {
-      this.freeProfilesLimit = options.freeProfilesLimit;
-    }
-    if (options?.freeVariablesLimit !== undefined) {
-      this.freeVariablesLimit = options.freeVariablesLimit;
-    }
+    setSubscriptionAdapter(adapter, options);
   }
 
   /**
@@ -101,25 +130,17 @@ export class SubscriptionService {
   }
 
   /**
-   * validFlagsUpdater が設定済みか確認
-   *
-   * @returns 設定済みの場合true
-   */
-  static hasValidFlagsUpdater(): boolean {
-    return this.validFlagsUpdater !== null;
-  }
-
-  /**
    * アダプターが設定済みか確認
    *
    * @returns SubscriptionAdapter
    * @throws {Error} アダプター未設定の場合
    */
   private static ensureAdapter(): SubscriptionAdapter {
-    if (!this.adapter) {
+    const adapter = getRegisteredSubscriptionAdapter();
+    if (!adapter) {
       throw new Error('SubscriptionAdapter not set. Call setAdapter() first.');
     }
-    return this.adapter;
+    return adapter;
   }
 
   /**
@@ -130,7 +151,7 @@ export class SubscriptionService {
    * Mobile: プラットフォーム固有のコールバック設定などに使用
    */
   static getAdapter(): SubscriptionAdapter | null {
-    return this.adapter;
+    return getRegisteredSubscriptionAdapter();
   }
 
   /**
@@ -139,7 +160,7 @@ export class SubscriptionService {
    * @returns Pro版に加入している場合true
    */
   static isSubscribed(): boolean {
-    return this.adapter?.isSubscribed() ?? false;
+    return getRegisteredSubscriptionAdapter()?.isSubscribed() ?? false;
   }
 
   /**
@@ -148,7 +169,7 @@ export class SubscriptionService {
    * @returns 初期化中の場合true
    */
   static isLoading(): boolean {
-    return this.adapter?.isLoading() ?? false;
+    return getRegisteredSubscriptionAdapter()?.isLoading() ?? false;
   }
 
   /**
@@ -193,54 +214,6 @@ export class SubscriptionService {
     return this.isSubscribed() || currentCount < this.freeProfilesLimit;
   }
 
-  /**
-   * 無効（使用不可）なアイテム数を計算
-   *
-   * @param totalCount - 総アイテム数
-   * @param limit - 上限数
-   * @returns 上限を超えたアイテム数
-   */
-  private static getInvalidCount(totalCount: number, limit: number): number {
-    return this.isSubscribed() ? 0 : Math.max(0, totalCount - limit);
-  }
-
-  /**
-   * 無効な変数数を取得
-   *
-   * @param totalCount - 総変数数
-   * @returns 無効な変数数（無料版で上限超過分）
-   */
-  static getInvalidVariablesCount(totalCount: number): number {
-    return this.getInvalidCount(totalCount, this.freeVariablesLimit);
-  }
-
-  /**
-   * 無効なプロファイル数を取得
-   *
-   * @param totalCount - 総プロファイル数
-   * @returns 無効なプロファイル数（無料版で上限超過分）
-   */
-  static getInvalidProfilesCount(totalCount: number): number {
-    return this.getInvalidCount(totalCount, this.freeProfilesLimit);
-  }
-
-  /**
-   * 無料プランのプロファイル上限を取得
-   *
-   * @returns プロファイル上限数
-   */
-  static getFreeProfilesLimit(): number {
-    return this.freeProfilesLimit;
-  }
-
-  /**
-   * 無料プランの変数上限を取得
-   *
-   * @returns 変数上限数
-   */
-  static getFreeVariablesLimit(): number {
-    return this.freeVariablesLimit;
-  }
 
   /**
    * validフラグを更新
@@ -249,19 +222,22 @@ export class SubscriptionService {
    * サブスク状態に応じてProfile/Variableのvalidフラグを更新。
    * 無料版では上限を超えたアイテムをinvalidにする。
    * アクティブプロファイルが無効になった場合、デフォルトに自動切り替え。
+   *
+   * @returns 更新を実行できたか。現在の呼び出し元8箇所はいずれも戻り値を見ていないが、
+   *          共有パッケージの公開APIのため型は変えずに維持している。
+   *          失敗は警告としてログに残す。
    */
-  static updateValidFlags(): void {
+  static updateValidFlags(): boolean {
     if (!this.validFlagsUpdater?.hasDbAdapter()) {
-      return;
+      return false;
     }
 
     try {
       const activeProfile = this.validFlagsUpdater.getActiveProfile();
       const subscribed = this.isSubscribed();
 
-      /* Pro版は実質無制限（999999）、無料版は定数制限 */
-      const limit = subscribed ? 999999 : this.freeProfilesLimit;
-      const varLimit = subscribed ? 999999 : this.freeVariablesLimit;
+      const limit = subscribed ? UNLIMITED_LIMIT : this.freeProfilesLimit;
+      const varLimit = subscribed ? UNLIMITED_LIMIT : this.freeVariablesLimit;
 
       /* created_at順でソート後、limit番目以降のアイテムのvalidフラグをfalseに設定 */
       this.validFlagsUpdater.updateProfileValidFlags(limit);
@@ -277,9 +253,13 @@ export class SubscriptionService {
           }
         }
       }
-
-    } catch {
-      /* 起動直後などDB未初期化時の正常エラーのため、ログ出力なし */
+      return true;
+    } catch (error) {
+      /* 有効フラグの再計算に失敗してもローカル業務機能は続行させる。
+         ここで例外を上げると、プロファイル削除・標準切替・インポートのトランザクションを
+         巻き込んで中断してしまうため再スローしない。原因追跡のため警告だけ残す。 */
+      Logger.warn('[SubscriptionService] Failed to update valid flags. Continuing without recalculation.', error);
+      return false;
     }
   }
 
@@ -289,21 +269,21 @@ export class SubscriptionService {
    * @param userId - Firebase UID
    */
   static async linkAccount(userId: string): Promise<void> {
-    await this.adapter?.linkAccount?.(userId);
+    await getRegisteredSubscriptionAdapter()?.linkAccount?.(userId);
   }
 
   /**
    * RevenueCatからログアウト
    */
   static async logout(): Promise<void> {
-    await this.adapter?.logout?.();
+    await getRegisteredSubscriptionAdapter()?.logout?.();
   }
 
   /**
    * CustomerInfo（顧客情報）を最新化
    */
   static async refreshCustomerInfo(): Promise<void> {
-    await this.adapter?.refreshCustomerInfo?.();
+    await getRegisteredSubscriptionAdapter()?.refreshCustomerInfo?.();
   }
 
   /**
@@ -312,7 +292,7 @@ export class SubscriptionService {
    * @remarks テスト用。状態を初期化する。
    */
   static reset(): void {
-    this.adapter?.reset?.();
+    getRegisteredSubscriptionAdapter()?.reset?.();
   }
 
   /* ======================================== */
@@ -325,7 +305,7 @@ export class SubscriptionService {
    * @returns サブスクリプションステータス、未実装時はnull
    */
   static async getStatus(): Promise<SubscriptionStatus | null> {
-    return this.adapter?.getStatus?.() ?? null;
+    return getRegisteredSubscriptionAdapter()?.getStatus?.() ?? null;
   }
 
   /**
@@ -334,7 +314,7 @@ export class SubscriptionService {
    * @returns プラン一覧、未実装時は空配列
    */
   static async getPlans(): Promise<SubscriptionPlan[]> {
-    return this.adapter?.getPlans?.() ?? [];
+    return getRegisteredSubscriptionAdapter()?.getPlans?.() ?? [];
   }
 
   /**

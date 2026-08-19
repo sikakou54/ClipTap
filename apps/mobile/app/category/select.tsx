@@ -10,12 +10,11 @@
  * - 新規カテゴリ作成への導線
  * - 現在選択中のカテゴリのハイライト表示
  *
- * @see lib/hooks/screens/useCategorySelectScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useCategorySelectScreen.ts - ビジネスロジック
  */
 
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, ListRenderItem } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from '@cliptap/shared'
 import { Ionicons } from '@expo/vector-icons';
@@ -23,8 +22,7 @@ import {
   useCategorySelectScreen,
   CategoryOption,
 } from '@hooks/screens/useCategorySelectScreen';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 
 export default function CategorySelectModal() {
   const { t } = useTranslation();
@@ -90,20 +88,14 @@ export default function CategorySelectModal() {
 
   /* カテゴリ選択モーダル */
   return (
-    <SafeAreaView
-      style={[commonStyles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}
-    >
-      {/* ヘッダー */}
-      <Header title={t('category.select')} isModal />
-
+    <ScreenContainer title={t('category.select')} isModal>
       {/* カテゴリ一覧（FlatList） */}
       <FlatList
         data={options}
         keyExtractor={(item) => item.id || 'uncategorized'}
         renderItem={renderItem}
       />
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 

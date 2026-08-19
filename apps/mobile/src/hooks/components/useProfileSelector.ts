@@ -14,7 +14,8 @@
 
 import { useState, useCallback } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { useProfiles, Profile } from '@cliptap/shared';
+import { useProfiles, useTranslation, Logger, Profile } from '@cliptap/shared';
+import { showErrorAlert } from '@utils/alerts';
 
 /**
  * useProfileSelectorのProps
@@ -35,7 +36,7 @@ export interface UseProfileSelectorReturn {
   showModal: boolean;
 
   /* ハンドラ */
-  handleSelectProfile: (profile: Profile) => Promise<void>;
+  handleSelectProfile: (profile: Profile) => void;
   openModal: () => void;
   closeModal: () => void;
   keyExtractor: (item: Profile) => string;
@@ -50,7 +51,10 @@ export interface UseProfileSelectorReturn {
 export function useProfileSelector({
   onProfileChange,
 }: UseProfileSelectorProps): UseProfileSelectorReturn {
-  const { profiles, activeProfile, setActiveProfile, loading, refresh } = useProfiles();
+  const { t } = useTranslation();
+
+  /* 切替候補は有効なプロファイルだけとする（無効なものはプロファイル管理画面で扱う） */
+  const { validProfiles: profiles, activeProfile, setActiveProfile, loading, refresh } = useProfiles();
 
   const [showModal, setShowModal] = useState(false);
 
@@ -66,20 +70,26 @@ export function useProfileSelector({
   /**
    * プロファイル選択時の処理
    */
-  const handleSelectProfile = useCallback(async (profile: Profile) => {
+  const handleSelectProfile = useCallback((profile: Profile) => {
+    /* 既に選択中の環境をタップした場合はDB更新も再読込も行わず、モーダルを閉じるだけにする（無駄な setActive とContext再読込を避ける）。 */
     if (activeProfile?.id === profile.id) {
       setShowModal(false);
       return;
     }
 
     try {
-      await setActiveProfile(profile.id);
+      setActiveProfile(profile.id);
       setShowModal(false);
       onProfileChange?.();
     } catch (error) {
-      /* エラーは無視 */
+      /* 切替に失敗した場合もモーダルを閉じてエラーを通知する。開いたままにすると
+         利用者には「タップしても何も起きない」ようにしか見えないため。
+         切替が成立していないので onProfileChange は呼ばない */
+      Logger.error('[useProfileSelector] Failed to set active profile:', error);
+      setShowModal(false);
+      showErrorAlert(t('error.generic'));
     }
-  }, [activeProfile?.id, setActiveProfile, onProfileChange]);
+  }, [activeProfile?.id, setActiveProfile, onProfileChange, t]);
 
   /**
    * モーダルを開く

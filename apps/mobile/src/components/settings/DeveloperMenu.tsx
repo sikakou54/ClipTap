@@ -2,20 +2,21 @@
  * 開発者メニュー
  *
  * 開発モード（__DEV__）でのみ表示されるデバッグ機能メニュー。
- * サブスクリプション状態テスト、DBリセット、完全削除、スキーマバージョン変更の4機能を提供。
+ * サブスクリプション状態の上書きとDBリセットの2機能を提供。
+ *
+ * 開発者専用メニューのため、表示文言は英語固定とし i18n キーを持たない。
+ * app/settings/index.tsx の __DEV__ 判定配下でのみ描画されるため、
+ * リリースビルドの利用者には表示されない。
  */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
-import { SCHEMA_VERSION } from '@database/schema';
 import { UI_CONSTANTS } from '@constants/ui';
 
 interface DeveloperMenuProps {
   onSubscriptionToggle: () => void;
   onResetDatabase: () => void;
-  onDeleteDatabase: () => void;
-  onChangeSchemaVersion: () => void;
 }
 
 interface MenuItemProps {
@@ -60,8 +61,6 @@ function DevMenuItem({ icon, iconColor, title, description, onPress }: MenuItemP
 export function DeveloperMenu({
   onSubscriptionToggle,
   onResetDatabase,
-  onDeleteDatabase,
-  onChangeSchemaVersion,
 }: DeveloperMenuProps) {
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
 
@@ -77,26 +76,10 @@ export function DeveloperMenu({
     {
       id: 'reset',
       icon: 'refresh-outline' as const,
-      iconColor: colors.error || '#FF6B6B',
+      iconColor: colors.error,
       title: 'Reset Database',
-      description: 'Delete all data and runSeed test data',
+      description: 'Delete all data and seed test data',
       onPress: onResetDatabase,
-    },
-    {
-      id: 'delete',
-      icon: 'trash-outline' as const,
-      iconColor: colors.error || '#FF6B6B',
-      title: 'Delete Database File',
-      description: 'Completely delete database file and recreate',
-      onPress: onDeleteDatabase,
-    },
-    {
-      id: 'schema',
-      icon: 'git-branch-outline' as const,
-      iconColor: colors.text,
-      title: 'Change Schema Version',
-      description: `Test database migrations (Current: ${SCHEMA_VERSION})`,
-      onPress: onChangeSchemaVersion,
     },
   ];
 
@@ -143,27 +126,27 @@ const styles = StyleSheet.create({
     fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,
     marginBottom: UI_CONSTANTS.GAP.MD,
     marginLeft: UI_CONSTANTS.GAP.XS,
-    textTransform: 'uppercase', // 大文字変換
+    textTransform: 'uppercase',
   },
   /** メニューグループ（カード） */
   menuGroup: {
     borderRadius: UI_CONSTANTS.BORDER_RADIUS.LG,
     borderWidth: UI_CONSTANTS.BORDER_WIDTH.THIN,
-    overflow: 'hidden', // 角丸を適用
+    overflow: 'hidden',
   },
   /** メニュー項目1行 */
   menuItem: {
-    flexDirection: 'row', // 横並び（左: アイコン+テキスト、右: 矢印）
-    justifyContent: 'space-between', // 両端揃え
-    alignItems: 'center', // 縦方向中央揃え
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: UI_CONSTANTS.GAP.LG,
   },
   /** 左側エリア（アイコン+テキスト） */
   menuLeft: {
-    flexDirection: 'row', // 横並び
+    flexDirection: 'row',
     alignItems: 'center',
     gap: UI_CONSTANTS.GAP.BASE,
-    flex: 1, // 残りスペースを使用
+    flex: 1,
   },
   /** 区切り線 */
   separator: {

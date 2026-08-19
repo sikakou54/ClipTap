@@ -8,6 +8,7 @@
  */
 import { useTranslation } from '@cliptap/shared';
 import { INPUT_LIMITS } from '@cliptap/shared';
+import { useEscapeClose } from '@hooks/useEscapeClose';
 import { CategoryColorSelector } from './CategoryColorSelector';
 
 interface CategoryModalProps {
@@ -66,6 +67,9 @@ export function CategoryModal({
   onSubmit,
 }: CategoryModalProps) {
   const { t } = useTranslation();
+
+  /* onClose は未保存確認付きのハンドラ（useCategoriesScreen.handleCloseModal）なので、ESCでも警告が出る */
+  useEscapeClose(isOpen, onClose);
 
   if (!isOpen) return null;
 

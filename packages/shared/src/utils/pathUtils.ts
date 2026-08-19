@@ -1,11 +1,23 @@
 /**
+ * @module pathUtils
+ * @description
+ * Node の `path` モジュールは React Native・ブラウザランタイムでは利用できないため、
+ * '/' 区切りを前提とした最小実装だけを置く。
+ * リポジトリ内で `path` を import しているのはビルド設定（apps/web/vite.config.ts /
+ * apps/mobile/metro.config.js）・生成スクリプト・Nodeで動くテストだけで、
+ * アプリ実行コードでは一切使っていない。
+ */
+
+/**
  * パスからファイル名を抽出（最後の'/'以降）
  *
  * @param path - ファイルパス
  * @returns ファイル名
+ *
+ * @remarks
+ * String.split('/') は必ず1要素以上を返すため、pop() の non-null 断定が成立する。
  */
 export const getFileName = (path: string): string => {
-  /* パスを'/'で分割し、最後の要素（ファイル名）を取得 */
   return path.split('/').pop()!;
 };
 
@@ -16,16 +28,21 @@ export const getFileName = (path: string): string => {
  * @returns ディレクトリパス
  */
 export const getDirectoryPath = (path: string): string => {
-  /* 最後の'/'より前の部分（ディレクトリパス）を取得 */
   return path.substring(0, path.lastIndexOf('/'));
 };
 
 /* ======================================== */
-/* OPFSパス関連ヘルパー（Web用） */
+/* OPFSパス関連ヘルパー（Web用）
+ *
+ * OPFS は Web 版（apps/web/src/adapters/WebDatabaseAdapter.ts ほか）専用だが、
+ * パス文字列の判定・組み立てという同種の責務のためこのモジュールに置く。
+ * Mobile 側（apps/mobile/src/adapters/MobileDatabaseAdapter.ts）は
+ * getFileName / getDirectoryPath のみ使う。
+ */
 /* ======================================== */
 
-/** OPFSパスのプレフィックス */
-export const OPFS_PREFIX = 'opfs://';
+/** OPFSパスのプレフィックス。判定・付与・除去は同ファイル内の関数が担うため外部へは公開しない */
+const OPFS_PREFIX = 'opfs://';
 
 /**
  * パスがOPFSパスかどうかを判定

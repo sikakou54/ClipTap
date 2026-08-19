@@ -16,12 +16,11 @@
  * - UIとビジネスロジックを完全分離
  * - 全ての状態・ロジックはuseSnippetFormScreenフックで管理
  *
- * @see lib/hooks/screens/useSnippetFormScreen.ts - ビジネスロジック
- * @see app/snippet/new.tsx - 新規作成ルート
- * @see app/snippet/[id]/edit.tsx - 編集ルート
+ * @see hooks/screens/useSnippetFormScreen.ts - ビジネスロジック
+ * @see app/snippet/create.tsx - 新規作成ルート
+ * @see app/snippet/edit.tsx - 編集ルート
  */
 
-import React from 'react';
 import {
   View,
   Text,
@@ -36,9 +35,8 @@ import { useTheme } from '@lib/themeSystem';
 import { useSnippetFormScreen } from '@hooks/screens/useSnippetFormScreen';
 import { CategoryBadge } from '@components/category/CategoryBadge';
 import { VariablePreview } from './VariablePreview';
-import { Header } from '@components/common/Header';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { commonStyles, snippetFormStyles } from '@lib/styles/commonStyles';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 /**
  * SnippetFormScreenのProps
@@ -84,33 +82,27 @@ export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
 
   /* スニペット作成・編集フォーム画面 */
   return (
-    <SafeAreaView
-      style={[commonStyles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}
+    <ScreenContainer
+      title={isEditMode ? t('snippet.edit') : t('snippet.create')}
+      isModal={!isTablet}
+      rightAction={
+        <TouchableOpacity
+          onPress={handleSave}
+          style={snippetFormStyles.saveButton}
+          disabled={saving || !canSave}
+        >
+          <Text style={[
+            snippetFormStyles.saveText,
+            {
+              color: (saving || !canSave) ? colors.textSecondary : colors.primary,
+              fontSize: responsiveFontSizes.base,
+            }
+          ]}>
+            {t('common.save')}
+          </Text>
+        </TouchableOpacity>
+      }
     >
-      {/* ヘッダー：タイトルと保存ボタン */}
-      <Header
-        title={isEditMode ? t('snippet.edit') : t('snippet.create')}
-        isModal={!isTablet}
-        rightAction={
-          <TouchableOpacity
-            onPress={handleSave}
-            style={snippetFormStyles.saveButton}
-            disabled={saving || !canSave}
-          >
-            <Text style={[
-              snippetFormStyles.saveText,
-              {
-                color: (saving || !canSave) ? colors.textSecondary : colors.primary,
-                fontSize: responsiveFontSizes.base,
-              }
-            ]}>
-              {t('common.save')}
-            </Text>
-          </TouchableOpacity>
-        }
-      />
-
       {/* スクロール可能なフォームコンテンツ */}
       <ScrollView style={snippetFormStyles.content}>
         {/* タイトル入力セクション */}
@@ -220,6 +212,6 @@ export function SnippetFormScreen({ mode, snippetId }: SnippetFormScreenProps) {
           copyWithTitle={copyWithTitle}
         />
       </ScrollView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }

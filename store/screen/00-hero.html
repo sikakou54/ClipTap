@@ -1,0 +1,44 @@
+<!doctype html>
+<!--
+  スライド 00 — アイキャッチ。
+  LP のヒーロー（apps/web/index.html:180-187 / en:180-187）をそのまま持ち込む。
+  見出し・リード・注記はいずれも逐語。端末も LP のヒーローと同じ2台組
+  （左=ホーム一覧、右=キーボード挿入）で、重なり方も lp.css の .hero-shots に従う。
+  デッキの先頭に置くアイキャッチなので、見出しだけ他の面より大きく組む
+  （lp.css の .hero h1 が .section-title より大きいのと同じ）。
+-->
+<meta charset="utf-8" />
+<template id="slide">
+  <div class="head">
+    <h1 class="ja">
+      <span class="line">何度も打つ文章は、</span>
+      <span class="line accent">もう打たない。</span>
+    </h1>
+    <h1 class="en">
+      <span class="line">Never type the same</span>
+      <span class="line accent">text twice.</span>
+    </h1>
+
+    <p class="sub ja">メール、SNS、チャット。文字を打てるアプリなら、ClipTapのキーボードからいつもの文章をそのまま入力できます。</p>
+    <p class="sub en">Mail, social, chat. If you can type in it, the ClipTap keyboard can drop your usual text straight into it.</p>
+  </div>
+
+  <div class="stage" data-shots="2">
+    <figure class="shot">
+      <div class="phone">
+        <div class="phone-inner">
+          <img src="{{IMG}}/01-hero-left-home.png" width="1170" height="2532" alt="" />
+        </div>
+      </div>
+      <figcaption class="cap"></figcaption>
+    </figure>
+    <figure class="shot">
+      <div class="phone">
+        <div class="phone-inner">
+          <img src="{{IMG}}/01-hero-right-insert.png" width="1170" height="2532" alt="" />
+        </div>
+      </div>
+      <figcaption class="cap"></figcaption>
+    </figure>
+  </div>
+</template>

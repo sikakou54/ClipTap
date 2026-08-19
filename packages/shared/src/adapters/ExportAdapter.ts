@@ -14,17 +14,6 @@
  */
 export interface ExportAdapter {
   /**
-   * データベースファイルのパス（またはBlob URL）を取得
-   *
-   * @returns データベースのパス
-   *
-   * @remarks
-   * - Mobile: ファイルシステム上のSQLiteパス
-   * - Web: メモリDBをBlobにしたURL
-   */
-  getDatabasePath(): Promise<string>;
-
-  /**
    * エクスポートデータをファイルとして保存
    *
    * @param fileName - 保存するファイル名

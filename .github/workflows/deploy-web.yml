@@ -24,7 +24,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # ルート package.json の engines（>=22）と ci.yml に合わせる
+          node-version: '22'
           cache: 'npm'
 
       # package-lock.json を削除して npm install すると、依存がビルド実行時の

@@ -12,6 +12,12 @@
  * 4. 変数値のインポート（プロファイル×変数）
  * 5. スニペットのインポート（カテゴリ・プロファイルIDを解決）
  *
+ * 表示順の扱い:
+ * 新規に作成するカテゴリ・変数・プロファイルは自動採番で末尾に置き、既存と同名のものは
+ * 表示順を据え置く。無料プランの有効判定は表示順で行うため、既存項目を末尾へ動かすと
+ * それまで有効だった項目が上限超過分と入れ替わって無効になるためである。
+ * これによりインポートで既存の有効な項目が無効になることはない。
+ *
  * @module ImportService
  */
 
@@ -21,6 +27,7 @@ import { getTempDbAdapter, hasTempDbAdapter, getMainDbAdapter, hasMainDbAdapter 
 import { getImportAdapter, hasImportAdapter } from '../adapters/ImportAdapter';
 import { ImportParserService } from './ImportParserService';
 import { Logger } from '../utils/logger';
+import { generateUniqueId } from '../utils/dateHelpers';
 import { uint8ArrayToBase64 } from '../utils/exportImportUtils';
 import { PartialImportError } from '../errors';
 import { CategoryService } from './CategoryService';
@@ -29,7 +36,14 @@ import { VariableService } from './VariableService';
 import { SnippetService } from './SnippetService';
 import { SubscriptionService } from './SubscriptionService';
 import { AuthService } from './AuthService';
-import { CategoryMapper, ProfileMapper, VariableMapper } from '../mappers';
+import {
+  CategoryMapper,
+  ProfileVariableMapper,
+  ProfileMapper,
+  SnippetMapper,
+  SystemVariableFormatMapper,
+  VariableMapper,
+} from '../mappers';
 import { migrateImportTempDb } from '../database/migrations';
 import { SCHEMA_VERSION } from '../database/schema';
 
@@ -70,11 +84,10 @@ function importCategories(
   const categoriesToImport = importMapper.getCategories(selectedCategoryIds);
 
   for (const category of categoriesToImport) {
-    /* 既存があれば更新、なければ新規作成 */
+    /* 既存があれば更新、なければ新規作成（新規の表示順は自動採番で末尾） */
     const result = CategoryService.upsert({
       name: category.name,
       color: category.color || undefined,
-      sortOrder: CategoryMapper.getNextSortOrder()
     });
     categoryIdMap.set(category.id, result.id);
   }
@@ -99,13 +112,12 @@ function importVariables(
   const variablesToImport = importMapper.getVariables(selectedVariableIds);
 
   for (const v of variablesToImport) {
-    /* 既存があれば更新、なければ新規作成 */
+    /* 既存があれば更新、なければ新規作成（新規の表示順は自動採番で末尾） */
     const result = VariableService.upsert({
       name: v.name,
       type: 'custom',
       label: v.label ?? undefined,
       icon: v.icon ?? undefined,
-      sortOrder: VariableMapper.getNextSortOrder()
     });
     variableIdMap.set(v.id, result.id);
   }
@@ -147,10 +159,9 @@ function importProfiles(
   const profilesToImport = importMapper.getProfiles(selectedProfileIds);
 
   for (const p of profilesToImport) {
-    /* 既存があれば更新、なければ新規作成 */
+    /* 既存があれば更新、なければ新規作成（新規の表示順は自動採番で末尾） */
     const result = ProfileService.upsert({
       name: p.name,
-      sortOrder: ProfileMapper.getNextSortOrder()
     });
     profileIdMap.set(p.id, result.id);
 
@@ -254,7 +265,13 @@ function importSnippets(
  * @returns プロファイルIDマッピング（旧ID → 新ID）
  *
  * @remarks
- * スニペットに紐づくプロファイル（選択されていないものも含む）を正しくマッピングするため
+ * スニペットに紐づくプロファイル（選択されていないものも含む）を正しくマッピングするため。
+ *
+ * このマッピングは、取込元スニペットが参照する「選択されていない既存プロファイル」の
+ * ローカルIDを引くためのもの。失敗して空マップになっても、選択項目は upsert が名前で
+ * 再解決するため取込自体は完了する（未選択プロファイルへの紐付けだけが落ちる。
+ * カテゴリの分類は prepareExistingCategoryMapping が別に解決するため影響しない）。
+ * ここで例外を上げると取込全体が失敗するため再スローはせず、原因追跡のため警告だけ残す。
  */
 function prepareExistingProfileMapping(
   importMapper: ImportMapper
@@ -269,8 +286,12 @@ function prepareExistingProfileMapping(
         profileIdMap.set(p.id, existing.id);
       }
     }
-  } catch {
-    /* エラーが発生しても処理は続行 */
+  } catch (error) {
+    /* 上記のとおり縮退して続行する。中断させないが、無音にすると原因追跡ができないため警告を残す */
+    Logger.warn(
+      '[ImportService] Failed to prepare existing profile mapping. Continuing with an empty map.',
+      error
+    );
   }
 
   return profileIdMap;
@@ -283,7 +304,12 @@ function prepareExistingProfileMapping(
  * @returns カテゴリIDマッピング（旧ID → 新ID）
  *
  * @remarks
- * スニペットに紐づくカテゴリ（選択されていない既存重複カテゴリも含む）を正しくマッピングするため
+ * スニペットに紐づくカテゴリ（選択されていない既存重複カテゴリも含む）を正しくマッピングするため。
+ *
+ * このマッピングは、取込元スニペットが参照する「選択されていない既存カテゴリ」の
+ * ローカルIDを引くためのもの。失敗して空マップになっても、選択項目は upsert が名前で
+ * 再解決するため取込自体は完了する（未選択カテゴリを参照するスニペットが未分類になるだけ）。
+ * ここで例外を上げると取込全体が失敗するため再スローはせず、原因追跡のため警告だけ残す。
  */
 function prepareExistingCategoryMapping(
   importMapper: ImportMapper
@@ -298,8 +324,12 @@ function prepareExistingCategoryMapping(
         categoryIdMap.set(c.id, existing.id);
       }
     }
-  } catch {
-    /* エラーが発生しても処理は続行 */
+  } catch (error) {
+    /* 上記のとおり縮退して続行する。中断させないが、無音にすると原因追跡ができないため警告を残す */
+    Logger.warn(
+      '[ImportService] Failed to prepare existing category mapping. Continuing with an empty map.',
+      error
+    );
   }
 
   return categoryIdMap;
@@ -311,11 +341,35 @@ function prepareExistingCategoryMapping(
  * @description
  * ImportAdapterを使用してプラットフォーム固有の処理を実行。
  * すべて静的メソッドで提供。
+ *
+ * importPartial＝選択項目のマージ取込、importDatabaseFromTempDb＝全データの逐語復元。
+ * どちらも prepareImportDatabase が作った一時DBのパスを受け取る。
  */
 export class ImportService {
   /* ======================================== */
   /* 静的メソッド（ファイル操作・DB準備） */
   /* ======================================== */
+
+  /**
+   * インポート前にサブスクリプション状態を同期する
+   *
+   * @remarks
+   * 有効フラグの再計算に最新の権利状態を使うための事前同期。
+   * 権利確認は外部通信のため失敗しうるが、失敗しても取込は中断せず、
+   * 既知の最後の権利状態で有効フラグを計算する。
+   * 取込はローカル業務機能であり、外部サービスの障害で壊さない。
+   */
+  private static async refreshSubscriptionForImport(): Promise<void> {
+    try {
+      if (!AuthService.getCurrentUser()) return;
+      await SubscriptionService.refreshCustomerInfo();
+    } catch (error) {
+      Logger.warn(
+        '[ImportService] Failed to refresh subscription state. Continuing with the last known state.',
+        error
+      );
+    }
+  }
 
   /**
    * インポート用の一時データベースファイルを作成
@@ -341,25 +395,42 @@ export class ImportService {
     const jsonContent = await adapter.readImportFile(fileUri);
     const { dbBytes, exportData } = await importParserService.parseAndValidate(jsonContent, password);
 
-    const tempDbName = `import_temp_${new Date().getTime()}.db`;
+    /** 同一ミリ秒の多重操作でも一時DBを共有しない */
+    const tempDbName = `import_temp_${generateUniqueId()}.db`;
     const dbBase64 = uint8ArrayToBase64(dbBytes);
 
     const tempDbPath = await adapter.writeTempDatabase(tempDbName, dbBase64);
 
-    /* 旧バージョンファイルの場合、一時DBに対してマイグレーションを実行 */
-    if (exportData.s < SCHEMA_VERSION) {
-      Logger.info(`[ImportService] Migrating temp DB from V${exportData.s} to V${SCHEMA_VERSION}...`);
+    try {
+      /** 一時DB上で、必要な移行と最新スキーマの後条件検証を完了する */
       const tempDbAdapter = getTempDbAdapter();
-      await tempDbAdapter.open?.(tempDbPath);
       try {
+        await tempDbAdapter.open?.(tempDbPath);
+
+        if (exportData.s < SCHEMA_VERSION) {
+          Logger.info(`[ImportService] Migrating temp DB from V${exportData.s} to V${SCHEMA_VERSION}...`);
+        }
+
         await migrateImportTempDb(tempDbAdapter, exportData.s);
-        Logger.info('[ImportService] Temp DB migration completed');
+
+        /** WebではV7の派生index補完も、close前に一時ファイルへ書き戻す必要がある */
+        await tempDbAdapter.persist?.();
+        if (exportData.s < SCHEMA_VERSION) {
+          Logger.info('[ImportService] Temp DB migration completed');
+        }
       } finally {
         tempDbAdapter.close?.();
       }
-    }
 
-    return tempDbPath;
+      return tempDbPath;
+    } catch (error) {
+      try {
+        await adapter.deleteFile(tempDbPath);
+      } catch (cleanupError) {
+        Logger.warn('[ImportService] Failed to cleanup invalid temp db:', cleanupError);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -414,30 +485,31 @@ export class ImportService {
       Logger.info('[ImportService] Starting partial import...');
 
       /* インポート前にサブスクリプション状態を更新（updateValidFlagsで使用されるため） */
-      const currentUser = AuthService.getCurrentUser();
-      if (currentUser) {
-        /* RevenueCatから最新のサブスクリプション状態を取得して同期 */
-        await SubscriptionService.refreshCustomerInfo();
-      }
+      await this.refreshSubscriptionForImport();
 
       const mapper = new ImportMapper(tempDbAdapter);
-      const importedDefaultProfileId = this.executePartialImportWithMapper(
-        mapper,
-        selectedSnippetIds,
-        selectedProfileIds,
-        selectedVariableIds,
-        selectedCategoryIds
-      );
+      getMainDbAdapter().transaction(() => {
+        const importedDefaultProfileId = this.runPartialImport(
+          mapper,
+          selectedSnippetIds,
+          selectedProfileIds,
+          selectedVariableIds,
+          selectedCategoryIds
+        );
 
-      /* インポート後にデフォルト/アクティブプロファイルを設定（必要な場合のみ） */
-      this.ensureDefaultAndActiveProfile(importedDefaultProfileId);
+        /* インポート後にデフォルト/アクティブプロファイルを設定（必要な場合のみ） */
+        ProfileService.ensureDefaultAndActive(importedDefaultProfileId);
 
-      /* インポート後に有効フラグを更新 */
-      SubscriptionService.updateValidFlags();
+        /* インポート後に有効フラグを更新 */
+        SubscriptionService.updateValidFlags();
+      });
 
       Logger.info('[ImportService] Partial import completed');
     } catch (error) {
       Logger.error('[ImportService] Partial import failed:', error);
+      /* Error以外がthrowされたときの文言は現行の日本語リテラルをそのまま維持する。
+         PartialImportError の既定値へ委ねると message が 'Partial import failed' に変わり、
+         ログと翻訳失敗時のフォールバック表示が変化するため。i18n化は別途判断すること */
       throw new PartialImportError(
         error instanceof Error ? error.message : 'インポート中にエラーが発生しました',
         error
@@ -451,7 +523,7 @@ export class ImportService {
    * Mapperを使用して部分インポートを実行（内部静的メソッド）
    * @returns インポート元でデフォルトだったプロファイルの新ID（存在する場合）
    */
-  private static executePartialImportWithMapper(
+  private static runPartialImport(
     importMapper: ImportMapper,
     selectedSnippetIds: string[],
     selectedProfileIds: string[],
@@ -474,54 +546,6 @@ export class ImportService {
     return defaultProfileId;
   }
 
-  /**
-   * データベース全体をインポート（既存データ削除→挿入方式）
-   *
-   * @param password - インポートファイルのパスワード
-   * @param fileUri - インポートファイルのURI
-   */
-  static async importDatabase(password: string, fileUri: string): Promise<void> {
-    /* 一時DBを作成してからインポートを実行 */
-    if (!hasImportAdapter()) {
-      throw new Error('ImportAdapter is required for importDatabase. Call setImportAdapter() first.');
-    }
-
-    if (!hasTempDbAdapter()) {
-      throw new Error('TempDbAdapter is required for importDatabase. Call setTempDbAdapter() first.');
-    }
-
-    const adapter = getImportAdapter();
-    const importParserService = new ImportParserService();
-
-    const jsonContent = await adapter.readImportFile(fileUri);
-    const { dbBytes, exportData } = await importParserService.parseAndValidate(jsonContent, password);
-
-    /* 一時データベースを作成 */
-    const dbBase64 = uint8ArrayToBase64(dbBytes);
-    const tempNewDbName = `import_new_${new Date().getTime()}.db`;
-    const tempNewDbUri = await adapter.writeTempDatabase(tempNewDbName, dbBase64);
-
-    /* 旧バージョンファイルの場合、一時DBに対してマイグレーションを実行 */
-    if (exportData.s < SCHEMA_VERSION) {
-      Logger.info(`[ImportService] Migrating temp DB from V${exportData.s} to V${SCHEMA_VERSION}...`);
-      const tempDbAdapter = getTempDbAdapter();
-      await tempDbAdapter.open?.(tempNewDbUri);
-      try {
-        await migrateImportTempDb(tempDbAdapter, exportData.s);
-        Logger.info('[ImportService] Temp DB migration completed');
-      } finally {
-        tempDbAdapter.close?.();
-      }
-    }
-
-    try {
-      /* 既存の一時DBを使用してインポートを実行 */
-      await this.importDatabaseFromTempDb(tempNewDbUri);
-    } finally {
-      /* 一時DBファイルを削除 */
-      await adapter.deleteFile(tempNewDbUri).catch(() => { });
-    }
-  }
 
   /**
    * 既存の一時データベースからデータベース全体をインポート（既存データ削除→挿入方式）
@@ -538,54 +562,22 @@ export class ImportService {
     }
 
     Logger.info('[ImportService] Starting database import from temp DB...');
-    Logger.info(`[ImportService] Temp DB path: ${tempDbPath}`);
-
     const tempDbAdapter = getTempDbAdapter();
     await tempDbAdapter.open?.(tempDbPath);
 
     try {
-      Logger.info('[ImportService] Deleting existing data...');
-
-      /* 既存データを削除（外部キー制約を考慮した順序） */
-      this.deleteAllExistingData();
-
-      Logger.info('[ImportService] Importing data from backup...');
-
       /* インポート前にサブスクリプション状態を更新（updateValidFlagsで使用されるため） */
-      const currentUser = AuthService.getCurrentUser();
-      if (currentUser) {
-        /* RevenueCatから最新のサブスクリプション状態を取得して同期 */
-        await SubscriptionService.refreshCustomerInfo();
-      }
+      await this.refreshSubscriptionForImport();
 
-      /* 一時DBから全データを取得 */
       const mapper = new ImportMapper(tempDbAdapter);
-      const candidates = mapper.getAllCandidates();
-
-      /* 全IDを抽出 */
-      const allSnippetIds = candidates.snippets.map((s) => s.id);
-      const allProfileIds = candidates.profiles.map((p) => p.id);
-      const allVariableIds = candidates.variables.map((v) => v.id);
-      const allCategoryIds = candidates.categories.map((c) => c.id);
-
-      /* 全データをインポート */
-      const importedDefaultProfileId = this.executePartialImportWithMapper(
-        mapper,
-        allSnippetIds,
-        allProfileIds,
-        allVariableIds,
-        allCategoryIds
-      );
-
-      /* インポート後にデフォルト/アクティブプロファイルを設定（インポート元の標準プロファイルを使用） */
-      this.ensureDefaultAndActiveProfile(importedDefaultProfileId);
-
-      /* インポート後に有効フラグを更新 */
-      SubscriptionService.updateValidFlags();
+      this.runFullRestore(mapper);
 
       Logger.info('[ImportService] Import completed successfully');
     } catch (error) {
       Logger.error('[ImportService] Import failed:', error);
+      /* Error以外がthrowされたときの文言は現行の日本語リテラルをそのまま維持する。
+         PartialImportError の既定値へ委ねると message が 'Partial import failed' に変わり、
+         ログと翻訳失敗時のフォールバック表示が変化するため。i18n化は別途判断すること */
       throw new PartialImportError(
         error instanceof Error ? error.message : 'インポート中にエラーが発生しました',
         error
@@ -596,15 +588,50 @@ export class ImportService {
   }
 
   /**
+   * 全復元を単一トランザクションで実行する。
+   * 通常のupsert経路を通さず、バックアップの識別子とメタデータを保持する。
+   */
+  private static runFullRestore(importMapper: ImportMapper): void {
+    const restoreData = importMapper.getFullRestoreData();
+    const mainDbAdapter = getMainDbAdapter();
+
+    mainDbAdapter.transaction(() => {
+      this.clearAllDataForFullRestore();
+
+      restoreData.categories.forEach((row) => CategoryMapper.restore(row));
+      restoreData.variables.forEach((row) => VariableMapper.restore(row));
+      restoreData.profiles.forEach((row) => ProfileMapper.restore(row));
+      restoreData.snippets.forEach((row) => SnippetMapper.restore(row));
+      restoreData.profileVariables.forEach((row) =>
+        ProfileVariableMapper.restore(row)
+      );
+      restoreData.snippetProfiles.forEach((row) =>
+        SnippetMapper.restoreProfileLink(row)
+      );
+      SystemVariableFormatMapper.restoreAllWithinTransaction(
+        restoreData.systemVariableFormats
+      );
+
+      /* 壊れたバックアップに標準・アクティブが無い場合だけ補完する。 */
+      ProfileService.ensureDefaultAndActive();
+      SubscriptionService.updateValidFlags();
+    });
+
+    SystemVariableFormatMapper.loadRegistry();
+  }
+
+  /**
    * 既存の全データを削除（外部キー制約を考慮した順序）
    *
    * @remarks
    * 外部キー制約があるため、関連テーブルから先に削除する必要がある
    */
-  private static deleteAllExistingData(): void {
+  private static clearAllDataForFullRestore(): void {
     const mainDbAdapter = getMainDbAdapter();
 
     try {
+      mainDbAdapter.run('DELETE FROM system_variable_formats');
+
       /* 外部キー制約を考慮した削除順序 */
       /* 1. 中間テーブル（外部キー参照） */
       mainDbAdapter.run('DELETE FROM snippet_profiles');
@@ -625,55 +652,6 @@ export class ImportService {
     } catch (error) {
       Logger.error('[ImportService] Failed to delete existing data:', error);
       throw error;
-    }
-  }
-
-  /**
-   * デフォルト/アクティブプロファイルがなければ設定
-   *
-   * @param importedDefaultProfileId - インポート元でデフォルトだったプロファイルの新ID（優先的に使用）
-   *
-   * @remarks
-   * フルリストア後、インポートされたプロファイルにはisDefault/isActiveフラグが設定されていない。
-   * インポート元でデフォルト（標準）だったプロファイルを優先的にデフォルト＆アクティブに設定する。
-   */
-  private static ensureDefaultAndActiveProfile(importedDefaultProfileId: string | null): void {
-    const defaultProfile = ProfileService.getDefault();
-    const activeProfile = ProfileService.getActive();
-
-    /* デフォルトもアクティブも存在する場合は何もしない */
-    if (defaultProfile && activeProfile) {
-      return;
-    }
-
-    /* インポート元のデフォルトプロファイルを優先、なければ最初のプロファイルを使用 */
-    let targetProfileId = importedDefaultProfileId;
-    if (!targetProfileId) {
-      const profiles = ProfileService.getAll();
-      const firstProfile = profiles[0];
-      if (!firstProfile) {
-        Logger.warn('[ImportService] No profiles available to set as default/active');
-        return;
-      }
-      targetProfileId = firstProfile.id;
-    }
-
-    /* 対象プロファイルを取得 */
-    const targetProfile = ProfileService.getById(targetProfileId);
-    if (!targetProfile) {
-      Logger.warn('[ImportService] Target profile not found:', targetProfileId);
-      return;
-    }
-
-    /* 対象プロファイルをデフォルトとアクティブに設定 */
-    if (!defaultProfile) {
-      ProfileService.setDefault(targetProfileId);
-      Logger.info('[ImportService] Set default profile:', targetProfile.name);
-    }
-
-    if (!activeProfile) {
-      ProfileService.setActive(targetProfileId);
-      Logger.info('[ImportService] Set active profile:', targetProfile.name);
     }
   }
 
@@ -709,6 +687,11 @@ export class ImportService {
     }
 
     const adapter = getImportAdapter();
-    adapter.deleteImportSourceFile?.(fileUri);
+
+    /* キャッシュの後始末はベストエフォート。
+       完了を待たず、失敗してもインポート結果には影響させない */
+    adapter.deleteImportSourceFile?.(fileUri).catch((err) => {
+      Logger.warn('[ImportService] Failed to delete import source file:', err);
+    });
   }
 }

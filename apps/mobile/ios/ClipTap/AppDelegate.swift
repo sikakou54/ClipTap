@@ -1,10 +1,10 @@
-import Expo
+internal import Expo
 import FirebaseCore
 import React
 import ReactAppDependencyProvider
 
-@UIApplicationMain
-public class AppDelegate: ExpoAppDelegate {
+@main
+class AppDelegate: ExpoAppDelegate {
   var window: UIWindow?
 
   var reactNativeDelegate: ExpoReactNativeFactoryDelegate?
@@ -20,7 +20,6 @@ public class AppDelegate: ExpoAppDelegate {
 
     reactNativeDelegate = delegate
     reactNativeFactory = factory
-    bindReactNativeFactory(factory)
 
 #if os(iOS) || os(tvOS)
     window = UIWindow(frame: UIScreen.main.bounds)
@@ -33,44 +32,8 @@ FirebaseApp.configure()
       launchOptions: launchOptions)
 #endif
 
-    // NotificationCenter経由でApp Groupへの保存通知を受け取る
-    NotificationCenter.default.addObserver(
-      self,
-      selector: #selector(handleSubscriptionUpdate),
-      name: NSNotification.Name("SubscriptionStatusUpdated"),
-      object: nil
-    )
-
-    // 注意：自動テストデータ書き込みは削除しました
-    // 開発者メニューから手動で期限内/期限切れを切り替えてください
-
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
-
-  @objc private func handleSubscriptionUpdate(_ notification: Notification) {
-    NSLog("[AppDelegate] 🔵 Received subscription notification")
-
-    guard let userInfo = notification.userInfo,
-          let isPremium = userInfo["isPremium"] as? Bool else {
-      NSLog("[AppDelegate] ⚠️ Invalid subscription notification")
-      return
-    }
-
-    let expiryDateString = userInfo["expiryDate"] as? String
-
-    // App Groupに保存
-    if let defaults = UserDefaults(suiteName: "group.com.sikakou.cliptap") {
-      defaults.set(isPremium, forKey: "is_premium_subscriber")
-      defaults.set(expiryDateString, forKey: "subscription_expiry_date")
-      defaults.set(Date().timeIntervalSince1970, forKey: "subscription_last_updated")
-      defaults.synchronize()
-
-      NSLog("[AppDelegate] ✅ Saved subscription to App Group: isPremium=\(isPremium), expiryDate=\(expiryDateString ?? "nil")")
-    } else {
-      NSLog("[AppDelegate] ❌ Failed to access App Group")
-    }
-  }
-
 
   // Linking API
   public override func application(

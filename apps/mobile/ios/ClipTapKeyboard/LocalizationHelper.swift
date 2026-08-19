@@ -22,9 +22,49 @@
 
 import Foundation
 
+/// キーボードの詳細ログは開発ビルドだけで出力する。
+enum KeyboardLog {
+    static func debug(_ message: String) {
+#if DEBUG
+        NSLog("%@", message)
+#endif
+    }
+
+    static func debug(_ format: String, _ arguments: CVarArg...) {
+#if DEBUG
+        withVaList(arguments) { NSLogv(format, $0) }
+#endif
+    }
+}
+
 /// 多言語対応のヘルパークラス（L10n = Localization の略）
 /// 翻訳キーを構造化して管理し、型安全にアクセスできるようにします
 enum L10n {
+
+    // MARK: - Language (表示言語の判定)
+
+    /// キーボード拡張の表示言語が日本語かどうか
+    ///
+    /// 【Locale.currentを使わない理由】
+    /// Locale.currentは「端末の言語設定」ではなく「バンドルが持つローカライズで絞り込んだ結果」を返します。
+    /// キーボード拡張にローカライズが含まれていない場合、日本語端末でも en と判定されてしまいます。
+    ///
+    /// 【先頭だけを見ない理由】
+    /// 端末の優先言語が [中国語, 日本語] のように非対応言語が先頭の場合、先頭だけを見ると
+    /// バンドルが解決する表示言語（日本語）と判定結果（英語）が食い違います。
+    /// Bundle.main.preferredLocalizationsと同じ解決順（優先言語を順に走査して対応言語の初出を採用）にしつつ、
+    /// バンドルのローカライズ同梱状況には依存しない形で判定します。
+    ///
+    /// 【単一の判定箇所】
+    /// 拡張キーボード内の言語判定はすべてこのプロパティを使用すること。
+    /// 個別に Locale.preferredLanguages.first を見ると画面ごとに言語が食い違います。
+    static var isJapanese: Bool {
+        for language in Locale.preferredLanguages {
+            if language.hasPrefix("ja") { return true }
+            if language.hasPrefix("en") { return false }
+        }
+        return false
+    }
 
     // MARK: - Profile (環境・プロファイル関連)
 
@@ -36,8 +76,7 @@ enum L10n {
             let localized = L10n.localized(key)
             // フォールバック: 翻訳が見つからない場合は言語に応じてデフォルト値を返す
             if localized == key {
-                let preferredLanguage = Locale.preferredLanguages.first ?? "en"
-                return preferredLanguage.hasPrefix("ja") ? "すべて" : "All"
+                return L10n.isJapanese ? "すべて" : "All"
             }
             return localized
         }
@@ -59,8 +98,7 @@ enum L10n {
             let localized = L10n.localized(key)
             // フォールバック: 翻訳が見つからない場合は言語に応じてデフォルト値を返す
             if localized == key {
-                let preferredLanguage = Locale.preferredLanguages.first ?? "en"
-                return preferredLanguage.hasPrefix("ja") ? "すべて" : "All"
+                return L10n.isJapanese ? "すべて" : "All"
             }
             return localized
         }
@@ -105,6 +143,9 @@ enum L10n {
 
         /// "閉じる" / "Close"
         static let close = localized("snippet.close")
+
+        /// "タイトルなし" / "No Title"
+        static let noTitle = localized("snippet_no_title")
     }
 
     // MARK: - Search (検索関連)
@@ -233,6 +274,12 @@ enum L10n {
 
         /// "並び替えボタン" / "Sort button"
         static let sortButton = localized("accessibility.sort_button")
+
+        /// "タイトル挿入ボタン" / "Insert title button"
+        static let insertTitleButton = localized("accessibility.insert_title_button")
+
+        /// "改行ボタン" / "Insert newline button"
+        static let insertNewlineButton = localized("accessibility.insert_newline_button")
     }
 
     // MARK: - Sort (ソート関連)
@@ -262,11 +309,14 @@ enum L10n {
         /// "設定" / "Settings"
         static let title = localized("settings.title")
 
-        /// "使用頻度をカウントする" / "Track Usage Frequency"
-        static let usageTrackingEnabled = localized("settings.usage_tracking_enabled")
+        /// "使用頻度の記録" / "Usage Tracking"
+        static let usageTracking = localized("settings.usage_tracking")
 
-        /// "使用頻度をカウントする" / "Track Usage Frequency"
-        static let usageTrackingDisabled = localized("settings.usage_tracking_disabled")
+        /// "有効" / "On"
+        static let usageTrackingActive = localized("settings.usage_tracking_active")
+
+        /// "無効" / "Off"
+        static let usageTrackingInactive = localized("settings.usage_tracking_inactive")
 
         /// "この機能を使用するにはフルアクセスの許可が必要です" / "Full access is required to use this feature"
         static let usageTrackingRequiresFullAccess = localized("settings.usage_tracking_requires_full_access")
@@ -302,7 +352,7 @@ enum L10n {
         if localizedString == key {
             // フォールバック: ハードコードされたデフォルト値
             localizedString = getDefaultValue(for: key)
-            print("[L10n] ⚠️ Translation not found for key: \(key), using fallback: \(localizedString)")
+            KeyboardLog.debug("[L10n] ⚠️ Translation not found for key: \(key), using fallback: \(localizedString)")
         }
 
         return localizedString
@@ -310,8 +360,7 @@ enum L10n {
 
     /// 翻訳ファイルが見つからない場合のフォールバック値
     private static func getDefaultValue(for key: String) -> String {
-        let preferredLanguage = Locale.preferredLanguages.first ?? "en"
-        let isJapanese = preferredLanguage.hasPrefix("ja")
+        let isJapanese = L10n.isJapanese
 
         switch key {
         // Profile
@@ -380,6 +429,7 @@ enum L10n {
         case "accessibility.close_button": return isJapanese ? "閉じるボタン" : "Close button"
         case "accessibility.copy_button": return isJapanese ? "コピーボタン" : "Copy button"
         case "accessibility.sort_button": return isJapanese ? "並び替えボタン" : "Sort button"
+        case "accessibility.insert_title_button": return isJapanese ? "タイトル挿入ボタン" : "Insert title button"
 
         // Sort
         case "sort.label": return isJapanese ? "並順" : "Sort"
@@ -390,13 +440,17 @@ enum L10n {
 
         // Settings
         case "settings.title": return isJapanese ? "設定" : "Settings"
-        case "settings.usage_tracking_enabled": return isJapanese ? "使用頻度をカウントする" : "Track Usage Frequency"
-        case "settings.usage_tracking_disabled": return isJapanese ? "使用頻度をカウントする" : "Track Usage Frequency"
-        case "settings.usage_tracking_requires_full_access": return isJapanese ? "この機能を使用するにはフルアクセスの許可が必要です" : "Full access is required to use this feature"
+        case "settings.usage_tracking": return isJapanese ? "使用頻度の記録" : "Usage Tracking"
+        case "settings.usage_tracking_active": return isJapanese ? "有効" : "On"
+        case "settings.usage_tracking_inactive": return isJapanese ? "無効" : "Off"
+        case "settings.usage_tracking_requires_full_access":
+            return isJapanese
+                ? "キーボードからの挿入回数を記録するには、フルアクセスの許可が必要です。許可すると使用頻度順の並べ替えが使えます。"
+                : "Full Access is required to record how often each snippet is inserted from the keyboard. Allowing it enables sorting by usage."
         case "settings.full_access_instructions":
             return isJapanese
-                ? "1. 設定アプリを開く\n2. 「ClipTap」→「キーボード」を選択\n3. 「フルアクセスを許可」をON"
-                : "1. Open Settings app\n2. Go to \"ClipTap\" → \"Keyboards\"\n3. Turn on \"Allow Full Access\""
+                ? "1. 設定アプリを開く\n2. 「一般」→「キーボード」→「キーボード」を選択\n3. 「ClipTap」をタップ\n4. 「フルアクセスを許可」をON"
+                : "1. Open the Settings app\n2. Go to \"General\" → \"Keyboard\" → \"Keyboards\"\n3. Tap \"ClipTap\"\n4. Turn on \"Allow Full Access\""
 
         default: return key
         }

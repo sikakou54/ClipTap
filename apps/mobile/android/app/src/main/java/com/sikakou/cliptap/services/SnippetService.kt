@@ -6,6 +6,7 @@ import android.os.Vibrator
 import android.util.Log
 import android.view.inputmethod.InputConnection
 import com.sikakou.cliptap.mappers.SnippetMapper
+import com.sikakou.cliptap.mappers.SystemVariableFormatMapper
 import com.sikakou.cliptap.models.Snippet
 import com.sikakou.cliptap.utils.VariableReplacer
 
@@ -33,6 +34,7 @@ class SnippetService private constructor(private val context: Context) {
 
     private val snippetMapper = SnippetMapper.getInstance(context)
     private val variableReplacer = VariableReplacer()
+    private val systemVariableFormatMapper = SystemVariableFormatMapper.getInstance(context)
 
     companion object {
         private const val TAG = "SnippetService"
@@ -119,25 +121,29 @@ class SnippetService private constructor(private val context: Context) {
      * → "こんにちは、田中さん"
      */
     fun replaceVariables(text: String, variablesMap: Map<String, String> = emptyMap()): String {
-        return variableReplacer.replace(text, variablesMap)
+        return variableReplacer.replace(text, variablesMap, systemVariableFormatMapper.getAll())
     }
 
     /**
-     * スニペットをテキスト入力欄に挿入
+     * スニペットの本文をテキスト入力欄に挿入
      *
      * 【目的】
-     * ユーザーが選択したスニペットをテキストフィールドに挿入します。
+     * ユーザーが選択したスニペットの本文をテキストフィールドに挿入します。
      *
      * 【何をするか】
-     * 1. タイトルの処理（copyWithTitle=trueの場合、タイトルも挿入）
-     * 2. タイトルと本文の変数を置換
-     * 3. InputConnectionを使ってテキストを挿入
-     * 4. 振動フィードバックを実行
+     * 1. 本文の変数を置換
+     * 2. InputConnectionを使ってテキストを挿入
+     * 3. 振動フィードバックを実行
+     * 4. 使用回数を加算
      *
      * 【引数】
      * @param snippet 挿入するスニペット
      * @param inputConnection テキストフィールドへの接続
      * @param variablesMap カスタム変数のマップ
+     *
+     * 【タイトルを含めない理由】
+     * メールの件名と本文のように別々の入力欄へ入れられるよう、
+     * タイトルはinsertTitle()から個別に挿入します。
      *
      * 【理由】
      * InputConnectionはAndroidのIMEがテキストを挿入するための標準的な方法です。
@@ -148,21 +154,15 @@ class SnippetService private constructor(private val context: Context) {
         inputConnection: InputConnection,
         variablesMap: Map<String, String> = emptyMap()
     ) {
-        // タイトルの処理
-        val title = if (snippet.copyWithTitle && snippet.title != null) {
-            variableReplacer.replace(snippet.title, variablesMap) + "\n"
-        } else {
-            ""
-        }
+        val formats = systemVariableFormatMapper.getAll()
 
         // 本文の変数置換
-        val content = variableReplacer.replace(snippet.content, variablesMap)
+        val content = variableReplacer.replace(snippet.content, variablesMap, formats)
 
-        /* テキストを挿入 */
-        val textToInsert = title + content
-        inputConnection.commitText(textToInsert, 1)
+        /* テキストを挿入（本文のみ） */
+        inputConnection.commitText(content, 1)
 
-        Log.d(TAG, "✅ Snippet inserted: ${snippet.id}")
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Snippet inserted: ${snippet.id}")
 
         /* 振動フィードバック */
         performHapticFeedback()
@@ -170,6 +170,90 @@ class SnippetService private constructor(private val context: Context) {
         /* 使用頻度（copyCount）をインクリメント
            使用頻度順ソートに反映するため、挿入時にカウントを加算 */
         snippetMapper.incrementCopyCount(snippet.id)
+    }
+
+    /**
+     * スニペットのタイトルだけをテキスト入力欄に挿入
+     *
+     * 【目的】
+     * メールの件名と本文のように、タイトルと本文を別々の入力欄へ入れられるようにします。
+     * 詳細画面のタイトル行にあるボタンから呼び出されます。
+     *
+     * 【何をするか】
+     * 1. copyWithTitleがONかつタイトルが空でないことを確認（それ以外は何もしない）
+     * 2. タイトルの変数を置換
+     * 3. InputConnectionを使ってタイトルを挿入
+     * 4. 振動フィードバックを実行
+     *
+     * 【引数】
+     * @param snippet 挿入するスニペット
+     * @param inputConnection テキストフィールドへの接続
+     * @param variablesMap カスタム変数のマップ
+     *
+     * 【改行を付けない理由】
+     * 別の入力欄へ入れることが主な用途のため、タイトル末尾に改行は付加しません。
+     *
+     * 【使用回数を加算しない理由】
+     * タイトルと本文を続けて挿入すると1回の利用が2回分として数えられてしまいます。
+     * 使用回数は本文挿入（insertSnippet）でのみ加算します。
+     */
+    fun insertTitle(
+        snippet: Snippet,
+        inputConnection: InputConnection,
+        variablesMap: Map<String, String> = emptyMap()
+    ) {
+        /* タイトルを持たない、またはタイトルをコピーしない設定のスニペットは何もしない */
+        if (!snippet.copyWithTitle || snippet.title.isNullOrEmpty()) {
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) {
+                Log.d(TAG, "Skipped title insert (no title or copyWithTitle is off)")
+            }
+            return
+        }
+
+        val formats = systemVariableFormatMapper.getAll()
+
+        // タイトルの変数置換（本文と同じルールで展開する）
+        val title = variableReplacer.replace(snippet.title, variablesMap, formats)
+
+        /* タイトルを挿入（改行は付けない） */
+        inputConnection.commitText(title, 1)
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Title inserted: ${snippet.id}")
+
+        /* 振動フィードバック（本文挿入と同じ） */
+        performHapticFeedback()
+    }
+
+    /**
+     * 改行だけをテキスト入力欄に挿入
+     *
+     * 【目的】
+     * タイトル挿入と本文挿入はどちらも改行を付けないため、同じ入力欄へ
+     * 「タイトル → 改行 → 本文」と入れたい場合に標準キーボードへの切り替えが必要でした。
+     * 詳細画面の改行ボタンから呼び出すことで、切り替えずに改行を入力できます。
+     *
+     * 【何をするか】
+     * 1. InputConnectionを使って改行を挿入
+     * 2. 振動フィードバックを実行
+     *
+     * 【引数】
+     * @param inputConnection テキストフィールドへの接続
+     *
+     * 【スニペットを引数に取らない理由】
+     * 挿入する文字は改行のみで、変数置換もプロファイルも関与しないためです。
+     *
+     * 【使用回数を加算しない理由】
+     * 使用回数は本文挿入（insertSnippet）でのみ加算します。
+     * 改行を挟むたびに加算すると、1回の利用が複数回として数えられてしまいます。
+     */
+    fun insertNewline(inputConnection: InputConnection) {
+        /* 改行を挿入 */
+        inputConnection.commitText("\n", 1)
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Newline inserted")
+
+        /* 振動フィードバック（本文挿入と同じ） */
+        performHapticFeedback()
     }
 
     /**

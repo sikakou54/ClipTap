@@ -21,7 +21,6 @@ module.exports = function (api) {
             '@app': './app',
             '@assets': './assets',
             '@lib': './src',
-            '@src': './src',
             '@root': './',
           },
         },

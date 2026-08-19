@@ -13,15 +13,25 @@
  *
  * 技術的ポイント:
  * - Animated.Valueでスムーズなフェードアウト
- * - useNativeDriver: false（背景色もアニメーション対象のため）
+ * - useNativeDriver: false でフェードアウト（アニメーション対象は opacity のみ）
  * - pointerEvents="none"でタッチイベントを透過
  * - zIndex: 9999で最前面に表示
  *
  * @see app/_layout.tsx - 使用例
  */
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, Image, Animated, StyleSheet } from 'react-native';
+import appIcon from '@assets/icon.png';
+
+/** スプラッシュ背景色。apps/mobile/app.json の expo-splash-screen プラグイン設定 backgroundColor と同値に保つ必要があるため、テーマ色ではなく固定値を使う */
+const SPLASH_BACKGROUND_COLOR = '#1F2937';
+
+/** フェードアウト開始までの待機時間 */
+const SPLASH_HOLD_MS = 1000;
+
+/** フェードアウトにかける時間 */
+const SPLASH_FADE_MS = 500;
 
 /*
  * ========================================
@@ -44,11 +54,12 @@ interface SplashScreenProps {
 export function SplashScreen({ onFinish, isLoading, onReady }: SplashScreenProps) {
   /*
    * ========================================
-   * Refs
+   * Refs / State
    * ========================================
    */
   /** フェードアニメーション値（1=完全表示, 0=完全透明） */
-  const fadeAnim = useRef(new Animated.Value(1)).current;
+  /* useStateの初期化子は初回マウント時のみ評価されるため、useRefと同じ単一インスタンスを保持する */
+  const [fadeAnim] = useState(() => new Animated.Value(1));
   const hasCalledReady = useRef(false);
 
   /*
@@ -76,8 +87,9 @@ export function SplashScreen({ onFinish, isLoading, onReady }: SplashScreenProps
 
   /**
    * フェードアウトアニメーション制御
-   * isLoadingがfalseになったら1秒待機後、500msかけてフェードアウト
-   * useNativeDriver: false - 背景色もアニメーション対象のため
+   * isLoadingがfalseになったらSPLASH_HOLD_MS待機し、SPLASH_FADE_MSかけてフェードアウトする
+   * アニメーション対象は Animated.View の opacity のみ。背景色は非アニメーションの wrapper が
+   * SPLASH_BACKGROUND_COLOR で塗るため、フェード中も背景色は変化しない。
    */
   useEffect(() => {
     if (isLoading) {
@@ -87,12 +99,12 @@ export function SplashScreen({ onFinish, isLoading, onReady }: SplashScreenProps
     const timer = setTimeout(() => {
       Animated.timing(fadeAnim, {
         toValue: 0,
-        duration: 500,
+        duration: SPLASH_FADE_MS,
         useNativeDriver: false,
       }).start(() => {
         onFinish();
       });
-    }, 1000);
+    }, SPLASH_HOLD_MS);
 
     return () => clearTimeout(timer);
   }, [fadeAnim, onFinish, isLoading]);
@@ -117,7 +129,7 @@ export function SplashScreen({ onFinish, isLoading, onReady }: SplashScreenProps
       >
         {/* アプリアイコン */}
         <Image
-          source={require('@assets/icon.png')}
+          source={appIcon}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -132,21 +144,20 @@ export function SplashScreen({ onFinish, isLoading, onReady }: SplashScreenProps
  * ========================================
  */
 const styles = StyleSheet.create({
-  /** zIndex: 9999で最前面に配置 */
+  /** 画面全体を覆い、他のどの要素よりも前面に出す不透明なレイヤ */
   wrapper: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#1F2937',
+    backgroundColor: SPLASH_BACKGROUND_COLOR,
     zIndex: 9999,
   },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1F2937',
   },
   logo: {
     width: 200,

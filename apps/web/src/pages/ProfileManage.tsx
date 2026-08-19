@@ -44,6 +44,7 @@ export function ProfileManage() {
     handleCloseModal,
     handleSubmit,
     handleDelete,
+    handleSetDefault,
   } = useProfilesScreen();
 
   return (
@@ -96,7 +97,7 @@ export function ProfileManage() {
           各プロファイルの名前を表示し、編集・削除ボタンで操作可能。
           空の場合は空状態メッセージを表示。
           デフォルトプロファイルは削除不可（削除ボタンが無効化される）。 */}
-      <ProfileList profiles={profiles} onEdit={openEditModal} onDelete={handleDelete} onCreate={openCreateModal} />
+      <ProfileList profiles={profiles} onEdit={openEditModal} onDelete={handleDelete} onSetDefault={handleSetDefault} onCreate={openCreateModal} />
 
       {/* 作成・編集モーダル（環境名の入力・保存）
           editingIdがnullなら新規作成モード、値があれば編集モード。

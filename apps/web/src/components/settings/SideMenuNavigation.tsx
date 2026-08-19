@@ -8,7 +8,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from '@cliptap/shared';
 
-interface MenuItem {
+export interface MenuItem {
   path: string;
   label: string;
   icon: string;
@@ -19,6 +19,7 @@ interface SideMenuNavigationProps {
   onClose: () => void;
   onImport: () => void;
   onExport: () => void;
+  onCloseFile: () => void;
   isSubscribed: boolean;
 }
 
@@ -27,6 +28,7 @@ export function SideMenuNavigation({
   onClose,
   onImport,
   onExport,
+  onCloseFile,
   isSubscribed,
 }: SideMenuNavigationProps) {
   const { t } = useTranslation();
@@ -76,7 +78,7 @@ export function SideMenuNavigation({
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
         </svg>
-        <span className="text-sm">{t('export_import.import', 'インポート')}</span>
+        <span className="text-sm">{t('export_import.import')}</span>
       </button>
 
       {/* エクスポートボタン */}
@@ -90,16 +92,26 @@ export function SideMenuNavigation({
         <span className="text-sm">{t('export_import.export')}</span>
       </button>
 
+      <button
+        onClick={onCloseFile}
+        className="w-full flex items-center gap-3 px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        <span className="text-sm">{t('settings.web_specific.close_file')}</span>
+      </button>
+
       {/* 広告バナー（Freeプランのみ表示） */}
       {!isSubscribed && (
         <div className="mt-auto pt-4">
           <div className="w-full flex justify-center">
-            <a href="https://px.a8.net/svt/ejp?a8mat=45IFX2+AP7H6A+1JUK+HY7W1" rel="nofollow">
+            <a href="https://px.a8.net/svt/ejp?a8mat=45IFX2+AQZRZM+2PEO+OC77L" rel="nofollow">
               <img
-                width="300"
+                width="250"
                 height="250"
                 alt=""
-                src="https://www21.a8.net/svt/bgt?aid=251123222647&wid=001&eno=01&mid=s00000007238003015000&mc=1"
+                src="https://www25.a8.net/svt/bgt?aid=251123222650&wid=001&eno=01&mid=s00000012624004088000&mc=1"
                 className="rounded-lg"
               />
             </a>
@@ -107,7 +119,7 @@ export function SideMenuNavigation({
             <img
               width="1"
               height="1"
-              src="https://www10.a8.net/0.gif?a8mat=45IFX2+AP7H6A+1JUK+HY7W1"
+              src="https://www12.a8.net/0.gif?a8mat=45IFX2+AQZRZM+2PEO+OC77L"
               alt=""
               className="hidden"
             />
@@ -117,4 +129,3 @@ export function SideMenuNavigation({
     </div>
   );
 }
-

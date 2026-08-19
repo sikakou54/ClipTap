@@ -7,13 +7,14 @@
  * @features
  * - データのエクスポート（.cliptapファイル形式）
  * - データのインポート（フルリストア/部分インポート）
- * - パスワード保護によるセキュリティ
+ * - パスワード一致とチェックサムによるファイル確認（暗号化ではない）
  *
  * @security
  * - パスワード + スキーマバージョンのSHA-256ハッシュ化
  * - 全フィールドのチェックサム検証
  *
- * @see lib/services/ExportImportService.ts - ビジネスロジック
+ * @see src/hooks/screens/useExportImportScreen.ts - ビジネスロジック
+ * @see packages/shared/src/services/ImportService.ts - インポート実処理
  */
 import React from 'react';
 import {
@@ -32,10 +33,12 @@ import { useTranslation } from '@cliptap/shared';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
 import { SCHEMA_VERSION } from '@database/schema';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { UI_CONSTANTS } from '@constants/ui';
 import { useExportImportScreen } from '@hooks/screens/useExportImportScreen';
+
+/* 使い方ガイドの手順。番号は配列順（index + 1）で描画する */
+const HELP_STEPS = ['export_import.step1', 'export_import.step2', 'export_import.step3'] as const;
 
 export default function ExportImportScreen() {
   const { t } = useTranslation();
@@ -75,10 +78,7 @@ export default function ExportImportScreen() {
   ];
 
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      {/* ヘッダー */}
-      <Header title={t('export_import.title')} backIcon="arrow-back" />
-
+    <ScreenContainer title={t('export_import.title')} backIcon="arrow-back">
       <ScrollView style={styles.content}>
         {/* バージョン情報セクション */}
         <View style={styles.infoSection}>
@@ -139,37 +139,24 @@ export default function ExportImportScreen() {
             {t('export_import.how_to_use')}
           </Text>
           <View style={[styles.helpCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <View style={styles.helpItem}>
-              <View style={[styles.helpNumber, { backgroundColor: colors.primary }]}>
-                <Text style={styles.helpNumberText}>1</Text>
+            {/* 使い方の手順 */}
+            {HELP_STEPS.map((stepKey, index) => (
+              <View key={stepKey} style={styles.helpItem}>
+                <View style={[styles.helpNumber, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.helpNumberText, { color: colors.onPrimary }]}>{index + 1}</Text>
+                </View>
+                <Text style={[styles.helpText, { color: colors.text, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
+                  {t(stepKey)}
+                </Text>
               </View>
-              <Text style={[styles.helpText, { color: colors.text, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
-                {t('export_import.step1')}
-              </Text>
-            </View>
-            <View style={styles.helpItem}>
-              <View style={[styles.helpNumber, { backgroundColor: colors.primary }]}>
-                <Text style={styles.helpNumberText}>2</Text>
-              </View>
-              <Text style={[styles.helpText, { color: colors.text, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
-                {t('export_import.step2')}
-              </Text>
-            </View>
-            <View style={styles.helpItem}>
-              <View style={[styles.helpNumber, { backgroundColor: colors.primary }]}>
-                <Text style={styles.helpNumberText}>3</Text>
-              </View>
-              <Text style={[styles.helpText, { color: colors.text, fontSize: responsiveFontSizes.sm, lineHeight: responsiveLineHeights.sm }]}>
-                {t('export_import.step3')}
-              </Text>
-            </View>
+            ))}
           </View>
         </View>
       </ScrollView>
 
       {/* ローディングオーバーレイ */}
       {isProcessing && (
-        <View style={styles.loadingOverlay}>
+        <View style={[styles.loadingOverlay, { backgroundColor: colors.overlay }]}>
           <View style={[styles.loadingContainer, { backgroundColor: colors.surface }]}>
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={[styles.loadingText, { color: colors.text }]}>
@@ -187,7 +174,7 @@ export default function ExportImportScreen() {
         onRequestClose={closePasswordModal}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <View style={styles.modalOverlay}>
+          <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
             <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
               <View style={styles.modalHeader}>
                 <Ionicons
@@ -242,7 +229,7 @@ export default function ExportImportScreen() {
                   style={[styles.modalButton, { backgroundColor: colors.primary }]}
                   onPress={handlePasswordSubmit}
                 >
-                  <Text style={[styles.modalButtonText, { fontSize: responsiveFontSizes.base }]}>
+                  <Text style={[styles.modalButtonText, { color: colors.onPrimary, fontSize: responsiveFontSizes.base }]}>
                     {t('common.ok')}
                   </Text>
                 </TouchableOpacity>
@@ -259,7 +246,7 @@ export default function ExportImportScreen() {
         animationType="fade"
         onRequestClose={closeImportModeModal}
       >
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             <View style={styles.modalHeader}>
               <Ionicons name="options-outline" size={48} color={colors.primary} />
@@ -281,6 +268,9 @@ export default function ExportImportScreen() {
                   <Text style={[styles.modeDescription, { color: colors.textSecondary }]}>
                     {t('backup.mode_restore_desc')}
                   </Text>
+                  <Text style={[styles.modeDescription, { color: colors.textSecondary }]}>
+                    {t('export_import.restore_includes_formats')}
+                  </Text>
                 </View>
               </TouchableOpacity>
 
@@ -295,6 +285,9 @@ export default function ExportImportScreen() {
                   <Text style={[styles.modeTitle, { color: colors.text }]}>{t('backup.mode_merge')}</Text>
                   <Text style={[styles.modeDescription, { color: colors.textSecondary }]}>
                     {t('backup.mode_merge_desc')}
+                  </Text>
+                  <Text style={[styles.modeDescription, { color: colors.textSecondary }]}>
+                    {t('export_import.partial_excludes_formats')}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -313,7 +306,7 @@ export default function ExportImportScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScreenContainer>
   );
 }
 
@@ -419,17 +412,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  /** 手順番号のテキスト（文字色は使用箇所でテーマの onPrimary を重ねる） */
   helpNumberText: {
-    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '600',
   },
   helpText: {
     flex: 1,
   },
+  /** モーダルオーバーレイ（背景色は使用箇所でテーマの overlay を重ねる） */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -475,13 +468,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
+  /** モーダルボタンのテキスト（文字色は使用箇所でテーマから重ねる） */
   modalButtonText: {
-    color: '#FFFFFF',
     fontWeight: '600',
   },
+  /** 処理中の全面遮蔽（背景色は使用箇所でテーマの overlay を重ねる） */
   loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    /* RN 0.86でStyleSheet.absoluteFillObjectが削除されたため明示指定 */
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,

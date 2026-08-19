@@ -3,25 +3,38 @@
  *
  * @description
  * プラットフォーム共通のインポート検証ロジックを提供する。
- * プラットフォーム固有の処理（暗号化）はアダプター経由で注入。
+ * プラットフォーム固有のハッシュ処理はアダプター経由で注入。
  *
  * @module ImportParserService
  */
 
 import { getCryptoAdapter, type CryptoAdapter } from '../adapters/CryptoAdapter';
-import type { ClipTapExportData } from '../schema';
+import { ClipTapExportDataSchema, type ClipTapExportData } from '../schema';
 import {
   buildPasswordHashInput,
   buildChecksumPayload,
   decodeDoubleBase64ToUint8Array,
 } from '../utils/exportImportUtils';
-import { SCHEMA_VERSION } from '../database/schema';
+import { MIN_SUPPORTED_SCHEMA_VERSION, SCHEMA_VERSION } from '../database/schema';
 import {
   ChecksumMismatchError,
   NewerVersionError,
   IncorrectPasswordError,
   InvalidFileFormatError,
+  VersionMismatchError,
 } from '../errors';
+
+/** SQLiteファイルの固定ヘッダー */
+const SQLITE_HEADER = new Uint8Array([
+  0x53, 0x51, 0x4c, 0x69, 0x74, 0x65, 0x20, 0x66,
+  0x6f, 0x72, 0x6d, 0x61, 0x74, 0x20, 0x33, 0x00,
+]);
+
+/** デコード結果がSQLiteファイルか判定 */
+function hasSqliteHeader(bytes: Uint8Array): boolean {
+  return bytes.length >= SQLITE_HEADER.length
+    && SQLITE_HEADER.every((byte, index) => bytes[index] === byte);
+}
 
 /**
  * 検証結果
@@ -40,7 +53,7 @@ export interface ValidationResult {
  *
  * @description
  * プラットフォーム共通のインポート検証ロジックを提供。
- * 暗号化アダプターはsetAllAdaptersで設定済みのものを使用。
+ * ハッシュアダプターはsetAllAdaptersで設定済みのものを使用。
  */
 export class ImportParserService {
   constructor() {
@@ -74,17 +87,26 @@ export class ImportParserService {
    */
   async parseAndValidate(jsonText: string, password: string): Promise<ValidationResult> {
     /* Step 1: JSONパース */
-    let data: ClipTapExportData;
+    let parsedJson: unknown;
     try {
-      data = JSON.parse(jsonText);
+      parsedJson = JSON.parse(jsonText);
     } catch {
       throw new InvalidFileFormatError();
     }
+
+    const parseResult = ClipTapExportDataSchema.safeParse(parsedJson);
+    if (!parseResult.success) {
+      throw new InvalidFileFormatError();
+    }
+    const data = parseResult.data;
 
     /* Step 2: スキーマバージョンチェック */
     /* ファイルバージョンが現在のスキーマより大きい場合はアプリ更新が必要 */
     if (data.s > SCHEMA_VERSION) {
       throw new NewerVersionError(SCHEMA_VERSION, data.s);
+    }
+    if (data.s < MIN_SUPPORTED_SCHEMA_VERSION) {
+      throw new VersionMismatchError(MIN_SUPPORTED_SCHEMA_VERSION, data.s);
     }
 
     /* Step 3: パスワードハッシュ検証 */
@@ -94,45 +116,32 @@ export class ImportParserService {
     }
 
     /* Step 4: チェックサム検証（データ改竄チェック） */
-    if (data.c) {
-      const dataToHash = buildChecksumPayload({
-        s: data.s,
-        t: data.t,
-        h: data.h,
-        d: data.d,
-      });
-      const calculatedChecksum = await this.crypto.sha256(dataToHash);
-      if (calculatedChecksum !== data.c) {
-        throw new ChecksumMismatchError();
-      }
+    const dataToHash = buildChecksumPayload({
+      s: data.s,
+      t: data.t,
+      h: data.h,
+      d: data.d,
+    });
+    const calculatedChecksum = await this.crypto.sha256(dataToHash);
+    if (calculatedChecksum !== data.c) {
+      throw new ChecksumMismatchError();
     }
 
     /* Step 5: バイナリデコード（二重Base64デコード → SQLiteバイナリ） */
-    const dbBytes = decodeDoubleBase64ToUint8Array(data.d);
+    let dbBytes: Uint8Array;
+    try {
+      dbBytes = decodeDoubleBase64ToUint8Array(data.d);
+    } catch {
+      throw new InvalidFileFormatError();
+    }
+    if (!hasSqliteHeader(dbBytes)) {
+      throw new InvalidFileFormatError();
+    }
 
     return {
       success: true,
       dbBytes,
       exportData: data,
     };
-  }
-
-  /**
-   * SHA-256ハッシュを計算（エクスポート用に公開）
-   *
-   * @param input - ハッシュ対象の文字列
-   * @returns ハッシュ値
-   */
-  async calculateSHA256(input: string): Promise<string> {
-    return this.crypto.sha256(input);
-  }
-
-  /**
-   * 現在のスキーマバージョンを取得
-   *
-   * @returns スキーマバージョン
-   */
-  getSchemaVersion(): number {
-    return SCHEMA_VERSION;
   }
 }

@@ -18,22 +18,13 @@ import type {
 } from '../schema';
 import { NotFoundError, EmptyContentError } from '../errors';
 import { hasVariables, replaceVariables, type VariableResolver } from '../variables/parser';
-import { prepareSnippetForClipboard } from '../utils/snippetUtils';
+import { prepareSnippetForClipboard, prepareSnippetTitleForClipboard } from '../utils/snippetUtils';
+import { SystemVariableFormatRegistry } from './SystemVariableFormatRegistry';
 
 /**
  * スニペットサービス
  */
 export class SnippetService {
-  /**
-   * 全スニペットを取得
-   *
-   * @param filterByProfileId - プロファイルIDでフィルタリング（オプション）
-   * @returns すべてのスニペットの配列（createdAtカラムの降順でソート済み）
-   */
-  static getAll(filterByProfileId?: string | null): Snippet[] {
-    return SnippetMapper.getAll(filterByProfileId);
-  }
-
   /**
    * IDでスニペットを取得
    *
@@ -42,17 +33,6 @@ export class SnippetService {
    */
   static getById(id: string): Snippet | null {
     return SnippetMapper.getById(id);
-  }
-
-  /**
-   * カテゴリIDでスニペットを取得
-   *
-   * @param categoryId - カテゴリのID（nullの場合は未分類スニペット）
-   * @param filterByProfileId - プロファイルIDでフィルタリング（オプション）
-   * @returns 指定カテゴリに属するスニペットの配列
-   */
-  static getByCategory(categoryId: string | null, filterByProfileId?: string | null): Snippet[] {
-    return SnippetMapper.getByCategory(categoryId, filterByProfileId);
   }
 
   /**
@@ -67,7 +47,7 @@ export class SnippetService {
     if (!data.content || data.content.trim() === '') {
       throw new EmptyContentError();
     }
-    /* バリデーション通過後、Mapper層に処理を委譲（データベース操作） */
+    /* 検証はService、SQLはMapperに集約する規約のため、検証済みデータをそのままMapperへ渡す */
     return SnippetMapper.create(data);
   }
 
@@ -84,7 +64,7 @@ export class SnippetService {
     if (!existing) {
       throw new NotFoundError('snippet', data.id);
     }
-    /* Mapper層に処理を委譲（データベース操作） */
+    /* 検証はService、SQLはMapperに集約する規約のため、検証済みデータをそのままMapperへ渡す */
     return SnippetMapper.update(data);
   }
 
@@ -137,25 +117,6 @@ export class SnippetService {
   }
 
   /**
-   * スニペット数を取得
-   *
-   * @returns スニペットの総数
-   */
-  static count(): number {
-    return SnippetMapper.count();
-  }
-
-  /**
-   * カテゴリごとのスニペット数を取得
-   *
-   * @param categoryId - カテゴリのID（nullの場合は未分類スニペット）
-   * @returns 指定カテゴリに属するスニペットの数
-   */
-  static countByCategory(categoryId: string | null): number {
-    return SnippetMapper.countByCategory(categoryId);
-  }
-
-  /**
    * スニペットに紐づくプロファイルID一覧を取得
    *
    * @param snippetId - スニペットのID
@@ -163,19 +124,6 @@ export class SnippetService {
    */
   static getProfileIds(snippetId: string): string[] {
     return SnippetMapper.getProfileIds(snippetId);
-  }
-
-  /**
-   * スニペットに紐づくプロファイルIDを更新
-   *
-   * @param snippetId - スニペットのID
-   * @param profileIds - 新しく関連付けるプロファイルIDの配列
-   *
-   * @remarks
-   * - 既存の関連付けは全て削除され、新しい関連付けに置き換わる
-   */
-  static setProfileIds(snippetId: string, profileIds: string[]): void {
-    SnippetMapper.setProfileIds(snippetId, profileIds);
   }
 
   /**
@@ -212,6 +160,7 @@ export class SnippetService {
     return replaceVariables(text, {
       locale: options?.locale,
       customResolver: options?.customResolver,
+      formats: SystemVariableFormatRegistry.getAll(),
     });
   }
 
@@ -238,16 +187,9 @@ export class SnippetService {
       throw new NotFoundError('snippet', id);
     }
 
-    /* 変数が含まれていない場合は早期リターン（パフォーマンス最適化、不要な処理を回避） */
-    if (!hasVariables(snippet.content)) {
-      return snippet.content;
-    }
-
-    /* 変数を実際の値に置換（システム変数とカスタム変数の両方を処理） */
-    return replaceVariables(snippet.content, {
-      locale: options?.locale,
-      customResolver: options?.customResolver,
-    });
+    /* 変数展開そのものは getTextPreview と同一の規則で行う。
+       このメソッドの責務はIDからスニペットを引く部分だけに絞り、展開規則を二重に持たない */
+    return this.getTextPreview(snippet.content, options);
   }
 
   /**
@@ -282,6 +224,45 @@ export class SnippetService {
 
     /* クリップボード用テキストを準備（変数展開、タイトル結合等を処理） */
     return prepareSnippetForClipboard({
+      snippet,
+      customResolver: options?.customResolver,
+      shouldReplaceVariables: options?.shouldReplaceVariables ?? true,
+      locale: options?.locale,
+    });
+  }
+
+  /**
+   * スニペットのタイトルだけをクリップボードにコピーするためのテキストを準備
+   *
+   * @param id - スニペットのID
+   * @param options - オプション
+   * @param options.locale - ロケール（システム変数の日付フォーマット等に使用）
+   * @param options.customResolver - カスタム変数リゾルバー
+   * @param options.shouldReplaceVariables - 変数を置換するか（デフォルト: true）
+   * @returns クリップボードにコピーするタイトル（タイトルがない場合は空文字）
+   * @throws {NotFoundError} スニペットが見つからない場合
+   *
+   * @remarks
+   * - 本文は結合せず、タイトルのみを返す
+   * - copyWithTitleの値にかかわらずタイトルを返す
+   * - shouldReplaceVariablesがtrueの場合、変数を実際の値に置換する
+   */
+  static async prepareTitleForClipboard(
+    id: string,
+    options?: {
+      locale?: string;
+      customResolver?: VariableResolver;
+      shouldReplaceVariables?: boolean;
+    }
+  ): Promise<string> {
+    /* スニペットを取得（存在しない場合はエラー） */
+    const snippet = SnippetMapper.getById(id);
+    if (!snippet) {
+      throw new NotFoundError('snippet', id);
+    }
+
+    /* クリップボード用タイトルを準備（変数展開を処理） */
+    return prepareSnippetTitleForClipboard({
       snippet,
       customResolver: options?.customResolver,
       shouldReplaceVariables: options?.shouldReplaceVariables ?? true,

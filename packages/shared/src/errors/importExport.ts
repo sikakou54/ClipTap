@@ -90,17 +90,6 @@ export class NewerVersionError extends ImportExportError {
   }
 }
 
-/**
- * ファイル読み込みエラー
- *
- * インポートファイルの読み込みに失敗した場合にスローされます。
- */
-export class FileReadError extends ImportExportError {
-  constructor(message: string = 'Failed to read file', cause?: unknown) {
-    super(message, 'error.file_read', 'error', cause);
-    this.name = 'FileReadError';
-  }
-}
 
 /**
  * 無効なファイル形式エラー
@@ -109,7 +98,7 @@ export class FileReadError extends ImportExportError {
  */
 export class InvalidFileTypeError extends ImportExportError {
   constructor(message: string = 'Invalid file type') {
-    super(message, 'backup.select_cliptap_file');
+    super(message, 'error.invalid_file_type');
     this.name = 'InvalidFileTypeError';
   }
 }
@@ -133,7 +122,7 @@ export class InvalidFileFormatError extends ImportExportError {
  */
 export class PasswordRequiredError extends ImportExportError {
   constructor(message: string = 'Password is required') {
-    super(message, 'backup.password_incorrect');
+    super(message, 'error.password_required');
     this.name = 'PasswordRequiredError';
   }
 }
@@ -150,17 +139,6 @@ export class ExportFailedError extends ImportExportError {
   }
 }
 
-/**
- * ファイル書き込みエラー
- *
- * エクスポートファイルの書き込みに失敗した場合にスローされます。
- */
-export class FileWriteError extends ImportExportError {
-  constructor(message: string = 'Failed to write file', cause?: unknown) {
-    super(message, 'error.file_write', 'error', cause);
-    this.name = 'FileWriteError';
-  }
-}
 
 /**
  * 一時DBパス未設定エラー
@@ -174,17 +152,6 @@ export class TempDbPathRequiredError extends ImportExportError {
   }
 }
 
-/**
- * 選択なしエラー
- *
- * 部分インポート時に何もアイテムが選択されていない場合にスローされます。
- */
-export class NoSelectionError extends ImportExportError {
-  constructor(message: string = 'No items selected') {
-    super(message, 'backup.no_selection', 'warning');
-    this.name = 'NoSelectionError';
-  }
-}
 
 /**
  * 部分インポートエラー
@@ -195,17 +162,5 @@ export class PartialImportError extends ImportExportError {
   constructor(message: string = 'Partial import failed', cause?: unknown) {
     super(message, 'error.generic', 'error', cause);
     this.name = 'PartialImportError';
-  }
-}
-
-/**
- * データベースパス未取得エラー
- *
- * データベースファイルのパスが取得できない場合にスローされます。
- */
-export class DatabasePathNotFoundError extends ImportExportError {
-  constructor(message: string = 'Database path not found') {
-    super(message, 'error.generic');
-    this.name = 'DatabasePathNotFoundError';
   }
 }

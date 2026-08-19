@@ -52,10 +52,3 @@ export function getCryptoAdapter(): CryptoAdapter {
   return cryptoAdapter;
 }
 
-/**
- * CryptoAdapterが登録済みか確認
- * @returns 登録済みの場合true
- */
-export function hasCryptoAdapter(): boolean {
-  return cryptoAdapter !== null;
-}

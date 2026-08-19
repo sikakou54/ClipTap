@@ -17,7 +17,6 @@
  * @see components/snippet/SnippetFormScreen.tsx - 共通フォームコンポーネント
  * @see app/snippet/edit.tsx - 編集画面
  */
-import React from 'react';
 import { SnippetFormScreen } from '@components/snippet/SnippetFormScreen';
 
 export default function CreateSnippetScreen() {

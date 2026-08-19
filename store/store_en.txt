@@ -1,78 +1,87 @@
-[Title]
-ClipTap : snippets & templates
+【App Store｜タイトル】（30 chars max）
+ClipTap: Text Snippet Keyboard
 
-[Subtitle]
-Save time with text templates
+【App Store｜サブタイトル】（30 chars max）
+Text expander & canned replies
 
-[Promo text]
-Stop typing the same text over and over.
-ClipTap lets you save text templates, auto-insert dates and names, and use them anywhere via a custom keyboard and web editor.
+【App Store｜キーワード】（100 chars max／カンマ区切り。タイトル・サブタイトルの語とは重複させない）
+paste,template,phrase,clipboard,shortcut,copy,offline,signature,hashtag,prompt,quick,macro,ai,email
 
-[What's New]
-Added template sorting feature!
+【App Store｜プロモーションテキスト】（170 chars max／審査なしで差し替え可）
+Paste saved replies into any app from the ClipTap keyboard - no app-switching, no copy-and-paste. Variables fill in dates and names, now in 94 formats. Works offline.
 
-• Choose from 4 sorting options: Created, Updated, Title, or Usage Frequency
-• Sort now available in the keyboard extension
+【Google Play｜アプリ名】（30 chars max）
+ClipTap: Text Snippet Keyboard
 
-A handy feature for users with growing template libraries.
+【Google Play｜短い説明】（80 chars max）
+Stop retyping: a snippet keyboard and text expander for canned replies.
 
-[Description]
+【リリースノート（Google Play／500 chars max）】
+Version 1.3.0
 
-What is ClipTap
+- Date and time formats (free): 94 presets across the 7 system variables.
+- Title and line-break buttons on the keyboard: fill a subject, then the body.
+- Mark any profile as the default from the list.
+- Try the web version in a PC browser without installing the app.
+- Older .cliptap files are migrated on import; large libraries load faster.
+- Improvements were made to the UI and the program.
 
-ClipTap is a text template app that lets you save phrases you use all the time and insert them with a single tap. Email greetings, your address and phone number, estimate and invoice messages, SNS hashtags and bios – anything you keep retyping can be turned into a reusable template.
+【説明文（App Store・Google Play 共通／4,000 chars max）】
+Stop retyping the same messages.
 
-You can also use variables to partly automate your messages. System variables like {{today}} and {{now}} insert the current date and time, and Pro adds custom variables such as {{name}} or {{company}}. It is ideal when only a few parts of a message change each time.
+ClipTap is a snippet keyboard and text expander for the phrases you send every day. Save a template once, switch to the ClipTap keyboard, and drop it straight into whatever app you are in - email, chat, social, your browser, an AI chat. No app-switching, no copy-and-paste.
 
-With the ClipTap keyboard extension, you can call templates directly from Gmail, Slack, LINE, X, Instagram, your browser and many other apps.
+The ClipTap keyboard only inserts your saved text; for regular typing, switch back to your usual keyboard.
 
-Who is ClipTap for?
+CLIPTAP IS FOR YOU IF YOU
 
-Business professionals who send similar emails and chats every day and need to switch signatures or company names between multiple roles.
+- Send the same emails and canned replies all week, with a different signature for each role
+- Reuse the same captions, hashtag sets and bios
+- Send quotes, invoices and reminders, and keep client details on your device
+- Reach for the same code snippets, commands and API examples
+- Keep a library of AI prompts you reuse
 
-Daily SNS users who post recurring series, reuse almost the same captions and hashtag blocks, and want standard bios ready to paste.
+WHAT YOU CAN DO
 
-Freelancers and solo entrepreneurs who send many semi-templated messages (quotes, invoices, reminders, Zoom links) and prefer to keep client data on their device.
+A text expander you tap, not abbreviations you memorize
+Save any phrase: a greeting, a canned reply, a whole email, a code snippet, a prompt. One tap in the app copies it, or tap its title to copy just the title. Unlimited templates and categories, even free.
 
-Main features
+The snippet keyboard, in any app
+Filter by category, switch profile and reorder the list without leaving the keyboard. Title and line-break buttons fill a subject line and then the body in one go. On iOS it works without Full Access; grant it and keyboard use also counts towards the usage ranking. Android needs nothing extra.
 
-• Keyboard extension
-Insert templates from the ClipTap keyboard in any app. No app-switching, no copy-and-paste loops.
+Variables for the parts that change
+Seven system variables - {{today}}, {{now}}, {{time}}, {{year}}, {{month}}, {{day}}, {{weekday}} - fill in the date and time as you insert. Custom variables like {{name}} or {{company}} hold your own details: enter them once, reuse everywhere. Free: 5. Pro: unlimited.
 
-• One-tap copy / one-tap insert
-Tap a template in the app to copy it, or tap it on the keyboard to insert it straight into the text field.
+94 date and time formats
+Pick the output format for each system variable from 94 presets in total, 34 for the date alone: 2026/08/04, 08/04/2026, 04/08/2026, 09:05, Tue, Tuesday. Preview against the real date; every template using that variable follows at once, in the app and on the keyboard. All 94 are free.
 
-• Variables for the parts that change
-Use system variables for dates and times ({{today}}, {{now}}, {{year}}, etc.), and with Pro add custom variables for your own data ({{name}}, {{email}}, {{company}}, {{client}}, {{fee}}). Register this information once and reuse it across many templates.
+Profiles for every hat you wear
+Profiles like "Company A", "Side project" and "Personal" each keep their own variable values, so one template comes out with a different company name, title and signature. Free: 3. Pro: unlimited.
 
-• Environments (profiles)
-Create profiles like “Company A”, “Company B”, “Side business” and “Personal”. Switching profiles automatically changes company names, titles and signatures while using the same templates.
-Free: up to 3 profiles / Pro: unlimited.
+A prompt library for AI chats
+Keep the instructions you reuse - summarize, translate, rewrite, review - as templates, add variables so only the date or project name changes, and insert them from the keyboard.
 
-• Web version (PC)
-Export your data as a .cliptap file, edit and organize templates on a PC, then import the updated file back into the app. Ideal if you write on PC but send from your phone.
+Categories, search and sorting
+Group templates into Work, Social, Prompts or Code, color-coded from 12 presets, search titles and bodies, and sort four ways, including most used.
 
-• Categories & search
-Group templates into categories such as “Work”, “SNS”, “Freelance admin”, “Code” and “Daily life”, and find them quickly with keyword search.
+The web version: free, nothing to install
+Organize a large library on a big screen in a PC browser, then move it to your phone as a .cliptap file. No app yet? Start from the free starter file.
 
-• Import / export sync
-Export templates to a file and import them on another device. Useful when changing phones or sharing the same setup between iPhone, iPad and the web version.
+EVERYTHING STAYS ON YOUR DEVICE
 
-Security & privacy
+Templates, variables and profiles stay in your phone's storage. No cloud sync, no automatic upload. ClipTap goes online only for subscription checks, sign-in and ads; every core feature works offline, and no account is needed.
 
-All templates and variable data are stored locally on your device. There is no automatic cloud sync and nothing is sent to external servers, except what is required for subscription processing. Core features work offline, so you can store text that includes client data, confidential business content or personal information.
+It asks for no location, camera, photo or microphone permission - those requests were removed in this version.
 
-Pro plan
+Changing phones? Export everything, or just what you pick, as a .cliptap file and import it on the other device with the password you set. A checksum rejects damaged files.
 
-Pro offers a monthly and a yearly subscription. It removes ads, unlocks unlimited profiles and unlimited custom variables, and includes all features of the free version. Payments are handled by the App Store, and you can cancel at any time; you keep Pro features until the end of the paid period.
+FREE AND PRO
 
-Example use cases
+Free: unlimited templates and categories, the snippet keyboard, all 7 text expander variables with all 94 format presets, 3 profiles, 5 custom variables.
+Pro (monthly or yearly): no ads, unlimited profiles and custom variables. Pricing varies by country or region - see the purchase screen in the app, or this store page, for the current price. Billing runs through your store account, cancel any time.
 
-• Sales / CS: scheduling emails, thank-you and apology messages, periodic reports, internal announcements
-• SNS: series post formats, hashtag sets and profile templates
-• Freelancers: quotes, invoices, reminders, Zoom invitations, contract-related text
-• Everyday life: address, phone number, email and frequently used fixed phrases
+FROM THE DEVELOPER
 
-From the developer
+I built ClipTap so the time you spend retyping the same sentences goes back to work that actually matters.
 
-ClipTap was created to help you spend less time retyping the same sentences and more time on work and communication that really matter. Whether it is for business, SNS or freelance admin tasks, I hope it can turn your “usual one-liners” into powerful templates and make each day a little easier.
+iPhone, iPad and Android (iOS 17.0+, Android 7.0+). Dark mode, English and Japanese.

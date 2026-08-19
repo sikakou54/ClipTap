@@ -4,12 +4,17 @@
  * Web版アラート表示ユーティリティ
  *
  * window.alert/window.confirmのラッパーとして実装。
- * Mobile版とAPI互換性を保つために、同じインターフェースを提供します。
  *
  * 主な機能:
  * - 確認ダイアログ（showConfirm）
  * - カスタムアラート（showAlert）
  * - エラーアラート（showErrorAlert）
+ *
+ * Mobile版（apps/mobile/src/utils/alerts.ts）とはシグネチャが共通化されていない。
+ * Web版は window.alert / window.confirm を使うため、ボタン文言やダイアログ種別を指定する引数を持たない:
+ * - showAlert の第3引数は、Webが onClose、Mobileが buttonText
+ * - showConfirm は Mobile に第4引数 type（'danger' で destructive 表示）があり、Webには無い
+ * - showConfirmMessage は Web にのみあり、showInfo / showWarningAlert は Mobile にのみある
  *
  * i18nextとの統合:
  * 翻訳キーを受け取る関数は、内部でI18nAdapterを使用して翻訳します。
@@ -106,7 +111,7 @@ export const showAlert = (title: string, message: string, onClose?: () => void):
  * エラーアラートダイアログを表示
  *
  * window.alertを使用してエラーメッセージを表示します。
- * タイトルは自動的に「エラー」になります。
+ * タイトルは common.error の翻訳が入ります。I18nAdapterが未登録の場合はタイトルなしで表示します。
  *
  * この関数は、translateError()で翻訳済みのエラーメッセージを受け取ることを想定しています。
  *
@@ -119,8 +124,8 @@ export const showErrorAlert = (message: string, onClose?: () => void): void => {
     const title = i18nAdapter.translate('common.error');
     showSingleButtonAlert(title, message, onClose);
   } catch {
-    /* I18nAdapterが未登録の場合はデフォルトタイトルを使用 */
-    showSingleButtonAlert('エラー', message, onClose);
+    /* I18nAdapter未登録時はタイトルを付けず、翻訳済みのメッセージだけを表示する */
+    showSingleButtonAlert('', message, onClose);
   }
 };
 

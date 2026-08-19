@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { translateError } from '@cliptap/shared';
+import { Logger, translateError } from '@cliptap/shared';
 import { showErrorAlert } from '@utils/alerts';
 
 export interface UseExportScreenReturn {
@@ -78,7 +78,7 @@ export function useExportScreen(): UseExportScreenReturn {
         });
         setShowExportModal(false);
       } catch (err) {
-        console.error('Failed to export:', err);
+        Logger.error('Failed to export:', err);
         const translatedMessage = translateError(err);
         showErrorAlert(translatedMessage);
       } finally {

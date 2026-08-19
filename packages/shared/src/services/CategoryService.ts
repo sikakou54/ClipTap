@@ -62,7 +62,7 @@ export class CategoryService {
     /* カテゴリ名の前後空白をトリム（ユーザー入力の正規化） */
     const trimmedName = input.name.trim();
 
-    /* 空文字チェック（空白のみも不可） */
+    /* 空白のみの名前は一覧で識別できず重複判定もすり抜けるため、trim後の空文字を拒否する */
     if (!trimmedName) {
       throw new EmptyContentError();
     }
@@ -73,7 +73,7 @@ export class CategoryService {
       throw new DuplicateNameError('category', trimmedName);
     }
 
-    /* バリデーション通過後、Mapper層に処理を委譲（データベース操作） */
+    /* 検証はService、SQLはMapperに集約する規約のため、検証済みデータをそのままMapperへ渡す */
     return CategoryMapper.create({ ...input, name: trimmedName });
   }
 
@@ -93,7 +93,7 @@ export class CategoryService {
       /* カテゴリ名の前後空白をトリム（ユーザー入力の正規化） */
       const trimmedName = data.name.trim();
 
-      /* 空文字チェック（空白のみも不可） */
+      /* 空白のみの名前は一覧で識別できず重複判定もすり抜けるため、trim後の空文字を拒否する */
       if (!trimmedName) {
         throw new EmptyContentError();
       }
@@ -108,7 +108,7 @@ export class CategoryService {
       updateData = { ...updateData, name: trimmedName };
     }
 
-    /* バリデーション通過後、Mapper層に処理を委譲（データベース操作） */
+    /* 検証はService、SQLはMapperに集約する規約のため、検証済みデータをそのままMapperへ渡す */
     return CategoryMapper.update(updateData);
   }
 
@@ -139,23 +139,17 @@ export class CategoryService {
   }
 
   /**
-   * カテゴリ総数を取得
-   *
-   * @returns カテゴリの総数
-   */
-  static count(): number {
-    return CategoryMapper.count();
-  }
-
-  /**
    * カテゴリを作成または更新（upsert）
    *
    * @param data - カテゴリの情報（nameで既存を検索、あれば更新、なければ新規作成）
    * @returns 作成/更新されたカテゴリ
    * @throws {EmptyContentError} カテゴリ名が空の場合
    * @throws {DuplicateNameError} 同名のカテゴリが既に存在する場合（自分以外）
+   * @remarks
+   * 既存カテゴリの表示順は変更しない。表示順は利用者が決めたものであり、
+   * インポートなどの外部由来の操作で並びが入れ替わらないようにする。
    */
-  static upsert(data: CreateCategoryInput & { sortOrder?: number }): Category {
+  static upsert(data: CreateCategoryInput): Category {
     const trimmedName = data.name.trim();
     if (!trimmedName) {
       throw new EmptyContentError();
@@ -163,16 +157,12 @@ export class CategoryService {
 
     const existing = CategoryMapper.getByName(trimmedName);
     if (existing) {
-      /* 既存カテゴリを更新（sortOrderが指定されている場合のみ更新） */
-      const updateData: UpdateCategoryInput = {
+      /* 既存カテゴリを更新（表示順は据え置く） */
+      return this.update({
         id: existing.id,
         name: trimmedName,
         color: data.color,
-      };
-      if (data.sortOrder !== undefined) {
-        updateData.sortOrder = data.sortOrder;
-      }
-      return this.update(updateData);
+      });
     } else {
       /* 新規作成（sortOrderは自動採番） */
       return this.create({

@@ -14,20 +14,18 @@
  * - UIとビジネスロジックを完全分離
  * - 全ての状態・ロジックはuseTextInputScreenフックで管理
  *
- * @see lib/hooks/screens/useTextInputScreen.ts - ビジネスロジック
+ * @see hooks/screens/useTextInputScreen.ts - ビジネスロジック
  * @see SnippetFormScreen - 親コンポーネント
  * @see VariableToolbar - 変数挿入ツールバー
  */
 
-import React from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { useTranslation } from '@cliptap/shared';
 import { useTheme } from '@lib/themeSystem';
 import { useTextInputScreen } from '@hooks/screens/useTextInputScreen';
 import { VariableToolbar } from './VariableToolbar';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScreenContainer } from '@components/common/ScreenContainer';
+import { INPUT_LIMITS } from '@cliptap/shared';
 
 /* ========================================
    Props定義
@@ -60,31 +58,26 @@ export function TextInputScreen({ type, initialValue, hasOnSave }: TextInputScre
   } = useTextInputScreen({ type, initialValue, hasOnSave });
   /* テキスト入力画面 */
   return (
-    <SafeAreaView
-      style={[commonStyles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}
+    <ScreenContainer
+      title={t(`snippet.${type}_input`)}
+      isModal={!isTablet}
+      rightAction={
+        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+          <Text
+            style={[
+              styles.saveText,
+              {
+                color: colors.primary,
+                fontSize: responsiveFontSizes.base,
+                lineHeight: responsiveLineHeights.base,
+              },
+            ]}
+          >
+            {t('common.done')}
+          </Text>
+        </TouchableOpacity>
+      }
     >
-      {/* ヘッダー（タイトルと完了ボタン） */}
-      <Header
-        title={t(`snippet.${type}_input`)}
-        isModal={!isTablet}
-        rightAction={
-          <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-            <Text
-              style={[
-                styles.saveText,
-                {
-                  color: colors.primary,
-                  fontSize: responsiveFontSizes.base,
-                  lineHeight: responsiveLineHeights.base,
-                },
-              ]}
-            >
-              {t('common.done')}
-            </Text>
-          </TouchableOpacity>
-        }
-      />
 
       {/* キーボード表示に応じてレイアウト調整 */}
       <View
@@ -100,28 +93,33 @@ export function TextInputScreen({ type, initialValue, hasOnSave }: TextInputScre
           },
         ]}
       >
-        {/* テキスト入力フィールド */}
-        <TextInput
-          ref={textInputRef}
-          value={text}
-          onChangeText={handleTextChange}
-          onSelectionChange={(e) => {
-            handleSelectionChange(e.nativeEvent.selection.start);
-          }}
-          placeholder={t(`snippet.${type}_input_placeholder`)}
-          placeholderTextColor={colors.textSecondary}
-          style={[
-            styles.input,
-            {
-              color: colors.text,
-              fontSize: responsiveFontSizes.base,
-              lineHeight: responsiveFontSizes.base * 1.5,
-            },
-          ]}
-          multiline
-          textAlignVertical="top"
-          scrollEnabled={true}
-        />
+        {/* テキスト入力エリア（余白を吸収し、入力欄を上端へ寄せる） */}
+        <View style={styles.inputArea}>
+          {/* テキスト入力フィールド */}
+          <TextInput
+            ref={textInputRef}
+            value={text}
+            onChangeText={handleTextChange}
+            onSelectionChange={(e) => {
+              handleSelectionChange(e.nativeEvent.selection.start);
+            }}
+            placeholder={t(`snippet.${type}_input_placeholder`)}
+            placeholderTextColor={colors.textSecondary}
+            style={[
+              /* 単一行のタイトルは伸縮させない（伸ばすと垂直中央に描画されるため） */
+              type === 'content' ? styles.input : styles.inputSingleLine,
+              {
+                color: colors.text,
+                fontSize: responsiveFontSizes.base,
+                lineHeight: responsiveFontSizes.base * 1.5,
+              },
+            ]}
+            multiline={type === 'content'}
+            maxLength={type === 'title' ? INPUT_LIMITS.SNIPPET_TITLE_MAX : undefined}
+            textAlignVertical="top"
+            scrollEnabled={true}
+          />
+        </View>
 
         {/* 変数挿入ツールバー（キーボードの上に表示） */}
         <View
@@ -136,7 +134,7 @@ export function TextInputScreen({ type, initialValue, hasOnSave }: TextInputScre
           <VariableToolbar onInsert={handleInsertVariable} />
         </View>
       </View>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 
@@ -150,8 +148,14 @@ const styles = StyleSheet.create({
   contentWrapper: {
     flex: 1,
   },
+  inputArea: {
+    flex: 1,
+  },
   input: {
     flex: 1,
+    padding: 16,
+  },
+  inputSingleLine: {
     padding: 16,
   },
   toolbarContainer: {

@@ -50,10 +50,10 @@ export interface UseWebImportResult {
   /* Actions */
   /** ファイル選択モーダルを表示 */
   setShowFileSelect: (show: boolean) => void;
-  /** インポートモード選択モーダルを表示 */
-  setShowModeSelect: (show: boolean) => void;
-  /** 項目選択モーダルを表示 */
-  setShowItemSelect: (show: boolean) => void;
+  /** インポートモード選択モーダルを閉じる（保持中の一時DBの破棄を伴う） */
+  closeModeSelect: () => void;
+  /** 項目選択モーダルを閉じる（保持中の一時DBの破棄を伴う） */
+  closeItemSelect: () => void;
   /** ファイルを解析 */
   handleFileSelected: (fileData: unknown, password: string) => Promise<void>;
   /** 全データ復元を実行 */
@@ -95,6 +95,20 @@ export function useWebImport(options: UseWebImportOptions): UseWebImportResult {
   const tempDbPathRef = useRef<string | null>(null);
 
   /**
+   * 保持中のプレビュー用一時DBをOPFSから削除する
+   *
+   * @remarks
+   * OPFSは永続領域のため、削除しないと `import_temp_*.db` が取込のたびに溜まり続ける。
+   * cleanupTempDatabase は内部で削除失敗をログに落とすだけなので、取込結果には影響しない。
+   */
+  const discardTempDb = useCallback(() => {
+    const path = tempDbPathRef.current;
+    if (!path) return;
+    tempDbPathRef.current = null;
+    ImportService.cleanupTempDatabase(path);
+  }, []);
+
+  /**
    * インポート後の共通後処理
    */
   const postImportProcess = useCallback(async () => {
@@ -107,6 +121,8 @@ export function useWebImport(options: UseWebImportOptions): UseWebImportResult {
    */
   const handleFileSelected = useCallback(async (fileData: unknown, password: string) => {
     setIsLoading(true);
+    /* 連続して取り込んだときに前回の一時DBが孤児として残らないよう先に破棄する */
+    discardTempDb();
     /* FileオブジェクトをOPFSに一時保存してから処理 */
     const file = fileData as File;
     const tempImportPath = toOpfsPath(`temp_import_${Date.now()}.json`);
@@ -133,6 +149,8 @@ export function useWebImport(options: UseWebImportOptions): UseWebImportResult {
       /* インポートモード選択モーダルを開く */
       setShowModeSelect(true);
     } catch (error) {
+      /* 候補読込に失敗した場合、作成済みの一時DBは使い道が無いため破棄する */
+      discardTempDb();
       onError?.(error instanceof Error ? error : new Error(String(error)));
     } finally {
       /* 一時ファイルを削除 */
@@ -143,7 +161,7 @@ export function useWebImport(options: UseWebImportOptions): UseWebImportResult {
       }
       setIsLoading(false);
     }
-  }, [onError]);
+  }, [onError, discardTempDb]);
 
   /**
    * 全データ復元を実行
@@ -166,14 +184,14 @@ export function useWebImport(options: UseWebImportOptions): UseWebImportResult {
 
       /* 状態リセット */
       setImportCandidates(EMPTY_CANDIDATES);
-      tempDbPathRef.current = null;
+      discardTempDb();
       setShowModeSelect(false);
     } catch (error) {
       onError?.(error instanceof Error ? error : new Error(String(error)));
     } finally {
       setIsProcessing(false);
     }
-  }, [onError, onImportComplete, postImportProcess]);
+  }, [onError, onImportComplete, postImportProcess, discardTempDb]);
 
   /**
    * マージモードに移行
@@ -221,14 +239,40 @@ export function useWebImport(options: UseWebImportOptions): UseWebImportResult {
 
       /* 状態リセット */
       setImportCandidates(EMPTY_CANDIDATES);
-      tempDbPathRef.current = null;
+      discardTempDb();
       setShowItemSelect(false);
     } catch (error) {
       onError?.(error instanceof Error ? error : new Error(String(error)));
     } finally {
       setIsProcessing(false);
     }
-  }, [onError, onImportComplete, postImportProcess]);
+  }, [onError, onImportComplete, postImportProcess, discardTempDb]);
+
+  /**
+   * インポートモード選択モーダルを閉じる
+   *
+   * @remarks
+   * 取込を中断するため、保持中の一時DBもここで破棄する。
+   * 取込処理中は実行中の一時DBを消してしまうため閉じない。
+   */
+  const closeModeSelect = useCallback(() => {
+    if (isProcessing) return;
+    discardTempDb();
+    setShowModeSelect(false);
+  }, [isProcessing, discardTempDb]);
+
+  /**
+   * 項目選択モーダルを閉じる
+   *
+   * @remarks
+   * 取込を中断するため、保持中の一時DBもここで破棄する。
+   * 取込処理中は実行中の一時DBを消してしまうため閉じない。
+   */
+  const closeItemSelect = useCallback(() => {
+    if (isProcessing) return;
+    discardTempDb();
+    setShowItemSelect(false);
+  }, [isProcessing, discardTempDb]);
 
   return {
     /* 状態 */
@@ -241,8 +285,8 @@ export function useWebImport(options: UseWebImportOptions): UseWebImportResult {
 
     /* Actions */
     setShowFileSelect,
-    setShowModeSelect,
-    setShowItemSelect,
+    closeModeSelect,
+    closeItemSelect,
     handleFileSelected,
     handleRestoreBackup,
     handleSelectMergeMode,

@@ -15,8 +15,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'expo-router';
-import { useTranslation, useAuth, Logger, isAuthCancelledError } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
+import { useTranslation, useAuth, Logger, isAuthCancelledError, useSharedSubscription } from '@cliptap/shared';
 import { showAlert, showConfirm } from '@utils/alerts';
 import { useDevMenu, type UseDevMenuReturn } from './useDevMenu';
 
@@ -27,7 +26,7 @@ import { useDevMenu, type UseDevMenuReturn } from './useDevMenu';
 /** メニュー項目の型定義 */
 export interface MenuItem {
   id: string;
-  icon: 'options-outline' | 'code-outline' | 'folder-outline' | 'keypad-outline' | 'sync-outline' | 'document-text-outline' | 'shield-checkmark-outline';
+  icon: 'options-outline' | 'code-outline' | 'calendar-outline' | 'folder-outline' | 'keypad-outline' | 'sync-outline' | 'document-text-outline' | 'shield-checkmark-outline';
   label: string;
   onPress: () => void;
   isPro: boolean;
@@ -74,7 +73,7 @@ export function useSettingsScreen(): UseSettingsScreenReturn {
   /* ======================================== */
   const { t } = useTranslation();
   const router = useRouter();
-  const { isSubscribed } = useSubscription();
+  const { isSubscribed } = useSharedSubscription();
   const {
     user,
     loading: authLoading,
@@ -108,54 +107,49 @@ export function useSettingsScreen(): UseSettingsScreenReturn {
     Logger.error('[useSettingsScreen] Account auth failed:', error);
     const errorObj = error as { message?: string } | null;
     showAlert(
-      t('error.account_auth_failed_title', 'アカウント認証失敗'),
-      errorObj?.message || t('error.account_auth_failed_message', 'アカウント連携中にエラーが発生しました。')
+      t('error.account_auth_failed_title'),
+      errorObj?.message || t('error.account_auth_failed_message')
     );
   }, [t]);
 
   /**
-   * Appleでサインイン
+   * サインイン処理の共通ラッパー
+   *
+   * @remarks
+   * 再入防止に2つのフラグを見ている。
+   * authLoading は AuthProvider が認証開始時に立てる共有フラグで、成功時は onAuthStateChanged が
+   * 届くまで true のまま。isLinkingAccount は本画面での連携操作中を表すローカルフラグで、
+   * signIn の解決時に false へ戻す。後者だけでは認証状態の遷移中に別の連携を開始できてしまう。
+   * 成功時は onAuthStateChanged 経由でUIが自動更新されるため、ここでは成功時の後処理を行わない。
    */
-  const handleAppleSignIn = useCallback(async () => {
-    /* 処理中なら何もしない */
+  const runSignIn = useCallback(async (signIn: () => Promise<void>) => {
     if (authLoading || isLinkingAccount) return;
 
-    /* 処理開始 */
     setIsLinkingAccount(true);
     try {
-      /* 共有AuthHookのAppleサインインを実行 */
-      await signInWithApple();
-      /* 成功時はUIが自動で更新される（onAuthStateChanged経由） */
+      await signIn();
     } catch (error) {
-      /* エラー時の共通処理を実行 */
       handleSignInError(error);
     } finally {
-      /* 処理終了 */
       setIsLinkingAccount(false);
     }
-  }, [authLoading, isLinkingAccount, signInWithApple, handleSignInError]);
+  }, [authLoading, isLinkingAccount, handleSignInError]);
+
+  /**
+   * Appleでサインイン
+   */
+  const handleAppleSignIn = useCallback(
+    () => runSignIn(signInWithApple),
+    [runSignIn, signInWithApple]
+  );
 
   /**
    * Googleでサインイン
    */
-  const handleGoogleSignIn = useCallback(async () => {
-    /* 処理中なら何もしない */
-    if (authLoading || isLinkingAccount) return;
-
-    /* 処理開始 */
-    setIsLinkingAccount(true);
-    try {
-      /* 共有AuthHookのGoogleサインインを実行 */
-      await signInWithGoogle();
-      /* 成功時はUIが自動で更新される（onAuthStateChanged経由） */
-    } catch (error) {
-      /* エラー時の共通処理を実行 */
-      handleSignInError(error);
-    } finally {
-      /* 処理終了 */
-      setIsLinkingAccount(false);
-    }
-  }, [authLoading, isLinkingAccount, signInWithGoogle, handleSignInError]);
+  const handleGoogleSignIn = useCallback(
+    () => runSignIn(signInWithGoogle),
+    [runSignIn, signInWithGoogle]
+  );
 
   /**
    * ログアウト処理
@@ -166,7 +160,7 @@ export function useSettingsScreen(): UseSettingsScreenReturn {
 
     /* 確認ダイアログを表示 */
     showConfirm(
-      t('settings.account_auth.confirm_logout', '現在のアカウント連携を解除しますか？'),
+      t('settings.account_auth.confirm_logout'),
       async () => {
         /* OKが押されたらログアウト処理開始 */
         setIsLinkingAccount(true);
@@ -175,15 +169,15 @@ export function useSettingsScreen(): UseSettingsScreenReturn {
           await authSignOut();
           /* 成功アラートを表示 */
           showAlert(
-            t('settings.account_auth.logout_success_title', '連携を解除しました'),
-            t('settings.account_auth.logout_success_message', 'アカウント連携が解除されました。')
+            t('settings.account_auth.logout_success_title'),
+            t('settings.account_auth.logout_success_message')
           );
         } catch (error) {
           /* エラーログ出力とアラート表示 */
           Logger.error('[useSettingsScreen] Logout failed:', error);
           showAlert(
-            t('error.logout_failed_title', 'ログアウト失敗'),
-            t('error.logout_failed_message', 'ログアウト中にエラーが発生しました。')
+            t('error.logout_failed_title'),
+            t('error.logout_failed_message')
           );
         } finally {
           /* 処理終了 */
@@ -210,8 +204,8 @@ export function useSettingsScreen(): UseSettingsScreenReturn {
   /* ======================================== */
 
   const accountAuthStatus = user
-    ? t('settings.account_auth.status_authenticated', '連携済')
-    : t('settings.account_auth.status_unauthenticated', '未連携');
+    ? t('settings.account_auth.status_authenticated')
+    : t('settings.account_auth.status_unauthenticated');
 
   /* ======================================== */
   /* メニュー項目定義 */
@@ -230,6 +224,13 @@ export function useSettingsScreen(): UseSettingsScreenReturn {
       icon: 'code-outline',
       label: t('settings.variables'),
       onPress: () => router.push('/settings/variables'),
+      isPro: false,
+    },
+    {
+      id: 'system-variable-formats',
+      icon: 'calendar-outline',
+      label: t('settings.system_variable_formats'),
+      onPress: () => router.push('/settings/system-variable-formats'),
       isPro: false,
     },
     {

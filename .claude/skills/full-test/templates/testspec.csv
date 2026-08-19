@@ -1,0 +1,1 @@
+TestID,PatternID,Category,FeatureID,ScreenID,TestPurpose,Precondition,InitialRoute,InitialState,TestData,StepNo,Action,Target,Input,ExpectedResult,ExpectedRoute,PostCondition,Evidence,Cleanup,Priority,Source

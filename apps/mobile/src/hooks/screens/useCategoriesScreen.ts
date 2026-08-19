@@ -10,7 +10,7 @@
  * - 新規作成・編集・削除処理
  *
  * @see app/settings/categories.tsx - UIコンポーネント
- * @see lib/hooks/useCategories.ts - カテゴリCRUD操作
+ * @see packages/shared/src/providers/CategoryProvider.tsx - カテゴリCRUD操作（useCategories）
  */
 
 import { useCallback } from 'react';
@@ -74,9 +74,9 @@ export function useCategoriesScreen(): UseCategoriesScreenReturn {
     (category: Category) => {
       showConfirm(
         'category.delete_confirm',
-        async () => {
+        () => {
           try {
-            await deleteCategory(category.id);
+            deleteCategory(category.id);
           } catch (error) {
             Logger.error('[CategoriesScreen] Failed to delete category:', error);
           }

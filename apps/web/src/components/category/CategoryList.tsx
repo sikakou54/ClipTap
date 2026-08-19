@@ -13,13 +13,13 @@ interface CategoryListProps {
   categories: Category[];
   onEdit: (category: Category) => void;
   onDelete: (id: string) => void;
-  onCreate?: () => void;
+  onCreate: () => void;
 }
 
 export function CategoryList({ categories, onEdit, onDelete, onCreate }: CategoryListProps) {
-  {/* カテゴリが0件の場合は空状態を表示 */}
+  /* カテゴリが0件の場合は空状態を表示 */
   if (categories.length === 0) {
-    return <EmptyCategoryList onCreate={onCreate || (() => {})} />;
+    return <EmptyCategoryList onCreate={onCreate} />;
   }
 
   /* カテゴリ一覧コンテナ（各カテゴリアイテムを表示） */

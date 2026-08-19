@@ -13,10 +13,10 @@
  * - 無料プラン: 最大3つまで（超過分はvalid=0で無効化）
  * - デフォルトプロファイル（isDefault=1）は削除不可
  *
- * @see lib/hooks/screens/useProfilesScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useProfilesScreen.ts - ビジネスロジック
  */
 
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTranslation } from '@cliptap/shared'
 import { FlashList, ListRenderItemInfo } from '@mobile-types/flashlist';
@@ -25,7 +25,7 @@ import { useTheme } from '@lib/themeSystem';
 import { useProfilesScreen } from '@hooks/screens/useProfilesScreen';
 import { Profile } from '@cliptap/shared';
 import EmptyState from '@components/common/EmptyState';
-import { Header } from '@components/common/Header';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 import { commonStyles, listStyles } from '@lib/styles/commonStyles';
 import { UI_CONSTANTS } from '@constants/ui';
 
@@ -34,12 +34,12 @@ export default function ProfileManagementScreen() {
   const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
 
   const {
-    refreshing,
     allProfiles,
     handleRefresh,
     handleCreateProfile,
     handleEditProfile,
     handleDeleteProfile,
+    handleSetDefaultProfile,
     isProfileEnabled,
   } = useProfilesScreen();
 
@@ -97,19 +97,46 @@ export default function ProfileManagementScreen() {
               </View>
             </View>
 
-            {/* 削除ボタン（デフォルトプロファイル以外） */}
-            {!item.isDefault && (
-              <TouchableOpacity
-                onPress={(e) => {
-                  e.stopPropagation();
-                  handleDeleteProfile(item);
-                }}
-                hitSlop={UI_CONSTANTS.HIT_SLOP.DEFAULT}
-                style={commonStyles.actionButton}
-              >
-                <Ionicons name="trash-outline" size={20} color={colors.error} />
-              </TouchableOpacity>
-            )}
+            {/* 行アクション（標準にする・削除） */}
+            <View style={styles.rowActions}>
+              {/* 標準にするバッジ（標準以外かつ有効なプロファイルのみ） */}
+              {!item.isDefault && enabled && (
+                <TouchableOpacity
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleSetDefaultProfile(item);
+                  }}
+                  hitSlop={UI_CONSTANTS.HIT_SLOP.DEFAULT}
+                  style={[styles.setDefaultBadge, { borderColor: colors.border }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('profile.set_default_action')}
+                >
+                  <Text
+                    style={[
+                      styles.setDefaultBadgeText,
+                      { color: colors.textSecondary, fontSize: responsiveFontSizes.xs, lineHeight: responsiveLineHeights.xs },
+                    ]}
+                  >
+                    {t('profile.set_default_action')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {/* 削除ボタン（デフォルトプロファイル以外） */}
+              {!item.isDefault && (
+                <TouchableOpacity
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleDeleteProfile(item);
+                  }}
+                  hitSlop={UI_CONSTANTS.HIT_SLOP.DEFAULT}
+                  style={commonStyles.actionButton}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.delete')}
+                >
+                  <Ionicons name="trash-outline" size={20} color={colors.error} />
+                </TouchableOpacity>
+              )}
+            </View>
           </TouchableOpacity>
           {/* セパレーター（最後のアイテム以外） */}
           {index < allProfiles.length - 1 && (
@@ -118,7 +145,7 @@ export default function ProfileManagementScreen() {
         </>
       );
     },
-    [allProfiles.length, colors, responsiveFontSizes, responsiveLineHeights, t, isProfileEnabled, handleEditProfile, handleDeleteProfile]
+    [allProfiles.length, colors, responsiveFontSizes, responsiveLineHeights, t, isProfileEnabled, handleEditProfile, handleDeleteProfile, handleSetDefaultProfile]
   );
 
   const headerRightAction = (
@@ -130,28 +157,25 @@ export default function ProfileManagementScreen() {
   if (allProfiles.length === 0) {
     /* 空状態（プロファイルがない場合） */
     return (
-      <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-        <Header title={t('profile.title')} backIcon="arrow-back" rightAction={headerRightAction} />
+      <ScreenContainer title={t('profile.title')} backIcon="arrow-back" rightAction={headerRightAction}>
         <EmptyState icon="people-outline" message={t('profile.no_profiles')} description={t('profile.add_hint')} />
-      </View>
+      </ScreenContainer>
     );
   }
 
   /* プロファイル管理画面 */
   return (
-    <View style={[commonStyles.container, { backgroundColor: colors.background }]}>
-      <Header title={t('profile.title')} backIcon="arrow-back" rightAction={headerRightAction} />
+    <ScreenContainer title={t('profile.title')} backIcon="arrow-back" rightAction={headerRightAction}>
       {/* プロファイル一覧（FlashList） */}
       <FlashList
         data={allProfiles}
         keyExtractor={(item) => item.id}
-        refreshing={refreshing}
         onRefresh={handleRefresh}
         contentContainerStyle={styles.list}
         estimatedItemSize={70}
         renderItem={renderItem}
       />
-    </View>
+    </ScreenContainer>
   );
 }
 
@@ -173,6 +197,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  /* 行アクションの並び。両ボタンのhitSlopが左右10dpずつ広がるため、
+     間隔を20dp取って隣接ボタンとタップ領域が重ならないようにする。
+     長い名前で操作が潰れないよう縮小もしない */
+  rowActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: UI_CONSTANTS.GAP.XL,
+    flexShrink: 0,
+  },
+  /* 標準にする操作のバッジ。状態表示の標準バッジと同形だが、枠線で操作であることを示す。
+     文字高18dpに上下padding4dpで26dp、hitSlopの上下10dpを足して46dpのタップ領域を確保する */
+  setDefaultBadge: {
+    paddingHorizontal: UI_CONSTANTS.GAP.MD,
+    paddingVertical: UI_CONSTANTS.GAP.XS,
+    borderRadius: UI_CONSTANTS.BORDER_RADIUS.XS,
+    borderWidth: 1,
+  },
+  setDefaultBadgeText: {
+    fontWeight: UI_CONSTANTS.FONT_WEIGHT.SEMIBOLD,
   },
   profileName: {
     fontWeight: '500',

@@ -7,7 +7,9 @@ import type { AuthStateListener } from '../adapters/AuthAdapter';
  * 認証サービス
  *
  * AuthAdapterを使用して認証機能を提供するビジネスロジック層。
- * 認証成功時に自動的にサブスクリプション（RevenueCat）との連携を行う。
+ * 認証成功時に自動的にサブスクリプション（RevenueCat）との連携を行い、
+ * サインアウト時にはその連携を解除して利用者識別を匿名へ戻す。
+ * 連携・解除はいずれも外部通信を伴うため、失敗しても認証処理自体は成功として扱う。
  */
 export class AuthService {
   /**
@@ -44,6 +46,10 @@ export class AuthService {
   static async signOut(): Promise<void> {
     const adapter = this.ensureAdapter();
     await adapter.signOut();
+
+    /* サインアウト後、RevenueCatの利用者識別も解除して匿名へ戻す。
+       解除しないと端末に前回のApp User IDが残り、次回起動時に他人のPro権利を復元してしまう */
+    await this.unlinkFromRevenueCat();
   }
 
   /**
@@ -85,6 +91,23 @@ export class AuthService {
       }
     } else {
         Logger.warn('[AuthService] Cannot link to RevenueCat: No current user');
+    }
+  }
+
+  /**
+   * RevenueCatとの連携を解除する（内部用）
+   *
+   * @remarks
+   * 解除は外部通信を伴うため、失敗しても警告を残すだけでサインアウト自体は成功として扱う。
+   * Webのアダプターはlogoutを実装していないため、SubscriptionService.logoutは何もしない。
+   */
+  private static async unlinkFromRevenueCat(): Promise<void> {
+    try {
+      Logger.info('[AuthService] Logging out from RevenueCat');
+      await SubscriptionService.logout();
+    } catch (error) {
+      /* 解除失敗してもサインアウト処理自体は成功として続行 */
+      Logger.warn('[AuthService] Failed to log out from RevenueCat', error);
     }
   }
 

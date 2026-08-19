@@ -1,8 +1,13 @@
 /**
- * ホーム画面のビジネスロジックフック
+ * 定型文一覧画面のビジネスロジックフック
  *
  * @description
- * メイン画面（定型文一覧）の状態管理とロジックを提供。
+ * 定型文一覧の状態管理とロジックを提供。
+ * webではルート `/` をファイル読み込み画面（pages/Home.tsx）が占めるため、
+ * 定型文一覧は `/dashboard`（pages/Dashboard.tsx）が担う。
+ * このフックは Dashboard.tsx からのみ使われ、
+ * apps/mobile/src/hooks/screens/useHomeScreen.ts と対応する。
+ *
  * Mobile版と同様のシンプルな構成で、モーダル/エクスポート/インポートは
  * 専用フック（useSnippetModal, useExportScreen, useImportScreen）に分離。
  *
@@ -12,15 +17,17 @@
  * @see useImportScreen.ts - インポート処理
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from '@cliptap/shared';
 import {
+  Logger,
   useSnippets,
   useCategories,
   useProfiles,
   useVariables,
   useAuth,
   useFilteredSnippets,
+  useDebounce,
   type Snippet,
   type Category,
   type Profile,
@@ -30,15 +37,15 @@ import {
   type SnippetSortBy,
 } from '@cliptap/shared';
 import { useDatabase } from '@cliptap/shared';
-import { useTheme } from '@providers/WebThemeProvider';
+import { useTheme } from '@hooks/useTheme';
 import { useBodyScrollLock } from '@hooks/useBodyScrollLock';
 import { useMobileMenu } from '@hooks/useMobileMenu';
 import { useSnippetModal } from '@hooks/screens/useSnippetModal';
 import { useExportScreen } from '@hooks/screens/useExportScreen';
 import { useImportScreen } from '@hooks/screens/useImportScreen';
 
-/** スニペットフォームの値（re-export） */
-export type { SnippetFormValues } from './useSnippetModal';
+/** コピー完了表示を出しておく時間（ミリ秒） */
+const COPY_SUCCESS_DURATION_MS = 2000;
 
 /**
  * useHomeScreenの戻り値の型
@@ -51,6 +58,7 @@ export interface UseHomeScreenReturn {
   searchQuery: string;
   selectedCategory: string | null;
   copiedId: string | null;
+  copiedTitleId: string | null;
   expandedSnippetId: string | null;
   showProfileDropdown: boolean;
   showSearchBar: boolean;
@@ -95,6 +103,7 @@ export interface UseHomeScreenReturn {
 
   /* ハンドラ */
   handleCopySnippet: (snippet: Snippet) => Promise<void>;
+  handleCopySnippetTitle: (snippet: Snippet) => Promise<void>;
   handleDeleteSnippet: (id: string) => Promise<void>;
   handleSelectProfile: (profileId: string) => Promise<void>;
   handleToggleSnippet: (snippetId: string) => void;
@@ -112,9 +121,9 @@ export interface UseHomeScreenReturn {
 export function useHomeScreen(): UseHomeScreenReturn {
   const { t, language } = useTranslation();
   const { isLoaded, setLoaded } = useDatabase();
-  const { allSnippets, snippetProfiles, copySnippet, deleteSnippet, refresh: refreshSnippets, sortBy, setSortBy } = useSnippets();
+  const { allSnippets, snippetProfiles, copySnippet, copySnippetTitle, deleteSnippet, refresh: refreshSnippets, sortBy, setSortBy } = useSnippets();
   const { categories, getById: getCategoryById } = useCategories();
-  const { profiles, profileVariables, activeProfile, defaultProfile, setActiveProfile } = useProfiles();
+  const { profiles, validProfiles, profileVariables, activeProfile, defaultProfile, setActiveProfile } = useProfiles();
   const { variables } = useVariables();
   const { gridColumns, setGridColumns } = useTheme();
   const { user } = useAuth();
@@ -139,8 +148,10 @@ export function useHomeScreen(): UseHomeScreenReturn {
   /* UI状態 */
   /* ======================================== */
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedTitleId, setCopiedTitleId] = useState<string | null>(null);
   const [expandedSnippetId, setExpandedSnippetId] = useState<string | null>(null);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
@@ -166,14 +177,15 @@ export function useHomeScreen(): UseHomeScreenReturn {
   const activeProfileId = activeProfile?.id || null;
   const defaultProfileId = defaultProfile?.id || null;
 
-  /** 有効なプロファイルのみ抽出 */
-  const validProfiles = useMemo(() => profiles.filter((p) => p.valid), [profiles]);
-
   /* 共通フィルタリングフックを使用 */
   const { filteredSnippets } = useFilteredSnippets({
     snippets: allSnippets,
     snippetProfiles,
-    searchQuery,
+    /*
+     * 検索欄を空にしたときだけデバウンスを待たず、即座に全件表示へ戻す。
+     * 入力中は300msのデバウンス値（debouncedSearchQuery）を使う
+     */
+    searchQuery: searchQuery === '' ? '' : debouncedSearchQuery,
     selectedCategory,
     activeProfileId,
     defaultProfileId,
@@ -191,20 +203,70 @@ export function useHomeScreen(): UseHomeScreenReturn {
     try {
       await copySnippet(snippet.id, activeProfile?.id);
       setCopiedId(snippet.id);
-      setTimeout(() => setCopiedId(null), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      Logger.error('Failed to copy:', err);
     }
   }, [copySnippet, activeProfile?.id]);
 
+  /**
+   * コピー完了表示の自動リセット
+   *
+   * @remarks
+   * クリーンアップでタイマーを解除するのは、アンマウント後や別の定型文をコピーして
+   * IDが入れ替わった後に、前回のタイマーが発火して表示を消してしまわないようにするため。
+   */
+  useEffect(() => {
+    if (!copiedId) return;
+
+    const timeoutId = setTimeout(() => setCopiedId(null), COPY_SUCCESS_DURATION_MS);
+
+    return () => clearTimeout(timeoutId);
+  }, [copiedId]);
+
+  /**
+   * スニペットのタイトルだけをクリップボードにコピー
+   *
+   * 【使用回数を加算しない理由】
+   * タイトルをコピーしたあと本文もコピーすると、1回の利用が2回分として数えられてしまいます。
+   * 加算はcopySnippet側に集約しており、こちらでは行いません。
+   */
+  const handleCopySnippetTitle = useCallback(async (snippet: Snippet) => {
+    try {
+      await copySnippetTitle(snippet.id, activeProfile?.id);
+      setCopiedTitleId(snippet.id);
+    } catch (err) {
+      Logger.error('Failed to copy title:', err);
+    }
+  }, [copySnippetTitle, activeProfile?.id]);
+
+  /**
+   * タイトルのコピー完了表示の自動リセット
+   *
+   * @remarks
+   * 本文側と同じ理由でクリーンアップを置く。タイマーを解除しないと、
+   * 続けて別のタイトルをコピーしたときに前回のタイマーが表示を消してしまう。
+   */
+  useEffect(() => {
+    if (!copiedTitleId) return;
+
+    const timeoutId = setTimeout(() => setCopiedTitleId(null), COPY_SUCCESS_DURATION_MS);
+
+    return () => clearTimeout(timeoutId);
+  }, [copiedTitleId]);
+
   /** スニペットを削除（確認ダイアログ付き） */
   const handleDeleteSnippet = useCallback(async (id: string) => {
+    /*
+     * ここは動的importのままにしている。静的importに変えるとReact Compilerが
+     * このフックの解析へ進み、handleCopySnippet / handleCopySnippetTitle の
+     * useCallback依存（activeProfile?.id）でlintエラーになるため
+     */
     const { showConfirm } = await import('@utils/alerts');
     showConfirm('snippet.delete_confirm', async () => {
       try {
         await deleteSnippet(id);
       } catch (err) {
-        console.error('Failed to delete:', err);
+        Logger.error('Failed to delete:', err);
       }
     });
   }, [deleteSnippet]);
@@ -247,6 +309,7 @@ export function useHomeScreen(): UseHomeScreenReturn {
     searchQuery,
     selectedCategory,
     copiedId,
+    copiedTitleId,
     expandedSnippetId,
     showProfileDropdown,
     showSearchBar,
@@ -287,6 +350,7 @@ export function useHomeScreen(): UseHomeScreenReturn {
 
     /* ハンドラ */
     handleCopySnippet,
+    handleCopySnippetTitle,
     handleDeleteSnippet,
     handleSelectProfile,
     handleToggleSnippet,

@@ -10,10 +10,9 @@
  * - カスタムRGBカラーの入力
  * - 新規作成/編集モードの自動判定
  *
- * @see lib/hooks/screens/useCategoryEditScreen.ts - ビジネスロジック
+ * @see src/hooks/screens/useCategoryEditScreen.ts - ビジネスロジック
  */
 
-import React from 'react';
 import {
   View,
   Text,
@@ -22,7 +21,6 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from '@cliptap/shared'
 import { Ionicons } from '@expo/vector-icons';
@@ -30,8 +28,7 @@ import { CATEGORY_COLORS } from '@cliptap/shared';
 import { useTheme } from '@lib/themeSystem';
 import { useCategoryEditScreen } from '@hooks/screens/useCategoryEditScreen';
 import { UI_CONSTANTS } from '@constants/ui';
-import { Header } from '@components/common/Header';
-import { commonStyles } from '@lib/styles/commonStyles';
+import { ScreenContainer } from '@components/common/ScreenContainer';
 
 export default function CategoryEditModal() {
   const { t } = useTranslation();
@@ -62,35 +59,29 @@ export default function CategoryEditModal() {
 
   /* カテゴリ編集モーダル */
   return (
-    <SafeAreaView
-      style={[commonStyles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}
-    >
-      {/* ヘッダー（タイトルと保存ボタン） */}
-      <Header
-        title={isEdit ? t('category.edit') : t('category.create')}
-        isModal={true}
-        rightAction={
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={saving || !canSave}
-            style={styles.saveButton}
+    <ScreenContainer
+      title={isEdit ? t('category.edit') : t('category.create')}
+      isModal={true}
+      rightAction={
+        <TouchableOpacity
+          onPress={handleSave}
+          disabled={saving || !canSave}
+          style={styles.saveButton}
+        >
+          <Text
+            style={[
+              styles.saveText,
+              {
+                color: saving || !canSave ? colors.textSecondary : colors.primary,
+                fontSize: responsiveFontSizes.base,
+              },
+            ]}
           >
-            <Text
-              style={[
-                styles.saveText,
-                {
-                  color: saving || !canSave ? colors.textSecondary : colors.primary,
-                  fontSize: responsiveFontSizes.base,
-                },
-              ]}
-            >
-              {t('common.save')}
-            </Text>
-          </TouchableOpacity>
-        }
-      />
-
+            {t('common.save')}
+          </Text>
+        </TouchableOpacity>
+      }
+    >
       {/* スクロール可能なコンテンツエリア */}
       <ScrollView contentContainerStyle={styles.content}>
         {/* カテゴリ名入力セクション */}
@@ -149,7 +140,7 @@ export default function CategoryEditModal() {
                 style={[
                   styles.modeSwitchText,
                   {
-                    color: !useCustomColor ? '#FFFFFF' : colors.textSecondary,
+                    color: !useCustomColor ? colors.onPrimary : colors.textSecondary,
                     fontSize: responsiveFontSizes.sm,
                   },
                 ]}
@@ -169,7 +160,7 @@ export default function CategoryEditModal() {
                 style={[
                   styles.modeSwitchText,
                   {
-                    color: useCustomColor ? '#FFFFFF' : colors.textSecondary,
+                    color: useCustomColor ? colors.onPrimary : colors.textSecondary,
                     fontSize: responsiveFontSizes.sm,
                   },
                 ]}
@@ -182,27 +173,37 @@ export default function CategoryEditModal() {
           {/* プリセットカラーグリッド */}
           {!useCustomColor ? (
             <View style={styles.colorGrid}>
-              {CATEGORY_COLORS.map((color) => (
-                <TouchableOpacity
-                  key={color}
-                  style={[
-                    styles.colorOption,
-                    {
-                      backgroundColor: color,
-                      width: isTablet ? 48 : 40,
-                      height: isTablet ? 48 : 40,
-                      borderRadius: isTablet ? 24 : 20,
-                    },
-                    selectedColor === color && !useCustomColor && styles.colorOptionSelected,
-                  ]}
-                  onPress={() => handleColorSelect(color)}
-                >
-                  {/* 選択中のチェックマーク */}
-                  {selectedColor === color && (
-                    <Ionicons name="checkmark" size={isTablet ? 24 : 20} color="#FFFFFF" />
-                  )}
-                </TouchableOpacity>
-              ))}
+              {CATEGORY_COLORS.map((color) => {
+                /* 保存値の表記ゆれ（小文字・前後の空白）を吸収して選択中かを判定する。
+                   判定規則は resolveCategoryColorForm のプリセット判定と揃えている */
+                const isColorSelected = selectedColor.trim().toUpperCase() === color.toUpperCase();
+
+                /* プリセットカラーの選択肢 */
+                return (
+                  <TouchableOpacity
+                    key={color}
+                    style={[
+                      styles.colorOption,
+                      {
+                        backgroundColor: color,
+                        width: isTablet ? 48 : 40,
+                        height: isTablet ? 48 : 40,
+                        borderRadius: isTablet ? 24 : 20,
+                      },
+                      isColorSelected && !useCustomColor && [
+                        styles.colorOptionSelected,
+                        { borderColor: colors.onPrimary, shadowColor: colors.shadow },
+                      ],
+                    ]}
+                    onPress={() => handleColorSelect(color)}
+                  >
+                    {/* 選択中のチェックマーク */}
+                    {isColorSelected && (
+                      <Ionicons name="checkmark" size={isTablet ? 24 : 20} color={colors.onPrimary} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           ) : (
             /* カスタムRGB入力セクション */
@@ -210,6 +211,7 @@ export default function CategoryEditModal() {
               <View style={styles.rgbInputRow}>
                 {/* RGB入力カラム */}
                 <View style={styles.rgbInputColumn}>
+                  {/* R/G/B の3入力は同じ規則で、不正値のときは枠線色を colors.error にするだけでなく太さも 1→2 にし、色と太さの両方で異常を示している */}
                   {/* R値入力 */}
                   <View style={styles.rgbInputWrapper}>
                     <Text
@@ -307,6 +309,7 @@ export default function CategoryEditModal() {
                       {
                         backgroundColor: currentColor,
                         borderColor: colors.border,
+                        shadowColor: colors.shadow,
                       },
                     ]}
                   />
@@ -325,7 +328,7 @@ export default function CategoryEditModal() {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 
@@ -379,10 +382,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  /** 選択中のプリセットカラー（枠線色と影の色は使用箇所でテーマから重ねる） */
   colorOptionSelected: {
     borderWidth: 3,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -424,12 +426,12 @@ const styles = StyleSheet.create({
     gap: 8,
     justifyContent: 'center',
   },
+  /** 現在の色のプレビュー（枠線色と影の色は使用箇所でテーマから重ねる） */
   colorPreview: {
     width: 80,
     height: 80,
     borderRadius: 40,
     borderWidth: 2,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,

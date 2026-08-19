@@ -26,7 +26,7 @@ export function ProfileDropdown({
 }: ProfileDropdownProps) {
   const { t } = useTranslation();
 
-  {/* プロファイルが0件の場合はタイトルのみ表示 */}
+  /* プロファイルが0件の場合はタイトルのみ表示 */
   if (validProfiles.length === 0) {
     return <h1 className="text-lg font-bold text-gray-900 dark:text-white">{t('settings.web_specific.load_file_title')}</h1>;
   }

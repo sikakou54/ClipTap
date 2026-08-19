@@ -5,10 +5,11 @@
  * テーマ切り替え、アカウント連携状態、DBバージョン表示を提供
  */
 import { useTranslation, SCHEMA_VERSION } from '@cliptap/shared';
-import type { SharedUser } from '@cliptap/shared';
+import type { SharedUser, ThemeMode } from '@cliptap/shared';
 
 interface SideMenuFooterProps {
   isDark: boolean;
+  themeMode: ThemeMode;
   user: SharedUser | null;
   onToggleTheme: () => void;
   onUnlinkAccount: () => void;
@@ -18,6 +19,7 @@ interface SideMenuFooterProps {
 
 export function SideMenuFooter({
   isDark,
+  themeMode,
   user,
   onToggleTheme,
   onUnlinkAccount,
@@ -44,7 +46,13 @@ export function SideMenuFooter({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
         )}
-        <span className="text-sm">{isDark ? t('settings.theme_dark') : t('settings.theme_light')}</span>
+        <span className="text-sm">
+          {themeMode === 'auto'
+            ? t('settings.theme_auto')
+            : themeMode === 'dark'
+              ? t('settings.theme_dark')
+              : t('settings.theme_light')}
+        </span>
       </button>
 
       {/* アカウント連携ボタン（ログイン済みの場合は連携解除、未ログインの場合は連携開始） */}
@@ -88,10 +96,9 @@ export function SideMenuFooter({
       {/* DBバージョン表示 */}
       <div className="mt-4 text-center">
         <span className="text-xs text-gray-400 dark:text-[#707070]">
-          DB Version : {SCHEMA_VERSION}
+          {t('settings.web_specific.db_version', { version: SCHEMA_VERSION })}
         </span>
       </div>
     </div>
   );
 }
-

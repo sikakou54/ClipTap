@@ -1,6 +1,8 @@
 <resources>
   <string name="app_name">"ClipTap"</string>
   <string name="accessibility_sort_button">"並び替えボタン"</string>
+  <string name="accessibility_insert_title_button">"タイトル挿入ボタン"</string>
+  <string name="accessibility_insert_newline_button">"改行ボタン"</string>
   <string name="keyboard_sort_label">"並順"</string>
   <string name="keyboard_sort_created">"作成日時"</string>
   <string name="keyboard_sort_updated">"更新日時"</string>

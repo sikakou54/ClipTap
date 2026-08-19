@@ -64,11 +64,39 @@ export interface SemanticColors {
   textTertiary: string;
   textInverse: string;
 
+  /**
+   * 彩度の高い塗り潰し背景（primary / success / 利用者が選んだカテゴリ色）の上に置く前景色
+   *
+   * @remarks
+   * textInverse はテーマごとに反転する（ライトで白、ダークで黒）ため、
+   * ダークモードでも明るいままの primary やカテゴリ色の上に載せるとコントラストが落ちる。
+   * 選択中チップの文字色・ボタンのラベル・カラースウォッチの選択枠のように
+   * 「塗り潰しの上だから白で固定したい」用途はこちらを使う。
+   */
+  onPrimary: string;
+
+  /**
+   * onPrimary と同じ塗り潰し背景の上に敷く、弱めた前景色
+   *
+   * @remarks
+   * 選択中チップの中に入るカウントバッジ背景のように、白をそのまま敷くと強すぎる場面で使う。
+   */
+  onPrimaryMuted: string;
+
   border: string;
   divider: string;
 
   overlay: string;
   backdropLight: string;
+
+  /**
+   * 影の色（shadowColor / elevation の影）
+   *
+   * @remarks
+   * 影の濃さは shadowOpacity 側で調整するため、色自体はライト・ダークとも黒で固定する。
+   * 各コンポーネントに散っていた '#000' のハードコードを1か所へ集めるために用意している。
+   */
+  shadow: string;
 }
 
 /**
@@ -103,6 +131,10 @@ export const LIGHT_THEME_COLORS: SemanticColors = {
   textTertiary: '#9CA3AF',
   textInverse: '#FFFFFF',
 
+  /* 塗り潰し背景の上の前景色（ライト・ダーク共通で固定） */
+  onPrimary: '#FFFFFF',
+  onPrimaryMuted: 'rgba(255, 255, 255, 0.3)',
+
   /* Border & Divider */
   border: '#E5E7EB',
   divider: '#F3F4F6',
@@ -110,6 +142,9 @@ export const LIGHT_THEME_COLORS: SemanticColors = {
   /* Overlays */
   overlay: 'rgba(0, 0, 0, 0.5)',
   backdropLight: 'rgba(255, 255, 255, 0.8)',
+
+  /* Shadow（濃さは shadowOpacity 側で調整するため色は固定） */
+  shadow: '#000000',
 };
 
 /**
@@ -144,6 +179,10 @@ export const DARK_THEME_COLORS: SemanticColors = {
   textTertiary: '#707070',
   textInverse: '#000000',
 
+  /* 塗り潰し背景の上の前景色（ダークでも primary は明るいままのため反転させない） */
+  onPrimary: '#FFFFFF',
+  onPrimaryMuted: 'rgba(255, 255, 255, 0.3)',
+
   /* Border & Divider */
   border: '#2A2A2A',
   divider: '#333333',
@@ -151,6 +190,9 @@ export const DARK_THEME_COLORS: SemanticColors = {
   /* Overlays (ダークモードでは濃いめ) */
   overlay: 'rgba(0, 0, 0, 0.8)',
   backdropLight: 'rgba(0, 0, 0, 0.9)',
+
+  /* Shadow（濃さは shadowOpacity 側で調整するため色は固定） */
+  shadow: '#000000',
 };
 
 /**

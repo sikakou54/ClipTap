@@ -9,7 +9,7 @@
  */
 
 import type { DbAdapter, DbRunResult } from '@cliptap/shared';
-import { getDirectoryPath, isOpfsPath, OPFS_PREFIX } from '@cliptap/shared';
+import { isOpfsPath } from '@cliptap/shared';
 import type { Database } from 'sql.js';
 import { SQLiteWasm } from '@src/mappers/sqliteWasm';
 import type { WebFileIOAdapter } from '@adapters/WebFileIOAdapter';
@@ -54,13 +54,6 @@ export class WebDatabaseAdapter implements DbAdapter {
     this.onWrite = options.onWrite;
   }
 
-  /**
-   * 書き込み後のコールバックを設定（後から設定可能）
-   * @param callback - 書き込み後に呼ばれるコールバック関数
-   */
-  setOnWrite(callback: () => void): void {
-    this.onWrite = callback;
-  }
 
   /**
    * データベースを非同期で開く
@@ -77,15 +70,6 @@ export class WebDatabaseAdapter implements DbAdapter {
 
     /* OPFSパスの場合 */
     if (isOpfsPath(path)) {
-      /* ディレクトリ作成（必要な場合） */
-      const dirPath = getDirectoryPath(path);
-      if (dirPath.length >= OPFS_PREFIX.length && dirPath !== path) {
-        const exists = await this.fileIO.exists(dirPath);
-        if (!exists) {
-          await this.fileIO.makeDirectory(dirPath);
-        }
-      }
-
       /* ファイルが存在する場合は読み込んでDBを作成 */
       const fileExists = await this.fileIO.exists(path);
       if (fileExists) {
@@ -215,6 +199,27 @@ export class WebDatabaseAdapter implements DbAdapter {
   async exec(sql: string): Promise<void> {
     const db = this.getDb();
     db.run(sql);
+
+    /* DDL（ALTER TABLE等）やPRAGMA user_versionもDBを変更するため、run()と同様に保存をスケジュールする */
+    this.onWrite?.();
+  }
+
+  /**
+   * メモリ上の変更をOPFSファイルへ書き戻す
+   *
+   * @description
+   * sql.jsはopen()時にファイル全体をメモリへ複製するため、
+   * close()すると exec()/run() による変更が失われる。
+   * 一時DBのマイグレーション結果のように、
+   * 開き直したあとも変更を引き継ぐ必要がある場合に呼び出す。
+   */
+  async persist(): Promise<void> {
+    /* OPFS以外のパス（Blob URL等）は書き戻し先が無いため何もしない */
+    if (!this.currentPath || !isOpfsPath(this.currentPath)) {
+      return;
+    }
+
+    await this.fileIO.writeBytes(this.currentPath, this.exportDatabase());
   }
 
   /**
@@ -243,15 +248,5 @@ export class WebDatabaseAdapter implements DbAdapter {
    */
   getCurrentPath(): string | null {
     return this.currentPath;
-  }
-
-  /**
-   * 内部のDatabaseインスタンスを取得（スキーマ初期化用）
-   *
-   * @returns sql.jsのDatabaseインスタンス
-   * @throws DBが開かれていない場合
-   */
-  getDatabase(): Database {
-    return this.getDb();
   }
 }

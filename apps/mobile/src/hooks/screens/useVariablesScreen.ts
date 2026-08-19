@@ -11,20 +11,23 @@
  * - 無料プラン制限チェック
  *
  * @see app/settings/variables.tsx - UIコンポーネント
- * @see lib/hooks/useVariables.tsx - 変数CRUD操作
+ * @see packages/shared/src/providers/VariableProvider.tsx - 変数CRUD操作（useVariables）
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import {
   useTranslation,
   VariableService,
   useVariables,
   useProfiles,
+  Logger,
+  FREE_VARIABLES_LIMIT,
+  useSharedSubscription,
   type Variable,
   type Profile,
 } from '@cliptap/shared';
-import { useSubscription } from '@providers/SubscriptionProvider';
+import { useUpgradePrompt } from '@hooks/useUpgradePrompt';
 import { showConfirm } from '@utils/alerts';
 
 /**
@@ -34,6 +37,7 @@ export interface UseVariablesScreenReturn {
   /* 状態 */
   variables: Variable[];
   selectedProfileId: string | null;
+  /** 環境を明示選択する（nullを渡すと先頭の環境に戻る） */
   setSelectedProfileId: (id: string | null) => void;
   profiles: Profile[];
 
@@ -44,7 +48,8 @@ export interface UseVariablesScreenReturn {
 
   /* ヘルパー */
   isVariableEnabled: (variable: Variable) => boolean;
-  getVariableValue: (variable: Variable) => string;
+  /** 変数の表示値。未設定の場合は null */
+  getVariableValue: (variable: Variable) => string | null;
 }
 
 /**
@@ -56,7 +61,9 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const { canAddCustomVariable } = useSubscription();
+  const confirmUpgrade = useUpgradePrompt();
+
+  const { canAddCustomVariable } = useSharedSubscription();
   const { deleteVariable: deleteVar } = useVariables();
   const { profiles, profileVariables, defaultProfile } = useProfiles();
 
@@ -64,8 +71,8 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
   /* 状態管理 */
   /* ======================================== */
   const [variables, setVariables] = useState<Variable[]>([]);
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
-  const [profileValuesMap, setProfileValuesMap] = useState<Record<string, string>>({});
+  /* ユーザーがチップで明示選択した環境ID（null = 先頭の環境） */
+  const [profileOverride, setProfileOverride] = useState<string | null>(null);
 
   /**
    * カスタム変数一覧を読み込む（無効なものも含む）
@@ -83,53 +90,23 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
   );
 
   /* ======================================== */
-  /* 副作用: プロファイル選択の初期化 */
+  /* 派生状態: プロファイル選択 */
   /* ======================================== */
 
   /**
-   * プロファイル一覧の更新に合わせて初期選択を設定
+   * 実際に選択されている環境ID
+   *
+   * 明示選択が現存する環境を指していればそれを、無ければ先頭の環境を使う。
    */
-  useEffect(() => {
-    /* プロファイルがない場合 */
+  const selectedProfileId = useMemo(() => {
     if (profiles.length === 0) {
-      setSelectedProfileId(null);
-      return;
+      return null;
     }
-
-    setSelectedProfileId((prev) => {
-      /* 前回選択が有効な場合 */
-      if (prev && profiles.some((profile) => profile.id === prev)) {
-        return prev;
-      }
-      return profiles[0].id;
-    });
-  }, [profiles]);
-
-  /**
-   * 選択中プロファイルの変数値マップをキャッシュ
-   */
-  useEffect(() => {
-    /* プロファイルが選択されていない場合 */
-    if (!selectedProfileId) {
-      setProfileValuesMap({});
-      return;
+    if (profileOverride && profiles.some((profile) => profile.id === profileOverride)) {
+      return profileOverride;
     }
-    /* profileVariablesからマップを構築 */
-    const variableIdToName: Record<string, string> = {};
-    const allVars = VariableService.getAllCustomVariablesIncludingInvalidSorted();
-    allVars.forEach(v => { variableIdToName[v.id] = v.name; });
-
-    const map: Record<string, string> = {};
-    profileVariables
-      .filter(pv => pv.profileId === selectedProfileId)
-      .forEach(pv => {
-        const varName = variableIdToName[pv.variableId];
-        if (varName) {
-          map[varName] = pv.value;
-        }
-      });
-    setProfileValuesMap(map);
-  }, [selectedProfileId, profileVariables]);
+    return profiles[0].id;
+  }, [profileOverride, profiles]);
 
   /* ======================================== */
   /* ヘルパー関数 */
@@ -144,9 +121,17 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
 
   /**
    * 変数の表示値を取得
+   *
+   * @remarks
+   * 選択環境の非空値 → 標準環境の非空値 → null（未設定）の順に解決する。
+   * 空文字は値なしとして扱い、次の候補へ進む。
+   * 環境が1件も無い（selectedProfileId が null）ときは標準環境の値のみを見る。
+   * 参照は変数IDで行う。変数名は一意制約に依存するため、キーには使わない。
+   * 未設定を翻訳済みの表示文字列で表さないのは、値として「未設定」を登録した変数が
+   * 未設定として描画されてしまうため。表示文言への変換は呼び出し側が行う。
    */
   const getVariableValue = useCallback(
-    (variable: Variable): string => {
+    (variable: Variable): string | null => {
       /* 標準値を取得（デフォルトプロファイルから） */
       const getStandardValueInline = (varId: string): string => {
         if (!defaultProfile) return '';
@@ -156,29 +141,25 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
         return pv?.value || '';
       };
 
-      /* 環境が選択されていない場合 */
       if (!selectedProfileId) {
-        return getStandardValueInline(variable.id) || t('common.not_set');
+        return getStandardValueInline(variable.id) || null;
       }
 
-      /* 環境固有の値を取得 */
-      const profileValue = profileValuesMap[variable.name];
-      /* 環境固有の値がある場合 */
+      const profileValue = profileVariables.find(
+        pv => pv.profileId === selectedProfileId && pv.variableId === variable.id
+      )?.value || '';
       if (profileValue) {
         return profileValue;
       }
 
-      /* 標準値を取得 */
       const standardValue = getStandardValueInline(variable.id);
-      /* 標準値がある場合 */
       if (standardValue) {
         return standardValue;
       }
 
-      /* 値がない場合 */
-      return t('common.not_set');
+      return null;
     },
-    [selectedProfileId, profileValuesMap, defaultProfile, profileVariables, t]
+    [selectedProfileId, defaultProfile, profileVariables]
   );
 
   /* ======================================== */
@@ -193,10 +174,14 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
       /* 「この変数を削除しますか？」確認 */
       showConfirm(
         t('settings.delete_variable_confirm', { name: variable.name }),
-        async () => {
-          await deleteVar(variable.id);
-          /* Service層から再取得して同期 */
-          setVariables(VariableService.getAllCustomVariablesIncludingInvalidSorted());
+        () => {
+          try {
+            deleteVar(variable.id);
+            /* Service層から再取得して同期 */
+            setVariables(VariableService.getAllCustomVariablesIncludingInvalidSorted());
+          } catch (error) {
+            Logger.error('[VariablesScreen] Failed to delete variable:', error);
+          }
         },
         undefined,
         'danger'
@@ -213,12 +198,7 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
       /* 無効な変数をタップした場合 */
       if (!enabled) {
         /* 「この変数は無効です。Proプランにアップグレードしますか？」警告 */
-        showConfirm(
-          t('settings.variable_disabled_message'),
-          () => router.push('/subscription/paywall'),
-          undefined,
-          'warning'
-        );
+        confirmUpgrade(t('settings.variable_disabled_message'));
         return;
       }
 
@@ -227,7 +207,7 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
         params: { id: variable.id },
       });
     },
-    [router, t]
+    [confirmUpgrade, router, t]
   );
 
   /**
@@ -237,17 +217,12 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
     /* 5つ制限チェック（無料版） */
     if (!canAddCustomVariable(variables.length)) {
       /* 「変数数が上限に達しました。Proプランにアップグレードしますか？」警告 */
-      showConfirm(
-        t('settings.variable_limit_message', { limit: 5 }),
-        () => router.push('/subscription/paywall'),
-        undefined,
-        'warning'
-      );
+      confirmUpgrade(t('settings.variable_limit_message', { limit: FREE_VARIABLES_LIMIT }));
       return;
     }
 
     router.push('/variable/edit');
-  }, [variables.length, canAddCustomVariable, router, t]);
+  }, [variables.length, canAddCustomVariable, confirmUpgrade, router, t]);
 
   /* ======================================== */
   /* 戻り値 */
@@ -256,7 +231,7 @@ export function useVariablesScreen(): UseVariablesScreenReturn {
     /* 状態 */
     variables,
     selectedProfileId,
-    setSelectedProfileId,
+    setSelectedProfileId: setProfileOverride,
     profiles,
 
     /* ハンドラ */

@@ -23,7 +23,7 @@ export interface ExportSelection {
 /**
  * SQLプレースホルダーを生成
  * @param count - プレースホルダーの数
- * @returns プレースホルダー文字列 (例: "?, ?, ?")
+ * @returns プレースホルダー文字列 (例: "?,?,?")
  */
 const placeholders = (count: number): string =>
   Array.from({ length: count }, () => '?').join(',');
@@ -140,6 +140,25 @@ export class ExportMapper {
   }
 
   /**
+   * 参照先が部分エクスポート対象外になった関連行を削除する。
+   *
+   * 個別削除メソッドの呼び出し順や空配列分岐に依存させず、最後に必ず
+   * 関連テーブルの整合性を回復する。
+   */
+  pruneOrphans(): void {
+    this.adapter.run(`
+      DELETE FROM profile_variables
+      WHERE profileId NOT IN (SELECT id FROM profiles)
+         OR variableId NOT IN (SELECT id FROM variables)
+    `);
+    this.adapter.run(`
+      DELETE FROM snippet_profiles
+      WHERE snippetId NOT IN (SELECT id FROM snippets)
+         OR profileId NOT IN (SELECT id FROM profiles)
+    `);
+  }
+
+  /**
    * 選択されていないデータを一括削除
    *
    * @param selection - 残すデータのID
@@ -149,5 +168,6 @@ export class ExportMapper {
     this.deleteUnselectedProfiles(selection.profileIds);
     this.deleteUnselectedVariables(selection.variableIds);
     this.deleteUnselectedCategories(selection.categoryIds);
+    this.pruneOrphans();
   }
 }

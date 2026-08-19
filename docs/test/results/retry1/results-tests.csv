@@ -1,0 +1,160 @@
+TestID,PatternID,Result,FailedStepNo,FailureClass,BugID,StartedAt,EndedAt,Device,OSVersion,Notes
+TC-0011,P-F02-011,FAIL,13,REQUIRES_TRIAGE,,2026-08-13T03:54:50.690Z,2026-08-13T03:55:29.813Z,iPhone 17,iOS-26-5,"Step 13 ASSERT_DB: 期待「本文が改行で区切られた2行として保存される」／実際「""1行目//2行目""」"
+TC-0012,P-F02-012,FAIL,13,REQUIRES_TRIAGE,,2026-08-13T03:55:29.813Z,2026-08-13T03:56:08.418Z,iPhone 17,iOS-26-5,"Step 13 ASSERT_DB: 期待「タイトルに改行が含まれない」／実際「""前半""」"
+TC-0013,P-F02-013,FAIL,13,REQUIRES_TRIAGE,,2026-08-13T03:56:08.418Z,2026-08-13T03:56:47.227Z,iPhone 17,iOS-26-5,"Step 13 ASSERT_SCREEN_HAS: 期待「ホーム一覧に 記号<>&"" が表示される」／実際「画面内に見つからない（表示中: \uF48B, Main, \uF232 / \uF56C / \uF5B1 / \uF563 / \uF105 / \uF5B4 / すべて / 仕事 / SNS / プロンプト / 記号<>&\"" / 記号を含む本文）」"
+TC-0016,P-F02-016,FAIL,12,AUTOMATION_ERROR,,2026-08-13T03:56:47.227Z,2026-08-13T03:57:25.563Z,iPhone 17,iOS-26-5,"Step 12 TAP: 期待「未分類のタップが受け付けられる」／実際「要素が見つかりません: label=未分類&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0019,P-F02-019,FAIL,13,AUTOMATION_ERROR,,2026-08-13T03:57:25.563Z,2026-08-13T03:58:04.951Z,iPhone 17,iOS-26-5,"Step 13 TAP: 期待「A社用のタップが受け付けられる」／実際「要素が見つかりません: label=A社用&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0021,P-F02-021,FAIL,12,AUTOMATION_ERROR,,2026-08-13T03:58:04.951Z,2026-08-13T03:58:42.759Z,iPhone 17,iOS-26-5,"Step 12 TAP: 期待「A社用のタップが受け付けられる」／実際「要素が見つかりません: label=A社用&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0022,P-F02-022,FAIL,12,AUTOMATION_ERROR,,2026-08-13T03:58:42.759Z,2026-08-13T03:59:20.551Z,iPhone 17,iOS-26-5,"Step 12 TAP: 期待「A社用のタップが受け付けられる」／実際「要素が見つかりません: label=A社用&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0111,P-F03-012,FAIL,13,AUTOMATION_ERROR,,2026-08-13T03:59:20.552Z,2026-08-13T04:00:22.119Z,iPhone 17,iOS-26-5,"Step 13 CLEAR_TEXT: 期待「B入力欄が空になる」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[3] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0112,P-F03-013,FAIL,9,AUTOMATION_ERROR,,2026-08-13T04:00:22.119Z,2026-08-13T04:01:02.948Z,iPhone 17,iOS-26-5,"Step 9 CLEAR_TEXT: 期待「R入力欄が空になる」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[1] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0114,P-F03-015,FAIL,9,AUTOMATION_ERROR,,2026-08-13T04:01:02.951Z,2026-08-13T04:01:44.388Z,iPhone 17,iOS-26-5,"Step 9 CLEAR_TEXT: 期待「R入力欄が空になる」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[1] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0115,P-F03-016,FAIL,11,AUTOMATION_ERROR,,2026-08-13T04:01:44.389Z,2026-08-13T04:02:35.851Z,iPhone 17,iOS-26-5,"Step 11 CLEAR_TEXT: 期待「G入力欄が空になる」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[2] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0116,P-F03-017,FAIL,15,REQUIRES_TRIAGE,,2026-08-13T04:02:35.852Z,2026-08-13T04:03:39.994Z,iPhone 17,iOS-26-5,Step 15 ASSERT_SCREEN_HAS: 期待「プレビューの16進値が#0C0000である」／実際「画面内に見つからない（表示中: \uF24A / カテゴリ作成 / 保存 / カテゴリ / 6/20 / RGB非数字 / プリセット / カスタムRGB / 159 / R / 0 / G）」
+TC-0117,P-F03-018,PASS,,,,2026-08-13T04:03:39.996Z,2026-08-13T04:04:25.319Z,iPhone 17,iOS-26-5,
+TC-0119,P-F03-020,FAIL,11,AUTOMATION_ERROR,,2026-08-13T04:04:25.321Z,2026-08-13T04:05:16.533Z,iPhone 17,iOS-26-5,"Step 11 CLEAR_TEXT: 期待「G入力欄が空になる」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[2] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0127,P-F03-028,FAIL,10,REQUIRES_TRIAGE,,2026-08-13T04:05:16.534Z,2026-08-13T04:05:51.383Z,iPhone 17,iOS-26-5,"Step 10 ASSERT_SCREEN_HAS: 期待「一覧に記号を含む名称が表示される」／実際「画面内に見つからない（表示中: \uF127 / カテゴリ / \uF103 / 仕事, \uF5F6 / SNS, \uF5F6 / プロンプト, \uF5F6 / 記号<>&\"", \uF5F6）」"
+TC-0128,P-F03-029,FAIL,6,AUTOMATION_ERROR,,2026-08-13T04:05:51.384Z,2026-08-13T04:06:28.392Z,iPhone 17,iOS-26-5,"Step 6 CLEAR_TEXT: 期待「カテゴリ名入力欄が空になる」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0129,P-F03-030,PASS,,,,2026-08-13T04:06:28.394Z,2026-08-13T04:07:25.035Z,iPhone 17,iOS-26-5,
+TC-0229,P-F04-030,FAIL,2,AUTOMATION_ERROR,,2026-08-13T04:07:25.036Z,2026-08-13T04:07:44.968Z,iPhone 17,iOS-26-5,"Step 2 TAP: 期待「シート内のMainのタップが受け付けられる」／実際「要素が見つかりません: label~=Main&visible=true[1] （一致件数 1）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0235,P-F04-036,PASS,,,,2026-08-13T04:07:44.972Z,2026-08-13T04:08:26.278Z,iPhone 17,iOS-26-5,
+TC-0239,P-F04-900,FAIL,6,REQUIRES_TRIAGE,,2026-08-13T04:08:26.279Z,2026-08-13T04:08:53.422Z,iPhone 17,iOS-26-5,"Step 6 ASSERT_DB: 期待「切替前は5件すべてが有効である」／実際「""3""」"
+TC-0300,P-F05-001,PASS,,,,2026-08-13T04:08:53.423Z,2026-08-13T04:09:43.430Z,iPhone 17,iOS-26-5,
+TC-0301,P-F05-002,PASS,,,,2026-08-13T04:09:43.431Z,2026-08-13T04:10:27.649Z,iPhone 17,iOS-26-5,
+TC-0306,P-F05-007,FAIL,7,AUTOMATION_ERROR,,2026-08-13T04:10:27.650Z,2026-08-13T04:11:03.036Z,iPhone 17,iOS-26-5,"Step 7 TYPE_PASTE: 期待「変数名入力欄へ半角空白3個が入力される」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0307,P-F05-008,FAIL,7,AUTOMATION_ERROR,,2026-08-13T04:11:03.039Z,2026-08-13T04:11:38.857Z,iPhone 17,iOS-26-5,"Step 7 TYPE_PASTE: 期待「変数名入力欄へ today が入力される」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0308,P-F05-009,PASS,,,,2026-08-13T04:11:38.860Z,2026-08-13T04:12:16.510Z,iPhone 17,iOS-26-5,
+TC-0311,P-F05-012,FAIL,7,AUTOMATION_ERROR,,2026-08-13T04:12:16.514Z,2026-08-13T04:12:53.342Z,iPhone 17,iOS-26-5,"Step 7 TYPE_PASTE: 期待「変数名入力欄へ Company が入力される」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0313,P-F05-014,FAIL,7,AUTOMATION_ERROR,,2026-08-13T04:12:53.342Z,2026-08-13T04:13:30.912Z,iPhone 17,iOS-26-5,"Step 7 TYPE_PASTE: 期待「変数名入力欄へ31文字を入力しようとする」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0315,P-F05-016,FAIL,7,AUTOMATION_ERROR,,2026-08-13T04:13:30.915Z,2026-08-13T04:14:08.205Z,iPhone 17,iOS-26-5,"Step 7 TYPE_PASTE: 期待「変数名入力欄へ label_max が入力される」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0316,P-F05-017,FAIL,7,AUTOMATION_ERROR,,2026-08-13T04:14:08.207Z,2026-08-13T04:14:44.934Z,iPhone 17,iOS-26-5,"Step 7 TYPE_PASTE: 期待「変数名入力欄へ label_over が入力される」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0319,P-F05-020,FAIL,7,AUTOMATION_ERROR,,2026-08-13T04:14:44.936Z,2026-08-13T04:15:21.809Z,iPhone 17,iOS-26-5,"Step 7 TYPE_PASTE: 期待「変数名入力欄へ icon_var が入力される」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0320,P-F05-021,FAIL,7,AUTOMATION_ERROR,,2026-08-13T04:15:21.810Z,2026-08-13T04:15:58.731Z,iPhone 17,iOS-26-5,"Step 7 TYPE_PASTE: 期待「変数名入力欄へ noicon_var が入力される」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0321,P-F05-022,FAIL,7,AUTOMATION_ERROR,,2026-08-13T04:15:58.732Z,2026-08-13T04:16:36.963Z,iPhone 17,iOS-26-5,"Step 7 TYPE_PASTE: 期待「変数名入力欄へ std_only が入力される」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0322,P-F05-023,PASS,,,,2026-08-13T04:16:36.964Z,2026-08-13T04:17:31.584Z,iPhone 17,iOS-26-5,
+TC-0324,P-F05-025,FAIL,7,AUTOMATION_ERROR,,2026-08-13T04:17:31.586Z,2026-08-13T04:18:06.980Z,iPhone 17,iOS-26-5,"Step 7 TYPE_PASTE: 期待「変数名入力欄へ blank_value が入力される」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0326,P-F05-027,FAIL,7,AUTOMATION_ERROR,,2026-08-13T04:18:06.988Z,2026-08-13T04:18:44.379Z,iPhone 17,iOS-26-5,"Step 7 TYPE_PASTE: 期待「変数名入力欄へ trim_std が入力される」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0331,P-F05-032,FAIL,7,AUTOMATION_ERROR,,2026-08-13T04:18:44.380Z,2026-08-13T04:19:21.210Z,iPhone 17,iOS-26-5,"Step 7 TYPE_PASTE: 期待「変数名入力欄へ multi_value が入力される」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0335,P-F05-036,PASS,,,,2026-08-13T04:19:21.211Z,2026-08-13T04:20:06.424Z,iPhone 17,iOS-26-5,
+TC-0343,P-F05-044,FAIL,6,AUTOMATION_ERROR,,2026-08-13T04:20:06.425Z,2026-08-13T04:20:42.474Z,iPhone 17,iOS-26-5,"Step 6 TYPE_PASTE: 期待「変数名入力欄の末尾へ 2 が入力される」／実際「入力欄をタップできません: 要素が見つかりません: role=AXTextField&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-0352,P-F05-053,PASS,,,,2026-08-13T04:20:42.476Z,2026-08-13T04:21:22.022Z,iPhone 17,iOS-26-5,
+TC-1001,P-F06-008,FAIL,2,REQUIRES_TRIAGE,,2026-08-13T04:21:22.028Z,2026-08-13T04:21:43.911Z,iPhone 17,iOS-26-5,"Step 2 ASSERT_ORDER: 期待「一覧の上から A 日付系 / B 時刻系 の順に並ぶ」／実際「0番目が不一致: 期待 ""A 日付系"" / 実際 ""Activate to dismiss pop-up window.""（一致件数 9）」"
+TC-1004,P-F06-010;P-F06-011;P-F06-012;P-F06-013,FAIL,5,REQUIRES_TRIAGE,,2026-08-13T04:21:43.915Z,2026-08-13T04:22:33.372Z,iPhone 17,iOS-26-5,"Step 5 ASSERT_CLIPBOARD: 期待「4つのトークンすべてが ${TODAY:yyyy/MM/dd} へ展開され区切り「|」で連結される」／実際「""2026/08/13と2026/08/13""」"
+TC-1006,P-F06-023,FAIL,5,REQUIRES_TRIAGE,,2026-08-13T04:22:33.379Z,2026-08-13T04:23:22.237Z,iPhone 17,iOS-26-5,"Step 5 ASSERT_CLIPBOARD: 期待「展開済みタイトル+改行+展開済み本文と完全一致する」／実際「""2026/08/13と2026/08/13""」"
+TC-1310,P-F11-012,PASS,,,,2026-08-13T04:23:22.243Z,2026-08-13T04:24:11.331Z,iPhone 17,iOS-26-5,
+TC-1116,P-F23-021,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:24:11.336Z,2026-08-13T04:24:32.138Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「設定画面が開く」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-2008,P-F01-008,FAIL,2,REQUIRES_TRIAGE,,2026-08-13T04:24:32.141Z,2026-08-13T04:24:52.913Z,iPhone 17,iOS-26-5,"Step 2 ASSERT_ORDER: 期待「一覧が上からAAA/BBB/CCC/DDDの順で並ぶ」／実際「0番目が不一致: 期待 ""AAA"" / 実際 ""Fitness""（一致件数 11）」"
+TC-2009,P-F01-009,FAIL,2,REQUIRES_TRIAGE,,2026-08-13T04:24:52.921Z,2026-08-13T04:25:14.935Z,iPhone 17,iOS-26-5,Step 2 ASSERT_SCREEN_HAS: 期待「一覧に定型文「要約プロンプト」がある」／実際「画面内に見つからない（表示中: Fitness / Watch / 連絡先 / ファイル / プレビュー / ユーティリティフォルダ / 2個のアプリ / PinMark / Expo Go / ClipTap / 検索 / 全2ページ中の2ページ目）」
+TC-2014,P-F01-015,FAIL,1,REQUIRES_TRIAGE,,2026-08-13T04:25:14.936Z,2026-08-13T04:25:32.910Z,iPhone 17,iOS-26-5,Step 1 ASSERT_SCREEN: 期待「ホーム画面が表示されている」／実際「SC-HOME と判定できない: label=すべて が無い」
+TC-2115,P-F07-016,FAIL,3,REQUIRES_TRIAGE,,2026-08-13T04:25:32.913Z,2026-08-13T04:26:07.225Z,iPhone 17,iOS-26-5,Step 3 ASSERT_SCREEN: 期待「検索画面が開く」／実際「SC-SEARCH と判定できない: text~=定型文を検索 が無い」
+TC-2116,P-F07-017,FAIL,3,REQUIRES_TRIAGE,,2026-08-13T04:26:07.232Z,2026-08-13T04:26:41.376Z,iPhone 17,iOS-26-5,Step 3 ASSERT_SCREEN: 期待「検索画面が開く」／実際「SC-SEARCH と判定できない: text~=定型文を検索 が無い」
+TC-2123,P-F07-027;P-F08-014,FAIL,3,REQUIRES_TRIAGE,,2026-08-13T04:26:41.383Z,2026-08-13T04:27:14.268Z,iPhone 17,iOS-26-5,Step 3 ASSERT_SCREEN: 期待「検索画面が開く」／実際「SC-SEARCH と判定できない: text~=定型文を検索 が無い」
+TC-2128,P-F07-032,FAIL,3,REQUIRES_TRIAGE,,2026-08-13T04:27:14.275Z,2026-08-13T04:27:49.094Z,iPhone 17,iOS-26-5,Step 3 ASSERT_SCREEN: 期待「検索画面が開く」／実際「SC-SEARCH と判定できない: text~=定型文を検索 が無い」
+TC-2131,P-F07-018,FAIL,3,REQUIRES_TRIAGE,,2026-08-13T04:27:49.102Z,2026-08-13T04:28:24.257Z,iPhone 17,iOS-26-5,Step 3 ASSERT_SCREEN: 期待「検索画面が開く」／実際「SC-SEARCH と判定できない: text~=定型文を検索 が無い」
+TC-2210,P-F08-015,FAIL,2,AUTOMATION_ERROR,,2026-08-13T04:28:24.262Z,2026-08-13T04:28:51.638Z,iPhone 17,iOS-26-5,"Step 2 TAP: 期待「カテゴリチップ「カテゴリ05」がタップされる」／実際「要素が見つかりません: label=カテゴリ05&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-2211,P-F08-016,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:28:51.643Z,2026-08-13T04:29:17.502Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「カテゴリチップ「カテゴリ05」がタップされる」／実際「要素が見つかりません: label=カテゴリ05&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-2300,P-F09-001,FAIL,3,REQUIRES_TRIAGE,,2026-08-13T04:29:17.509Z,2026-08-13T04:29:39.332Z,iPhone 17,iOS-26-5,"Step 3 ASSERT_ORDER: 期待「一覧が上からDDD/CCC/BBB/AAAの順に並ぶ」／実際「0番目が不一致: 期待 ""DDD"" / 実際 ""Fitness""（一致件数 11）」"
+TC-2301,P-F09-002,FAIL,3,REQUIRES_TRIAGE,,2026-08-13T04:29:39.337Z,2026-08-13T04:30:01.682Z,iPhone 17,iOS-26-5,"Step 3 ASSERT_ORDER: 期待「一覧が上からBBB/AAA/DDD/CCCの順に並ぶ」／実際「0番目が不一致: 期待 ""BBB"" / 実際 ""Fitness""（一致件数 11）」"
+TC-2302,P-F09-003,FAIL,3,REQUIRES_TRIAGE,,2026-08-13T04:30:01.688Z,2026-08-13T04:30:23.826Z,iPhone 17,iOS-26-5,"Step 3 ASSERT_ORDER: 期待「一覧が上からAAA/BBB/CCC/DDDの順に並ぶ」／実際「0番目が不一致: 期待 ""AAA"" / 実際 ""Fitness""（一致件数 11）」"
+TC-2303,P-F09-004,FAIL,3,REQUIRES_TRIAGE,,2026-08-13T04:30:23.833Z,2026-08-13T04:30:45.956Z,iPhone 17,iOS-26-5,"Step 3 ASSERT_ORDER: 期待「一覧が上からCCC/DDD/AAA/BBBの順に並ぶ」／実際「0番目が不一致: 期待 ""CCC"" / 実際 ""Fitness""（一致件数 11）」"
+TC-2310,P-F09-011,PASS,,,,2026-08-13T04:30:45.962Z,2026-08-13T04:31:05.029Z,iPhone 17,iOS-26-5,
+TC-2313,P-F09-015,FAIL,6,REQUIRES_TRIAGE,,2026-08-13T04:31:05.033Z,2026-08-13T04:31:39.574Z,iPhone 17,iOS-26-5,"Step 6 ASSERT_ORDER: 期待「一覧が使用回数の多い順に並ぶ」／実際「0番目が不一致: 期待 ""今日の積み上げ"" / 実際 ""要約プロンプト""（一致件数 3）」"
+TC-2322,P-F09-026,FAIL,7,REQUIRES_TRIAGE,,2026-08-13T04:31:39.576Z,2026-08-13T04:32:15.556Z,iPhone 17,iOS-26-5,"Step 7 ASSERT_ORDER: 期待「検索結果も並べ替え設定どおり作成日時の新しい順で要約プロンプト/あいさつの順に並ぶ」／実際「0番目が不一致: 期待 ""要約プロンプト"" / 実際 """"（一致件数 2）」"
+TC-3005,P-F13-007,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:32:15.561Z,2026-08-13T04:32:35.159Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3034,P-F13-034,FAIL,4,REQUIRES_TRIAGE,,2026-08-13T04:32:35.162Z,2026-08-13T04:33:05.545Z,iPhone 17,iOS-26-5,Step 4 ASSERT_VISIBLE: 期待「定型文タブの選択件数が(4)になる」／実際「見つからない」
+TC-3035,P-F13-035,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:33:05.551Z,2026-08-13T04:33:26.848Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3040,P-F13-040,FAIL,4,REQUIRES_TRIAGE,,2026-08-13T04:33:26.851Z,2026-08-13T04:33:57.197Z,iPhone 17,iOS-26-5,Step 4 ASSERT_VISIBLE: 期待「定型文タブの選択件数が(4)になる」／実際「見つからない」
+TC-3046,P-F13-046,FAIL,5,REQUIRES_TRIAGE,,2026-08-13T04:33:57.205Z,2026-08-13T04:34:28.758Z,iPhone 17,iOS-26-5,"Step 5 ASSERT_VISIBLE: 期待「タブの選択件数が「変数, (2)」になる」／実際「見つからない」"
+TC-3041,P-F13-041,FAIL,4,REQUIRES_TRIAGE,,2026-08-13T04:34:28.766Z,2026-08-13T04:34:59.224Z,iPhone 17,iOS-26-5,Step 4 ASSERT_VISIBLE: 期待「定型文タブの選択件数が(4)になる」／実際「見つからない」
+TC-3042,P-F13-042,FAIL,4,AUTOMATION_ERROR,,2026-08-13T04:34:59.231Z,2026-08-13T04:35:30.820Z,iPhone 17,iOS-26-5,"Step 4 TAP: 期待「ヘッダ右のチェックボックスが押される」／実際「要素が見つかりません: label=\uF21A&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3043,P-F13-043,FAIL,3,AUTOMATION_ERROR,,2026-08-13T04:35:30.826Z,2026-08-13T04:36:01.120Z,iPhone 17,iOS-26-5,"Step 3 TAP: 期待「ヘッダ右のチェックボックスが押される」／実際「要素が見つかりません: label=\uF21A&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3044,P-F13-044,PASS,,,,2026-08-13T04:36:01.127Z,2026-08-13T04:36:33.294Z,iPhone 17,iOS-26-5,
+TC-3051,P-F13-051,FAIL,9,AUTOMATION_ERROR,,2026-08-13T04:36:33.300Z,2026-08-13T04:37:29.084Z,iPhone 17,iOS-26-5,"Step 9 TAP: 期待「カテゴリタブを全解除する」／実際「要素が見つかりません: label=\uF21A&visible=true[0] （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3060,P-F13-060,FAIL,4,REQUIRES_TRIAGE,,2026-08-13T04:37:29.093Z,2026-08-13T04:38:04.922Z,iPhone 17,iOS-26-5,Step 4 ASSERT_VISIBLE: 期待「見出し「パスワードを設定」が画面内にある」／実際「見つからない」
+TC-3061,P-F13-061,FAIL,4,AUTOMATION_ERROR,,2026-08-13T04:38:04.928Z,2026-08-13T04:38:33.576Z,iPhone 17,iOS-26-5,"Step 4 TYPE: 期待「パスワード入力欄へabcが入力される」／実際「入力欄をタップできません: 要素が見つかりません: label=パスワード&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3062,P-F13-062,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:38:33.582Z,2026-08-13T04:38:54.779Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3070,P-F13-070,FAIL,4,AUTOMATION_ERROR,,2026-08-13T04:38:54.783Z,2026-08-13T04:39:24.092Z,iPhone 17,iOS-26-5,"Step 4 TAP: 期待「パスワードを入力せずOKが押される」／実際「要素が見つかりません: label=OK&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3071,P-F13-071,FAIL,4,AUTOMATION_ERROR,,2026-08-13T04:39:24.097Z,2026-08-13T04:39:53.423Z,iPhone 17,iOS-26-5,"Step 4 TYPE: 期待「パスワード入力欄へ半角空白3文字が入力される」／実際「入力欄をタップできません: 要素が見つかりません: label=パスワード&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3102,P-F13-102,FAIL,4,AUTOMATION_ERROR,,2026-08-13T04:39:53.429Z,2026-08-13T04:40:22.809Z,iPhone 17,iOS-26-5,"Step 4 TYPE: 期待「パスワード入力欄へabcが入力される」／実際「入力欄をタップできません: 要素が見つかりません: label=パスワード&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3201,P-F14-002,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:40:22.816Z,2026-08-13T04:40:43.012Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ホームヘッダの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3202,P-F14-003,PASS,,,,2026-08-13T04:40:43.016Z,2026-08-13T04:41:03.139Z,iPhone 17,iOS-26-5,
+TC-3205,P-F14-006,FAIL,3,REQUIRES_TRIAGE,,2026-08-13T04:41:03.141Z,2026-08-13T04:41:23.279Z,iPhone 17,iOS-26-5,"Step 3 ASSERT_DB: 期待「DBのuser_versionが7である」／実際「""0""」"
+TC-3206,P-F14-007,PASS,,,,2026-08-13T04:41:23.284Z,2026-08-13T04:41:46.371Z,iPhone 17,iOS-26-5,
+TC-3304,P-F18-009,FAIL,7,AUTOMATION_ERROR,,2026-08-13T04:41:46.377Z,2026-08-13T04:42:16.703Z,iPhone 17,iOS-26-5,"Step 7 TYPE: 期待「変数名入力欄へd1_addedが入力される」／実際「入力欄をタップできません: 要素が見つかりません: label~=例: myname&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-3380,P-F18-080,PASS,,,,2026-08-13T04:42:16.705Z,2026-08-13T04:42:44.524Z,iPhone 17,iOS-26-5,
+TC-3403,P-F18-104,FAIL,6,REQUIRES_TRIAGE,,2026-08-13T04:42:44.530Z,2026-08-13T04:43:12.546Z,iPhone 17,iOS-26-5,Step 6 ASSERT_TEXT_CONTAINS: 期待「var_eightの行に「無効」が含まれる」／実際「要素が見つからない: label~=var_eight」
+TC-3407,P-F18-108,FAIL,5,REQUIRES_TRIAGE,,2026-08-13T04:43:12.554Z,2026-08-13T04:43:40.062Z,iPhone 17,iOS-26-5,"Step 5 ASSERT_SCREEN_LACKS: 期待「画面内に「無効」が無い」／実際「見つかってしまった: \uF4AC, 変数6, {{var_six}}, 無効側の値, \uF5F6」"
+TC-3412,P-F18-112,FAIL,2,AUTOMATION_ERROR,,2026-08-13T04:43:40.064Z,2026-08-13T04:44:04.114Z,iPhone 17,iOS-26-5,"Step 2 TAP: 期待「ホームヘッダの設定アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4001,P-F16-002,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:44:04.116Z,2026-08-13T04:44:23.510Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4005,P-F16-011,FAIL,2,AUTOMATION_ERROR,,2026-08-13T04:44:23.514Z,2026-08-13T04:44:44.918Z,iPhone 17,iOS-26-5,"Step 2 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4101,P-F17-002,FAIL,2,AUTOMATION_ERROR,,2026-08-13T04:44:44.919Z,2026-08-13T04:45:05.712Z,iPhone 17,iOS-26-5,"Step 2 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4102,P-F17-003;P-F17-005,FAIL,4,AUTOMATION_ERROR,,2026-08-13T04:45:05.714Z,2026-08-13T04:45:35.950Z,iPhone 17,iOS-26-5,Step 4 WAIT_FOR: 期待「Paywallの読み込みが終わり「購入を復元」が現れる」／実際「8000ms 以内に条件を満たしませんでした: waitfor label~=購入を復元&visible=true」
+TC-4108,P-F17-017,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:45:35.956Z,2026-08-13T04:45:46.121Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4109,P-F17-018,FAIL,3,AUTOMATION_ERROR,,2026-08-13T04:45:46.127Z,2026-08-13T04:46:15.285Z,iPhone 17,iOS-26-5,Step 3 WAIT_FOR: 期待「Paywallの読み込みが終わる」／実際「8000ms 以内に条件を満たしませんでした: waitfor label~=購入を復元&visible=true」
+TC-4110,P-F17-019,FAIL,3,AUTOMATION_ERROR,,2026-08-13T04:46:15.294Z,2026-08-13T04:46:44.026Z,iPhone 17,iOS-26-5,Step 3 WAIT_FOR: 期待「Paywallの読み込みが終わる」／実際「8000ms 以内に条件を満たしませんでした: waitfor label~=購入を復元&visible=true」
+TC-4111,P-F17-006;P-F17-010,FAIL,3,AUTOMATION_ERROR,,2026-08-13T04:46:44.033Z,2026-08-13T04:47:13.647Z,iPhone 17,iOS-26-5,Step 3 WAIT_FOR: 期待「Paywallの読み込みが終わる」／実際「8000ms 以内に条件を満たしませんでした: waitfor label~=購入を復元&visible=true」
+TC-4112,P-F17-011,FAIL,3,AUTOMATION_ERROR,,2026-08-13T04:47:13.655Z,2026-08-13T04:47:43.202Z,iPhone 17,iOS-26-5,Step 3 WAIT_FOR: 期待「Paywallの読み込みが終わる」／実際「8000ms 以内に条件を満たしませんでした: waitfor label~=購入を復元&visible=true」
+TC-4113,P-F17-032,FAIL,4,AUTOMATION_ERROR,,2026-08-13T04:47:43.208Z,2026-08-13T04:48:14.340Z,iPhone 17,iOS-26-5,Step 4 WAIT_FOR: 期待「Paywallの読み込みが終わる」／実際「8000ms 以内に条件を満たしませんでした: waitfor label~=購入を復元&visible=true」
+TC-4114,P-F17-033,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:48:14.346Z,2026-08-13T04:48:34.359Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4115,P-F17-034,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:48:34.364Z,2026-08-13T04:48:55.696Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4301,P-F19-002,FAIL,2,REQUIRES_TRIAGE,,2026-08-13T04:48:55.698Z,2026-08-13T04:49:24.222Z,iPhone 17,iOS-26-5,Step 2 ASSERT_SCREEN: 期待「ホーム画面が表示されている」／実際「SC-HOME と判定できない: label=すべて が無い」
+TC-4401,P-F20-002,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:49:24.223Z,2026-08-13T04:49:43.984Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4402,P-F20-003,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:49:43.990Z,2026-08-13T04:50:03.242Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4406,P-F20-004,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:50:03.244Z,2026-08-13T04:50:23.027Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4500,P-F21-001;P-F21-005,PASS,,,,2026-08-13T04:50:23.031Z,2026-08-13T04:50:51.167Z,iPhone 17,iOS-26-5,
+TC-4503,P-F21-008,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:50:51.172Z,2026-08-13T04:51:10.966Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「ヘッダーの入出力アイコンが押される」／実際「要素が見つかりません: label=\uF5B1&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-4600,P-F22-001;P-F22-003;P-F22-005;P-F22-007,PASS,,,,2026-08-13T04:51:10.970Z,2026-08-13T04:51:42.770Z,iPhone 17,iOS-26-5,
+TC-4601,P-F22-008;P-F22-014,FAIL,8,REQUIRES_TRIAGE,,2026-08-13T04:51:42.773Z,2026-08-13T04:52:16.258Z,iPhone 17,iOS-26-5,Step 8 ASSERT_VISIBLE: 期待「2回目も手順1が表示されている」／実際「見つからない」
+TC-4604,P-F22-010,FAIL,1,AUTOMATION_ERROR,,2026-08-13T04:52:16.267Z,2026-08-13T04:52:36.018Z,iPhone 17,iOS-26-5,"Step 1 TAP: 期待「歯車アイコンが押される」／実際「要素が見つかりません: label=\uF56C&visible=true （一致件数 0）
+usage: gesture tap <x> <y> [holdMs]」"
+TC-5008,P-F03-E01,PASS,,,,2026-08-13T04:52:36.021Z,2026-08-13T04:53:07.375Z,iPhone 17,iOS-26-5,

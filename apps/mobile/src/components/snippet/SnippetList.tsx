@@ -11,7 +11,7 @@
  * - 空状態の表示
  *
  * @see SnippetCard - 各スニペットのカード表示
- * @see app/(tabs)/index.tsx - メイン画面での使用例
+ * @see app/index.tsx - メイン画面での使用例
  */
 
 import React, { useCallback, useRef, useEffect } from 'react';
@@ -30,6 +30,7 @@ import { Category } from '@cliptap/shared';
  * @property onPress - スニペットタップ時のコールバック（コピー処理）
  * @property onEdit - 編集ボタンタップ時のコールバック
  * @property onDelete - 削除ボタンタップ時のコールバック
+ * @property onPressTitle - タイトルタップ時のコールバック（タイトルのみコピー、省略可）
  * @property refreshing - プルリフレッシュ中フラグ（省略可、デフォルト: false）
  * @property onRefresh - プルリフレッシュ時のコールバック（省略可）
  * @property disableCopy - コピー機能を無効化（省略可、デフォルト: false）
@@ -38,9 +39,10 @@ import { Category } from '@cliptap/shared';
  */
 interface SnippetListProps {
   snippets: SnippetWithDisplay[];
-  onPress: (snippet: SnippetWithDisplay) => void;
+  onPress: (snippet: SnippetWithDisplay) => void | Promise<void>;
   onEdit: (snippet: SnippetWithDisplay) => void;
   onDelete: (snippet: SnippetWithDisplay) => void;
+  onPressTitle?: (snippet: SnippetWithDisplay) => void | Promise<void>;
   refreshing?: boolean;
   onRefresh?: () => void;
   disableCopy?: boolean;
@@ -54,6 +56,7 @@ export function SnippetList({
   onPress,
   onEdit,
   onDelete,
+  onPressTitle,
   refreshing = false,
   onRefresh,
   disableCopy = false,
@@ -112,13 +115,14 @@ export function SnippetList({
             onPress={onPress}
             onEdit={onEdit}
             onDelete={onDelete}
+            onPressTitle={onPressTitle}
             disableCopy={disableCopy}
             category={category}
           />
         </View>
       );
     },
-    [categoryMap, isTablet, columnGap, onPress, onEdit, onDelete, disableCopy]
+    [categoryMap, isTablet, columnGap, onPress, onEdit, onDelete, onPressTitle, disableCopy]
   );
 
   if (snippets.length === 0) {
