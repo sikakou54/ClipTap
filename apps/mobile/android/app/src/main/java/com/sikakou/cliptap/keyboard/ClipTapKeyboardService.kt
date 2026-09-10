@@ -16,9 +16,12 @@ import androidx.core.content.ContextCompat
 import com.sikakou.cliptap.R
 import com.sikakou.cliptap.models.Profile
 import com.sikakou.cliptap.models.Category
+import com.sikakou.cliptap.models.Shortcut
+import com.sikakou.cliptap.models.ShortcutValue
 import com.sikakou.cliptap.models.Snippet
 import com.sikakou.cliptap.services.ProfileService
 import com.sikakou.cliptap.services.CategoryService
+import com.sikakou.cliptap.services.ShortcutService
 import com.sikakou.cliptap.services.SnippetService
 import com.sikakou.cliptap.services.VariableService
 import com.sikakou.cliptap.database.Database
@@ -75,6 +78,16 @@ class ClipTapKeyboardService : InputMethodService() {
     private lateinit var insertNewlineButton: View
     private lateinit var closeButton: View
 
+    // ショートカット画面のビュー
+    private lateinit var shortcutView: View
+    private lateinit var shortcutBackButton: android.widget.ImageButton
+    private lateinit var shortcutTitleLabel: android.widget.TextView
+    private lateinit var shortcutCloseButton: android.widget.ImageButton
+    private lateinit var shortcutRecyclerView: RecyclerView
+    private lateinit var shortcutEmptyView: View
+    private lateinit var shortcutAdapter: ShortcutAdapter
+    private lateinit var shortcutValueAdapter: ShortcutValueAdapter
+
     // 選択中のスニペット
     private var selectedSnippet: Snippet? = null
 
@@ -82,6 +95,7 @@ class ClipTapKeyboardService : InputMethodService() {
     private lateinit var profileService: ProfileService
     private lateinit var categoryService: CategoryService
     private lateinit var snippetService: SnippetService
+    private lateinit var shortcutService: ShortcutService
     private lateinit var variableService: VariableService
     private lateinit var database: Database
 
@@ -97,6 +111,9 @@ class ClipTapKeyboardService : InputMethodService() {
     private lateinit var sortButton: android.widget.ImageButton
     private lateinit var sortBadge: android.view.View
     private var currentSortBy: String = "created"
+
+    // ショートカットボタン
+    private lateinit var shortcutButton: android.widget.ImageButton
 
     companion object {
         private const val TAG = "ClipTapKeyboard"
@@ -146,6 +163,7 @@ class ClipTapKeyboardService : InputMethodService() {
         profileService = ProfileService.getInstance(applicationContext)
         categoryService = CategoryService.getInstance(applicationContext)
         snippetService = SnippetService.getInstance(applicationContext)
+        shortcutService = ShortcutService.getInstance(applicationContext)
         variableService = VariableService.getInstance(applicationContext)
         database = Database.getInstance(applicationContext)
 
@@ -217,6 +235,15 @@ class ClipTapKeyboardService : InputMethodService() {
         emptyStateTextView = keyboardView.findViewById(R.id.emptyStateTextView)
         sortButton = keyboardView.findViewById(R.id.sortButton)
         sortBadge = keyboardView.findViewById(R.id.sortBadge)
+        shortcutButton = keyboardView.findViewById(R.id.shortcutButton)
+
+        // ショートカット画面のビューを初期化
+        shortcutView = keyboardView.findViewById(R.id.shortcutView)
+        shortcutBackButton = keyboardView.findViewById(R.id.shortcutBackButton)
+        shortcutTitleLabel = keyboardView.findViewById(R.id.shortcutTitleLabel)
+        shortcutCloseButton = keyboardView.findViewById(R.id.shortcutCloseButton)
+        shortcutRecyclerView = keyboardView.findViewById(R.id.shortcutRecyclerView)
+        shortcutEmptyView = keyboardView.findViewById(R.id.shortcutEmptyView)
 
         // 詳細画面のビューを初期化
         detailView = keyboardView.findViewById(R.id.detailView)
@@ -247,6 +274,34 @@ class ClipTapKeyboardService : InputMethodService() {
             onSnippetClicked(snippet)
         }
         snippetRecyclerView.adapter = snippetAdapter
+
+        // ショートカット画面のRecyclerViewの設定
+        shortcutRecyclerView.layoutManager = LinearLayoutManager(this)
+
+        /* 一覧の表示枠は固定高さのため、行数が変わってもRecyclerView自体の大きさは変わらない。
+           これを伝えることでスクロール中のレイアウト再計算を省ける */
+        shortcutRecyclerView.setHasFixedSize(true)
+
+        /* ショートカット一覧と値一覧は1つのRecyclerViewでアダプターを差し替えて表示する。
+           差し替えると表示位置が先頭に戻るため、階層を移動するたびに一覧の先頭から読める */
+        shortcutAdapter = ShortcutAdapter { shortcut ->
+            onShortcutClicked(shortcut)
+        }
+        shortcutValueAdapter = ShortcutValueAdapter { value ->
+            onShortcutValueClicked(value)
+        }
+        shortcutRecyclerView.adapter = shortcutAdapter
+
+        // ショートカット画面のボタンにクリックリスナーを設定
+        shortcutButton.setOnClickListener {
+            openShortcutView()
+        }
+        shortcutBackButton.setOnClickListener {
+            showShortcutList()
+        }
+        shortcutCloseButton.setOnClickListener {
+            closeShortcutView()
+        }
 
         // 詳細画面のボタンにクリックリスナーを設定
         copyButton.setOnClickListener {
@@ -942,6 +997,239 @@ class ClipTapKeyboardService : InputMethodService() {
         super.onDestroy()
         database.close()
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Keyboard service destroyed")
+    }
+
+    // MARK: - Shortcut Methods（ショートカット関連メソッド）
+
+    /**
+     * ショートカット画面を開く
+     *
+     * 【目的】
+     * ヘッダーのショートカットボタンから、ショートカット一覧へ切り替えます。
+     *
+     * 【何をするか】
+     * 1. ショートカット一覧を組み立てる（そのときの入力内容で並べ替える）
+     * 2. メインビューを隠し、ショートカット画面をフェードインで表示する
+     *
+     * 【排他表示について】
+     * ショートカットボタンはmainViewの中にあるため、詳細画面が出ている間は押せない。
+     * つまりmainView / detailView / shortcutViewのうち表示されるのは常に1つになる。
+     */
+    private fun openShortcutView() {
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Shortcut view requested")
+
+        showShortcutList()
+
+        // ショートカット画面を表示（フェードインアニメーション）
+        mainView.visibility = View.GONE
+        shortcutView.visibility = View.VISIBLE
+        shortcutView.alpha = 0f
+        shortcutView.animate()
+            .alpha(1f)
+            .setDuration(200)
+            .start()
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Shortcut view shown")
+    }
+
+    /**
+     * ショートカット画面を閉じる
+     *
+     * 【目的】
+     * ショートカット画面をフェードアウトして、定型文一覧へ戻ります。
+     *
+     * 【理由】
+     * 詳細画面（closeDetailView）と同じ作法にすることで、画面の出入りの印象を揃えます。
+     */
+    private fun closeShortcutView() {
+        // フェードアウトアニメーション
+        shortcutView.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction {
+                shortcutView.visibility = View.GONE
+                mainView.visibility = View.VISIBLE
+            }
+            .start()
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Shortcut view closed")
+    }
+
+    /**
+     * ショートカット一覧を表示
+     *
+     * 【目的】
+     * ショートカット画面の1階層目（ショートカット名の一覧）を表示します。
+     *
+     * 【何をするか】
+     * 1. カーソル直前の入力内容で並べ替えたショートカット一覧を取得
+     * 2. ヘッダーを「ショートカット」にして戻るボタンを押せなくする
+     * 3. 一覧を差し替え、0件なら空状態を表示する
+     *
+     * 【開くたびに取得し直す理由】
+     * メインアプリでの追加・並べ替えを次に開いたときに反映するため。
+     * また、そのときの入力内容で候補の並びを決め直すため。
+     */
+    private fun showShortcutList() {
+        val shortcuts = loadRankedShortcuts()
+
+        shortcutTitleLabel.text = getString(R.string.shortcut_title)
+
+        /* GONEにしないのは、タイトルの開始位置を階層の移動で動かさないため */
+        shortcutBackButton.visibility = View.INVISIBLE
+
+        shortcutRecyclerView.adapter = shortcutAdapter
+        shortcutAdapter.submitList(shortcuts)
+        updateShortcutEmptyState(shortcuts.isEmpty())
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Loaded ${shortcuts.size} shortcuts")
+    }
+
+    /**
+     * ショートカット値の一覧を表示
+     *
+     * 【目的】
+     * ショートカット画面の2階層目（値の一覧）を表示します。
+     *
+     * 【何をするか】
+     * 1. カーソル直前の入力内容で値を並べ替える
+     * 2. ヘッダーを「＜ <ショートカット名>」にする（戻るボタン + ショートカット名）
+     * 3. 一覧を値用のアダプターへ差し替える
+     *
+     * @param shortcut 選択されたショートカット
+     */
+    private fun showShortcutValues(shortcut: Shortcut) {
+        val values = shortcutService.rankedValues(shortcut.values, textBeforeCursor())
+
+        shortcutTitleLabel.text = shortcut.name
+        shortcutBackButton.visibility = View.VISIBLE
+
+        shortcutRecyclerView.adapter = shortcutValueAdapter
+        shortcutValueAdapter.submitList(values)
+
+        /* 値を持つショートカットからしか遷移しないため、この階層で空状態になることはない */
+        updateShortcutEmptyState(false)
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Shortcut values shown (${values.size} values)")
+    }
+
+    /**
+     * ショートカットクリック時の処理
+     *
+     * 【目的】
+     * 選ばれたショートカットの値が1件か複数かで、動きを変えます。
+     *
+     * 【1件のときに値一覧を出さない理由】
+     * 選ぶ余地がないため、階層をもう1つ挟むと同じ結果に届くまでのタップ数が増えるだけになる。
+     *
+     * @param shortcut 選択されたショートカット
+     */
+    private fun onShortcutClicked(shortcut: Shortcut) {
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Shortcut selected (${shortcut.values.size} values)")
+
+        /* 値を持たないショートカットは挿入するものがないため何もしない */
+        if (shortcut.values.isEmpty()) {
+            Log.w(TAG, "⚠️ Shortcut has no values")
+            return
+        }
+
+        /* 値が1件だけなら、値一覧を挟まずそのまま挿入する */
+        if (shortcut.values.size == 1) {
+            insertShortcutValue(shortcut.values[0])
+            return
+        }
+
+        showShortcutValues(shortcut)
+    }
+
+    /**
+     * ショートカット値クリック時の処理
+     *
+     * @param value 選択されたショートカット値
+     */
+    private fun onShortcutValueClicked(value: ShortcutValue) {
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Shortcut value selected")
+        insertShortcutValue(value)
+    }
+
+    /**
+     * ショートカット値をテキストフィールドへ挿入
+     *
+     * 【何をするか】
+     * 1. currentInputConnectionを取得（テキストフィールドへの接続）
+     * 2. ShortcutService.insertValue()で値を挿入（振動と使用回数の加算も行う）
+     * 3. ショートカット画面を閉じて定型文一覧へ戻る
+     *
+     * 【挿入後に閉じる理由】
+     * 既存の定型文挿入（onCopyButtonClicked）と同じ体験にするため。
+     *
+     * @param value 挿入するショートカット値
+     */
+    private fun insertShortcutValue(value: ShortcutValue) {
+        val ic = currentInputConnection
+        if (ic == null) {
+            Log.e(TAG, "❌ InputConnection is null")
+            Toast.makeText(this, R.string.keyboard_insert_failed, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        shortcutService.insertValue(value, ic)
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Shortcut value inserted successfully")
+        closeShortcutView()
+    }
+
+    /**
+     * 入力内容で並べ替えたショートカット一覧を取得
+     *
+     * 【例外を握る理由】
+     * メインアプリが一度も起動していない、またはメインアプリのDBがまだ古い版で
+     * shortcutsテーブルが無い場合、クエリは失敗する。
+     * ここで空一覧に倒すことで、定型文の挿入というキーボード本来の機能は使えるままにする。
+     *
+     * @return 表示順に並べ替えたショートカット一覧（取得できない場合は空）
+     */
+    private fun loadRankedShortcuts(): List<Shortcut> {
+        return try {
+            shortcutService.rankedShortcuts(textBeforeCursor())
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to load shortcuts", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * カーソル直前の入力内容を取得
+     *
+     * 【目的】
+     * 候補推測の手掛かりとして、いま入力している内容の末尾を読み取ります。
+     *
+     * 【全文を読まない理由】
+     * 離れた位置に出た語で候補が動き続けて落ち着かないため、
+     * 候補推測が見る長さ（ShortcutService.SHORTCUT_CONTEXT_LENGTH）だけを読む。
+     *
+     * @return カーソル直前の文字列（取得できない場合は空文字）
+     */
+    private fun textBeforeCursor(): String {
+        val ic = currentInputConnection ?: return ""
+        return ic.getTextBeforeCursor(ShortcutService.SHORTCUT_CONTEXT_LENGTH, 0)?.toString() ?: ""
+    }
+
+    /**
+     * ショートカット画面の空の状態表示を更新
+     *
+     * 【目的】
+     * ショートカットが0件の時に案内を表示します。
+     *
+     * @param isEmpty 一覧が空かどうか
+     */
+    private fun updateShortcutEmptyState(isEmpty: Boolean) {
+        if (isEmpty) {
+            shortcutEmptyView.visibility = View.VISIBLE
+            shortcutRecyclerView.visibility = View.GONE
+        } else {
+            shortcutEmptyView.visibility = View.GONE
+            shortcutRecyclerView.visibility = View.VISIBLE
+        }
     }
 
     // MARK: - Sort Methods（ソート関連メソッド）

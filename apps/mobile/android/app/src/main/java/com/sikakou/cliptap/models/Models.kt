@@ -61,3 +61,39 @@ data class ProfileVariable(
     val variableId: String,
     val value: String
 )
+
+/**
+ * ショートカット値
+ *
+ * 【nameとvalueの違い】
+ * nameは値を選ぶための名称（例: 母）で、挿入されるのはvalue（例: 090-0000-0000）のみ。
+ * 定型文と違い、valueに変数トークンの展開は行わない（保存された文字列をそのまま挿入する）。
+ *
+ * 【対応するTypeScript型】
+ * packages/shared/src/types/shortcut.ts の ShortcutValue と同じ列構成
+ */
+data class ShortcutValue(
+    val id: String,
+    val shortcutId: String,
+    val name: String,
+    val value: String,
+    val useCount: Int,       /* 拡張キーボードから挿入した回数（値単位の候補推測に使う） */
+    val sortOrder: Int,      /* 同一ショートカット内での並び順（0始まり） */
+    val createdAt: String,
+    val updatedAt: String
+)
+
+/**
+ * ショートカット
+ *
+ * 【対応するTypeScript型】
+ * packages/shared/src/types/shortcut.ts の Shortcut と同じ列構成
+ */
+data class Shortcut(
+    val id: String,
+    val name: String,
+    val values: List<ShortcutValue>, /* 所属する値（sortOrder順） */
+    val sortOrder: Int,              /* 一覧での並び順（0始まり） */
+    val createdAt: String,
+    val updatedAt: String
+)

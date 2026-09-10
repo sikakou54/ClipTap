@@ -10,4 +10,10 @@
   <string name="keyboard_sort_usage">"使用頻度"</string>
   <string name="category_all">"すべて"</string>
   <string name="snippet_empty">"スニペットがありません"</string>
+  <string name="accessibility_shortcut_button">"ショートカットボタン"</string>
+  <string name="accessibility_back_button">"戻るボタン"</string>
+  <string name="accessibility_close_button">"閉じるボタン"</string>
+  <string name="shortcut_title">"ショートカット"</string>
+  <string name="shortcut_empty">"ショートカットがありません"</string>
+  <string name="shortcut_empty_hint">"メインアプリでショートカットを作成してください"</string>
 </resources>

@@ -46,6 +46,20 @@ class KeyboardViewController: UIInputViewController {
         case list
         case detail
         case settings
+        case shortcutList
+    }
+
+    /**
+     * ショートカット画面の表示モード
+     *
+     * 値一覧をScreenStateへ足さず、ショートカット画面の中のモードとして持つ。
+     * ScreenStateはapplyScreenState()が全画面ビューを排他表示するための区分であり、
+     * 同じshortcutView内での表示の切り替えまで持たせると、
+     * 状態が増えるほど「どのビューを出すか」の組み合わせが読みづらくなるため。
+     */
+    private enum ShortcutScreenMode {
+        case list    /* ショートカット一覧 */
+        case values  /* 選択したショートカットの値一覧 */
     }
 
     // MARK: - Services（サービス層：ビジネスロジックを担当）
@@ -65,6 +79,10 @@ class KeyboardViewController: UIInputViewController {
 
     /// 変数（{{today}}などの動的な値）の管理を行うサービス
     private let variableService = VariableService.shared
+
+    /// ショートカット（値の使い分け）の管理を行うサービス
+    /// 一覧の並べ替えと、選ばれた値の挿入を担当
+    private let shortcutService = ShortcutService.shared
 
     /// サブスクリプション（有料機能）の管理を行うマネージャー
 
@@ -112,6 +130,18 @@ class KeyboardViewController: UIInputViewController {
     /// 詳細画面で表示中のスニペット
     /// ユーザーがスニペットをタップすると、このプロパティに保存されます
     private var selectedSnippet: Snippet?
+
+    /// ショートカット画面に表示中のショートカット一覧（候補推測で並べ替え済み）
+    private var rankedShortcuts: [Shortcut] = []
+
+    /// 値一覧を表示しているショートカット
+    private var selectedShortcut: Shortcut?
+
+    /// 値一覧に表示中のショートカット値（候補推測で並べ替え済み）
+    private var rankedShortcutValues: [ShortcutValue] = []
+
+    /// ショートカット画面の表示モード（一覧 or 値一覧）
+    private var shortcutScreenMode: ShortcutScreenMode = .list
 
     /// 現在のソート順
     /// 値: "created" | "updated" | "title" | "usage"
@@ -233,6 +263,21 @@ class KeyboardViewController: UIInputViewController {
         view.translatesAutoresizingMaskIntoConstraints = false
         view.isHidden = true
         return view
+    }()
+
+    /// ショートカットボタン（ソートボタンの左隣に配置）
+    /// タップするとショートカット画面が表示される
+    private let shortcutButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        /* 稲妻アイコン: 登録済みの値をひと突きで差し込む機能であることを想起させる */
+        let image = UIImage(systemName: "bolt.fill", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.tintColor = .label
+        button.backgroundColor = .clear
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.accessibilityLabel = L10n.Accessibility.shortcutButton
+        return button
     }()
 
     /// 設定ボタン（ソートボタンの右隣に配置）
@@ -544,6 +589,92 @@ class KeyboardViewController: UIInputViewController {
         return label
     }()
 
+    // === ショートカット画面エリア ===
+
+    /// ショートカット画面全体を包むビュー（全画面表示）
+    /// 設定画面（settingsView）と同じく、一覧の上に重ねて全画面で表示する
+    private let shortcutView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isHidden = true
+        return view
+    }()
+
+    /// ショートカット画面のヘッダービュー
+    private let shortcutHeaderView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+
+    /// ショートカット画面のタイトルラベル
+    /// 一覧モードでは「ショートカット」、値モードでは選択中のショートカット名を表示する
+    private let shortcutTitleLabel: UILabel = {
+        let label = UILabel()
+        label.font = .boldSystemFont(ofSize: 16)
+        label.textAlignment = .center
+        /* 長いショートカット名でも左右のボタンに重ならないよう、末尾を省略して1行に収める */
+        label.lineBreakMode = .byTruncatingTail
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    /// ショートカット画面の戻るボタン（値一覧からショートカット一覧へ戻る）
+    /// 一覧モードでは戻る先がないため非表示にする
+    private let shortcutBackButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        let image = UIImage(systemName: "chevron.left", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.backgroundColor = .secondarySystemFill
+        button.tintColor = .label
+        button.layer.cornerRadius = 15
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.isHidden = true
+        button.accessibilityLabel = L10n.Accessibility.backButton
+        return button
+    }()
+
+    /// ショートカット画面の閉じるボタン
+    /// 値一覧からでも一覧へ戻らずキーボードの定型文一覧へ戻れるよう、どちらのモードでも表示する
+    private let shortcutCloseButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        let image = UIImage(systemName: "xmark", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.backgroundColor = .secondarySystemFill
+        button.tintColor = .label
+        button.layer.cornerRadius = 15
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+
+    /// ショートカット／値の一覧を表示するテーブルビュー
+    /// スニペット一覧（tableView）とは別のテーブルビューなので、
+    /// データソース・デリゲートでは必ず同一性で分岐すること
+    private let shortcutTableView: UITableView = {
+        let tv = UITableView()
+        tv.backgroundColor = .clear
+        tv.translatesAutoresizingMaskIntoConstraints = false
+        return tv
+    }()
+
+    /// ショートカットが1件もない場合に表示されるメッセージラベル
+    private let shortcutEmptyLabel: UILabel = {
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        /* 多言語対応: "ショートカットがありません\nメインアプリでショートカットを作成してください" */
+        label.text = "\(L10n.Shortcut.empty)\n\(L10n.Shortcut.emptyHint)"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        return label
+    }()
+
     // MARK: - Lifecycle Methods（ライフサイクルメソッド：画面の表示・非表示時に呼ばれる）
 
     /// 画面が最初に読み込まれたときに1回だけ呼ばれるメソッド
@@ -759,6 +890,12 @@ class KeyboardViewController: UIInputViewController {
                 KeyboardLog.debug("✓ [Refresh] Snippets unchanged: %d snippets", newCount)
             }
 
+            /* ショートカットは画面を開くときに読み直すため、ここでは表示中のときだけ作り直す */
+            if screenState == .shortcutList {
+                KeyboardLog.debug("🔄 [Refresh] Reloading shortcut screen...")
+                reloadShortcutScreen()
+            }
+
             KeyboardLog.debug("✅ [Refresh] All data refreshed successfully")
 
         } catch {
@@ -767,10 +904,11 @@ class KeyboardViewController: UIInputViewController {
     }
 
     private func setupUI() {
-        // 統合フィルターコンテナ（環境ドロップダウン + カテゴリドロップダウン + ソートボタン + 設定ボタン）
+        // 統合フィルターコンテナ（環境ドロップダウン + カテゴリドロップダウン + ショートカットボタン + ソートボタン + 設定ボタン）
         view.addSubview(filterContainerView)
         filterContainerView.addSubview(profileDropdownButton)
         filterContainerView.addSubview(categoryDropdownButton)
+        filterContainerView.addSubview(shortcutButton)
         filterContainerView.addSubview(sortButton)
         filterContainerView.addSubview(settingsButton)
 
@@ -783,6 +921,9 @@ class KeyboardViewController: UIInputViewController {
 
         // ソートボタンのメニューを設定
         setupSortButtonMenu()
+
+        // ショートカットボタンのアクションを設定
+        shortcutButton.addTarget(self, action: #selector(shortcutButtonTapped), for: .touchUpInside)
 
         // 設定ボタンのアクションを設定
         settingsButton.addTarget(self, action: #selector(settingsButtonTapped), for: .touchUpInside)
@@ -806,11 +947,13 @@ class KeyboardViewController: UIInputViewController {
             chevronImageView.widthAnchor.constraint(equalToConstant: 12),
             chevronImageView.heightAnchor.constraint(equalToConstant: 12),
 
-            /* カテゴリドロップダウンボタン: 環境ドロップダウンの右隣、固定幅100pt */
+            /* カテゴリドロップダウンボタン: 環境ドロップダウンの右隣（幅は下の categoryDropdownWidthConstraint で指定） */
             categoryDropdownButton.leadingAnchor.constraint(equalTo: profileDropdownButton.trailingAnchor, constant: 8),
             categoryDropdownButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
             categoryDropdownButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
-            categoryDropdownButton.widthAnchor.constraint(equalToConstant: 100),
+
+            /* カテゴリドロップダウンの右端がボタン群に重ならないための上限（必須） */
+            categoryDropdownButton.trailingAnchor.constraint(lessThanOrEqualTo: shortcutButton.leadingAnchor, constant: -8),
 
             /* カテゴリ用シェブロンアイコン: ボタンの右端に固定配置 */
             categoryChevronImageView.trailingAnchor.constraint(equalTo: categoryDropdownButton.trailingAnchor, constant: -10),
@@ -824,6 +967,12 @@ class KeyboardViewController: UIInputViewController {
             settingsButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
             settingsButton.widthAnchor.constraint(equalToConstant: 36),
 
+            /* ショートカットボタン: ソートボタンの左隣、固定幅36pt */
+            shortcutButton.trailingAnchor.constraint(equalTo: sortButton.leadingAnchor, constant: -4),
+            shortcutButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
+            shortcutButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
+            shortcutButton.widthAnchor.constraint(equalToConstant: 36),
+
             /* ソートボタン: 設定ボタンの左隣、固定幅36pt */
             sortButton.trailingAnchor.constraint(equalTo: settingsButton.leadingAnchor, constant: -4),
             sortButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
@@ -836,6 +985,17 @@ class KeyboardViewController: UIInputViewController {
             sortBadgeView.topAnchor.constraint(equalTo: sortButton.topAnchor, constant: 2),
             sortBadgeView.trailingAnchor.constraint(equalTo: sortButton.trailingAnchor, constant: -2)
         ])
+
+        /* カテゴリドロップダウンの幅100ptは「そうしたい」希望として扱い、必須にはしない。
+           ヘッダーに必要な横幅は、ショートカットボタンを足したことで
+           8+100(環境)+8+100(カテゴリ)+8+36(ショートカット)+4+36(ソート)+4+36(設定)+8 = 348pt になる。
+           対応最小OS（iOS 17）で最も狭い端末は幅375ptのため通常は縮まないが、
+           これより狭い幅になった場合に固定幅のままだとボタン群と重なってしまう。
+           優先度を下げておけば、上のtrailing上限が効いてカテゴリ名側だけが縮み、
+           右のボタン群（36ptの固定幅）は押せる大きさのまま必ず表示され続ける。 */
+        let categoryDropdownWidthConstraint = categoryDropdownButton.widthAnchor.constraint(equalToConstant: 100)
+        categoryDropdownWidthConstraint.priority = .defaultHigh
+        categoryDropdownWidthConstraint.isActive = true
 
         // TableView: フィルターコンテナの下に配置（+36ptの表示エリア拡大）
         tableView.delegate = self
@@ -1074,7 +1234,93 @@ class KeyboardViewController: UIInputViewController {
             fullAccessInstructionsLabel.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor, constant: -16)
         ])
 
+        // Shortcut View (ショートカット画面 - 全画面表示)
+        setupShortcutView()
+
         applyScreenState()
+    }
+
+    /**
+     * ショートカット画面を組み立てる
+     *
+     * 設定画面（settingsView）と同じ全画面ビューとして作る。
+     * setupUIへ直接書くと1メソッドが長くなりすぎるため、この画面の組み立てだけを分けている。
+     */
+    private func setupShortcutView() {
+        view.addSubview(shortcutView)
+        shortcutView.addSubview(shortcutHeaderView)
+        shortcutHeaderView.addSubview(shortcutBackButton)
+        shortcutHeaderView.addSubview(shortcutTitleLabel)
+        shortcutHeaderView.addSubview(shortcutCloseButton)
+        shortcutView.addSubview(shortcutTableView)
+        shortcutView.addSubview(shortcutEmptyLabel)
+
+        // ショートカット画面のアクションを設定
+        shortcutBackButton.addTarget(self, action: #selector(shortcutBackButtonTapped), for: .touchUpInside)
+        shortcutCloseButton.addTarget(self, action: #selector(closeShortcutView), for: .touchUpInside)
+
+        shortcutTableView.delegate = self
+        shortcutTableView.dataSource = self
+        shortcutTableView.register(ShortcutCell.self, forCellReuseIdentifier: ShortcutCell.reuseIdentifier)
+        shortcutTableView.register(ShortcutValueCell.self, forCellReuseIdentifier: ShortcutValueCell.reuseIdentifier)
+
+        /* 行の高さを固定し、自動高さ計算（セルフサイジング）を無効化する。
+           スニペット一覧と同じ理由で、推定高さのままだと行の実フレームが見た目とずれ、
+           余白部分でタッチが拾えないことがある。
+           一覧モードと値モード（2行）で高さが違うため、モードを切り替えるたびに入れ替える */
+        shortcutTableView.rowHeight = ShortcutCell.rowHeight
+        shortcutTableView.estimatedRowHeight = 0
+
+        /* 内容が画面に収まっていてもドラッグに反応させる（無反応に見える状態をなくす） */
+        shortcutTableView.alwaysBounceVertical = true
+
+        /* セルの余白を読みやすさ優先の幅に合わせず、行を画面幅いっぱいに使う */
+        shortcutTableView.cellLayoutMarginsFollowReadableWidth = false
+
+        NSLayoutConstraint.activate([
+            // Shortcut View: 全画面表示
+            shortcutView.topAnchor.constraint(equalTo: view.topAnchor),
+            shortcutView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            shortcutView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            shortcutView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            /* ヘッダー: 上部に固定（横向き時のノッチ側を避けるためセーフエリア基準） */
+            shortcutHeaderView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            shortcutHeaderView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            shortcutHeaderView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            shortcutHeaderView.heightAnchor.constraint(equalToConstant: 44),
+
+            // Back Button: ヘッダー左端（値一覧のときだけ表示）
+            shortcutBackButton.leadingAnchor.constraint(equalTo: shortcutHeaderView.leadingAnchor, constant: 12),
+            shortcutBackButton.centerYAnchor.constraint(equalTo: shortcutHeaderView.centerYAnchor),
+            shortcutBackButton.widthAnchor.constraint(equalToConstant: 30),
+            shortcutBackButton.heightAnchor.constraint(equalToConstant: 30),
+
+            // Close Button: ヘッダー右端
+            shortcutCloseButton.trailingAnchor.constraint(equalTo: shortcutHeaderView.trailingAnchor, constant: -12),
+            shortcutCloseButton.centerYAnchor.constraint(equalTo: shortcutHeaderView.centerYAnchor),
+            shortcutCloseButton.widthAnchor.constraint(equalToConstant: 30),
+            shortcutCloseButton.heightAnchor.constraint(equalToConstant: 30),
+
+            /* Title: ヘッダー中央。左右のボタンより内側に収め、長い名前は末尾を省略する */
+            shortcutTitleLabel.centerXAnchor.constraint(equalTo: shortcutHeaderView.centerXAnchor),
+            shortcutTitleLabel.centerYAnchor.constraint(equalTo: shortcutHeaderView.centerYAnchor),
+            shortcutTitleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: shortcutBackButton.trailingAnchor, constant: 8),
+            shortcutTitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: shortcutCloseButton.leadingAnchor, constant: -8),
+
+            /* TableView: ヘッダーの下。下端をセーフエリアに合わせるのはスニペット一覧と同じ理由で、
+               ホームインジケータ帯から始めたドラッグをOSのジェスチャに奪われないようにするため */
+            shortcutTableView.topAnchor.constraint(equalTo: shortcutHeaderView.bottomAnchor),
+            shortcutTableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            shortcutTableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            shortcutTableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+
+            // Empty Label: テーブルビューの中央
+            shortcutEmptyLabel.centerXAnchor.constraint(equalTo: shortcutTableView.centerXAnchor),
+            shortcutEmptyLabel.centerYAnchor.constraint(equalTo: shortcutTableView.centerYAnchor),
+            shortcutEmptyLabel.leadingAnchor.constraint(equalTo: shortcutTableView.leadingAnchor, constant: 20),
+            shortcutEmptyLabel.trailingAnchor.constraint(equalTo: shortcutTableView.trailingAnchor, constant: -20)
+        ])
     }
 
     private func loadInitialData() {
@@ -1399,6 +1645,7 @@ class KeyboardViewController: UIInputViewController {
         detailView.isHidden = screenState != .detail
         loadingView.isHidden = screenState != .loading
         settingsView.isHidden = screenState != .settings
+        shortcutView.isHidden = screenState != .shortcutList
     }
 
     /// スニペットの詳細画面（プレビュー）を表示
@@ -1755,14 +2002,209 @@ class KeyboardViewController: UIInputViewController {
         applyScreenState()
     }
 
+    // MARK: - Shortcut（ショートカット関連）
+
+    /// ショートカットボタンがタップされた時のアクション
+    @objc private func shortcutButtonTapped() {
+        KeyboardLog.debug("⚡ [Shortcut] Shortcut button tapped")
+        showShortcutView()
+    }
+
+    /// ショートカット画面を表示する（必ず一覧モードから開く）
+    private func showShortcutView() {
+        reloadShortcutList()
+
+        screenState = .shortcutList
+        applyScreenState()
+    }
+
+    /**
+     * ショートカット一覧を読み直して表示する（表示モードも一覧へ戻す）
+     *
+     * 【毎回読み直す理由】
+     * 開いた時点のカーソル直前の入力内容で並べ替えるため、そのつど候補推測をやり直す必要がある。
+     * 直前の挿入で増えた使用回数も、読み直すことでそのまま値一覧の並びへ反映される。
+     */
+    private func reloadShortcutList() {
+        shortcutScreenMode = .list
+        selectedShortcut = nil
+        rankedShortcuts = shortcutService.rankedShortcuts(context: currentInputContext())
+        rankedShortcutValues = []
+        KeyboardLog.debug("⚡ [Shortcut] Loaded %d shortcuts", rankedShortcuts.count)
+
+        shortcutTitleLabel.text = L10n.Shortcut.title
+        /* 一覧モードは戻る先がないため戻るボタンを隠す */
+        shortcutBackButton.isHidden = true
+
+        applyShortcutRowHeight()
+        shortcutTableView.reloadData()
+        /* 前に開いたときのスクロール位置が残ると、並べ替えた先頭の候補が画面外になるため先頭へ戻す */
+        shortcutTableView.setContentOffset(.zero, animated: false)
+        updateShortcutEmptyState()
+    }
+
+    /**
+     * 選択したショートカットの値一覧へ切り替える
+     *
+     * - Parameter shortcut: 値一覧を表示するショートカット
+     */
+    private func showShortcutValues(_ shortcut: Shortcut) {
+        selectedShortcut = shortcut
+        shortcutScreenMode = .values
+        rankedShortcutValues = shortcutService.rankedValues(shortcut.values, context: currentInputContext())
+        KeyboardLog.debug("⚡ [Shortcut] Showing %d values for shortcut: %@", rankedShortcutValues.count, shortcut.name)
+
+        /* ヘッダーは「＜ <ショートカット名>」。＜は戻るボタン、名前はタイトルが担当する */
+        shortcutTitleLabel.text = shortcut.name
+        shortcutBackButton.isHidden = false
+
+        applyShortcutRowHeight()
+        shortcutTableView.reloadData()
+        shortcutTableView.setContentOffset(.zero, animated: false)
+        updateShortcutEmptyState()
+    }
+
+    /**
+     * ショートカットが選ばれたときの処理
+     *
+     * - Parameter shortcut: タップされたショートカット
+     *
+     * 【値が1件のときに階層を挟まない理由】
+     * 選択肢が1つしかない一覧を見せても選ぶ余地がなく、操作が1回増えるだけのため、
+     * その値を直接挿入する。
+     */
+    private func selectShortcut(_ shortcut: Shortcut) {
+        if shortcut.values.count == 1, let value = shortcut.values.first {
+            insertShortcutValue(value)
+            return
+        }
+
+        /* 値を持たないショートカットはメインアプリで作れない（作成時に1件以上を必須にしている）。
+           万一そうしたデータが入っていても、選ぶものが無い一覧を見せないよう何もしない */
+        guard !shortcut.values.isEmpty else {
+            KeyboardLog.debug("⚠️ [Shortcut] Shortcut has no values: %@", shortcut.id)
+            return
+        }
+
+        showShortcutValues(shortcut)
+    }
+
+    /**
+     * ショートカット値を入力欄へ挿入し、ショートカット画面を閉じる
+     *
+     * - Parameter value: 挿入するショートカット値
+     *
+     * 【挿入後に閉じる理由】
+     * 定型文の挿入（詳細画面 → 挿入 → 一覧へ戻る）と同じ体験に揃えるため、
+     * 挿入したらショートカット画面を閉じて通常の定型文一覧へ戻す。
+     */
+    private func insertShortcutValue(_ value: ShortcutValue) {
+        KeyboardLog.debug("⚡ [Shortcut] Inserting shortcut value: %@", value.id)
+
+        /* 挿入・振動フィードバック・使用回数の記録はService側で実行する */
+        shortcutService.insertValue(value, into: textDocumentProxy)
+
+        closeShortcutView()
+    }
+
+    /// 値一覧からショートカット一覧へ戻る
+    @objc private func shortcutBackButtonTapped() {
+        KeyboardLog.debug("⚡ [Shortcut] Back button tapped")
+        reloadShortcutList()
+    }
+
+    /**
+     * 表示中のショートカット画面を最新のデータで作り直す
+     *
+     * 【値一覧を開いたままにする条件】
+     * 開いていたショートカットが最新のデータにも残っていて、値が2件以上あるときだけ値一覧へ戻す。
+     * メインアプリ側で削除・整理された場合にそのまま値一覧を残すと、
+     * もう存在しない値を挿入できてしまうため、その場合は一覧に留まる。
+     */
+    private func reloadShortcutScreen() {
+        /* 一覧の読み直しでselectedShortcutが消えるため、先に控えておく */
+        let reopeningShortcutId: String? = shortcutScreenMode == .values ? selectedShortcut?.id : nil
+
+        reloadShortcutList()
+
+        guard let shortcutId = reopeningShortcutId else { return }
+
+        guard let shortcut = rankedShortcuts.first(where: { $0.id == shortcutId }),
+              shortcut.values.count > 1 else {
+            KeyboardLog.debug("⚠️ [Shortcut] Reopened shortcut is gone or has a single value: %@", shortcutId)
+            return
+        }
+
+        showShortcutValues(shortcut)
+    }
+
+    /// ショートカット画面を閉じてスニペット一覧に戻る
+    @objc private func closeShortcutView() {
+        KeyboardLog.debug("⚡ [Shortcut] Closing shortcut view")
+        shortcutScreenMode = .list
+        selectedShortcut = nil
+        screenState = .list
+        applyScreenState()
+    }
+
+    /**
+     * 表示モードに応じた固定の行高さを適用する
+     *
+     * 一覧は1行、値一覧は2行のため高さが異なる。
+     * どちらも固定値で、自動高さ計算（セルフサイジング）は使わない。
+     */
+    private func applyShortcutRowHeight() {
+        shortcutTableView.rowHeight = shortcutScreenMode == .values
+            ? ShortcutValueCell.rowHeight
+            : ShortcutCell.rowHeight
+    }
+
+    /**
+     * ショートカット画面の空状態を更新する
+     *
+     * ショートカットが1件も無いときだけ案内を表示する。
+     * 値一覧は値が1件以下のショートカットでは開かないため、空になることはない。
+     */
+    private func updateShortcutEmptyState() {
+        let isEmpty = shortcutScreenMode == .values
+            ? rankedShortcutValues.isEmpty
+            : rankedShortcuts.isEmpty
+
+        shortcutTableView.isHidden = isEmpty
+        shortcutEmptyLabel.isHidden = !isEmpty
+    }
+
+    /**
+     * 候補推測に使う「入力中の内容」を取り出す
+     *
+     * - Returns: カーソル直前の入力内容（取得できない場合は空文字）
+     *
+     * 【切り出しをここで行わない理由】
+     * 末尾何文字を見るか・どう正規化するかは候補推測の規則そのものなので、
+     * 規則を写しているShortcutService側に一元化する。
+     */
+    private func currentInputContext() -> String {
+        return textDocumentProxy.documentContextBeforeInput ?? ""
+    }
+
 }
 
 extension KeyboardViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        /* 2つのテーブルビューを1つのデータソースで扱うため、必ずテーブルビューの同一性で分岐する
+           （引数のtableViewはプロパティのtableViewを隠すので、比較対象はshortcutTableViewに固定する） */
+        if tableView === shortcutTableView {
+            return shortcutScreenMode == .values ? rankedShortcutValues.count : rankedShortcuts.count
+        }
+
         return filteredSnippets.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        if tableView === shortcutTableView {
+            return shortcutCell(for: tableView, at: indexPath)
+        }
+
         guard let cell = tableView.dequeueReusableCell(
             withIdentifier: SnippetCell.reuseIdentifier,
             for: indexPath
@@ -1784,10 +2226,63 @@ extension KeyboardViewController: UITableViewDataSource {
 
         return cell
     }
+
+    /**
+     * ショートカット画面の行セルを作る
+     *
+     * - Parameters:
+     *   - tableView: ショートカット画面のテーブルビュー
+     *   - indexPath: 対象の行
+     * - Returns: モードに応じたセル
+     *
+     * 【変数置換をしない理由】
+     * ショートカットの値は保存された文字列をそのまま挿入するため、
+     * 表示も置換せず保存されたままを見せる（定型文の一覧とは扱いが異なる）。
+     */
+    private func shortcutCell(for tableView: UITableView, at indexPath: IndexPath) -> UITableViewCell {
+        if shortcutScreenMode == .values {
+            guard let cell = tableView.dequeueReusableCell(
+                withIdentifier: ShortcutValueCell.reuseIdentifier,
+                for: indexPath
+            ) as? ShortcutValueCell else {
+                return UITableViewCell()
+            }
+
+            let value = rankedShortcutValues[indexPath.row]
+            cell.configure(name: value.name, value: value.value)
+
+            return cell
+        }
+
+        guard let cell = tableView.dequeueReusableCell(
+            withIdentifier: ShortcutCell.reuseIdentifier,
+            for: indexPath
+        ) as? ShortcutCell else {
+            return UITableViewCell()
+        }
+
+        cell.configure(name: rankedShortcuts[indexPath.row].name)
+
+        return cell
+    }
 }
 
 extension KeyboardViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        /* データソースと同じく、必ずテーブルビューの同一性で分岐する */
+        if tableView === shortcutTableView {
+            tableView.deselectRow(at: indexPath, animated: true)
+
+            if shortcutScreenMode == .values {
+                /* 値をタップ: その値だけを現在のカーソル位置へ挿入する */
+                insertShortcutValue(rankedShortcutValues[indexPath.row])
+            } else {
+                /* ショートカットをタップ: 値一覧へ進む（値が1件なら直接挿入） */
+                selectShortcut(rankedShortcuts[indexPath.row])
+            }
+            return
+        }
+
         os_log("👆 Snippet tapped at index: %d", log: keyboardLog, type: .info, indexPath.row)
         KeyboardLog.debug("👆 [KeyboardViewController] Snippet tapped at index: %d", indexPath.row)
 
@@ -1927,6 +2422,179 @@ final class SnippetCell: UITableViewCell {
      */
     func configure(title: String) {
         titleLabel.text = title
+    }
+}
+
+// MARK: - ShortcutCell
+
+/**
+ * ショートカット一覧の行セル
+ *
+ * 【なぜ専用セルにするか】
+ * SnippetCellと同じ理由。defaultContentConfigurationは内部ビューの大きさを文字量に合わせて決めるため、
+ * 行のどこを触ってもタッチが拾える保証がない。
+ * ラベルをcontentViewいっぱいに広げ、行全体を確実にタップ対象にする。
+ *
+ * 【ファイル配置について】
+ * 新しいSwiftファイルを追加するとproject.pbxprojの更新が必要になるため、
+ * KeyboardViewControllerと同じファイルに定義している。
+ */
+final class ShortcutCell: UITableViewCell {
+
+    /// 再利用識別子
+    static let reuseIdentifier = "ShortcutCell"
+
+    /// 行の高さ（pt）。自動高さ計算を使わず固定値で確定させる
+    static let rowHeight: CGFloat = 44
+
+    /// ショートカット名を表示するラベル
+    private let nameLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 15)
+        label.textColor = .label
+        label.lineBreakMode = .byTruncatingTail
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupCell()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupCell()
+    }
+
+    /**
+     * セルの見た目とレイアウトを設定する
+     *
+     * SnippetCellと同じく、contentViewのタッチを無効にして行内のビューが
+     * タッチを横取りしないようにする。選択とスクロールはテーブルビュー側が処理する。
+     */
+    private func setupCell() {
+        backgroundColor = .clear
+        /* 次の階層（値一覧）があることを「＞」で示す */
+        accessoryType = .disclosureIndicator
+        contentView.isUserInteractionEnabled = false
+
+        contentView.addSubview(nameLabel)
+        NSLayoutConstraint.activate([
+            nameLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            nameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
+            nameLabel.topAnchor.constraint(equalTo: contentView.topAnchor),
+            nameLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+        ])
+
+        let selectedBackground = UIView()
+        selectedBackground.backgroundColor = .secondarySystemFill
+        selectedBackgroundView = selectedBackground
+    }
+
+    /**
+     * 表示するショートカット名を設定する
+     *
+     * - Parameter name: ショートカット名
+     */
+    func configure(name: String) {
+        nameLabel.text = name
+    }
+}
+
+// MARK: - ShortcutValueCell
+
+/**
+ * ショートカット値一覧の行セル（値名と値の2行表示）
+ *
+ * 【2行にする理由】
+ * 値名（例: 母）だけでは何を挿入するか分からず、値（例: 090-0000-0000）だけでは
+ * どれを選べばよいか分からないため、両方を見せて選べるようにする。
+ *
+ * 【ファイル配置について】
+ * 新しいSwiftファイルを追加するとproject.pbxprojの更新が必要になるため、
+ * KeyboardViewControllerと同じファイルに定義している。
+ */
+final class ShortcutValueCell: UITableViewCell {
+
+    /// 再利用識別子
+    static let reuseIdentifier = "ShortcutValueCell"
+
+    /// 行の高さ（pt）。自動高さ計算を使わず固定値で確定させる（2行分）
+    static let rowHeight: CGFloat = 56
+
+    /// 値名を表示するラベル
+    private let nameLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 15)
+        label.textColor = .label
+        label.lineBreakMode = .byTruncatingTail
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    /// 挿入される値を表示するラベル
+    private let valueLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .secondaryLabel
+        label.lineBreakMode = .byTruncatingTail
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupCell()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupCell()
+    }
+
+    /**
+     * セルの見た目とレイアウトを設定する
+     *
+     * ShortcutCellと同じく、contentViewのタッチを無効にして行全体をタップ対象にする。
+     */
+    private func setupCell() {
+        backgroundColor = .clear
+        /* タップすると値を挿入して終わるため、次の階層は無い */
+        accessoryType = .none
+        contentView.isUserInteractionEnabled = false
+
+        contentView.addSubview(nameLabel)
+        contentView.addSubview(valueLabel)
+        NSLayoutConstraint.activate([
+            nameLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            nameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            nameLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+
+            valueLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            valueLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            valueLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 2),
+            /* 行の高さは固定なので、下端は「はみ出さない」ことだけを保証する */
+            valueLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -8)
+        ])
+
+        let selectedBackground = UIView()
+        selectedBackground.backgroundColor = .secondarySystemFill
+        selectedBackgroundView = selectedBackground
+    }
+
+    /**
+     * 表示する値名と値を設定する
+     *
+     * - Parameters:
+     *   - name: 値名（例: 母）
+     *   - value: 挿入される値（例: 090-0000-0000）
+     */
+    func configure(name: String, value: String) {
+        nameLabel.text = name
+        /* 改行を含む値は1行表示だと途中で切れて何の値か分からなくなるため、
+           空白へ置き換えて1行に収める。挿入するのは元の文字列のままで、表示だけを整える */
+        valueLabel.text = value.components(separatedBy: .newlines).joined(separator: " ")
     }
 }
 

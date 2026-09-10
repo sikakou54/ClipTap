@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ショートカット画面レイアウト（keyboard_view.xmlからincludeされる全画面ビュー）
+
+     【高さを360dpに固定する理由】
+     keyboard_view.xmlのルートが360dp固定で、その上に重ねて表示するため、
+     同じ高さにしないとキーボードの表示領域からはみ出す／余白が残る。
+     snippet_detail_view.xmlと同じ扱い。 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/shortcutView"
+    android:layout_width="match_parent"
+    android:layout_height="360dp"
+    android:minHeight="360dp"
+    android:maxHeight="360dp"
+    android:visibility="gone">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <!-- ヘッダー（戻るボタン + タイトル + 閉じるボタン）
+             メインビューのフィルターエリアと同じ44dpにして、切り替えても行の高さが動かないようにする -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@android:color/transparent">
+
+            <!-- 戻るボタン（値一覧のときだけ押せる）
+                 ショートカット一覧ではgoneではなくinvisibleにする。
+                 goneにするとタイトルの開始位置が階層を移動するたびに左右へ動いてしまうため -->
+            <ImageButton
+                android:id="@+id/shortcutBackButton"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/ic_chevron_left"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/accessibility_back_button"
+                android:scaleType="fitCenter"
+                android:padding="6dp"
+                android:visibility="invisible" />
+
+            <!-- タイトル（ショートカット一覧では「ショートカット」、値一覧では選択中のショートカット名） -->
+            <TextView
+                android:id="@+id/shortcutTitleLabel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:textSize="16sp"
+                android:textColor="?android:attr/textColorPrimary"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <!-- 閉じるボタン（定型文一覧へ戻る）
+                 scaleTypeをfitCenterにしているのは、標準の閉じるアイコンが24dpより大きく、
+                 実寸で中央に置く（center）と×の先が欠けるため -->
+            <ImageButton
+                android:id="@+id/shortcutCloseButton"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/accessibility_close_button"
+                android:scaleType="fitCenter"
+                android:padding="6dp" />
+
+        </LinearLayout>
+
+        <!-- 一覧とEmptyビューのコンテナ（固定高さ：親の高さ360dp - padding 16dp - header 44dp - marginTop 8dp = 292dp）
+             メインビューの一覧と同じ高さにして、画面を切り替えても一覧の位置が動かないようにする -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="292dp"
+            android:layout_marginTop="8dp">
+
+            <!-- ショートカット一覧／値一覧（アダプターを差し替えて共用する） -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/shortcutRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:scrollbars="vertical" />
+
+            <!-- 空の状態表示（ショートカットが0件のとき）
+                 案内は「ありません」だけでは次に何をすればよいか分からないため、
+                 メインアプリで作成する旨を添える（iOS版の空状態と同じ2行構成） -->
+            <LinearLayout
+                android:id="@+id/shortcutEmptyView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/shortcut_empty"
+                    android:textSize="16sp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/shortcut_empty_hint"
+                    android:textSize="12sp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:gravity="center" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

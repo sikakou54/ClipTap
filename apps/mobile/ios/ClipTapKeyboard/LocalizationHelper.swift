@@ -148,6 +148,20 @@ enum L10n {
         static let noTitle = localized("snippet_no_title")
     }
 
+    // MARK: - Shortcut (ショートカット関連)
+
+    /// ショートカット関連の翻訳
+    enum Shortcut {
+        /// "ショートカット" / "Shortcuts"
+        static let title = localized("shortcut.title")
+
+        /// "ショートカットがありません" / "No shortcuts available"
+        static let empty = localized("shortcut.empty")
+
+        /// "メインアプリでショートカットを作成してください" / "Create shortcuts in the main app"
+        static let emptyHint = localized("shortcut.empty_hint")
+    }
+
     // MARK: - Search (検索関連)
 
     /// 検索関連の翻訳
@@ -280,6 +294,12 @@ enum L10n {
 
         /// "改行ボタン" / "Insert newline button"
         static let insertNewlineButton = localized("accessibility.insert_newline_button")
+
+        /// "ショートカットボタン" / "Shortcuts button"
+        static let shortcutButton = localized("accessibility.shortcut_button")
+
+        /// "戻るボタン" / "Back button"
+        static let backButton = localized("accessibility.back_button")
     }
 
     // MARK: - Sort (ソート関連)
@@ -385,6 +405,11 @@ enum L10n {
         case "snippet.detail": return isJapanese ? "詳細" : "Details"
         case "snippet.close": return isJapanese ? "閉じる" : "Close"
 
+        // Shortcut
+        case "shortcut.title": return isJapanese ? "ショートカット" : "Shortcuts"
+        case "shortcut.empty": return isJapanese ? "ショートカットがありません" : "No shortcuts available"
+        case "shortcut.empty_hint": return isJapanese ? "メインアプリでショートカットを作成してください" : "Create shortcuts in the main app"
+
         // Search
         case "search.placeholder": return isJapanese ? "スニペットを検索" : "Search snippets"
         case "search.clear": return isJapanese ? "クリア" : "Clear"
@@ -430,6 +455,8 @@ enum L10n {
         case "accessibility.copy_button": return isJapanese ? "コピーボタン" : "Copy button"
         case "accessibility.sort_button": return isJapanese ? "並び替えボタン" : "Sort button"
         case "accessibility.insert_title_button": return isJapanese ? "タイトル挿入ボタン" : "Insert title button"
+        case "accessibility.shortcut_button": return isJapanese ? "ショートカットボタン" : "Shortcuts button"
+        case "accessibility.back_button": return isJapanese ? "戻るボタン" : "Back button"
 
         // Sort
         case "sort.label": return isJapanese ? "並順" : "Sort"

@@ -10,4 +10,10 @@
   <string name="keyboard_sort_usage">"Usage"</string>
   <string name="category_all">"All"</string>
   <string name="snippet_empty">"No snippets"</string>
+  <string name="accessibility_shortcut_button">"Shortcuts button"</string>
+  <string name="accessibility_back_button">"Back button"</string>
+  <string name="accessibility_close_button">"Close button"</string>
+  <string name="shortcut_title">"Shortcuts"</string>
+  <string name="shortcut_empty">"No shortcuts available"</string>
+  <string name="shortcut_empty_hint">"Create shortcuts in the main app"</string>
 </resources>

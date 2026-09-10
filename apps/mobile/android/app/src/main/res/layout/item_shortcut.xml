@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ショートカット一覧の1行（ショートカット名 + 「＞」）
+     minHeight 44dpは、行全体をタッチ対象にするためiOS HIGの最小タップ領域に合わせたもの -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="44dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:background="?attr/selectableItemBackground"
+    android:padding="12dp">
+
+    <!-- ショートカット名 -->
+    <TextView
+        android:id="@+id/shortcutName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="15sp"
+        android:textColor="?android:attr/textColorPrimary"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <!-- 「＞」（次の階層がある）
+         行そのものが読み上げ対象なので、装飾のこのアイコンは読み上げから除く -->
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="8dp"
+        android:src="@drawable/ic_chevron_right"
+        android:importantForAccessibility="no" />
+
+</LinearLayout>

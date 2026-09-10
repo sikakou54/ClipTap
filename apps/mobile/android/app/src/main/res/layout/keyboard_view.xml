@@ -46,6 +46,29 @@
             android:layout_height="match_parent"
             android:layout_weight="1" />
 
+        <!-- ショートカットボタン（ソートボタンの左隣）
+
+             【横幅が足りなくなる場合の検討】
+             この行の固定幅の合計は 100(環境) + 8 + 100(カテゴリ) + 4 + 36(ショートカット) + 4 + 36(ソート) = 288dp。
+             mainViewのpadding 8dp×2を引くと、288dpを収めるには画面幅304dpが必要になる。
+             対応する最小画面幅は320dpのため、既定の表示サイズであればすべての対応端末で収まる
+             （360dp端末ならスペーサーに56dpの余りが出る）。
+             幅が足りなくなった場合は、重み付き（weight=1）のスペーサーが先に0まで縮み、
+             チップとボタンはどれも縮まない。
+             環境・カテゴリのチップを可変幅（0dp + weight）にする案も検討したが、
+             画面幅に応じてチップの幅が変わり既存の見た目が変わるため採らなかった。
+             これ以上ボタンや固定幅を増やすときは、チップの100dpを見直すこと。 -->
+        <ImageButton
+            android:id="@+id/shortcutButton"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="4dp"
+            android:src="@drawable/ic_shortcut"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/accessibility_shortcut_button"
+            android:scaleType="center"
+            android:padding="8dp" />
+
         <!-- ソートボタン + バッジコンテナ（右端固定） -->
         <FrameLayout
             android:layout_width="36dp"
@@ -109,5 +132,9 @@
 
     <!-- 詳細ビュー（全画面表示、初期状態は非表示） -->
     <include layout="@layout/snippet_detail_view" />
+
+    <!-- ショートカットビュー（全画面表示、初期状態は非表示）
+         mainView / detailView / shortcutView は同時に1つだけ表示する -->
+    <include layout="@layout/shortcut_view" />
 
 </FrameLayout>
