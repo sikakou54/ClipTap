@@ -366,8 +366,8 @@
     "value_name_placeholder": "例: 母",
     "value_value": "値",
     "value_value_placeholder": "例: 080-0000-0000",
-    "delete_confirm": "ショートカット {{name}} を削除しますか?",
-    "delete_value_confirm": "値 {{name}} を削除しますか?",
+    "delete_confirm": "ショートカット「{{name}}」を削除しますか？\n\nこのショートカットに登録されているすべての値も削除されます。",
+    "delete_value_confirm": "値「{{name}}」を削除しますか？",
     "register": "登録"
   }
 }

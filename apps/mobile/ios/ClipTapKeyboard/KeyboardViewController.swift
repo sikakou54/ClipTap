@@ -2273,7 +2273,9 @@ extension KeyboardViewController: UITableViewDataSource {
             return UITableViewCell()
         }
 
-        cell.configure(name: rankedShortcuts[indexPath.row].name)
+        let shortcut = rankedShortcuts[indexPath.row]
+        /* 値が1件のショートカットは値一覧へ進まず直接挿入するため、次の階層を予告しない */
+        cell.configure(name: shortcut.name, hasValueList: shortcut.values.count > 1)
 
         return cell
     }
@@ -2487,8 +2489,6 @@ final class ShortcutCell: UITableViewCell {
      */
     private func setupCell() {
         backgroundColor = .clear
-        /* 次の階層（値一覧）があることを「＞」で示す */
-        accessoryType = .disclosureIndicator
         contentView.isUserInteractionEnabled = false
 
         contentView.addSubview(nameLabel)
@@ -2505,12 +2505,19 @@ final class ShortcutCell: UITableViewCell {
     }
 
     /**
-     * 表示するショートカット名を設定する
+     * 表示するショートカット名と、次の階層の有無を設定する
      *
-     * - Parameter name: ショートカット名
+     * - Parameters:
+     *   - name: ショートカット名
+     *   - hasValueList: タップしたときに値一覧へ進む場合はtrue
+     *
+     * 【件数で出し分ける理由】
+     * 値が1件のショートカットは値一覧を経由せずその場で挿入するため、
+     * 「＞」を出すと入らない階層を予告することになる。
      */
-    func configure(name: String) {
+    func configure(name: String, hasValueList: Bool) {
         nameLabel.text = name
+        accessoryType = hasValueList ? .disclosureIndicator : .none
     }
 }
 

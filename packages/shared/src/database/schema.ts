@@ -191,6 +191,16 @@ export const CREATE_INDEXES = {
     CREATE INDEX IF NOT EXISTS idx_shortcut_values_shortcut
     ON shortcut_values(shortcutId);
   `,
+  /**
+   * 使用回数のindex
+   *
+   * @remarks
+   * useCount順の並べ替えは取得後のメモリ上で行うため、このindexで速くなるクエリは無い。
+   * それでも置いているのは、移行・取込の後に `useCount` 列が存在することを確かめる唯一の経路だから。
+   * `finalizeLatestSchema` はテーブル名しか確認せず、Mapperは `useCount ?? 0` で読むため、
+   * 列が欠けても例外にならず全件0として静かに壊れる（migrations.tsの「派生indexが参照する列は
+   * createIndexesWithDbの作成時に検知される」に対応）。参照するクエリが無いことを理由に消さないこと。
+   */
   shortcutValuesUseCount: `
     CREATE INDEX IF NOT EXISTS idx_shortcut_values_use_count
     ON shortcut_values(useCount DESC);

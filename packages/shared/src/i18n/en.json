@@ -366,8 +366,8 @@
     "value_name_placeholder": "e.g. Mother",
     "value_value": "Value",
     "value_value_placeholder": "e.g. 080-0000-0000",
-    "delete_confirm": "Delete shortcut {{name}}?",
-    "delete_value_confirm": "Delete value {{name}}?",
+    "delete_confirm": "Delete shortcut \"{{name}}\"?\n\nAll values registered in this shortcut will also be deleted.",
+    "delete_value_confirm": "Delete value \"{{name}}\"?",
     "register": "Save"
   }
 }

@@ -22,8 +22,13 @@
         android:ellipsize="end" />
 
     <!-- 「＞」（次の階層がある）
+         値が1件のショートカットは値一覧を経由せず直接挿入するため、
+         その行では入らない階層を予告しないよう非表示にする（アダプターで出し分ける）。
+         GONEではなくINVISIBLEを既定にしないのは、名前の折り返し幅を行ごとに変えないため
+         幅を残す必要がなく、余白を詰めたほうが読みやすいから。
          行そのものが読み上げ対象なので、装飾のこのアイコンは読み上げから除く -->
     <ImageView
+        android:id="@+id/shortcutChevron"
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:layout_marginStart="8dp"
