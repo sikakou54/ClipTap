@@ -115,6 +115,9 @@ class ClipTapKeyboardService : InputMethodService() {
     // ショートカットボタン
     private lateinit var shortcutButton: android.widget.ImageButton
 
+    /** ショートカット画面を閉じるアニメーションの実行中かどうか（この間のタップは無視する） */
+    private var isClosingShortcutView: Boolean = false
+
     companion object {
         private const val TAG = "ClipTapKeyboard"
         private const val SORT_PREFS_NAME = "ClipTapKeyboardPrefs"
@@ -965,6 +968,7 @@ class ClipTapKeyboardService : InputMethodService() {
     override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
         applyWindowBackground()
+        restoreShortcutViewState()
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "============================================================")
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "👁️ onStartInputView CALLED")
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "   restarting: $restarting")
@@ -1018,6 +1022,7 @@ class ClipTapKeyboardService : InputMethodService() {
     private fun openShortcutView() {
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Shortcut view requested")
 
+        isClosingShortcutView = false
         showShortcutList()
 
         // ショートカット画面を表示（フェードインアニメーション）
@@ -1040,8 +1045,15 @@ class ClipTapKeyboardService : InputMethodService() {
      *
      * 【理由】
      * 詳細画面（closeDetailView）と同じ作法にすることで、画面の出入りの印象を揃えます。
+     *
+     * 【閉じ始めたら操作を受け付けない理由】
+     * フェードアウトの200msの間、ショートカット画面はまだ表示されていて行に触れてしまう。
+     * 挿入直後に素早くもう一度触れると、同じ値が2回入力され使用回数も2回加算されるため、
+     * 閉じ始めた時点でフラグを立てて以降のタップを無視する。
      */
     private fun closeShortcutView() {
+        isClosingShortcutView = true
+
         // フェードアウトアニメーション
         shortcutView.animate()
             .alpha(0f)
@@ -1049,10 +1061,36 @@ class ClipTapKeyboardService : InputMethodService() {
             .withEndAction {
                 shortcutView.visibility = View.GONE
                 mainView.visibility = View.VISIBLE
+                isClosingShortcutView = false
             }
             .start()
 
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Shortcut view closed")
+    }
+
+    /**
+     * 入力欄が切り替わったときにショートカット画面の状態を整える
+     *
+     * 【目的】
+     * ショートカット画面を開いたままキーボードを閉じても、次に開いたときに
+     * 削除済みのショートカットや値が残らないようにします。
+     *
+     * 【なぜ必要か】
+     * AndroidのIMEは onCreateInputView で作ったビューを使い回すため、
+     * 何もしないとショートカット画面と、そこに載っている当時のデータがそのまま残る。
+     * その間にメインアプリで削除されていると、存在しない値を挿入できてしまう。
+     *
+     * 【一覧へ戻す理由】
+     * 値一覧を開いていた場合、そのショートカット自体が消えている可能性がある。
+     * 一覧から読み直せば、消えたものは並びから外れる。
+     * （iOS版の refreshAllData → reloadShortcutScreen と同じ狙い）
+     */
+    private fun restoreShortcutViewState() {
+        if (!::shortcutView.isInitialized) return
+        if (shortcutView.visibility != View.VISIBLE) return
+
+        isClosingShortcutView = false
+        showShortcutList()
     }
 
     /**
@@ -1125,6 +1163,9 @@ class ClipTapKeyboardService : InputMethodService() {
      * @param shortcut 選択されたショートカット
      */
     private fun onShortcutClicked(shortcut: Shortcut) {
+        /* 閉じ始めた後のタップは無視する（二重挿入の防止） */
+        if (isClosingShortcutView) return
+
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Shortcut selected (${shortcut.values.size} values)")
 
         /* 値を持たないショートカットは挿入するものがないため何もしない */
@@ -1148,6 +1189,9 @@ class ClipTapKeyboardService : InputMethodService() {
      * @param value 選択されたショートカット値
      */
     private fun onShortcutValueClicked(value: ShortcutValue) {
+        /* 閉じ始めた後のタップは無視する（二重挿入の防止） */
+        if (isClosingShortcutView) return
+
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Shortcut value selected")
         insertShortcutValue(value)
     }

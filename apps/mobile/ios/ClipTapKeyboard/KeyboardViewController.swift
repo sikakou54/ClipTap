@@ -994,7 +994,11 @@ class KeyboardViewController: UIInputViewController {
            優先度を下げておけば、上のtrailing上限が効いてカテゴリ名側だけが縮み、
            右のボタン群（36ptの固定幅）は押せる大きさのまま必ず表示され続ける。 */
         let categoryDropdownWidthConstraint = categoryDropdownButton.widthAnchor.constraint(equalToConstant: 100)
-        categoryDropdownWidthConstraint.priority = .defaultHigh
+        /* UIButtonの水平方向の圧縮抵抗は既定で.defaultHigh(750)であり、同値にすると
+           「幅100」と「内容幅以上」が同じ強さで競合して幅が一意に定まらない。
+           1つ上げて幅100を勝たせ、長いカテゴリ名はボタン側の省略に委ねる。
+           上のtrailing上限は必須（1000）なので、狭いときに縮む挙動は保たれる */
+        categoryDropdownWidthConstraint.priority = UILayoutPriority(rawValue: UILayoutPriority.defaultHigh.rawValue + 1)
         categoryDropdownWidthConstraint.isActive = true
 
         // TableView: フィルターコンテナの下に配置（+36ptの表示エリア拡大）
@@ -2143,6 +2147,14 @@ class KeyboardViewController: UIInputViewController {
         KeyboardLog.debug("⚡ [Shortcut] Closing shortcut view")
         shortcutScreenMode = .list
         selectedShortcut = nil
+
+        /* 表示中だった値一覧の行をテーブルに残さない。
+           次に開くときは必ずreloadShortcutList()が走るため表示には出ないが、
+           モードと行数の食い違いを閉じた時点で解消しておく */
+        rankedShortcutValues = []
+        applyShortcutRowHeight()
+        shortcutTableView.reloadData()
+
         screenState = .list
         applyScreenState()
     }

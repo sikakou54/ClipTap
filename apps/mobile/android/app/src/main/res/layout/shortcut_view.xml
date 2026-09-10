@@ -57,12 +57,18 @@
 
             <!-- 閉じるボタン（定型文一覧へ戻る）
                  scaleTypeをfitCenterにしているのは、標準の閉じるアイコンが24dpより大きく、
-                 実寸で中央に置く（center）と×の先が欠けるため -->
+                 実寸で中央に置く（center）と×の先が欠けるため。
+
+                 tintを付ける理由: この標準アイコンは白い芯を暗い輪郭で囲んだエンボス調の素材で、
+                 着色しないと隣の戻るボタン（単色のベクター）と質感が揃わない。
+                 同じヘッダーに並ぶ戻るボタンと同じ colorControlNormal で塗り、
+                 ライト・ダークのどちらでも単色で表示する。 -->
             <ImageButton
                 android:id="@+id/shortcutCloseButton"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:tint="?attr/colorControlNormal"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/accessibility_close_button"
                 android:scaleType="fitCenter"
