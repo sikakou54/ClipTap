@@ -134,6 +134,7 @@ export {
   ProfileService,         /* プロファイル管理サービス */
   SnippetService,         /* スニペット管理サービス */
   VariableService,        /* 変数管理サービス */
+  ShortcutService,        /* ショートカット管理サービス */
   SubscriptionService,    /* 課金管理サービス */
   FREE_PROFILES_LIMIT,    /* 無料プランのプロファイル上限 */
   FREE_VARIABLES_LIMIT,   /* 無料プランの変数上限 */
@@ -302,4 +303,9 @@ export {
   SnippetProvider,
   useSnippets,
   type SnippetContextValue,
+
+  /* ショートカット管理Provider */
+  ShortcutProvider,
+  useShortcuts,
+  type ShortcutContextValue,
 } from './providers';

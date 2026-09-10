@@ -26,7 +26,7 @@ import { useDevMenu, type UseDevMenuReturn } from './useDevMenu';
 /** メニュー項目の型定義 */
 export interface MenuItem {
   id: string;
-  icon: 'options-outline' | 'code-outline' | 'calendar-outline' | 'folder-outline' | 'keypad-outline' | 'sync-outline' | 'document-text-outline' | 'shield-checkmark-outline';
+  icon: 'options-outline' | 'code-outline' | 'calendar-outline' | 'folder-outline' | 'flash-outline' | 'keypad-outline' | 'sync-outline' | 'document-text-outline' | 'shield-checkmark-outline';
   label: string;
   onPress: () => void;
   isPro: boolean;
@@ -231,6 +231,13 @@ export function useSettingsScreen(): UseSettingsScreenReturn {
       icon: 'calendar-outline',
       label: t('settings.system_variable_formats'),
       onPress: () => router.push('/settings/system-variable-formats'),
+      isPro: false,
+    },
+    {
+      id: 'shortcuts',
+      icon: 'flash-outline',
+      label: t('shortcut.title'),
+      onPress: () => router.push('/settings/shortcuts'),
       isPro: false,
     },
     {

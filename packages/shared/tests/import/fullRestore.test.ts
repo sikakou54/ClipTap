@@ -45,6 +45,16 @@ describe('ImportService full restore', () => {
     backup.run(
       "INSERT INTO system_variable_formats VALUES ('today', 'yyyy-MM-dd', 'format-updated')"
     );
+    main.run("INSERT INTO shortcuts VALUES ('old-sc', 'old', 0, 'old-time', 'old-time')");
+    main.run(
+      "INSERT INTO shortcut_values VALUES ('old-sv', 'old-sc', 'old', 'old', 0, 0, 'old-time', 'old-time')"
+    );
+    backup.run(
+      "INSERT INTO shortcuts VALUES ('sc1', 'phone', 3, 'sc-created', 'sc-updated')"
+    );
+    backup.run(
+      "INSERT INTO shortcut_values VALUES ('sv1', 'sc1', 'mother', '080-0000-0000', 12, 1, 'sv-created', 'sv-updated')"
+    );
 
     await ImportService.importDatabaseFromTempDb('memory');
 
@@ -86,6 +96,26 @@ describe('ImportService full restore', () => {
       pattern: 'yyyy-MM-dd',
       updatedAt: 'format-updated',
     });
+    expect(main.get('SELECT * FROM shortcuts WHERE id = ?', ['sc1'])).toEqual({
+      id: 'sc1',
+      name: 'phone',
+      sortOrder: 3,
+      createdAt: 'sc-created',
+      updatedAt: 'sc-updated',
+    });
+    expect(main.get('SELECT * FROM shortcut_values WHERE id = ?', ['sv1'])).toEqual({
+      id: 'sv1',
+      shortcutId: 'sc1',
+      name: 'mother',
+      value: '080-0000-0000',
+      useCount: 12,
+      sortOrder: 1,
+      createdAt: 'sv-created',
+      updatedAt: 'sv-updated',
+    });
     expect(main.get('SELECT id FROM categories WHERE id = ?', ['old'])).toBeNull();
+    /* 全復元は既存のショートカットも入れ替える（値だけが取り残されない） */
+    expect(main.get('SELECT id FROM shortcuts WHERE id = ?', ['old-sc'])).toBeNull();
+    expect(main.get('SELECT id FROM shortcut_values WHERE id = ?', ['old-sv'])).toBeNull();
   });
 });

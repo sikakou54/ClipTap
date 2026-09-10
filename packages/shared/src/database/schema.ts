@@ -7,7 +7,7 @@
 /**
  * データベーススキーマバージョン
  */
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 
 /** インポートで受け付ける最古のスキーマバージョン */
 export const MIN_SUPPORTED_SCHEMA_VERSION = 3;
@@ -119,6 +119,36 @@ export const CREATE_TABLES = {
       updatedAt TEXT NOT NULL
     );
   `,
+
+  /**
+   * ショートカットテーブル
+   */
+  shortcuts: `
+    CREATE TABLE IF NOT EXISTS shortcuts (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      sortOrder INTEGER DEFAULT 0,
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL
+    );
+  `,
+
+  /**
+   * ショートカット値テーブル
+   */
+  shortcutValues: `
+    CREATE TABLE IF NOT EXISTS shortcut_values (
+      id TEXT PRIMARY KEY,
+      shortcutId TEXT NOT NULL,
+      name TEXT NOT NULL,
+      value TEXT NOT NULL,
+      useCount INTEGER DEFAULT 0,
+      sortOrder INTEGER DEFAULT 0,
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL,
+      FOREIGN KEY (shortcutId) REFERENCES shortcuts(id) ON DELETE CASCADE
+    );
+  `,
 };
 
 /**
@@ -157,12 +187,22 @@ export const CREATE_INDEXES = {
     CREATE INDEX IF NOT EXISTS idx_snippet_profiles_profile
     ON snippet_profiles(profileId);
   `,
+  shortcutValuesShortcut: `
+    CREATE INDEX IF NOT EXISTS idx_shortcut_values_shortcut
+    ON shortcut_values(shortcutId);
+  `,
+  shortcutValuesUseCount: `
+    CREATE INDEX IF NOT EXISTS idx_shortcut_values_use_count
+    ON shortcut_values(useCount DESC);
+  `,
 };
 
 /**
  * テーブル削除SQL定義（外部キー制約のため削除順序重要）
  */
 export const DROP_TABLES = {
+  shortcutValues: 'DROP TABLE IF EXISTS shortcut_values;',
+  shortcuts: 'DROP TABLE IF EXISTS shortcuts;',
   systemVariableFormats: 'DROP TABLE IF EXISTS system_variable_formats;',
   snippetProfiles: 'DROP TABLE IF EXISTS snippet_profiles;',
   profileVariables: 'DROP TABLE IF EXISTS profile_variables;',

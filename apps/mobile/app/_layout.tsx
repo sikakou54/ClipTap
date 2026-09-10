@@ -10,6 +10,7 @@
  * - アプリデータ初期化処理（useAppInitialization、AuthProvider内）
  * - プロバイダー階層: ThemeProvider → AuthProvider → SubscriptionProvider
  *   → DatabaseProvider → ProfileProvider → VariableProvider → CategoryProvider → SnippetProvider
+ *   → ShortcutProvider
  * - 全画面のナビゲーション設定（Stack Navigator）
  * - スプラッシュスクリーンの表示制御
  *
@@ -21,7 +22,7 @@ import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { ThemeProvider } from '@lib/themeSystem';
 import { SubscriptionProvider } from '@providers/SubscriptionProvider';
 import { SplashScreen } from '@components/common/SplashScreen';
-import { AuthProvider, DatabaseProvider, ProfileProvider, VariableProvider, CategoryProvider, SnippetProvider } from '@cliptap/shared';
+import { AuthProvider, DatabaseProvider, ProfileProvider, VariableProvider, CategoryProvider, SnippetProvider, ShortcutProvider } from '@cliptap/shared';
 import { useAdapterInitialization } from '@hooks/screens/useAdapterInitialization';
 import { useAppInitialization } from '@hooks/screens/useAppInitialization';
 
@@ -84,55 +85,61 @@ function AppContent({ isTabletDevice }: { isTabletDevice: boolean }) {
   }
 
   /* データベースプロバイダーとナビゲーションスタック */
-  /* Provider階層: Database → Profile → Variable → Category → Snippet（各Providerが useDatabase() を前提にするため Database を最外に置く） */
+  /* Provider階層: Database → Profile → Variable → Category → Snippet → Shortcut（各Providerが useDatabase() を前提にするため Database を最外に置く） */
   return (
     <DatabaseProvider value={{ isLoaded, setLoaded }}>
       <ProfileProvider>
         <VariableProvider>
           <CategoryProvider>
             <SnippetProvider>
-              <Stack screenOptions={HEADER_HIDDEN_OPTIONS}>
-                {/* ホーム画面 */}
-                <Stack.Screen name="index" />
-                {/* 検索画面（透明モーダル） */}
-                <Stack.Screen
-                  name="search"
-                  options={{ presentation: 'transparentModal', headerShown: false, animation: 'fade' }}
-                />
-                {/* スニペット作成画面 */}
-                <Stack.Screen name="snippet/create" options={tabletAwareModalOptions} />
-                {/* スニペット編集画面 */}
-                <Stack.Screen name="snippet/edit" options={tabletAwareModalOptions} />
-                {/* スニペット内容入力画面 */}
-                <Stack.Screen name="snippet/content-input" options={tabletAwareModalOptions} />
-                {/* スニペットタイトル入力画面 */}
-                <Stack.Screen name="snippet/title-input" options={tabletAwareModalOptions} />
-                {/* スニペットプロファイル選択画面 */}
-                <Stack.Screen name="snippet/profile-select" options={MODAL_SLIDE_OPTIONS} />
-                {/* カテゴリ編集画面 */}
-                <Stack.Screen name="category/edit" options={MODAL_SLIDE_OPTIONS} />
-                {/* カテゴリ選択画面 */}
-                <Stack.Screen name="category/select" options={MODAL_SLIDE_OPTIONS} />
-                {/* 変数編集画面 */}
-                <Stack.Screen name="variable/edit" options={MODAL_SLIDE_OPTIONS} />
-                {/* 変数プロファイル値編集画面 */}
-                <Stack.Screen name="variable/profile-value-edit" options={MODAL_SLIDE_OPTIONS} />
-                {/* システム変数書式選択画面 */}
-                <Stack.Screen name="variable/format-edit" options={MODAL_SLIDE_OPTIONS} />
-                {/* プロファイル編集画面 */}
-                <Stack.Screen name="profile/edit" options={MODAL_SLIDE_OPTIONS} />
-                {/* 設定画面 */}
-                <Stack.Screen name="settings" />
-                {/* サブスクリプション課金画面（フルスクリーンモーダル） */}
-                <Stack.Screen
-                  name="subscription/paywall"
-                  options={{ presentation: 'fullScreenModal', headerShown: false }}
-                />
-                {/* サブスクリプション管理画面 */}
-                <Stack.Screen name="subscription/manage" />
-                {/* WebView画面 */}
-                <Stack.Screen name="webview" />
-              </Stack>
+              <ShortcutProvider>
+                <Stack screenOptions={HEADER_HIDDEN_OPTIONS}>
+                  {/* ホーム画面 */}
+                  <Stack.Screen name="index" />
+                  {/* 検索画面（透明モーダル） */}
+                  <Stack.Screen
+                    name="search"
+                    options={{ presentation: 'transparentModal', headerShown: false, animation: 'fade' }}
+                  />
+                  {/* スニペット作成画面 */}
+                  <Stack.Screen name="snippet/create" options={tabletAwareModalOptions} />
+                  {/* スニペット編集画面 */}
+                  <Stack.Screen name="snippet/edit" options={tabletAwareModalOptions} />
+                  {/* スニペット内容入力画面 */}
+                  <Stack.Screen name="snippet/content-input" options={tabletAwareModalOptions} />
+                  {/* スニペットタイトル入力画面 */}
+                  <Stack.Screen name="snippet/title-input" options={tabletAwareModalOptions} />
+                  {/* スニペットプロファイル選択画面 */}
+                  <Stack.Screen name="snippet/profile-select" options={MODAL_SLIDE_OPTIONS} />
+                  {/* カテゴリ編集画面 */}
+                  <Stack.Screen name="category/edit" options={MODAL_SLIDE_OPTIONS} />
+                  {/* カテゴリ選択画面 */}
+                  <Stack.Screen name="category/select" options={MODAL_SLIDE_OPTIONS} />
+                  {/* 変数編集画面 */}
+                  <Stack.Screen name="variable/edit" options={MODAL_SLIDE_OPTIONS} />
+                  {/* 変数プロファイル値編集画面 */}
+                  <Stack.Screen name="variable/profile-value-edit" options={MODAL_SLIDE_OPTIONS} />
+                  {/* システム変数書式選択画面 */}
+                  <Stack.Screen name="variable/format-edit" options={MODAL_SLIDE_OPTIONS} />
+                  {/* プロファイル編集画面 */}
+                  <Stack.Screen name="profile/edit" options={MODAL_SLIDE_OPTIONS} />
+                  {/* ショートカット作成・編集画面 */}
+                  <Stack.Screen name="shortcut/edit" options={MODAL_SLIDE_OPTIONS} />
+                  {/* ショートカット値編集画面 */}
+                  <Stack.Screen name="shortcut/value-edit" options={MODAL_SLIDE_OPTIONS} />
+                  {/* 設定画面 */}
+                  <Stack.Screen name="settings" />
+                  {/* サブスクリプション課金画面（フルスクリーンモーダル） */}
+                  <Stack.Screen
+                    name="subscription/paywall"
+                    options={{ presentation: 'fullScreenModal', headerShown: false }}
+                  />
+                  {/* サブスクリプション管理画面 */}
+                  <Stack.Screen name="subscription/manage" />
+                  {/* WebView画面 */}
+                  <Stack.Screen name="webview" />
+                </Stack>
+              </ShortcutProvider>
             </SnippetProvider>
           </CategoryProvider>
         </VariableProvider>
@@ -149,7 +156,7 @@ export default function RootLayout() {
       {/* アダプター初期化完了後のメインアプリコンテンツ */}
       {isAdaptersReady && (
         <View style={styles.rootContainer}>
-          {/* プロバイダー階層（テーマ → 認証 → サブスクリプション → Database → Profile → Variable → Category → Snippet） */}
+          {/* プロバイダー階層（テーマ → 認証 → サブスクリプション → Database → Profile → Variable → Category → Snippet → Shortcut） */}
           <ThemeProvider>
             <AuthProvider>
               <SubscriptionProvider>

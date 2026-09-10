@@ -11,6 +11,7 @@
  * - V4 → V5: variables, profilesテーブルにsortOrderカラム追加
  * - V5 → V6: snippetsテーブルにcopyCountカラム追加（使用頻度ソート用）
  * - V6 → V7: システム変数書式設定テーブル追加
+ * - V7 → V8: ショートカット・ショートカット値テーブル追加
  */
 
 import type { DbAdapter } from '../adapters/DbAdapter';
@@ -659,6 +660,32 @@ export async function migrateV6ToV7(db: DbAdapter): Promise<void> {
   }
 }
 
+/* ======================================== */
+/* V7 → V8 マイグレーション */
+/* ======================================== */
+
+/**
+ * ショートカットと、その値を保持するテーブルを追加します。
+ *
+ * @param db - データベースアダプター
+ *
+ * @remarks
+ * 既存データは持たないため、初期行は挿入しません。
+ * 派生indexは移行後の`finalizeLatestSchema`が作成するため、ここでは作成しません。
+ */
+export async function migrateV7ToV8(db: DbAdapter): Promise<void> {
+  Logger.info('[Migration V7→V8] Starting migration...');
+
+  try {
+    await db.exec(CREATE_TABLES.shortcuts);
+    await db.exec(CREATE_TABLES.shortcutValues);
+    Logger.success('[Migration V7→V8] Migration completed successfully');
+  } catch (error) {
+    Logger.error('[Migration V7→V8] Failed to migrate:', error);
+    throw error;
+  }
+}
+
 /**
  * 全テーブルを作成
  *
@@ -675,6 +702,8 @@ export async function createTablesWithDb(db: DbAdapter): Promise<void> {
     await db.exec(CREATE_TABLES.profileVariables);
     await db.exec(CREATE_TABLES.snippetProfiles);
     await db.exec(CREATE_TABLES.systemVariableFormats);
+    await db.exec(CREATE_TABLES.shortcuts);
+    await db.exec(CREATE_TABLES.shortcutValues);
     Logger.info('[Migration] Tables created successfully');
   } catch (error) {
     Logger.error('[Migration] Failed to create tables:', error);
@@ -785,8 +814,11 @@ export async function runMigrations(
       case 7:
         await migrateV6ToV7(mainDB);
         break;
-      /* 冒頭のassertSupportedMigrationVersion(fromVersion, 1)によりfromVersionは1〜SCHEMA_VERSION(7)に
-         制限されるため、nextVersionは2〜7となり上のcaseが全て存在する＝現行の版範囲では到達しない。
+      case 8:
+        await migrateV7ToV8(mainDB);
+        break;
+      /* 冒頭のassertSupportedMigrationVersion(fromVersion, 1)によりfromVersionは1〜SCHEMA_VERSION(8)に
+         制限されるため、nextVersionは2〜8となり上のcaseが全て存在する＝現行の版範囲では到達しない。
          なお版番号を確定する前にfinalizeLatestSchemaが必須テーブルの欠落をDatabaseErrorにする */
       default:
         Logger.warn(`[Migration] No migration defined for version ${nextVersion}`);
@@ -837,8 +869,11 @@ export async function migrateImportTempDb(db: DbAdapter, fromVersion: number): P
       case 7:
         await migrateV6ToV7(db);
         break;
+      case 8:
+        await migrateV7ToV8(db);
+        break;
       /* 冒頭のassertSupportedMigrationVersion(fromVersion, MIN_SUPPORTED_SCHEMA_VERSION)により
-         fromVersionは3〜SCHEMA_VERSION(7)に制限されるため、nextVersionは4〜7となり
+         fromVersionは3〜SCHEMA_VERSION(8)に制限されるため、nextVersionは4〜8となり
          上のcaseが全て存在する＝現行の版範囲では到達しない */
       default:
         throw new VersionMismatchError(SCHEMA_VERSION, currentVersion);
@@ -847,7 +882,7 @@ export async function migrateImportTempDb(db: DbAdapter, fromVersion: number): P
     currentVersion = nextVersion;
   }
 
-  /** 取込前に形の不整合を明示エラーへ変えるため、宣言版がV7でも必ず確認する */
+  /** 取込前に形の不整合を明示エラーへ変えるため、宣言版が最新でも必ず確認する */
   await finalizeLatestSchema(db);
   Logger.success(`[Import Migration] Migration completed to V${SCHEMA_VERSION}`);
 }
