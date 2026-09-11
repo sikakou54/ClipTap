@@ -48,8 +48,8 @@ import { useTracking } from '@hooks/useTracking';
  * 未設定のまま本番ビルドへ入ると広告は表示されず、代わりにエラーログを出して起動を続行する。
  */
 const AD_UNIT_IDS = {
-  ios: '',
-  android: '',
+  ios: 'ca-app-pub-5616727577619398/5690894031',
+  android: 'ca-app-pub-5616727577619398/9225235353',
 };
 
 /**
