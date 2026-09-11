@@ -22,10 +22,10 @@ import { useAppOpenAd } from '@hooks/useAppOpenAd';
 
 /**
  * AppOpenAdGateのProps
- * @property onSettled - 表示判定が決着したときのコールバック（表示の有無によらず必ず1回呼ばれる）
+ * @property onSettled - 表示判定が決着したときのコールバック（表示の有無によらず必ず1回呼ばれる。引数は実際に広告を表示したか）
  */
 interface AppOpenAdGateProps {
-  onSettled: () => void;
+  onSettled: (adShown: boolean) => void;
 }
 
 export function AppOpenAdGate({ onSettled }: AppOpenAdGateProps) {

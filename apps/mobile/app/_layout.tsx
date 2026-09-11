@@ -158,15 +158,27 @@ export default function RootLayout() {
    * 起動時App Open広告の表示判定が未決着か
    *
    * 決着するまでスプラッシュを保持し、広告をスプラッシュの裏で表示させる。
-   * こうすると利用者には「スプラッシュ → 広告 → ホーム」と見え、
-   * 広告を閉じた瞬間にはフェードが終わったホームが現れる。
-   * AppOpenAdGate は上限時間で必ず決着するため、ここで起動が止まることはない。
+   * こうすると利用者には「スプラッシュ → 広告 → ホーム」と見える。
+   * スプラッシュ側の保持時間はマウント時点から並行して進むため、
+   * この保留がそのまま起動時間へ上乗せされることはない。
+   * AppOpenAdGate は上限時間で必ず決着するため、ここで起動が止まることもない。
    */
   const [isAppOpenAdPending, setIsAppOpenAdPending] = useState(true);
 
-  const handleAppOpenAdSettled = useCallback(() => {
-    setIsAppOpenAdPending(false);
-  }, []);
+  const handleAppOpenAdSettled = useCallback(
+    (adShown: boolean) => {
+      setIsAppOpenAdPending(false);
+
+      /* 広告を全画面で表示できたなら、その裏でスプラッシュを演出する意味はない。
+         保持したままだと、広告を閉じた利用者にスプラッシュが1.5秒現れてしまう
+         （Androidは広告表示中にJSタイマーが止まるため必ずそうなる）。
+         ここで畳んでおけば、閉じた時点でホーム画面が見えている */
+      if (adShown) {
+        hideSplash();
+      }
+    },
+    [hideSplash]
+  );
 
   return (
     <>

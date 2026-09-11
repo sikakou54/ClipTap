@@ -11,21 +11,26 @@
  * 起動時に表示してよい全画面広告はApp Open広告だけであり、両者を入れ替えてはならない。
  *
  * 【表示条件（すべて満たしたときだけ表示する）】
- * 1. 無料プランであることが確定している（未確定・権利確認失敗の間は表示しない）
- * 2. このプロセスでまだ一度も表示を試みていない（＝コールドスタート直後の1回だけ）
- * 3. 前回の表示から COOLDOWN_MS 以上経過している
- * 4. 上限時間内に広告のロードが完了した
+ * 1. 広告ユニットIDが設定されていること
+ * 2. 初回起動ではないこと（インストール直後はATT許可ダイアログと連続してしまうため出さない）
+ * 3. 前回の表示から COOLDOWN_MS 以上経過していること
+ * 4. 無料プランであることが確定していること（未確定・権利確認失敗の間は表示しない）
+ * 5. このプロセスでまだ一度も表示を試みていないこと（＝コールドスタート直後の1回だけ）
+ * 6. 上限時間内にロードが完了し、その時点でアプリが前面にあること
+ *
+ * 1〜3は加入状態を待たずに判定できるため先に行う。こうするとクールダウン中の起動が
+ * 課金サービスの応答を待たずに決着し、起動が速いままになる。
  *
  * 【起動を止めない】
  * 判定・初期化・ロード・表示のどこで失敗しても、必ず settle() を通って onSettled を呼ぶ。
  * 外部サービスの失敗でローカル業務機能を止めないという方針に従う。
  *
- * @see docs/機能仕様書.md
+ * @see docs/機能仕様書.md §8.19 広告・トラッキング同意
  * @module useAppOpenAd
  */
 
-import { useCallback, useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import mobileAds, { AppOpenAd, AdEventType, TestIds } from 'react-native-google-mobile-ads';
 import { Logger, useSharedSubscription } from '@cliptap/shared';
@@ -59,8 +64,8 @@ const COOLDOWN_MS = 4 * 60 * 60 * 1000;
  * 起動を保留してよい上限時間
  *
  * 加入状態の確定・SDK初期化・広告ロードの合計がこの時間を超えたら広告を諦めて起動を進める。
- * スプラッシュ自体が保持1000ms＋フェード500msを持つため、体感で増える待ち時間は最大でも
- * この値からその1500msを引いた分に収まる。
+ * スプラッシュの保持1000msはマウント時点から数えるためこの保留と並行して進み、
+ * 体感で増える待ち時間はこの値から保持1000msを引いた分までに収まる。
  */
 const SETTLE_TIMEOUT_MS = 3000;
 
@@ -81,6 +86,15 @@ const LAST_SHOWN_AT_KEY = '@app_open_ad_last_shown_at';
 let hasStartedThisProcess = false;
 
 /**
+ * 走行中の表示フローを打ち切ったか
+ *
+ * 停止スイッチは、それが止める対象（モジュール側で生き残るSDKの購読）と同じ
+ * プロセス単位で持つ。マウント単位のrefにすると、ゲートがアンマウントした時点で
+ * 値が凍結し、後から届いたロード完了で広告が出てしまう。
+ */
+let hasAbandonedThisProcess = false;
+
+/**
  * 生成済みのAppOpenAdインスタンス
  *
  * createForAdRequest はインスタンスごとにネイティブイベントの購読を張るが、
@@ -93,6 +107,9 @@ let adInstance: AppOpenAd | null = null;
    型定義
    ======================================== */
 
+/** 加入状態を待たずに行う事前判定の結果 */
+type PreflightResult = 'eligible' | 'skip';
+
 /** useAppOpenAd の引数 */
 export interface UseAppOpenAdParams {
   /**
@@ -100,8 +117,10 @@ export interface UseAppOpenAdParams {
    *
    * 「表示した」「表示しないと決めた」「諦めた」のいずれでも必ず1回呼ばれる。
    * 呼び出し側はこれを合図にスプラッシュの保持を解除する。
+   *
+   * @param adShown - 実際に広告を全画面表示したか
    */
-  onSettled: () => void;
+  onSettled: (adShown: boolean) => void;
 }
 
 /* ========================================
@@ -120,12 +139,14 @@ export function useAppOpenAd({ onSettled }: UseAppOpenAdParams): void {
   const { isLoading, isSubscribed, verificationFailed, shouldShowAds } = useSharedSubscription();
   const { getTrackingStatus } = useTracking();
 
+  /** 加入状態を待たずに判定できる条件の結果（nullは判定中） */
+  const [preflight, setPreflight] = useState<PreflightResult | null>(null);
+
   /**
    * このマウントで onSettled を呼んだか
    *
-   * プロセス単位ではなくマウント単位で持つ。プロセス単位にすると、万一このフックが
-   * 貼り直されたときに「判定済みだから何もしない」と「保留が解除されない」が同時に成立し、
-   * スプラッシュが永久に残る。
+   * onSettled の多重呼び出しを防ぐためだけに持つ。走行中フローの停止は
+   * プロセス単位の hasAbandonedThisProcess が担当する。
    */
   const hasSettledRef = useRef(false);
 
@@ -133,47 +154,60 @@ export function useAppOpenAd({ onSettled }: UseAppOpenAdParams): void {
    * 表示判定の決着
    *
    * どの経路から来ても、このマウントでは1回しか onSettled を呼ばない。
+   * 同時に走行中のフローを打ち切り、決着後に遅れて広告が出ることを防ぐ。
    */
   const settle = useCallback(
-    (reason: string) => {
+    (reason: string, adShown = false) => {
+      hasAbandonedThisProcess = true;
       if (hasSettledRef.current) return;
       hasSettledRef.current = true;
       Logger.debug(`[useAppOpenAd] Settled: ${reason}`);
-      onSettled();
+      onSettled(adShown);
     },
     [onSettled]
   );
 
   /**
-   * 上限時間の打ち切り
+   * 上限時間の打ち切りと、加入状態を待たない事前判定
    *
    * 加入状態が永久に確定しない、SDK初期化が返ってこない、といった場合でも
-   * 起動が止まらないようにマウント時に1回だけ仕掛ける。
+   * 起動が止まらないよう、マウント時に1回だけ打ち切りを仕掛ける。
    */
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       settle('Timed out before the ad could be shown');
     }, SETTLE_TIMEOUT_MS);
 
-    return () => clearTimeout(timeoutId);
-  }, [settle]);
-
-  /**
-   * 表示判定の開始
-   *
-   * 加入状態が確定してから1回だけ走る。未確定のまま進めるとPro利用者へ
-   * 全画面広告を出す事故につながるため、isLoading の間は必ず待つ。
-   */
-  useEffect(() => {
     /* 同一プロセスで判定済みならもう出さない。ただし保留は必ず解除する */
     if (hasStartedThisProcess) {
       settle('Already attempted in this process');
-      return;
+    } else {
+      hasStartedThisProcess = true;
+      void runPreflight().then((result) => {
+        if (result === 'skip') {
+          settle('Preflight rejected the ad');
+        }
+        setPreflight(result);
+      });
     }
 
-    if (isLoading) return;
+    return () => {
+      clearTimeout(timeoutId);
+      /* ゲートが消えたあとに広告を出す先はない。走行中のフローを打ち切る */
+      hasAbandonedThisProcess = true;
+    };
+  }, [settle]);
 
-    hasStartedThisProcess = true;
+  /**
+   * 加入状態の確定を待ってから表示する
+   *
+   * 未確定のまま進めるとPro利用者へ全画面広告を出す事故につながるため、
+   * isLoading の間は必ず待つ。
+   */
+  useEffect(() => {
+    if (preflight !== 'eligible') return;
+    if (isLoading) return;
+    if (hasAbandonedThisProcess) return;
 
     /* Proが確定している、権利確認に失敗して判断できない、のどちらも表示しない。
        バナーと違い全画面広告は誤表示の被害が大きいため、確信が持てないときは出さない側へ倒す */
@@ -182,99 +216,128 @@ export function useAppOpenAd({ onSettled }: UseAppOpenAdParams): void {
       return;
     }
 
-    void showAppOpenAd({
-      settle,
-      /* 上限時間で打ち切られたあとに遅れて表示しないための判定。
-         ホームが見えたあとに全画面広告が降ってくるのが最悪の体験になる */
-      isSettled: () => hasSettledRef.current,
-      getTrackingStatus,
-    });
-  }, [isLoading, isSubscribed, verificationFailed, shouldShowAds, settle, getTrackingStatus]);
+    void loadAndShowAppOpenAd({ settle, getTrackingStatus });
+  }, [
+    preflight,
+    isLoading,
+    isSubscribed,
+    verificationFailed,
+    shouldShowAds,
+    settle,
+    getTrackingStatus,
+  ]);
 }
 
 /* ========================================
    内部処理
    ======================================== */
 
-/** showAppOpenAd の引数 */
-interface ShowAppOpenAdParams {
+/**
+ * 本番・開発に応じた広告ユニットIDを返す
+ *
+ * 未設定または対象外プラットフォームでは空文字を返す。
+ */
+function resolveAdUnitId(): string {
+  if (__DEV__) return TestIds.APP_OPEN;
+
+  return (
+    Platform.select({
+      ios: AD_UNIT_IDS.ios,
+      android: AD_UNIT_IDS.android,
+    }) ?? ''
+  );
+}
+
+/**
+ * 加入状態を待たずに判定できる条件をまとめて確認する
+ *
+ * ここで弾ける起動は課金サービスの応答を待たずに決着するため、
+ * クールダウン中の起動が遅くならない。
+ */
+async function runPreflight(): Promise<PreflightResult> {
+  if (!resolveAdUnitId()) {
+    /* 静かに無効化されると設定漏れに気付けないため、本番でも残るerrorで知らせる */
+    Logger.error('[useAppOpenAd] No App Open ad unit ID configured. Set AD_UNIT_IDS to enable it.');
+    return 'skip';
+  }
+
+  return (await isWithinCooldown()) ? 'skip' : 'eligible';
+}
+
+/** loadAndShowAppOpenAd の引数 */
+interface LoadAndShowParams {
   /** 表示判定の決着を通知する */
-  settle: (reason: string) => void;
-  /** すでに決着済みか（上限時間での打ち切りを含む） */
-  isSettled: () => boolean;
+  settle: (reason: string, adShown?: boolean) => void;
   /** ATT許可状態を取得する */
   getTrackingStatus: () => Promise<string>;
 }
 
 /**
- * クールダウン判定・SDK初期化・ロード・表示をまとめて行う
+ * SDK初期化・ロード・表示を行う
  *
  * 例外は握りつぶして settle() へ倒す。広告の失敗で起動が止まってはならない。
  *
- * @param params - ShowAppOpenAdParams
+ * @param params - LoadAndShowParams
  */
-async function showAppOpenAd({
+async function loadAndShowAppOpenAd({
   settle,
-  isSettled,
   getTrackingStatus,
-}: ShowAppOpenAdParams): Promise<void> {
+}: LoadAndShowParams): Promise<void> {
   try {
-    /* 広告ユニットIDの決定（開発時はGoogleのテストID） */
-    const adUnitId = __DEV__
-      ? TestIds.APP_OPEN
-      : Platform.select({
-          ios: AD_UNIT_IDS.ios,
-          android: AD_UNIT_IDS.android,
-        });
+    const adUnitId = resolveAdUnitId();
 
-    if (!adUnitId) {
-      /* 静かに無効化されると設定漏れに気付けないため、本番でも残るerrorで知らせる */
-      Logger.error('[useAppOpenAd] No App Open ad unit ID configured. Set AD_UNIT_IDS to enable it.');
-      settle('No ad unit ID configured');
-      return;
-    }
-
-    /* クールダウン判定。保存値が壊れていた場合は「未表示」とみなして先へ進む */
-    if (await isWithinCooldown()) {
-      settle('Within cooldown window');
-      return;
-    }
-
-    /* ATT許可状態に応じてパーソナライズ広告の可否を決める。
-       ATTダイアログ自体は useAdapterInitialization で解決済みのため、ここは確定値の読み出し。
-       AndroidにはATTのgranted状態がないため常に非パーソナライズになる（バナーと同じ扱い） */
-    const trackingStatus = await getTrackingStatus();
+    /* パーソナライズ広告を要求してよいのはiOSでATT許可が得られたときだけ。
+       AndroidにはATTのgranted状態が無く TrackingService は常に'granted'を返すため、
+       その値をそのまま使うとバナー（常に非パーソナライズ）と挙動が食い違う */
+    const isPersonalizedAllowed = Platform.OS === 'ios' && (await getTrackingStatus()) === 'granted';
 
     /* SDKの初期化。広告をロードする前に1回だけ必要で、
        Pro利用者に無駄な外部通信をさせないよう無料プラン確定後のこの位置で呼ぶ */
     await mobileAds().initialize();
 
-    /* ここまでの待ち時間で上限に達していたら、もう表示してはならない */
-    if (isSettled()) return;
+    /* ここまでの待ち時間で打ち切られていたら、もう表示してはならない */
+    if (hasAbandonedThisProcess) return;
 
-    const ad = getOrCreateAd(adUnitId, trackingStatus !== 'granted');
+    const ad = getOrCreateAd(adUnitId, !isPersonalizedAllowed);
+
+    /**
+     * 広告イベントの購読
+     *
+     * ロード完了だけでなく、実際に提示できたこと（OPENED）まで見届ける。
+     * show() の解決は提示要求が受理されたことまでしか保証しないため、
+     * それを表示成功とみなすと、出ていない広告でクールダウンを消費してしまう。
+     */
+    const unsubscribe = ad.addAdEventsListener(({ type, payload }) => {
+      switch (type) {
+        case AdEventType.LOADED:
+          presentAd(ad, settle);
+          break;
+
+        case AdEventType.OPENED:
+          /* ここで初めて表示成功。クールダウンの起点にする */
+          void recordShownAt();
+          break;
+
+        case AdEventType.CLOSED:
+          unsubscribe();
+          break;
+
+        case AdEventType.ERROR:
+          unsubscribe();
+          Logger.error('[useAppOpenAd] App Open ad reported an error:', payload);
+          settle('Ad failed to load or present');
+          break;
+
+        default:
+          break;
+      }
+    });
 
     /* すでにロード済みなら待たずに表示する（同一プロセスで再入した場合の保険） */
     if (ad.loaded) {
       presentAd(ad, settle);
       return;
     }
-
-    const unsubscribe = ad.addAdEventsListener(({ type, payload }) => {
-      if (type === AdEventType.LOADED) {
-        unsubscribe();
-        /* ロードが上限時間に間に合わなかった場合。すでにホームが見えているため表示しない */
-        if (isSettled()) return;
-        presentAd(ad, settle);
-        return;
-      }
-
-      if (type === AdEventType.ERROR) {
-        unsubscribe();
-        Logger.error('[useAppOpenAd] Failed to load the App Open ad:', payload);
-        settle('Ad failed to load');
-      }
-    });
 
     ad.load();
   } catch (error) {
@@ -297,16 +360,26 @@ function getOrCreateAd(adUnitId: string, requestNonPersonalizedAdsOnly: boolean)
 }
 
 /**
- * ロード済みの広告を表示し、最終表示時刻を記録する
+ * ロード済みの広告を表示する
  *
  * show() はロード未完了だと同期例外を投げるため、呼び出し前に loaded を確認する。
- * settle() は show() の解決を待たずに呼ぶ。広告はネイティブの全画面表示でスプラッシュより
- * 手前に出るため、裏でスプラッシュのフェードを終わらせておくと閉じた直後にホームが見える。
+ * settle() は show() の解決を待たずに呼ぶ。呼び出し側は表示できた合図として
+ * スプラッシュを即座に畳むため、広告を閉じた時点でホーム画面が見えている。
  *
  * @param ad - 表示するAppOpenAd
  * @param settle - 表示判定の決着を通知する
  */
-function presentAd(ad: AppOpenAd, settle: (reason: string) => void): void {
+function presentAd(ad: AppOpenAd, settle: (reason: string, adShown?: boolean) => void): void {
+  /* 打ち切り後、またはロードが間に合わなかった場合。すでにホームが見えているため表示しない */
+  if (hasAbandonedThisProcess) return;
+
+  /* 起動直後に別アプリへ移られた場合、裏で提示しても見られないまま消費されるだけになる。
+     戻ってきた利用者に文脈のない全画面広告を見せることにもなるため、前面のときだけ表示する */
+  if (AppState.currentState !== 'active') {
+    settle('App is not in the foreground');
+    return;
+  }
+
   if (!ad.loaded) {
     settle('Ad reported loaded but is not showable');
     return;
@@ -314,17 +387,13 @@ function presentAd(ad: AppOpenAd, settle: (reason: string) => void): void {
 
   try {
     const shown = ad.show();
-    settle('Shown');
+    settle('Shown', true);
 
-    /* 最終表示時刻は実際に提示できたときだけ記録する。
-       提示前に失敗した分までクールダウンに数えると、出せるはずの広告を落としてしまう */
-    void shown
-      .then(() => recordShownAt())
-      .catch((error: unknown) => {
-        Logger.error('[useAppOpenAd] Failed to present the App Open ad:', error);
-      });
+    void shown.catch((error: unknown) => {
+      Logger.error('[useAppOpenAd] Failed to present the App Open ad:', error);
+    });
   } catch (error) {
-    Logger.error('[useAppOpenAd] show() rejected the App Open ad:', error);
+    Logger.error('[useAppOpenAd] show() threw for the App Open ad:', error);
     settle('show() threw');
   }
 }
@@ -332,13 +401,19 @@ function presentAd(ad: AppOpenAd, settle: (reason: string) => void): void {
 /**
  * 前回表示からクールダウン中かを判定する
  *
- * 読み出しや解析に失敗した場合は false（＝表示してよい）を返す。
- * 記録が無い初回起動と区別できないため、広告を出せる側へ倒すのが自然である。
+ * 記録が無い場合は初回起動とみなし、現在時刻を記録したうえでクールダウン中として扱う。
+ * インストール直後はATT許可ダイアログが出るため、続けて全画面広告を出すと
+ * アプリの中身を一度も見せないまま全画面を2枚踏ませることになる。
+ * 読み出しや解析に失敗した場合は表示してよい側へ倒す。
  */
 async function isWithinCooldown(): Promise<boolean> {
   try {
     const raw = await AsyncStorage.getItem(LAST_SHOWN_AT_KEY);
-    if (!raw) return false;
+
+    if (!raw) {
+      await recordShownAt();
+      return true;
+    }
 
     const lastShownAt = Number(raw);
     if (!Number.isFinite(lastShownAt)) return false;
