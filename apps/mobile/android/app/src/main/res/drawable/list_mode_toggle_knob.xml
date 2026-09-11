@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 表示切替トグルのノブ（トラックの中を左右に動く円）
+
+     【白で固定する理由】
+     トラックの色はライト・ダークとアクセント色で変わるため、ノブまで追随させると
+     どれかの組み合わせでノブがトラックに沈む。OSの切替スイッチと同じく白で固定する。
+     keyboardOnAccent は values / values-night のどちらも #FFFFFF。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/keyboardOnAccent" />
+</shape>

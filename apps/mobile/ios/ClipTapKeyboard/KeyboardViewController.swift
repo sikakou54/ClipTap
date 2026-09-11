@@ -311,16 +311,10 @@ class KeyboardViewController: UIInputViewController {
     /// アイコン・色・読み上げラベルは表示中の一覧によって変わるため、
     /// updateShortcutToggleAppearance(isShowingShortcuts:) が一元的に更新する。
     /// ここでは既定（定型文表示）の見た目だけを与える。
-    private let shortcutButton: UIButton = {
-        let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        /* 稲妻アイコン: 登録済みの値をひと突きで差し込む機能であることを想起させる */
-        let image = UIImage(systemName: "bolt.fill", withConfiguration: config)
-        button.setImage(image, for: .normal)
-        button.tintColor = .label
-        button.backgroundColor = .clear
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
+    private let shortcutToggle: ListModeToggle = {
+        let toggle = ListModeToggle()
+        toggle.translatesAutoresizingMaskIntoConstraints = false
+        return toggle
     }()
 
     /// 設定ボタン（ソートボタンの右隣に配置）
@@ -943,7 +937,7 @@ class KeyboardViewController: UIInputViewController {
         view.addSubview(filterContainerView)
         filterContainerView.addSubview(profileDropdownButton)
         filterContainerView.addSubview(categoryDropdownButton)
-        filterContainerView.addSubview(shortcutButton)
+        filterContainerView.addSubview(shortcutToggle)
         filterContainerView.addSubview(sortButton)
         filterContainerView.addSubview(settingsButton)
 
@@ -958,7 +952,7 @@ class KeyboardViewController: UIInputViewController {
         setupSortButtonMenu()
 
         // ショートカットボタンのアクションを設定
-        shortcutButton.addTarget(self, action: #selector(shortcutButtonTapped), for: .touchUpInside)
+        shortcutToggle.addTarget(self, action: #selector(shortcutToggleTapped), for: .touchUpInside)
 
         // 設定ボタンのアクションを設定
         settingsButton.addTarget(self, action: #selector(settingsButtonTapped), for: .touchUpInside)
@@ -970,11 +964,11 @@ class KeyboardViewController: UIInputViewController {
             filterContainerView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
             filterContainerView.heightAnchor.constraint(equalToConstant: 36),
 
-            /* 環境ドロップダウンボタン: 左端に固定、固定幅100pt */
+            /* 環境ドロップダウンボタン: 左端に固定、固定幅92pt */
             profileDropdownButton.leadingAnchor.constraint(equalTo: filterContainerView.leadingAnchor),
             profileDropdownButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
             profileDropdownButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
-            profileDropdownButton.widthAnchor.constraint(equalToConstant: 100),
+            profileDropdownButton.widthAnchor.constraint(equalToConstant: 92),
 
             /* シェブロンアイコン: ボタンの右端に固定配置 */
             chevronImageView.trailingAnchor.constraint(equalTo: profileDropdownButton.trailingAnchor, constant: -10),
@@ -988,7 +982,7 @@ class KeyboardViewController: UIInputViewController {
             categoryDropdownButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
 
             /* カテゴリドロップダウンの右端がボタン群に重ならないための上限（必須） */
-            categoryDropdownButton.trailingAnchor.constraint(lessThanOrEqualTo: shortcutButton.leadingAnchor, constant: -8),
+            categoryDropdownButton.trailingAnchor.constraint(lessThanOrEqualTo: shortcutToggle.leadingAnchor, constant: -8),
 
             /* カテゴリ用シェブロンアイコン: ボタンの右端に固定配置 */
             categoryChevronImageView.trailingAnchor.constraint(equalTo: categoryDropdownButton.trailingAnchor, constant: -10),
@@ -1002,11 +996,12 @@ class KeyboardViewController: UIInputViewController {
             settingsButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
             settingsButton.widthAnchor.constraint(equalToConstant: 36),
 
-            /* ショートカットボタン: ソートボタンの左隣、固定幅36pt */
-            shortcutButton.trailingAnchor.constraint(equalTo: sortButton.leadingAnchor, constant: -4),
-            shortcutButton.topAnchor.constraint(equalTo: filterContainerView.topAnchor),
-            shortcutButton.bottomAnchor.constraint(equalTo: filterContainerView.bottomAnchor),
-            shortcutButton.widthAnchor.constraint(equalToConstant: 36),
+            /* 表示切替トグル: ソートボタンの左隣。ピル形なので高さは行いっぱいに広げず、
+               32ptで縦中央に置く。タップ判定はListModeToggleが44ptまで広げる */
+            shortcutToggle.trailingAnchor.constraint(equalTo: sortButton.leadingAnchor, constant: -4),
+            shortcutToggle.centerYAnchor.constraint(equalTo: filterContainerView.centerYAnchor),
+            shortcutToggle.widthAnchor.constraint(equalToConstant: ListModeToggle.trackWidth),
+            shortcutToggle.heightAnchor.constraint(equalToConstant: ListModeToggle.trackHeight),
 
             /* ソートボタン: 設定ボタンの左隣、固定幅36pt */
             sortButton.trailingAnchor.constraint(equalTo: settingsButton.leadingAnchor, constant: -4),
@@ -1021,17 +1016,19 @@ class KeyboardViewController: UIInputViewController {
             sortBadgeView.trailingAnchor.constraint(equalTo: sortButton.trailingAnchor, constant: -2)
         ])
 
-        /* カテゴリドロップダウンの幅100ptは「そうしたい」希望として扱い、必須にはしない。
-           ヘッダーに必要な横幅は、ショートカットボタンを足したことで
-           8+100(環境)+8+100(カテゴリ)+8+36(ショートカット)+4+36(ソート)+4+36(設定)+8 = 348pt になる。
+        /* カテゴリドロップダウンの幅92ptは「そうしたい」希望として扱い、必須にはしない。
+           ヘッダーに必要な横幅は
+           8+92(環境)+8+92(カテゴリ)+8+52(表示切替)+4+36(ソート)+4+36(設定)+8 = 348pt になる。
+           表示切替をアイコン1つ（36pt）からトグル（52pt）へ広げた分は、
+           2つのドロップダウンを100ptから92ptへ詰めて相殺しており、行の合計は変えていない。
            対応最小OS（iOS 17）で最も狭い端末は幅375ptのため通常は縮まないが、
            これより狭い幅になった場合に固定幅のままだとボタン群と重なってしまう。
            優先度を下げておけば、上のtrailing上限が効いてカテゴリ名側だけが縮み、
            右のボタン群（36ptの固定幅）は押せる大きさのまま必ず表示され続ける。 */
-        let categoryDropdownWidthConstraint = categoryDropdownButton.widthAnchor.constraint(equalToConstant: 100)
+        let categoryDropdownWidthConstraint = categoryDropdownButton.widthAnchor.constraint(equalToConstant: 92)
         /* UIButtonの水平方向の圧縮抵抗は既定で.defaultHigh(750)であり、同値にすると
-           「幅100」と「内容幅以上」が同じ強さで競合して幅が一意に定まらない。
-           1つ上げて幅100を勝たせ、長いカテゴリ名はボタン側の省略に委ねる。
+           「幅92」と「内容幅以上」が同じ強さで競合して幅が一意に定まらない。
+           1つ上げて幅92を勝たせ、長いカテゴリ名はボタン側の省略に委ねる。
            上のtrailing上限は必須（1000）なので、狭いときに縮む挙動は保たれる */
         categoryDropdownWidthConstraint.priority = UILayoutPriority(rawValue: UILayoutPriority.defaultHigh.rawValue + 1)
         categoryDropdownWidthConstraint.isActive = true
@@ -1746,13 +1743,15 @@ class KeyboardViewController: UIInputViewController {
      * ショートカット表示中は強調色にして選択中であることを示す。
      */
     private func updateShortcutToggleAppearance(isShowingShortcuts: Bool) {
-        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        let symbolName = isShowingShortcuts ? "list.bullet" : "bolt.fill"
-        shortcutButton.setImage(UIImage(systemName: symbolName, withConfiguration: config), for: .normal)
-        shortcutButton.tintColor = isShowingShortcuts ? .systemBlue : .label
-        shortcutButton.accessibilityLabel = isShowingShortcuts
+        /* 読み上げは「押したら何が起きるか」を伝える。見た目は今どちらかを表すため、
+           両者で向きが逆になる（ショートカット表示中は「定型文を表示」と読ませる） */
+        shortcutToggle.accessibilityLabel = isShowingShortcuts
             ? L10n.Accessibility.showSnippetsButton
             : L10n.Accessibility.showShortcutsButton
+
+        /* 画面状態の適用のたびに呼ばれるため、値が変わらないときはアニメーションを起こさない
+           （ListModeToggle側で同値を弾く） */
+        shortcutToggle.setShowingShortcuts(isShowingShortcuts, animated: true)
     }
 
     /// スニペットの詳細画面（プレビュー）を表示
@@ -2133,7 +2132,7 @@ class KeyboardViewController: UIInputViewController {
      * 同じ位置のトグルで一覧の中身だけを入れ替えることで、
      * 「閉じる」専用のボタンを置かずに往復できる。
      */
-    @objc private func shortcutButtonTapped() {
+    @objc private func shortcutToggleTapped() {
         KeyboardLog.debug("⚡ [Shortcut] Toggle tapped (showing shortcuts: %@)",
                           screenState == .shortcutList ? "true" : "false")
 
@@ -2883,5 +2882,158 @@ extension UIColor {
 
         // RGBAの各成分からUIColorを生成
         self.init(red: r, green: g, blue: b, alpha: a)
+    }
+}
+
+/**
+ * 定型文／ショートカットの表示切替トグル
+ *
+ * 【見た目】
+ * 角丸のトラックの中を白いノブが左右に動く、OSの切替スイッチと同じ形。
+ * 左（灰色のトラック・書類のアイコン）が定型文、右（アクセント色・稲妻のアイコン）がショートカット。
+ * アイコンだけの切替と違い、今どちらを見ているかと、押すと反対側へ移ることが同時に分かる。
+ *
+ * 【ノブを白で固定する理由】
+ * トラックの色がライト・ダークとアクセント色で変わるため、ノブまで追随させると
+ * どの組み合わせでもノブが背景に沈む場面が出る。OSの切替スイッチと同じく白で固定する。
+ * 中のアイコンも、白の上に置く前提で固定の灰とアクセント色を使う。
+ *
+ * 【タップ領域】
+ * トラックは32ptでHIGの44ptに届かないため、判定だけを44ptまで広げる。
+ *
+ * 【ファイル配置について】
+ * 新しいSwiftファイルを追加するとproject.pbxprojの更新が必要になるため、
+ * KeyboardViewControllerと同じファイルに定義している。
+ */
+final class ListModeToggle: UIControl {
+
+    /// トラックの幅（pt）
+    static let trackWidth: CGFloat = 52
+
+    /// トラックの高さ（pt）
+    static let trackHeight: CGFloat = 32
+
+    /// トラックの内側に取るノブの余白（pt）
+    private static let knobInset: CGFloat = 2
+
+    /// ノブの直径（pt）
+    private static let knobSize: CGFloat = trackHeight - knobInset * 2
+
+    /// ノブの中に置くアイコンの一辺（pt）
+    private static let iconSize: CGFloat = 16
+
+    /// 確保する最小タップ領域（pt）
+    private static let minimumHitSize: CGFloat = 44
+
+    /// 切り替えにかける時間（秒）
+    private static let animationDuration: TimeInterval = 0.1
+
+    /// ショートカットを表示しているか（trueならノブが右）
+    private(set) var isShowingShortcuts = false
+
+    private let knobView = UIView()
+    private let iconView = UIImageView()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+
+        layer.cornerRadius = Self.trackHeight / 2
+        clipsToBounds = true
+
+        knobView.backgroundColor = .white
+        knobView.layer.cornerRadius = Self.knobSize / 2
+        knobView.isUserInteractionEnabled = false
+        addSubview(knobView)
+
+        iconView.contentMode = .scaleAspectFit
+        iconView.isUserInteractionEnabled = false
+        knobView.addSubview(iconView)
+
+        isAccessibilityElement = true
+        accessibilityTraits = .button
+
+        applyAppearance()
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override var intrinsicContentSize: CGSize {
+        CGSize(width: Self.trackWidth, height: Self.trackHeight)
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        layoutKnob()
+    }
+
+    /// タップ判定の範囲を最小タップ領域まで広げる
+    /// - Parameters:
+    ///   - point: 自身の座標系でのタッチ位置
+    ///   - event: 対象のイベント
+    /// - Returns: タップ領域に含まれる場合はtrue
+    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        let horizontalInset = min(0, (bounds.width - Self.minimumHitSize) / 2)
+        let verticalInset = min(0, (bounds.height - Self.minimumHitSize) / 2)
+        return bounds.insetBy(dx: horizontalInset, dy: verticalInset).contains(point)
+    }
+
+    /**
+     * 表示対象を設定する
+     *
+     * - Parameters:
+     *   - showingShortcuts: ショートカットを表示しているか
+     *   - animated: ノブの移動をアニメーションさせるか
+     *
+     * 値が変わらないときは何もしない。画面状態の適用のたびに呼ばれるため、
+     * 毎回アニメーションを起こすと切り替えていないのに動いて見える。
+     */
+    func setShowingShortcuts(_ showingShortcuts: Bool, animated: Bool) {
+        guard showingShortcuts != isShowingShortcuts else { return }
+        isShowingShortcuts = showingShortcuts
+
+        guard animated else {
+            applyAppearance()
+            layoutKnob()
+            return
+        }
+
+        UIView.animate(withDuration: Self.animationDuration) {
+            self.applyAppearance()
+            self.layoutKnob()
+        }
+    }
+
+    /// トラックの色とノブの中のアイコンを現在の状態に合わせる
+    private func applyAppearance() {
+        backgroundColor = isShowingShortcuts ? .systemBlue : .systemGray4
+
+        let config = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
+        let symbolName = isShowingShortcuts ? "bolt.fill" : "doc.text"
+        iconView.image = UIImage(systemName: symbolName, withConfiguration: config)
+        /* 白のノブの上に置くため、テーマで色が反転しない値を使う */
+        iconView.tintColor = isShowingShortcuts ? .systemBlue : .systemGray
+    }
+
+    /// ノブとアイコンの位置を現在の状態に合わせる
+    private func layoutKnob() {
+        let knobX = isShowingShortcuts
+            ? bounds.width - Self.knobSize - Self.knobInset
+            : Self.knobInset
+        knobView.frame = CGRect(
+            x: knobX,
+            y: Self.knobInset,
+            width: Self.knobSize,
+            height: Self.knobSize
+        )
+        let iconOrigin = (Self.knobSize - Self.iconSize) / 2
+        iconView.frame = CGRect(
+            x: iconOrigin,
+            y: iconOrigin,
+            width: Self.iconSize,
+            height: Self.iconSize
+        )
     }
 }

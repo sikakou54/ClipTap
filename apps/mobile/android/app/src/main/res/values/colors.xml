@@ -9,4 +9,8 @@
   <color name="keyboardAccent">#2196F3</color>
   <color name="keyboardOnAccent">#FFFFFF</color>
   <color name="keyboardSeparator">#1F000000</color>
+  <!-- 表示切替トグルの、選択されていない側のアイコン色。
+       ノブは常に白のため、テーマで反転する色を使うとダークで見えなくなる。
+       values-night に対の定義を置かないのは意図的。 -->
+  <color name="keyboardToggleKnobIcon">#6B7280</color>
 </resources>

@@ -29,25 +29,25 @@
         android:gravity="center_vertical"
         android:background="@android:color/transparent">
 
-        <!-- 環境選択ドロップダウンボタン（左端、固定幅100dp）
+        <!-- 環境選択ドロップダウンボタン（左端、固定幅92dp）
              ショートカット表示のときも出したままにする。
              ショートカットはプロファイル（環境）に属するため、どの環境の一覧を見ているのかと、
              別の環境へ切り替える手段が必要になるため -->
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/profileChipGroup"
-            android:layout_width="100dp"
+            android:layout_width="92dp"
             android:layout_height="match_parent"
             app:singleSelection="true"
             app:chipSpacing="0dp" />
 
-        <!-- カテゴリ選択ドロップダウンボタン（固定幅100dp）
+        <!-- カテゴリ選択ドロップダウンボタン（固定幅92dp）
              カテゴリは定型文専用のため、ショートカット表示のときはコードからGONEにする。
              INVISIBLEではなくGONEにできるのは、右隣が重み付きスペーサーで、
-             空いた108dp（100 + marginStart 8）をスペーサーが吸収し、
+             空いた100dp（92 + marginStart 8）をスペーサーが吸収し、
              右側のトグルとソートボタンの位置が動かないため -->
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/categoryChipGroup"
-            android:layout_width="100dp"
+            android:layout_width="92dp"
             android:layout_height="match_parent"
             android:layout_marginStart="8dp"
             app:singleSelection="true"
@@ -61,13 +61,16 @@
 
         <!-- 定型文／ショートカットの表示切替トグル（ソートボタンの左隣）
 
-             【ボタンを増やさない理由】
-             1つのボタンで往復させることで、この行の固定幅を増やさずに切替を追加できる。
-             アイコンは「押したら何が表示されるか」を示すため、コードから
-             ic_shortcut（定型文表示中）と ic_snippet（ショートカット表示中）を差し替える。
+             【切替スイッチの形にする理由】
+             アイコン1つの差し替えだと、今どちらを見ているのかと、押すとどうなるのかが
+             同じ絵に重なって分かりにくい。トラックの中をノブが左右に動く形にすると、
+             位置と色で現在の状態を示し、反対側へ移せることも同時に伝えられる。
+             左（灰色・書類）が定型文、右（アクセント色・稲妻）がショートカット。
 
              【横幅が足りなくなる場合の検討】
-             この行の固定幅の合計は 100(環境) + 8 + 100(カテゴリ) + 4 + 36(表示切替) + 4 + 36(ソート) = 288dp。
+             この行の固定幅の合計は 92(環境) + 8 + 92(カテゴリ) + 4 + 52(表示切替) + 4 + 36(ソート) = 288dp。
+             表示切替をアイコン1つ（36dp）からトグル（52dp）へ広げた分は、
+             2つのチップを100dpから92dpへ詰めて相殺しており、行の合計は変えていない。
              mainViewのpadding 8dp×2を引くと、288dpを収めるには画面幅304dpが必要になる。
              対応する最小画面幅は320dpのため、既定の表示サイズであればすべての対応端末で収まる
              （360dp端末ならスペーサーに56dpの余りが出る）。
@@ -76,16 +79,40 @@
              環境・カテゴリのチップを可変幅（0dp + weight）にする案も検討したが、
              画面幅に応じてチップの幅が変わり既存の見た目が変わるため採らなかった。
              これ以上ボタンや固定幅を増やすときは、チップの100dpを見直すこと。 -->
-        <ImageButton
-            android:id="@+id/shortcutButton"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+        <FrameLayout
+            android:id="@+id/shortcutToggle"
+            android:layout_width="52dp"
+            android:layout_height="32dp"
             android:layout_marginStart="4dp"
-            android:src="@drawable/ic_shortcut"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@drawable/list_mode_toggle_track_off"
             android:contentDescription="@string/accessibility_show_shortcuts_button"
-            android:scaleType="center"
-            android:padding="8dp" />
+            android:clickable="true"
+            android:focusable="true">
+
+            <!-- ノブ（トラックの中を左右に動く白い円）
+                 左右の余白2dpを引いた28dpの円。位置はコードから translationX で動かす。
+                 layout_gravity を start にしておき、ショートカット表示では 20dp ずらす -->
+            <FrameLayout
+                android:id="@+id/shortcutToggleKnob"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="start|center_vertical"
+                android:layout_marginStart="2dp"
+                android:background="@drawable/list_mode_toggle_knob">
+
+                <!-- ノブの中のアイコン。絵と色はコードから状態に合わせて差し替える。
+                     行そのものが読み上げ対象のため、この装飾は読み上げから除く -->
+                <ImageView
+                    android:id="@+id/shortcutToggleIcon"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_snippet"
+                    android:importantForAccessibility="no" />
+
+            </FrameLayout>
+
+        </FrameLayout>
 
         <!-- ソートボタン + バッジコンテナ（右端固定）
 

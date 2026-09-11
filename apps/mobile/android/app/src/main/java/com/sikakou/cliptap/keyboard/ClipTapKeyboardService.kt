@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.ContextThemeWrapper
 import androidx.core.content.ContextCompat
+import androidx.core.widget.ImageViewCompat
 import com.sikakou.cliptap.R
 import com.sikakou.cliptap.models.Profile
 import com.sikakou.cliptap.models.Category
@@ -117,7 +118,10 @@ class ClipTapKeyboardService : InputMethodService() {
     private var currentSortBy: String = "created"
 
     // 定型文／ショートカットの表示切替トグル
-    private lateinit var shortcutButton: android.widget.ImageButton
+    // 定型文／ショートカットの表示切替トグル（トラック・ノブ・ノブの中のアイコン）
+    private lateinit var shortcutToggle: android.widget.FrameLayout
+    private lateinit var shortcutToggleKnob: android.widget.FrameLayout
+    private lateinit var shortcutToggleIcon: android.widget.ImageView
 
     /** 一覧にショートカットを表示しているかどうか（falseなら定型文を表示している） */
     private var isShortcutMode: Boolean = false
@@ -148,6 +152,12 @@ class ClipTapKeyboardService : InputMethodService() {
          * 同じ値を続けて入れたい操作は妨げない長さにしている。
          */
         private const val SHORTCUT_TAP_DEBOUNCE_MS = 300L
+
+        /** トグルのノブが左端から右端まで動く距離（dp） */
+        private const val TOGGLE_KNOB_TRAVEL_DP = 20f
+
+        /** トグルのノブが動く時間（ミリ秒） */
+        private const val TOGGLE_KNOB_ANIMATION_MS = 100L
     }
 
     /**
@@ -250,13 +260,13 @@ class ClipTapKeyboardService : InputMethodService() {
      *    - categoryChipGroup: カテゴリフィルター
      *    - snippetListContainer: 定型文一覧（一覧エリアの表示物のひとつ）
      *    - shortcutView: ショートカット画面（一覧エリアの表示物のひとつ、初期状態は非表示）
-     *    - shortcutButton: 定型文／ショートカットの表示切替トグル
+     *    - shortcutToggle: 定型文／ショートカットの表示切替トグル
      *    - detailView: 詳細画面（初期状態は非表示）
      * 2. RecyclerViewの設定
      *    - LinearLayoutManager: 縦スクロール
      *    - SnippetAdapter: スニペットカードを表示
      * 3. ショートカット関連のボタンにリスナーを設定
-     *    - shortcutButton: 一覧に出す対象を切り替える
+     *    - shortcutToggle: 一覧に出す対象を切り替える
      *    - shortcutBackButton: 値一覧からショートカット一覧へ戻る
      * 4. 詳細画面のボタンにリスナーを設定
      *    - copyButton: スニペットを挿入
@@ -279,7 +289,9 @@ class ClipTapKeyboardService : InputMethodService() {
         sortButtonContainer = keyboardView.findViewById(R.id.sortButtonContainer)
         sortButton = keyboardView.findViewById(R.id.sortButton)
         sortBadge = keyboardView.findViewById(R.id.sortBadge)
-        shortcutButton = keyboardView.findViewById(R.id.shortcutButton)
+        shortcutToggle = keyboardView.findViewById(R.id.shortcutToggle)
+        shortcutToggleKnob = keyboardView.findViewById(R.id.shortcutToggleKnob)
+        shortcutToggleIcon = keyboardView.findViewById(R.id.shortcutToggleIcon)
 
         // ショートカット画面のビューを初期化
         shortcutView = keyboardView.findViewById(R.id.shortcutView)
@@ -340,7 +352,7 @@ class ClipTapKeyboardService : InputMethodService() {
 
         /* 表示切替トグル: 押すたびに定型文表示とショートカット表示を往復する。
            以前のように別画面へ遷移しないため、ショートカット側に閉じる専用のボタンは置かない */
-        shortcutButton.setOnClickListener {
+        shortcutToggle.setOnClickListener {
             toggleListMode()
         }
 
@@ -1063,7 +1075,7 @@ class ClipTapKeyboardService : InputMethodService() {
      * 定型文表示とショートカット表示を切り替える
      *
      * 【目的】
-     * フィルター行のトグル（shortcutButton）から、一覧に出す対象を往復で切り替えます。
+     * フィルター行のトグル（shortcutToggle）から、一覧に出す対象を往復で切り替えます。
      *
      * 【別画面への遷移をやめた理由】
      * 以前はショートカットを全画面のビューで出し、専用の閉じるボタンで定型文へ戻していた。
@@ -1156,22 +1168,78 @@ class ClipTapKeyboardService : InputMethodService() {
      * トグルは定型文表示でもショートカット表示でも同じ位置に見えている必要があるので、
      * 並べ替えは場所だけ残すINVISIBLEにする。
      *
-     * 【アイコンと色の役割分担】
-     * アイコンは「押したら何が表示されるか」（＝行き先）を示す。
-     * それだけでは今どちらを見ているのか読み取りにくいため、ショートカット表示中に使う
-     * ic_snippetをアクセント色にして、状態の目印を兼ねさせている。
+     * 【トグルの見た目】
+     * トラックの色とノブの位置・中のアイコンで、今どちらを見ているかを示す。
+     * 左（灰色・書類）が定型文、右（アクセント色・稲妻）がショートカット。
+     * 読み上げだけは「押したら何が起きるか」を伝えるため、見た目と逆の側を読ませる。
+     *
+     * 【ノブの中のアイコンをコードから着色する理由】
+     * ノブは常に白のため、テーマで反転する色を焼き込むとダークで見えなくなる。
+     * 選択されていない側は固定の灰、選択されている側はアクセント色を使う。
      */
     private fun updateListModeChrome() {
         categoryChipGroup.visibility = if (isShortcutMode) View.GONE else View.VISIBLE
         sortButtonContainer.visibility = if (isShortcutMode) View.INVISIBLE else View.VISIBLE
 
-        if (isShortcutMode) {
-            shortcutButton.setImageResource(R.drawable.ic_snippet)
-            shortcutButton.contentDescription = getString(R.string.accessibility_show_snippets_button)
+        shortcutToggle.setBackgroundResource(
+            if (isShortcutMode) R.drawable.list_mode_toggle_track_on
+            else R.drawable.list_mode_toggle_track_off
+        )
+        shortcutToggle.contentDescription = getString(
+            if (isShortcutMode) R.string.accessibility_show_snippets_button
+            else R.string.accessibility_show_shortcuts_button
+        )
+
+        shortcutToggleIcon.setImageResource(
+            if (isShortcutMode) R.drawable.ic_shortcut else R.drawable.ic_snippet
+        )
+        ImageViewCompat.setImageTintList(
+            shortcutToggleIcon,
+            android.content.res.ColorStateList.valueOf(
+                ContextCompat.getColor(
+                    this,
+                    if (isShortcutMode) R.color.keyboardAccent else R.color.keyboardToggleKnobIcon
+                )
+            )
+        )
+
+        moveToggleKnob()
+    }
+
+    /**
+     * トグルのノブを現在の表示対象に合わせて動かす
+     *
+     * 【translationXで動かす理由】
+     * layout_gravityやmarginを付け替えるとレイアウトのやり直しが入る。
+     * ノブは描画位置がずれるだけでよいので、再レイアウトの要らないtranslationXを使う。
+     *
+     * 【移動量】
+     * トラック52dp、ノブ28dp、左右の余白2dpずつ。左端から右端までは
+     * 52 - 28 - 2 - 2 = 20dp となる。
+     *
+     * 【ビュー生成直後はアニメーションさせない理由】
+     * 初期表示で勝手にノブが滑ると、利用者が触っていないのに切り替わったように見える。
+     * 既に同じ位置にいるときは何もしない。
+     */
+    private fun moveToggleKnob() {
+        val target = if (isShortcutMode) {
+            TOGGLE_KNOB_TRAVEL_DP * resources.displayMetrics.density
         } else {
-            shortcutButton.setImageResource(R.drawable.ic_shortcut)
-            shortcutButton.contentDescription = getString(R.string.accessibility_show_shortcuts_button)
+            0f
         }
+
+        if (shortcutToggleKnob.translationX == target) return
+
+        /* 表示されていない間はアニメーションの完了が保証されないため、位置だけ合わせる */
+        if (!shortcutToggleKnob.isShown) {
+            shortcutToggleKnob.translationX = target
+            return
+        }
+
+        shortcutToggleKnob.animate()
+            .translationX(target)
+            .setDuration(TOGGLE_KNOB_ANIMATION_MS)
+            .start()
     }
 
     /**
