@@ -2,20 +2,27 @@
  * ショートカット管理画面のビジネスロジックフック
  *
  * ショートカット一覧の表示・管理に必要な状態管理とロジックを提供。
- * UIコンポーネント（settings/shortcuts.tsx）から完全に分離されたビジネスロジック層。
+ * UIコンポーネント（shortcut/index.tsx）から完全に分離されたビジネスロジック層。
  *
  * 主な責務:
- * - ショートカット一覧の取得・更新
+ * - アクティブなプロファイルのショートカット一覧の取得・更新
+ * - 表示対象プロファイルの切り替え
  * - Pull-to-refresh処理
  * - 新規作成・編集・削除処理
  *
- * @see app/settings/shortcuts.tsx - UIコンポーネント
+ * @see app/shortcut/index.tsx - UIコンポーネント
  * @see packages/shared/src/providers/ShortcutProvider.tsx - ショートカットCRUD操作（useShortcuts）
  */
 
 import { useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useShortcuts, useTranslation, type Shortcut } from '@cliptap/shared';
+import {
+  useProfiles,
+  useShortcuts,
+  useTranslation,
+  type Profile,
+  type Shortcut,
+} from '@cliptap/shared';
 import { showConfirm } from '@utils/alerts';
 import { Logger } from '@cliptap/shared';
 
@@ -24,12 +31,18 @@ import { Logger } from '@cliptap/shared';
  */
 export interface UseShortcutsScreenReturn {
   /* 状態 */
-  /** ショートカット一覧（sortOrder順） */
+  /** アクティブなプロファイルのショートカット一覧（sortOrder順） */
   shortcuts: Shortcut[];
   /** データ読み込み中フラグ */
   loading: boolean;
+  /** 表示対象として選べるプロファイル（無効なものを除く） */
+  selectableProfiles: Profile[];
+  /** 表示中のプロファイルID（未確定ならnull） */
+  activeProfileId: string | null;
 
   /* ハンドラ */
+  /** 表示対象のプロファイルを切り替える */
+  handleSelectProfile: (profileId: string) => void;
   /** 一覧を再読み込みする */
   handleRefresh: () => void;
   /** 新規作成画面を開く */
@@ -48,7 +61,9 @@ export interface UseShortcutsScreenReturn {
 export function useShortcutsScreen(): UseShortcutsScreenReturn {
   const { t } = useTranslation();
   const router = useRouter();
-  const { shortcuts, loading, refresh, deleteShortcut } = useShortcuts();
+  const { shortcuts, activeProfileId, loading, refresh, deleteShortcut } = useShortcuts();
+  /* 無効なプロファイル（Free上限超過分）は選べないようvalidProfilesを使う */
+  const { validProfiles, setActiveProfile } = useProfiles();
 
   /* ======================================== */
   /* 画面フォーカス時のデータ更新 */
@@ -63,6 +78,16 @@ export function useShortcutsScreen(): UseShortcutsScreenReturn {
   /* ======================================== */
   /* イベントハンドラ */
   /* ======================================== */
+
+  /* 表示対象の切り替えはアクティブなプロファイルそのものを切り替える。
+     新規作成の登録先もアクティブなプロファイルのため、こうしないと
+     「表示しているプロファイル」と「登録されるプロファイル」がずれる */
+  const handleSelectProfile = useCallback(
+    (profileId: string) => {
+      setActiveProfile(profileId);
+    },
+    [setActiveProfile]
+  );
 
   const handleCreateShortcut = useCallback(() => {
     router.push('/shortcut/edit');
@@ -100,6 +125,9 @@ export function useShortcutsScreen(): UseShortcutsScreenReturn {
   return {
     shortcuts,
     loading,
+    selectableProfiles: validProfiles,
+    activeProfileId,
+    handleSelectProfile,
     handleRefresh: refresh,
     handleCreateShortcut,
     handleEditShortcut,

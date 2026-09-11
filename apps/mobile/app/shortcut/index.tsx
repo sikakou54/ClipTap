@@ -3,13 +3,17 @@
  * @description ショートカット管理画面
  *
  * 拡張キーボードから呼び出すショートカットを一覧表示・管理。
+ * ホーム画面ヘッダーのショートカットアイコンから開く。
  *
  * @features
- * - ショートカット一覧の表示（FlashListによる高速レンダリング）
+ * - アクティブなプロファイルのショートカット一覧（FlashListによる高速レンダリング）
+ * - プロファイルチップによる表示対象の切り替え
  * - ショートカットの新規作成/編集/削除
  * - Pull-to-refreshによるデータ更新
  *
  * @note 削除するとそのショートカットが持つ値もすべて削除される
+ * @note 一覧はアクティブなプロファイルの分だけを表示する。新規作成もそのプロファイルへ登録するため、
+ *       表示中のプロファイルと登録先は常に一致する
  *
  * @see src/hooks/screens/useShortcutsScreen.ts - ビジネスロジック
  * @see docs/機能仕様書.md §9.1 モバイル画面
@@ -24,6 +28,7 @@ import { useTheme } from '@lib/themeSystem';
 import { useShortcutsScreen } from '@hooks/screens/useShortcutsScreen';
 import { type Shortcut } from '@cliptap/shared';
 import EmptyState from '@components/common/EmptyState';
+import { ProfileChipSelector } from '@components/profile/ProfileChipSelector';
 import { ScreenContainer } from '@components/common/ScreenContainer';
 import { commonStyles, listStyles } from '@lib/styles/commonStyles';
 import { UI_CONSTANTS } from '@constants/ui';
@@ -42,16 +47,31 @@ const ESTIMATED_ITEM_SIZE = 108;
 
 export default function ShortcutManagementScreen() {
   const { t } = useTranslation();
-  const { colors, responsiveFontSizes, responsiveLineHeights } = useTheme();
+  const { colors, responsiveFontSizes, responsiveLineHeights, responsiveSpacing } = useTheme();
 
   const {
     shortcuts,
     loading,
+    selectableProfiles,
+    activeProfileId,
+    handleSelectProfile,
     handleRefresh,
     handleCreateShortcut,
     handleEditShortcut,
     handleDeleteShortcut,
   } = useShortcutsScreen();
+
+  /* プロファイルチップ（複数ある場合のみ表示）。
+     どのプロファイルのショートカットを見ているかを示し、同時に切り替えもできる */
+  const profileSelector =
+    selectableProfiles.length > 1 ? (
+      <ProfileChipSelector
+        profiles={selectableProfiles}
+        selectedProfileId={activeProfileId}
+        onSelectProfile={handleSelectProfile}
+        containerPadding={responsiveSpacing.containerPadding}
+      />
+    ) : null;
 
   const renderItem = useCallback(
     ({ item, index }: ListRenderItemInfo<Shortcut>) => {
@@ -174,6 +194,7 @@ export default function ShortcutManagementScreen() {
         backIcon="arrow-back"
         rightAction={headerRightAction}
       >
+        {profileSelector}
         <EmptyState
           icon="flash-outline"
           message={t('shortcut.empty')}
@@ -190,6 +211,8 @@ export default function ShortcutManagementScreen() {
       backIcon="arrow-back"
       rightAction={headerRightAction}
     >
+      {profileSelector}
+
       {/* ショートカット一覧（FlashList） */}
       <FlashList
         data={shortcuts}

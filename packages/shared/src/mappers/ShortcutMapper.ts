@@ -22,31 +22,42 @@ import { generateUniqueId, getCurrentTimestamp } from '../utils/dateHelpers';
 /* ======================================== */
 
 const ShortcutQueries = {
-  /* 全ショートカットを取得（sortOrder順） */
-  SELECT_ALL: 'SELECT * FROM shortcuts ORDER BY sortOrder ASC',
+  /* 指定プロファイルのショートカットを取得（sortOrder順） */
+  SELECT_BY_PROFILE:
+    'SELECT * FROM shortcuts WHERE profileId = ? ORDER BY sortOrder ASC',
   /* IDでショートカットを取得 */
   SELECT_BY_ID: 'SELECT * FROM shortcuts WHERE id = ?',
-  /* 名前でショートカットを取得（重複チェック用） */
-  SELECT_BY_NAME: 'SELECT * FROM shortcuts WHERE name = ?',
+  /* プロファイル内の名前でショートカットを取得（重複チェック用） */
+  SELECT_BY_NAME: 'SELECT * FROM shortcuts WHERE profileId = ? AND name = ?',
   /* ショートカットを新規作成 */
-  INSERT: `INSERT INTO shortcuts (id, name, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)`,
-  /* ショートカットの名前と更新日時を更新 */
-  UPDATE: `UPDATE shortcuts SET name = ?, sortOrder = ?, updatedAt = ? WHERE id = ?`,
+  INSERT: `INSERT INTO shortcuts (id, profileId, name, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)`,
+  /* ショートカットの所属プロファイル・名前・更新日時を更新 */
+  UPDATE: `UPDATE shortcuts SET profileId = ?, name = ?, sortOrder = ?, updatedAt = ? WHERE id = ?`,
   /* 更新日時だけを更新（値の増減で親の更新日時を進めるため） */
   TOUCH: 'UPDATE shortcuts SET updatedAt = ? WHERE id = ?',
   /* ショートカットを削除 */
   DELETE: 'DELETE FROM shortcuts WHERE id = ?',
+  /* 指定プロファイルのショートカットをすべて削除 */
+  DELETE_BY_PROFILE: 'DELETE FROM shortcuts WHERE profileId = ?',
   /* ショートカットの並び順を更新 */
   UPDATE_SORT_ORDER: 'UPDATE shortcuts SET sortOrder = ? WHERE id = ?',
-  /* ショートカット総数を取得 */
-  SELECT_COUNT: 'SELECT COUNT(*) as count FROM shortcuts',
-  /* 最大のsortOrderを取得（新規作成時に使用） */
-  SELECT_MAX_SORT_ORDER: 'SELECT MAX(sortOrder) as maxOrder FROM shortcuts',
+  /* 指定プロファイルのショートカット数を取得 */
+  SELECT_COUNT_BY_PROFILE:
+    'SELECT COUNT(*) as count FROM shortcuts WHERE profileId = ?',
+  /* 指定プロファイル内の最大sortOrderを取得（新規作成時に使用） */
+  SELECT_MAX_SORT_ORDER:
+    'SELECT MAX(sortOrder) as maxOrder FROM shortcuts WHERE profileId = ?',
 };
 
 const ShortcutValueQueries = {
-  /* 全ショートカット値を取得（ショートカット順・並び順） */
-  SELECT_ALL: 'SELECT * FROM shortcut_values ORDER BY shortcutId ASC, sortOrder ASC',
+  /* 指定プロファイルのショートカット値を取得（ショートカット順・並び順） */
+  SELECT_BY_PROFILE: `SELECT v.* FROM shortcut_values v
+           INNER JOIN shortcuts s ON s.id = v.shortcutId
+           WHERE s.profileId = ?
+           ORDER BY v.shortcutId ASC, v.sortOrder ASC`,
+  /* 指定プロファイルのショートカット値をすべて削除 */
+  DELETE_BY_PROFILE: `DELETE FROM shortcut_values
+           WHERE shortcutId IN (SELECT id FROM shortcuts WHERE profileId = ?)`,
   /* 指定ショートカットの値を取得（並び順） */
   SELECT_BY_SHORTCUT: 'SELECT * FROM shortcut_values WHERE shortcutId = ? ORDER BY sortOrder ASC',
   /* ショートカット値を新規作成 */
@@ -74,6 +85,7 @@ const ShortcutValueQueries = {
  */
 const toShortcutRow = (row: any): ShortcutRow => ({
   id: row.id, /* ショートカットID */
+  profileId: row.profileId, /* 所属プロファイルID */
   name: row.name, /* ショートカット名 */
   sortOrder: row.sortOrder ?? 0, /* 並び順（列がNULLの場合は0） */
   createdAt: row.createdAt, /* 作成日時 */
@@ -112,6 +124,7 @@ export class ShortcutMapper {
   static restore(shortcut: ShortcutRow): void {
     getMainDbAdapter().run(ShortcutQueries.INSERT, [
       shortcut.id,
+      shortcut.profileId,
       shortcut.name,
       shortcut.sortOrder,
       shortcut.createdAt,
@@ -134,15 +147,21 @@ export class ShortcutMapper {
   }
 
   /**
-   * 全ショートカットを値付きで取得
+   * 指定プロファイルのショートカットを値付きで取得
+   * @param profileId - 所属プロファイルID
    * @returns ショートカット一覧（sortOrder順、値もsortOrder順）
    * @description
    * 値はショートカットの件数によらず1回のクエリでまとめて取得する。
+   * 全プロファイル横断で取得する用途は無いため、プロファイル指定を必須にしている。
    */
-  static getAll(): Shortcut[] {
+  static getByProfileId(profileId: string): Shortcut[] {
     const db = getMainDbAdapter();
-    const rows = db.all<any>(ShortcutQueries.SELECT_ALL).map(toShortcutRow);
-    const valueRows = db.all<any>(ShortcutValueQueries.SELECT_ALL).map(toValue);
+    const rows = db
+      .all<any>(ShortcutQueries.SELECT_BY_PROFILE, [profileId])
+      .map(toShortcutRow);
+    const valueRows = db
+      .all<any>(ShortcutValueQueries.SELECT_BY_PROFILE, [profileId])
+      .map(toValue);
 
     /* ショートカットIDごとに値をまとめる（1回の走査で振り分ける） */
     const valuesByShortcut = new Map<string, ShortcutValue[]>();
@@ -169,15 +188,17 @@ export class ShortcutMapper {
   }
 
   /**
-   * 名前でショートカットを取得
+   * プロファイル内の名前でショートカットを取得
+   * @param profileId - 所属プロファイルID
    * @param name - ショートカット名
    * @returns ショートカット（存在しない場合はnull）
    * @description
-   * ショートカット名の重複チェックで使用される
+   * ショートカット名の重複チェックで使用される。
+   * 名前の一意性はプロファイル内に限るため、プロファイルも条件に含める。
    */
-  static getByName(name: string): Shortcut | null {
+  static getByName(profileId: string, name: string): Shortcut | null {
     const db = getMainDbAdapter();
-    const row = db.get<any>(ShortcutQueries.SELECT_BY_NAME, [name]);
+    const row = db.get<any>(ShortcutQueries.SELECT_BY_NAME, [profileId, name]);
     if (!row) return null;
 
     return { ...toShortcutRow(row), values: this.getValues(row.id) };
@@ -197,6 +218,7 @@ export class ShortcutMapper {
 
   /**
    * ショートカットを値ごと作成
+   * @param profileId - 所属させるプロファイルID（検証済み）
    * @param name - ショートカット名（検証済み）
    * @param values - 登録する値（検証済み、1件以上）
    * @returns 作成されたショートカット
@@ -204,16 +226,20 @@ export class ShortcutMapper {
    * ショートカット本体と値の挿入を1トランザクションで行い、
    * 値だけが残る中途半端な状態を作らない。
    */
-  static create(name: string, values: ShortcutValueInput[]): Shortcut {
+  static create(
+    profileId: string,
+    name: string,
+    values: ShortcutValueInput[]
+  ): Shortcut {
     const db = getMainDbAdapter();
     /* 一意性を保証するIDとタイムスタンプを生成 */
     const id = generateUniqueId();
     const now = getCurrentTimestamp();
-    /* 既存ショートカットの最大sortOrder+1を次の並び順として設定（末尾に追加） */
-    const sortOrder = this.getNextSortOrder();
+    /* 同一プロファイル内の最大sortOrder+1を次の並び順として設定（末尾に追加） */
+    const sortOrder = this.getNextSortOrder(profileId);
 
     db.transaction(() => {
-      db.run(ShortcutQueries.INSERT, [id, name, sortOrder, now, now]);
+      db.run(ShortcutQueries.INSERT, [id, profileId, name, sortOrder, now, now]);
       values.forEach((value, index) => {
         db.run(ShortcutValueQueries.INSERT, [
           generateUniqueId(),
@@ -241,16 +267,20 @@ export class ShortcutMapper {
    * @param id - ショートカットID
    * @param name - 新しいショートカット名（未指定なら既存値を保持）
    * @param values - 新しい値一覧（未指定なら既存値を保持）
+   * @param profileId - 新しい所属プロファイルID（未指定なら既存値を保持）
    * @returns 更新されたショートカット
    * @description
    * valuesを指定した場合は差し替え方式で反映する。
    * 入力にidを持つ値は既存行を更新し、持たない値は追加し、
    * 入力に現れなかった既存行は削除する。使用回数は既存行を更新するかぎり保持される。
+   * プロファイルを移す場合は、移動先の末尾へ並ぶよう並び順を採り直す。
+   * 値と使用回数は値行に持つため、移動しても失われない。
    */
   static update(
     id: string,
     name?: string,
-    values?: ShortcutValueInput[]
+    values?: ShortcutValueInput[],
+    profileId?: string
   ): Shortcut {
     const db = getMainDbAdapter();
     /* 更新対象のショートカットが存在するか確認（存在しない場合はエラー） */
@@ -260,11 +290,18 @@ export class ShortcutMapper {
     }
 
     const now = getCurrentTimestamp();
+    const nextProfileId = profileId !== undefined ? profileId : existing.profileId;
+    const isMovingProfile = nextProfileId !== existing.profileId;
+    /* 移動先では既存の並び順が別の行と衝突しうるため、末尾へ採り直す */
+    const nextSortOrder = isMovingProfile
+      ? this.getNextSortOrder(nextProfileId)
+      : existing.sortOrder;
 
     db.transaction(() => {
       db.run(ShortcutQueries.UPDATE, [
+        nextProfileId,
         name !== undefined ? name : existing.name,
-        existing.sortOrder,
+        nextSortOrder,
         now,
         id,
       ]);
@@ -294,6 +331,20 @@ export class ShortcutMapper {
       db.run(ShortcutValueQueries.DELETE_BY_SHORTCUT, [id]);
       db.run(ShortcutQueries.DELETE, [id]);
     });
+  }
+
+  /**
+   * 指定プロファイルのショートカットを値ごと削除
+   * @param profileId - 削除対象のプロファイルID
+   * @description
+   * 実行時の外部キー強制は行わない方針のため、宣言したCASCADEは働かない。
+   * プロファイル削除時に孤児のショートカットが残らないよう、ProfileMapperから呼ぶ。
+   * 呼び出し側が張ったトランザクションの中で実行するため、ここでは張らない。
+   */
+  static deleteByProfileId(profileId: string): void {
+    const db = getMainDbAdapter();
+    db.run(ShortcutValueQueries.DELETE_BY_PROFILE, [profileId]);
+    db.run(ShortcutQueries.DELETE_BY_PROFILE, [profileId]);
   }
 
   /**
@@ -329,24 +380,30 @@ export class ShortcutMapper {
   }
 
   /**
-   * ショートカット数を取得
+   * 指定プロファイルのショートカット数を取得
+   * @param profileId - 所属プロファイルID
    * @returns ショートカット数
    */
-  static count(): number {
+  static count(profileId: string): number {
     const db = getMainDbAdapter();
-    const result = db.get<{ count: number }>(ShortcutQueries.SELECT_COUNT);
+    const result = db.get<{ count: number }>(
+      ShortcutQueries.SELECT_COUNT_BY_PROFILE,
+      [profileId]
+    );
     return result?.count || 0;
   }
 
   /**
    * 次のsortOrder値を取得（新規ショートカット作成時に使用）
-   * @returns 既存の最大sortOrder+1（データが存在しない場合は0）
+   * @param profileId - 所属プロファイルID
+   * @returns 同一プロファイル内の最大sortOrder+1（データが存在しない場合は0）
    */
-  static getNextSortOrder(): number {
+  static getNextSortOrder(profileId: string): number {
     const db = getMainDbAdapter();
     /* 現在の最大sortOrderを取得（新規ショートカットを末尾に追加するため） */
     const result = db.get<{ maxOrder: number | null }>(
-      ShortcutQueries.SELECT_MAX_SORT_ORDER
+      ShortcutQueries.SELECT_MAX_SORT_ORDER,
+      [profileId]
     );
     /* 最大値+1を返す（データがない場合は-1+1=0が返る） */
     return (result?.maxOrder ?? -1) + 1;

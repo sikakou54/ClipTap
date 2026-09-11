@@ -57,12 +57,14 @@ export type ShortcutValueInput = z.infer<typeof ShortcutValueInputSchema>;
  * ショートカットスキーマ
  *
  * @remarks
- * - name: ショートカット名（重複不可）。複数の値をまとめるグループ名
+ * - profileId: 所属するプロファイルID。1ショートカットは必ず1プロファイルに属する
+ * - name: ショートカット名（同一プロファイル内で重複不可）。複数の値をまとめるグループ名
  * - values: 1件以上のショートカット値（sortOrder順）
- * - sortOrder: 一覧での並び順（0始まり）
+ * - sortOrder: 同一プロファイル内での並び順（0始まり）
  */
 export const ShortcutSchema = z.object({
   id: z.string(),
+  profileId: z.string(),
   name: z.string(),
   values: z.array(ShortcutValueSchema),
   sortOrder: z.number(),
@@ -79,11 +81,13 @@ export type Shortcut = z.infer<typeof ShortcutSchema>;
  * ショートカット作成入力スキーマ
  *
  * @remarks
- * - name: 必須（重複チェックされる）
+ * - profileId: 必須。呼び出し側はアクティブなプロファイルのIDを渡す
+ * - name: 必須（同一プロファイル内で重複チェックされる）
  * - values: 1件以上必須。0件では保存できない
  * - sortOrderは自動設定される
  */
 export const CreateShortcutInputSchema = z.object({
+  profileId: z.string(),
   name: z.string(),
   values: z.array(ShortcutValueInputSchema),
 });
@@ -99,9 +103,11 @@ export type CreateShortcutInput = z.infer<typeof CreateShortcutInputSchema>;
  * @remarks
  * - valuesは差し替え方式。入力に含まれない既存値は削除される
  * - valuesを省略した場合は既存の値をそのまま残す
+ * - profileIdを指定すると所属プロファイルを移す。値と使用回数はそのまま持ち越す
  */
 export const UpdateShortcutInputSchema = z.object({
   id: z.string(),
+  profileId: z.string().optional(),
   name: z.string().optional(),
   values: z.array(ShortcutValueInputSchema).optional(),
 });
@@ -122,6 +128,7 @@ export type UpdateShortcutInput = z.infer<typeof UpdateShortcutInputSchema>;
  */
 export const ShortcutRowSchema = z.object({
   id: z.string(),
+  profileId: z.string(),
   name: z.string(),
   sortOrder: z.number(),
   createdAt: z.string(),

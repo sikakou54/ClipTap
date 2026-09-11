@@ -28,6 +28,10 @@ describe('ImportService full restore', () => {
     setTempDbAdapter(backup);
 
     main.run("INSERT INTO categories VALUES ('old', 'old', NULL, 0, 'old-time')");
+    /* ショートカットは所属プロファイルを必須とするため、消される側にもプロファイルを置く */
+    main.run(
+      "INSERT INTO profiles VALUES ('old-p', 'old', 1, 1, 0, 0, 'old-time', 'old-time')"
+    );
     backup.run("INSERT INTO categories VALUES ('c1', 'category', '#123456', 7, 'c-created')");
     backup.run(
       "INSERT INTO variables VALUES ('v1', 'token', 'custom', 'Token', NULL, 0, 8, 'v-created', 'v-updated')"
@@ -45,12 +49,14 @@ describe('ImportService full restore', () => {
     backup.run(
       "INSERT INTO system_variable_formats VALUES ('today', 'yyyy-MM-dd', 'format-updated')"
     );
-    main.run("INSERT INTO shortcuts VALUES ('old-sc', 'old', 0, 'old-time', 'old-time')");
+    main.run(
+      "INSERT INTO shortcuts VALUES ('old-sc', 'old-p', 'old', 0, 'old-time', 'old-time')"
+    );
     main.run(
       "INSERT INTO shortcut_values VALUES ('old-sv', 'old-sc', 'old', 'old', 0, 0, 'old-time', 'old-time')"
     );
     backup.run(
-      "INSERT INTO shortcuts VALUES ('sc1', 'phone', 3, 'sc-created', 'sc-updated')"
+      "INSERT INTO shortcuts VALUES ('sc1', 'p1', 'phone', 3, 'sc-created', 'sc-updated')"
     );
     backup.run(
       "INSERT INTO shortcut_values VALUES ('sv1', 'sc1', 'mother', '080-0000-0000', 12, 1, 'sv-created', 'sv-updated')"
@@ -98,6 +104,7 @@ describe('ImportService full restore', () => {
     });
     expect(main.get('SELECT * FROM shortcuts WHERE id = ?', ['sc1'])).toEqual({
       id: 'sc1',
+      profileId: 'p1',
       name: 'phone',
       sortOrder: 3,
       createdAt: 'sc-created',

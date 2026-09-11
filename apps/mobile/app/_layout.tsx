@@ -126,6 +126,8 @@ function AppContent({ isTabletDevice }: { isTabletDevice: boolean }) {
                   <Stack.Screen name="variable/format-edit" options={MODAL_SLIDE_OPTIONS} />
                   {/* プロファイル編集画面 */}
                   <Stack.Screen name="profile/edit" options={MODAL_SLIDE_OPTIONS} />
+                  {/* ショートカット一覧画面（ホームヘッダーから開く） */}
+                  <Stack.Screen name="shortcut/index" />
                   {/* ショートカット作成・編集画面 */}
                   <Stack.Screen name="shortcut/edit" options={MODAL_SLIDE_OPTIONS} />
                   {/* ショートカット値編集画面 */}

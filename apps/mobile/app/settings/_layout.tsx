@@ -9,7 +9,6 @@
  * - categories: カテゴリ管理
  * - profiles: プロファイル（環境）管理
  * - variables: カスタム変数管理
- * - shortcuts: ショートカット管理
  * - system-variable-formats: システム変数書式管理
  * - export-import: バックアップ・復元
  * - select-export-data: エクスポートデータ選択（モーダル）
@@ -31,8 +30,6 @@ export default function SettingsLayout() {
       <Stack.Screen name="profiles" />
       {/* 変数管理画面 */}
       <Stack.Screen name="variables" />
-      {/* ショートカット管理画面 */}
-      <Stack.Screen name="shortcuts" />
       {/* システム変数書式管理画面 */}
       <Stack.Screen name="system-variable-formats" />
       {/* エクスポート・インポート画面 */}

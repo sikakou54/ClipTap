@@ -44,7 +44,7 @@ describe('migrateImportTempDb', () => {
     }
     if (version >= 8) {
       await db.exec(`
-        CREATE TABLE shortcuts (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, sortOrder INTEGER DEFAULT 0, createdAt TEXT NOT NULL, updatedAt TEXT NOT NULL);
+        CREATE TABLE shortcuts (id TEXT PRIMARY KEY, profileId TEXT NOT NULL, name TEXT NOT NULL, sortOrder INTEGER DEFAULT 0, createdAt TEXT NOT NULL, updatedAt TEXT NOT NULL, FOREIGN KEY (profileId) REFERENCES profiles(id) ON DELETE CASCADE, UNIQUE(profileId, name));
         CREATE TABLE shortcut_values (id TEXT PRIMARY KEY, shortcutId TEXT NOT NULL, name TEXT NOT NULL, value TEXT NOT NULL, useCount INTEGER DEFAULT 0, sortOrder INTEGER DEFAULT 0, createdAt TEXT NOT NULL, updatedAt TEXT NOT NULL, FOREIGN KEY (shortcutId) REFERENCES shortcuts(id) ON DELETE CASCADE);
       `);
     }
@@ -284,7 +284,7 @@ describe('migrateImportTempDb', () => {
       db
         .all<{ name: string }>("SELECT name FROM pragma_table_info('shortcuts')")
         .map((c) => c.name)
-    ).toEqual(['id', 'name', 'sortOrder', 'createdAt', 'updatedAt']);
+    ).toEqual(['id', 'profileId', 'name', 'sortOrder', 'createdAt', 'updatedAt']);
     expect(
       db
         .all<{ name: string }>("SELECT name FROM pragma_table_info('shortcut_values')")
@@ -305,7 +305,7 @@ describe('migrateImportTempDb', () => {
   it('keeps existing rows when the shortcut tables already exist', async () => {
     const db = await createVersion(8);
     db.run(
-      "INSERT INTO shortcuts VALUES ('sc1', 'Phone', 0, 'created', 'updated')"
+      "INSERT INTO shortcuts VALUES ('sc1', 'p1', 'Phone', 0, 'created', 'updated')"
     );
     db.run(
       "INSERT INTO shortcut_values VALUES ('sv1', 'sc1', 'Mother', '080-0000-0000', 3, 0, 'created', 'updated')"
@@ -314,7 +314,14 @@ describe('migrateImportTempDb', () => {
     await migrateV7ToV8(db);
 
     expect(db.all('SELECT * FROM shortcuts')).toEqual([
-      { id: 'sc1', name: 'Phone', sortOrder: 0, createdAt: 'created', updatedAt: 'updated' },
+      {
+        id: 'sc1',
+        profileId: 'p1',
+        name: 'Phone',
+        sortOrder: 0,
+        createdAt: 'created',
+        updatedAt: 'updated',
+      },
     ]);
     expect(db.all('SELECT * FROM shortcut_values')).toEqual([
       {

@@ -672,6 +672,11 @@ export async function migrateV6ToV7(db: DbAdapter): Promise<void> {
  * @remarks
  * 既存データは持たないため、初期行は挿入しません。
  * 派生indexは移行後の`finalizeLatestSchema`が作成するため、ここでは作成しません。
+ *
+ * ショートカットは所属プロファイルID（`profileId`）を持ち、名前は同一プロファイル内で一意です。
+ * V8はまだリリースしていないため（`release/prod`はV7）、新しい段を作らずこの段の定義を更新しています。
+ * 同じ理由で、配布中の`apps/web/public/starter_v8_*.cliptap`はファイル名が変わりません。
+ * 版据置でDDLを変えたときは404で検知できないため、必ず再生成すること。
  */
 export async function migrateV7ToV8(db: DbAdapter): Promise<void> {
   Logger.info('[Migration V7→V8] Starting migration...');

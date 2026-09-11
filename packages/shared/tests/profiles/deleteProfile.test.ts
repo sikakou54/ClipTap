@@ -134,6 +134,35 @@ describe('ProfileService.deleteWithAutoSwitch', () => {
   });
 
   /**
+   * 削除したプロファイルのショートカットは値ごと物理削除する。
+   *
+   * ショートカットは必ず1件のプロファイルへ属するため、関連だけを外すと所属先の無い行が残る。
+   * 実行時に外部キーを強制していないので、宣言したCASCADEでは消えない。
+   * 他のプロファイルのショートカットを巻き込まないことも同時に固定する。
+   */
+  it('removes the shortcuts and their values of the deleted profile', () => {
+    insertProfile('a', 0, { isDefault: true, isActive: true });
+    insertProfile('b', 1);
+    db?.run(
+      "INSERT INTO shortcuts VALUES ('sc-a', 'a', 'phone', 0, 'created', 'updated')"
+    );
+    db?.run(
+      "INSERT INTO shortcut_values VALUES ('sv-a', 'sc-a', 'mother', '080', 0, 0, 'created', 'updated')"
+    );
+    db?.run(
+      "INSERT INTO shortcuts VALUES ('sc-b', 'b', 'phone', 0, 'created', 'updated')"
+    );
+    db?.run(
+      "INSERT INTO shortcut_values VALUES ('sv-b', 'sc-b', 'father', '090', 0, 0, 'created', 'updated')"
+    );
+
+    deleteThroughProvider('b');
+
+    expect(db?.all('SELECT id FROM shortcuts')).toEqual([{ id: 'sc-a' }]);
+    expect(db?.all('SELECT id FROM shortcut_values')).toEqual([{ id: 'sv-a' }]);
+  });
+
+  /**
    * 有効フラグの再計算をProviderが呼ぶことを、実装のソースで固定する。
    * Providerはフックのため実DBテストから直接呼べず、上のケースは合成の正しさしか保証しない。
    * 呼び忘れると無効なプロファイルが無効のまま残るので、ここで欠落を検出する。

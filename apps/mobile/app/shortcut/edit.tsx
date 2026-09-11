@@ -19,6 +19,7 @@ import { useTranslation } from '@cliptap/shared';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/themeSystem';
 import { useShortcutEditScreen } from '@hooks/screens/useShortcutEditScreen';
+import { ProfileChipSelector } from '@components/profile/ProfileChipSelector';
 import { ScreenContainer } from '@components/common/ScreenContainer';
 import { UI_CONSTANTS } from '@constants/ui';
 
@@ -32,6 +33,9 @@ export default function ShortcutEditModal() {
   const {
     name,
     setName,
+    profileId,
+    setProfileId,
+    selectableProfiles,
     values,
     saving,
     isEdit,
@@ -103,6 +107,26 @@ export default function ShortcutEditModal() {
             maxLength={UI_CONSTANTS.INPUT_LIMITS.SHORTCUT_NAME_MAX}
           />
         </View>
+
+        {/* 所属プロファイル選択セクション（プロファイルが複数ある場合のみ表示）。
+            新規作成ではアクティブなプロファイルが初期選択され、ここで別のプロファイルへ移せる */}
+        {selectableProfiles.length > 1 && (
+          <View style={styles.section}>
+            <Text
+              style={[
+                styles.label,
+                { color: colors.textSecondary, fontSize: responsiveFontSizes.sm },
+              ]}
+            >
+              {t('shortcut.profile')}
+            </Text>
+            <ProfileChipSelector
+              profiles={selectableProfiles}
+              selectedProfileId={profileId}
+              onSelectProfile={setProfileId}
+            />
+          </View>
+        )}
 
         {/* 値一覧セクション */}
         <View style={styles.section}>

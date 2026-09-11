@@ -44,8 +44,8 @@ export interface UseHomeScreenReturn {
   handleCopySnippetTitle: (snippet: SnippetWithDisplay) => Promise<void>;
   handleEditSnippet: (snippet: SnippetWithDisplay) => void;
   handleDeleteSnippet: (snippet: SnippetWithDisplay) => void;
+  handleNavigateToShortcuts: () => void;
   handleNavigateToSettings: () => void;
-  handleNavigateToExportImport: () => void;
   handleNavigateToSearch: () => void;
   handleNavigateToCreate: () => void;
   handleProfileChange: () => void;
@@ -196,12 +196,12 @@ export function useHomeScreen(): UseHomeScreenReturn {
     }
   }, [deleteSnippet, t]);
 
-  const handleNavigateToSettings = useCallback(() => {
-    router.push('/settings');
+  const handleNavigateToShortcuts = useCallback(() => {
+    router.push('/shortcut');
   }, [router]);
 
-  const handleNavigateToExportImport = useCallback(() => {
-    router.push('/settings/export-import');
+  const handleNavigateToSettings = useCallback(() => {
+    router.push('/settings');
   }, [router]);
 
   const handleNavigateToSearch = useCallback(() => {
@@ -230,8 +230,8 @@ export function useHomeScreen(): UseHomeScreenReturn {
     handleCopySnippetTitle,
     handleEditSnippet,
     handleDeleteSnippet,
+    handleNavigateToShortcuts,
     handleNavigateToSettings,
-    handleNavigateToExportImport,
     handleNavigateToSearch,
     handleNavigateToCreate,
     handleProfileChange,

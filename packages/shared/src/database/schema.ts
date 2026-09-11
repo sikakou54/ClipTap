@@ -122,14 +122,23 @@ export const CREATE_TABLES = {
 
   /**
    * ショートカットテーブル
+   *
+   * @remarks
+   * 1件のショートカットは必ず1件のプロファイルに属する。
+   * 名前の一意性はプロファイル内に限るため、列単位のUNIQUEではなく複合UNIQUEで表す。
+   * 実行時に外部キーを強制していないため、プロファイル削除時のカスケードは
+   * ProfileMapperが明示的に行う（profile_variablesと同じ扱い）。
    */
   shortcuts: `
     CREATE TABLE IF NOT EXISTS shortcuts (
       id TEXT PRIMARY KEY,
-      name TEXT NOT NULL UNIQUE,
+      profileId TEXT NOT NULL,
+      name TEXT NOT NULL,
       sortOrder INTEGER DEFAULT 0,
       createdAt TEXT NOT NULL,
-      updatedAt TEXT NOT NULL
+      updatedAt TEXT NOT NULL,
+      FOREIGN KEY (profileId) REFERENCES profiles(id) ON DELETE CASCADE,
+      UNIQUE(profileId, name)
     );
   `,
 
@@ -186,6 +195,19 @@ export const CREATE_INDEXES = {
   snippetProfilesProfile: `
     CREATE INDEX IF NOT EXISTS idx_snippet_profiles_profile
     ON snippet_profiles(profileId);
+  `,
+  /**
+   * ショートカットの所属プロファイルのindex
+   *
+   * @remarks
+   * 一覧はプロファイルで絞って取得するため実際に使われる。
+   * 併せて、移行・取込の後に `profileId` 列が存在することを確かめる経路でもある。
+   * `finalizeLatestSchema` はテーブル名しか確認しないため、この列が欠けたまま
+   * 最新スキーマとして通ってしまうのを防いでいる。参照するクエリが無いと誤解して消さないこと。
+   */
+  shortcutsProfile: `
+    CREATE INDEX IF NOT EXISTS idx_shortcuts_profile
+    ON shortcuts(profileId);
   `,
   shortcutValuesShortcut: `
     CREATE INDEX IF NOT EXISTS idx_shortcut_values_shortcut
