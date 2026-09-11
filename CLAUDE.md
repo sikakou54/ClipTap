@@ -72,7 +72,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **テスト**: Vitest 4.0.14
 
 ### 現在のバージョン情報
-- **アプリバージョン**: 1.5.0
+- **アプリバージョン**: 1.4.0
 - **データベーススキーマ**: V8
 - **対応OS**: iOS 17.0以上、Android 7.0 (API 24) 以上
 - **新アーキテクチャ**: 対応済み（React Native）
