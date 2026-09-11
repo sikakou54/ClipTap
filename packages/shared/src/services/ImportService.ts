@@ -635,7 +635,10 @@ export class ImportService {
     try {
       mainDbAdapter.run('DELETE FROM system_variable_formats');
 
-      /* ショートカットは子テーブルから先に削除する（他エンティティとは独立） */
+      /* ショートカットは値（子テーブル）から先に削除する。
+         ショートカット本体はプロファイルに属するため、profiles より先に消す必要がある。
+         実行時に外部キーを強制していないので、順序を崩しても例外にはならず
+         所属先の無い行が静かに残る */
       mainDbAdapter.run('DELETE FROM shortcut_values');
       mainDbAdapter.run('DELETE FROM shortcuts');
 

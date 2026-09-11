@@ -150,6 +150,13 @@ class KeyboardViewController: UIInputViewController {
     private var screenState: ScreenState = .list
 
     /**
+     * 直前にショートカット行の操作を受け付けた時刻（端末起動からの経過秒）
+     *
+     * 二度押しで意図しない値を挿入しないための判定に使う（`acceptShortcutTap()`）。
+     */
+    private var lastShortcutTapAt: TimeInterval = 0
+
+    /**
      * 設定画面を開く直前に表示していた画面
      *
      * フィルター行（設定ボタンを含む）をショートカット表示でも出すようにしたため、
@@ -189,6 +196,14 @@ class KeyboardViewController: UIInputViewController {
      * ショートカット一覧では0ptへ畳む。
      */
     private static let shortcutHeaderHeight: CGFloat = 44
+
+    /**
+     * ショートカット行の二度押しを無視する時間（秒）
+     *
+     * Android IMEの `INSERT_DEBOUNCE_MS` と同じ値にして、
+     * 同じ操作で同じ結果になるようにする。
+     */
+    private static let shortcutTapDebounce: TimeInterval = 0.3
 
     /**
      * ショートカット画面のヘッダーの高さ制約
@@ -2208,8 +2223,11 @@ class KeyboardViewController: UIInputViewController {
      * その値を直接挿入する。
      */
     private func selectShortcut(_ shortcut: Shortcut) {
+        /* 階層移動も行の中身が入れ替わる操作のため、挿入と同じ窓で二度押しを塞ぐ */
+        guard acceptShortcutTap() else { return }
+
         if shortcut.values.count == 1, let value = shortcut.values.first {
-            insertShortcutValue(value)
+            insertShortcutValue(value, shouldReloadList: false)
             return
         }
 
@@ -2236,14 +2254,48 @@ class KeyboardViewController: UIInputViewController {
      * 1つ選び終えた後に同じ値一覧へ留まる必要はない。
      * 読み直すことで、挿入直後のカーソル直前の内容に合わせた並べ替えと、
      * 増えた使用回数の反映も同時に行われる。
+     *
+     * 【一覧から直接挿したときは読み直さない理由】
+     * すでにショートカット一覧を見ているところで並べ替えと先頭スクロールが起きると、
+     * 次に押したい行が指の下で動く。候補推測は挿入した語を含む名前を上位へ繰り上げるため、
+     * まさに今押した行が移動しやすく、続けて押すと別のショートカットを挿してしまう。
+     *
+     * - Parameter shouldReloadList: 挿入後に一覧を読み直すか（値一覧から挿したときだけtrue）
      */
-    private func insertShortcutValue(_ value: ShortcutValue) {
+    private func insertShortcutValue(_ value: ShortcutValue, shouldReloadList: Bool) {
         KeyboardLog.debug("⚡ [Shortcut] Inserting shortcut value: %@", value.id)
 
         /* 挿入・振動フィードバック・使用回数の記録はService側で実行する */
         shortcutService.insertValue(value, into: textDocumentProxy)
 
-        reloadShortcutList()
+        if shouldReloadList {
+            reloadShortcutList()
+        }
+    }
+
+    /**
+     * ショートカット行の操作を受け付けてよいか判定する
+     *
+     * 指が跳ねて同じ場所を二度押しすると、1回目で一覧の中身（階層や並び）が入れ替わり、
+     * 2回目が差し替わった別の行に当たって、選んだ覚えのない値を挿入してしまう。
+     * 行の中身が入れ替わる操作はすべて同じ窓で塞ぐ。
+     *
+     * 判定は行のタップ1回につき1度だけ行う。挿入側にも置くと、値1件のショートカットで
+     * 同じタップが2回数えられ、2度目が必ず落ちて挿入できなくなる。
+     *
+     * 単調増加の時計を使うのは、端末の時刻設定が変わっても判定が壊れないようにするため。
+     *
+     * - Returns: 受け付ける場合はtrue（受け付けた時点で次回の判定用に時刻を記録する）
+     */
+    private func acceptShortcutTap() -> Bool {
+        let now = ProcessInfo.processInfo.systemUptime
+        if now - lastShortcutTapAt < Self.shortcutTapDebounce {
+            KeyboardLog.debug("⚡ [Shortcut] Tap ignored (too soon)")
+            return false
+        }
+
+        lastShortcutTapAt = now
+        return true
     }
 
     /// 値一覧からショートカット一覧へ戻る
@@ -2442,8 +2494,10 @@ extension KeyboardViewController: UITableViewDelegate {
             tableView.deselectRow(at: indexPath, animated: true)
 
             if shortcutScreenMode == .values {
-                /* 値をタップ: その値だけを現在のカーソル位置へ挿入する */
-                insertShortcutValue(rankedShortcutValues[indexPath.row])
+                /* 値をタップ: その値だけを現在のカーソル位置へ挿入し、ショートカット一覧へ戻る。
+                   階層が入れ替わるため、ここでも二度押しを塞ぐ */
+                guard acceptShortcutTap() else { return }
+                insertShortcutValue(rankedShortcutValues[indexPath.row], shouldReloadList: true)
             } else {
                 /* ショートカットをタップ: 値一覧へ進む（値が1件なら直接挿入） */
                 selectShortcut(rankedShortcuts[indexPath.row])

@@ -26,7 +26,7 @@ import { useDevMenu, type UseDevMenuReturn } from './useDevMenu';
 /** メニュー項目の型定義 */
 export interface MenuItem {
   id: string;
-  icon: 'options-outline' | 'code-outline' | 'calendar-outline' | 'folder-outline' | 'flash-outline' | 'keypad-outline' | 'swap-horizontal-outline' | 'sync-outline' | 'document-text-outline' | 'shield-checkmark-outline';
+  icon: 'options-outline' | 'code-outline' | 'calendar-outline' | 'folder-outline' | 'keypad-outline' | 'swap-horizontal-outline' | 'document-text-outline' | 'shield-checkmark-outline';
   label: string;
   onPress: () => void;
   isPro: boolean;

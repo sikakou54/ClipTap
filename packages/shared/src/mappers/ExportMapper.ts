@@ -156,6 +156,19 @@ export class ExportMapper {
       WHERE snippetId NOT IN (SELECT id FROM snippets)
          OR profileId NOT IN (SELECT id FROM profiles)
     `);
+    /* ショートカットは1件のプロファイルへ必ず属するため、所属先が選択外になった行は
+       関連ではなく本体ごと落とす（ProfileMapper.deleteと同じ扱い）。
+       残すと、選択したつもりのないプロファイルのショートカット名と値が
+       そのまま出力ファイルへ入ってしまう */
+    this.adapter.run(`
+      DELETE FROM shortcuts
+      WHERE profileId NOT IN (SELECT id FROM profiles)
+    `);
+    /* 親を失った値も掃除する。本体を先に消しているのでこの条件で漏れなく拾える */
+    this.adapter.run(`
+      DELETE FROM shortcut_values
+      WHERE shortcutId NOT IN (SELECT id FROM shortcuts)
+    `);
   }
 
   /**

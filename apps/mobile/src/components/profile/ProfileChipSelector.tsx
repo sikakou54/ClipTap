@@ -10,7 +10,9 @@
  * - オプションのカウントバッジ表示
  * - カスタマイズ可能なパディング
  *
- * @see app/search.tsx - 検索画面での使用（現在の唯一の使用箇所）
+ * @see app/search.tsx - 検索画面での使用（表示対象の絞り込み）
+ * @see app/shortcut/index.tsx - ショートカット一覧での使用（アクティブなプロファイルの切替）
+ * @see app/shortcut/edit.tsx - ショートカット編集での使用（所属プロファイルの選択）
  */
 
 import React from 'react';

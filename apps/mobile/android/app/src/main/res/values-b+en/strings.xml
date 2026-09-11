@@ -13,7 +13,6 @@
   <string name="accessibility_show_shortcuts_button">"Show shortcuts"</string>
   <string name="accessibility_show_snippets_button">"Show snippets"</string>
   <string name="accessibility_back_button">"Back button"</string>
-  <string name="accessibility_close_button">"Close button"</string>
   <string name="shortcut_title">"Shortcuts"</string>
   <string name="shortcut_empty">"No shortcuts available"</string>
   <string name="shortcut_empty_hint">"Create shortcuts in the main app"</string>

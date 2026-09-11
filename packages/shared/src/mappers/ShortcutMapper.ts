@@ -37,8 +37,6 @@ const ShortcutQueries = {
   TOUCH: 'UPDATE shortcuts SET updatedAt = ? WHERE id = ?',
   /* ショートカットを削除 */
   DELETE: 'DELETE FROM shortcuts WHERE id = ?',
-  /* 指定プロファイルのショートカットをすべて削除 */
-  DELETE_BY_PROFILE: 'DELETE FROM shortcuts WHERE profileId = ?',
   /* ショートカットの並び順を更新 */
   UPDATE_SORT_ORDER: 'UPDATE shortcuts SET sortOrder = ? WHERE id = ?',
   /* 指定プロファイルのショートカット数を取得 */
@@ -55,9 +53,6 @@ const ShortcutValueQueries = {
            INNER JOIN shortcuts s ON s.id = v.shortcutId
            WHERE s.profileId = ?
            ORDER BY v.shortcutId ASC, v.sortOrder ASC`,
-  /* 指定プロファイルのショートカット値をすべて削除 */
-  DELETE_BY_PROFILE: `DELETE FROM shortcut_values
-           WHERE shortcutId IN (SELECT id FROM shortcuts WHERE profileId = ?)`,
   /* 指定ショートカットの値を取得（並び順） */
   SELECT_BY_SHORTCUT: 'SELECT * FROM shortcut_values WHERE shortcutId = ? ORDER BY sortOrder ASC',
   /* ショートカット値を新規作成 */
@@ -331,20 +326,6 @@ export class ShortcutMapper {
       db.run(ShortcutValueQueries.DELETE_BY_SHORTCUT, [id]);
       db.run(ShortcutQueries.DELETE, [id]);
     });
-  }
-
-  /**
-   * 指定プロファイルのショートカットを値ごと削除
-   * @param profileId - 削除対象のプロファイルID
-   * @description
-   * 実行時の外部キー強制は行わない方針のため、宣言したCASCADEは働かない。
-   * プロファイル削除時に孤児のショートカットが残らないよう、ProfileMapperから呼ぶ。
-   * 呼び出し側が張ったトランザクションの中で実行するため、ここでは張らない。
-   */
-  static deleteByProfileId(profileId: string): void {
-    const db = getMainDbAdapter();
-    db.run(ShortcutValueQueries.DELETE_BY_PROFILE, [profileId]);
-    db.run(ShortcutQueries.DELETE_BY_PROFILE, [profileId]);
   }
 
   /**

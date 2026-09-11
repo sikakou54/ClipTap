@@ -120,10 +120,14 @@ export default function ShortcutEditModal() {
             >
               {t('shortcut.profile')}
             </Text>
+            {/* containerPaddingを0にするのは、このチップがフォームのセクション内にあり、
+                画面端の余白は既に親のcontentが持っているため。既定値のままだと
+                他のセクション（名前入力・値カード）より16pt余分に字下げされる */}
             <ProfileChipSelector
               profiles={selectableProfiles}
               selectedProfileId={profileId}
               onSelectProfile={setProfileId}
+              containerPadding={0}
             />
           </View>
         )}

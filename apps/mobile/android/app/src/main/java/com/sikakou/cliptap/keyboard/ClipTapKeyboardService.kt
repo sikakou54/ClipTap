@@ -122,8 +122,8 @@ class ClipTapKeyboardService : InputMethodService() {
     /** 一覧にショートカットを表示しているかどうか（falseなら定型文を表示している） */
     private var isShortcutMode: Boolean = false
 
-    /** 直前にショートカット値を挿入した時刻（端末起動からの経過ミリ秒） */
-    private var lastShortcutInsertAt: Long = 0L
+    /** 直前にショートカット行の操作を受け付けた時刻（端末起動からの経過ミリ秒） */
+    private var lastShortcutTapAt: Long = 0L
 
     companion object {
         private const val TAG = "ClipTapKeyboard"
@@ -147,7 +147,7 @@ class ClipTapKeyboardService : InputMethodService() {
          * 二度押しとして扱われる間隔（およそ300ms）を落とし、
          * 同じ値を続けて入れたい操作は妨げない長さにしている。
          */
-        private const val INSERT_DEBOUNCE_MS = 300L
+        private const val SHORTCUT_TAP_DEBOUNCE_MS = 300L
     }
 
     /**
@@ -217,6 +217,14 @@ class ClipTapKeyboardService : InputMethodService() {
 
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Keyboard view inflated: ${keyboardView.javaClass.simpleName}")
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Layout params: ${keyboardView.layoutParams}")
+
+        /* 表示モードをレイアウトの初期状態へ戻す。
+           Serviceのインスタンスはビューより長生きで、画面回転やダークモード切替などで
+           onCreateInputViewだけが呼び直される。インフレートし直したレイアウトは
+           shortcut_view.xmlのvisibility="gone"により必ず定型文表示から始まるため、
+           このフラグを引き継ぐとフィルター行の見た目だけがショートカット表示のまま残り、
+           トグルを1回押しても何も切り替わらないように見える */
+        isShortcutMode = false
 
         // ビューの初期化
         initializeViews()
@@ -1262,6 +1270,9 @@ class ClipTapKeyboardService : InputMethodService() {
      * @param shortcut 選択されたショートカット
      */
     private fun onShortcutClicked(shortcut: Shortcut) {
+        /* 階層移動も行の中身が入れ替わる操作のため、挿入と同じ窓で二度押しを塞ぐ */
+        if (!acceptShortcutTap()) return
+
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Shortcut selected (${shortcut.values.size} values)")
 
         /* 値を持たないショートカットは挿入するものがないため何もしない */
@@ -1294,6 +1305,11 @@ class ClipTapKeyboardService : InputMethodService() {
      * @param value 選択されたショートカット値
      */
     private fun onShortcutValueClicked(value: ShortcutValue) {
+        /* 二度押しの判定は行のタップ1回につき1度だけ行う。
+           挿入側にも置くと、値1件のショートカット（onShortcutClicked→insertShortcutValue）で
+           同じタップが2回数えられ、2度目が必ず落ちて挿入できなくなる */
+        if (!acceptShortcutTap()) return
+
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Shortcut value selected")
 
         if (!insertShortcutValue(value)) return
@@ -1305,20 +1321,21 @@ class ClipTapKeyboardService : InputMethodService() {
      * ショートカット値をテキストフィールドへ挿入
      *
      * 【何をするか】
-     * 1. 直前の挿入から間が空いているか確かめる（二重挿入の防止）
-     * 2. currentInputConnectionを取得（テキストフィールドへの接続）
-     * 3. ShortcutService.insertValue()で値を挿入（振動と使用回数の加算も行う）
+     * 1. currentInputConnectionを取得（テキストフィールドへの接続）
+     * 2. ShortcutService.insertValue()で値を挿入（振動と使用回数の加算も行う）
+     *
+     * 【二重挿入の判定をここに置かない理由】
+     * 呼び出し元の行タップ（onShortcutClicked / onShortcutValueClicked）で既に判定している。
+     * ここにも置くと、値1件のショートカットで同じタップが2回数えられてしまう。
      *
      * 【挿入してもショートカット表示のままにする理由】
      * 表示対象はトグルで決めるものなので、挿入を理由に勝手に定型文へ戻さない。
      * 続けて別のショートカットを入れられる。
      *
      * @param value 挿入するショートカット値
-     * @return 挿入した場合はtrue（二重挿入として落とした場合や挿入先が無い場合はfalse）
+     * @return 挿入した場合はtrue（挿入先が無い場合はfalse）
      */
     private fun insertShortcutValue(value: ShortcutValue): Boolean {
-        if (!acceptShortcutInsert()) return false
-
         val ic = currentInputConnection
         if (ic == null) {
             Log.e(TAG, "❌ InputConnection is null")
@@ -1342,20 +1359,25 @@ class ClipTapKeyboardService : InputMethodService() {
      * フラグ（isClosingShortcutView）で無視していた。
      * トグル化で挿入後も画面が閉じなくなったため、同じ役目を時間で果たす。
      *
+     * 【挿入だけでなく階層移動も対象にする理由】
+     * 値が複数のショートカットを指が跳ねて二度押しすると、1回目で値一覧へ切り替わり、
+     * 2回目が差し替わった直後の値行に当たって、選んだ覚えのない値が挿入されてしまう。
+     * 行の中身が入れ替わる操作はすべて同じ窓で塞ぐ。
+     *
      * 【elapsedRealtimeを使う理由】
      * 端末の時刻設定や時差の変更に影響されない単調増加の時計のため、
      * 時刻が戻ったときに判定が壊れない。
      *
      * @return 受け付ける場合はtrue（受け付けた時点で次回の判定用に時刻を記録する）
      */
-    private fun acceptShortcutInsert(): Boolean {
+    private fun acceptShortcutTap(): Boolean {
         val now = android.os.SystemClock.elapsedRealtime()
-        if (now - lastShortcutInsertAt < INSERT_DEBOUNCE_MS) {
-            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Shortcut insert ignored (too soon)")
+        if (now - lastShortcutTapAt < SHORTCUT_TAP_DEBOUNCE_MS) {
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Shortcut tap ignored (too soon)")
             return false
         }
 
-        lastShortcutInsertAt = now
+        lastShortcutTapAt = now
         return true
     }
 

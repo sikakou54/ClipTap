@@ -51,7 +51,6 @@
   <string name="accessibility_profile_button">Profile button</string>
   <string name="accessibility_category_button">Category button</string>
   <string name="accessibility_snippet_item">Snippet item</string>
-  <string name="accessibility_close_button">Close button</string>
   <string name="accessibility_copy_button">Copy button</string>
   <string name="accessibility_sort_button">Sort button</string>
   <string name="accessibility_insert_title_button">Insert title button</string>
