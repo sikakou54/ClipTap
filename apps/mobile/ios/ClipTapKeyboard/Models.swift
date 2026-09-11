@@ -75,3 +75,27 @@ struct ProfileWithVariables {
     let profile: Profile
     let variables: [String: String]  // variableName: value
 }
+
+// MARK: - Shortcut
+
+struct Shortcut {
+    let id: String
+    let name: String
+    let sortOrder: Int
+    let createdAt: String
+    let updatedAt: String
+    var values: [ShortcutValue] = []  /* shortcut_valuesから取得（getAllで一括ロード） */
+}
+
+// MARK: - ShortcutValue
+
+struct ShortcutValue {
+    let id: String
+    let shortcutId: String
+    let name: String        /* 値を識別する名称（例: 母） */
+    let value: String       /* 実際に挿入する文字列（例: 090-0000-0000） */
+    let useCount: Int       /* 拡張キーボードから挿入した回数（候補の並べ替え用） */
+    let sortOrder: Int
+    let createdAt: String
+    let updatedAt: String
+}

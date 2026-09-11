@@ -13,12 +13,16 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.ContextThemeWrapper
 import androidx.core.content.ContextCompat
+import androidx.core.widget.ImageViewCompat
 import com.sikakou.cliptap.R
 import com.sikakou.cliptap.models.Profile
 import com.sikakou.cliptap.models.Category
+import com.sikakou.cliptap.models.Shortcut
+import com.sikakou.cliptap.models.ShortcutValue
 import com.sikakou.cliptap.models.Snippet
 import com.sikakou.cliptap.services.ProfileService
 import com.sikakou.cliptap.services.CategoryService
+import com.sikakou.cliptap.services.ShortcutService
 import com.sikakou.cliptap.services.SnippetService
 import com.sikakou.cliptap.services.VariableService
 import com.sikakou.cliptap.database.Database
@@ -38,6 +42,8 @@ import com.sikakou.cliptap.utils.LocalizationHelper
  * - スニペット一覧の表示とフィルタリング
  * - スニペット詳細表示
  * - スニペットのテキスト挿入（変数置換込み）
+ * - 定型文一覧とショートカット一覧の切り替え（フィルター行のトグル）
+ * - ショートカット値の挿入（選択中の環境のショートカットのみを表示）
  *
  * 【重要な仕組み: データの流れ】
  * 1. メインアプリがSharedDBにスニペット・プロファイル・変数を保存
@@ -58,6 +64,7 @@ class ClipTapKeyboardService : InputMethodService() {
     private lateinit var mainView: View
     private lateinit var profileChipGroup: ChipGroup
     private lateinit var categoryChipGroup: ChipGroup
+    private lateinit var snippetListContainer: View
     private lateinit var snippetRecyclerView: RecyclerView
     private lateinit var emptyStateTextView: android.widget.TextView
     private lateinit var snippetAdapter: SnippetAdapter
@@ -75,6 +82,16 @@ class ClipTapKeyboardService : InputMethodService() {
     private lateinit var insertNewlineButton: View
     private lateinit var closeButton: View
 
+    // ショートカット画面のビュー
+    private lateinit var shortcutView: View
+    private lateinit var shortcutHeader: View
+    private lateinit var shortcutBackButton: android.widget.ImageButton
+    private lateinit var shortcutTitleLabel: android.widget.TextView
+    private lateinit var shortcutRecyclerView: RecyclerView
+    private lateinit var shortcutEmptyView: View
+    private lateinit var shortcutAdapter: ShortcutAdapter
+    private lateinit var shortcutValueAdapter: ShortcutValueAdapter
+
     // 選択中のスニペット
     private var selectedSnippet: Snippet? = null
 
@@ -82,6 +99,7 @@ class ClipTapKeyboardService : InputMethodService() {
     private lateinit var profileService: ProfileService
     private lateinit var categoryService: CategoryService
     private lateinit var snippetService: SnippetService
+    private lateinit var shortcutService: ShortcutService
     private lateinit var variableService: VariableService
     private lateinit var database: Database
 
@@ -94,14 +112,52 @@ class ClipTapKeyboardService : InputMethodService() {
     private var variablesMap: Map<String, String> = emptyMap()
 
     // ソートボタンとソート状態
+    private lateinit var sortButtonContainer: View
     private lateinit var sortButton: android.widget.ImageButton
     private lateinit var sortBadge: android.view.View
     private var currentSortBy: String = "created"
+
+    // 定型文／ショートカットの表示切替トグル
+    // 定型文／ショートカットの表示切替トグル（トラック・ノブ・ノブの中のアイコン）
+    private lateinit var shortcutToggle: android.widget.FrameLayout
+    private lateinit var shortcutToggleKnob: android.widget.FrameLayout
+    private lateinit var shortcutToggleIcon: android.widget.ImageView
+
+    /** 一覧にショートカットを表示しているかどうか（falseなら定型文を表示している） */
+    private var isShortcutMode: Boolean = false
+
+    /** 直前にショートカット行の操作を受け付けた時刻（端末起動からの経過ミリ秒） */
+    private var lastShortcutTapAt: Long = 0L
 
     companion object {
         private const val TAG = "ClipTapKeyboard"
         private const val SORT_PREFS_NAME = "ClipTapKeyboardPrefs"
         private const val SORT_PREFERENCE_KEY = "keyboard_snippet_sort_by"
+
+        /** 定型文一覧とショートカット一覧を入れ替えるフェードの長さ（ミリ秒） */
+        private const val LIST_SWITCH_DURATION_MS = 200L
+
+        /**
+         * ショートカット値を挿入してから、次の挿入を受け付けるまでの間隔（ミリ秒）
+         *
+         * 【この仕組みが必要な理由】
+         * 以前は挿入のたびにショートカット画面を閉じ、その200msのフェードアウトの間に
+         * 行へ触れても効かないようフラグ（isClosingShortcutView）で止めていた。
+         * トグル化で挿入後もショートカット表示のまま留まるようになり、閉じるフェードが無くなったため、
+         * 同じ役目を時間で果たす。これが無いと指が跳ねた二度押しで同じ値が2回入力され、
+         * 使用回数も2回加算されてしまう。
+         *
+         * 【この長さにする理由】
+         * 二度押しとして扱われる間隔（およそ300ms）を落とし、
+         * 同じ値を続けて入れたい操作は妨げない長さにしている。
+         */
+        private const val SHORTCUT_TAP_DEBOUNCE_MS = 300L
+
+        /** トグルのノブが左端から右端まで動く距離（dp） */
+        private const val TOGGLE_KNOB_TRAVEL_DP = 20f
+
+        /** トグルのノブが動く時間（ミリ秒） */
+        private const val TOGGLE_KNOB_ANIMATION_MS = 100L
     }
 
     /**
@@ -146,6 +202,7 @@ class ClipTapKeyboardService : InputMethodService() {
         profileService = ProfileService.getInstance(applicationContext)
         categoryService = CategoryService.getInstance(applicationContext)
         snippetService = SnippetService.getInstance(applicationContext)
+        shortcutService = ShortcutService.getInstance(applicationContext)
         variableService = VariableService.getInstance(applicationContext)
         database = Database.getInstance(applicationContext)
 
@@ -171,6 +228,14 @@ class ClipTapKeyboardService : InputMethodService() {
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Keyboard view inflated: ${keyboardView.javaClass.simpleName}")
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Layout params: ${keyboardView.layoutParams}")
 
+        /* 表示モードをレイアウトの初期状態へ戻す。
+           Serviceのインスタンスはビューより長生きで、画面回転やダークモード切替などで
+           onCreateInputViewだけが呼び直される。インフレートし直したレイアウトは
+           shortcut_view.xmlのvisibility="gone"により必ず定型文表示から始まるため、
+           このフラグを引き継ぐとフィルター行の見た目だけがショートカット表示のまま残り、
+           トグルを1回押しても何も切り替わらないように見える */
+        isShortcutMode = false
+
         // ビューの初期化
         initializeViews()
 
@@ -193,12 +258,17 @@ class ClipTapKeyboardService : InputMethodService() {
      * 1. findViewById()でビューを取得
      *    - profileChipGroup: 環境選択ドロップダウン
      *    - categoryChipGroup: カテゴリフィルター
-     *    - snippetRecyclerView: スニペット一覧
+     *    - snippetListContainer: 定型文一覧（一覧エリアの表示物のひとつ）
+     *    - shortcutView: ショートカット画面（一覧エリアの表示物のひとつ、初期状態は非表示）
+     *    - shortcutToggle: 定型文／ショートカットの表示切替トグル
      *    - detailView: 詳細画面（初期状態は非表示）
      * 2. RecyclerViewの設定
      *    - LinearLayoutManager: 縦スクロール
      *    - SnippetAdapter: スニペットカードを表示
-     * 3. 詳細画面のボタンにリスナーを設定
+     * 3. ショートカット関連のボタンにリスナーを設定
+     *    - shortcutToggle: 一覧に出す対象を切り替える
+     *    - shortcutBackButton: 値一覧からショートカット一覧へ戻る
+     * 4. 詳細画面のボタンにリスナーを設定
      *    - copyButton: スニペットを挿入
      *    - insertNewlineButton: 改行を挿入
      *    - closeButton: 詳細画面を閉じる
@@ -213,10 +283,23 @@ class ClipTapKeyboardService : InputMethodService() {
         mainView = keyboardView.findViewById(R.id.mainView)
         profileChipGroup = keyboardView.findViewById(R.id.profileChipGroup)
         categoryChipGroup = keyboardView.findViewById(R.id.categoryChipGroup)
+        snippetListContainer = keyboardView.findViewById(R.id.snippetListContainer)
         snippetRecyclerView = keyboardView.findViewById(R.id.snippetRecyclerView)
         emptyStateTextView = keyboardView.findViewById(R.id.emptyStateTextView)
+        sortButtonContainer = keyboardView.findViewById(R.id.sortButtonContainer)
         sortButton = keyboardView.findViewById(R.id.sortButton)
         sortBadge = keyboardView.findViewById(R.id.sortBadge)
+        shortcutToggle = keyboardView.findViewById(R.id.shortcutToggle)
+        shortcutToggleKnob = keyboardView.findViewById(R.id.shortcutToggleKnob)
+        shortcutToggleIcon = keyboardView.findViewById(R.id.shortcutToggleIcon)
+
+        // ショートカット画面のビューを初期化
+        shortcutView = keyboardView.findViewById(R.id.shortcutView)
+        shortcutHeader = keyboardView.findViewById(R.id.shortcutHeader)
+        shortcutBackButton = keyboardView.findViewById(R.id.shortcutBackButton)
+        shortcutTitleLabel = keyboardView.findViewById(R.id.shortcutTitleLabel)
+        shortcutRecyclerView = keyboardView.findViewById(R.id.shortcutRecyclerView)
+        shortcutEmptyView = keyboardView.findViewById(R.id.shortcutEmptyView)
 
         // 詳細画面のビューを初期化
         detailView = keyboardView.findViewById(R.id.detailView)
@@ -248,6 +331,36 @@ class ClipTapKeyboardService : InputMethodService() {
         }
         snippetRecyclerView.adapter = snippetAdapter
 
+        // ショートカット画面のRecyclerViewの設定
+        shortcutRecyclerView.layoutManager = LinearLayoutManager(this)
+
+        /* 行数が変わってもRecyclerView自体の大きさは変わらない。
+           これを伝えることでスクロール中のレイアウト再計算を省ける。
+           値一覧でヘッダーを出すと表示枠の高さは44dp縮むが、それは親からのレイアウト変更で、
+           行数の増減による再計算ではないため、この指定と矛盾しない */
+        shortcutRecyclerView.setHasFixedSize(true)
+
+        /* ショートカット一覧と値一覧は1つのRecyclerViewでアダプターを差し替えて表示する。
+           差し替えると表示位置が先頭に戻るため、階層を移動するたびに一覧の先頭から読める */
+        shortcutAdapter = ShortcutAdapter { shortcut ->
+            onShortcutClicked(shortcut)
+        }
+        shortcutValueAdapter = ShortcutValueAdapter { value ->
+            onShortcutValueClicked(value)
+        }
+        shortcutRecyclerView.adapter = shortcutAdapter
+
+        /* 表示切替トグル: 押すたびに定型文表示とショートカット表示を往復する。
+           以前のように別画面へ遷移しないため、ショートカット側に閉じる専用のボタンは置かない */
+        shortcutToggle.setOnClickListener {
+            toggleListMode()
+        }
+
+        /* 値一覧（2階層目）からショートカット一覧（1階層目）へ戻る */
+        shortcutBackButton.setOnClickListener {
+            showShortcutList()
+        }
+
         // 詳細画面のボタンにクリックリスナーを設定
         copyButton.setOnClickListener {
             onCopyButtonClicked()
@@ -269,6 +382,9 @@ class ClipTapKeyboardService : InputMethodService() {
         }
         updateSortBadgeVisibility()
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Sort button configured (currentSortBy: $currentSortBy)")
+
+        /* 起動直後は定型文表示。トグルのアイコンとフィルター行の見え方をその状態に合わせる */
+        updateListModeChrome()
 
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ RecyclerView configured")
     }
@@ -582,6 +698,7 @@ class ClipTapKeyboardService : InputMethodService() {
      * 2. 新しいプロファイルの変数マップを取得
      * 3. プロファイルチップのテキストを更新
      * 4. reloadSnippets()でスニペット一覧を再読み込み
+     * 5. ショートカットを表示中なら、その一覧も読み直す
      *
      * 【理由】
      * プロファイルが変わると表示するスニペットと変数が変わるため、
@@ -600,6 +717,13 @@ class ClipTapKeyboardService : InputMethodService() {
             }
 
             reloadSnippets()
+
+            /* ショートカットもプロファイルに属するため、表示中なら読み直す。
+               値一覧（2階層目）を開いていた場合、そのショートカットは切り替え前の環境のものなので、
+               1階層目へ戻したうえで新しい環境の一覧を出す */
+            if (isShortcutMode) {
+                showShortcutList()
+            }
         }
     }
 
@@ -910,6 +1034,7 @@ class ClipTapKeyboardService : InputMethodService() {
     override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
         applyWindowBackground()
+        restoreShortcutViewState()
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "============================================================")
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "👁️ onStartInputView CALLED")
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "   restarting: $restarting")
@@ -942,6 +1067,451 @@ class ClipTapKeyboardService : InputMethodService() {
         super.onDestroy()
         database.close()
         if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Keyboard service destroyed")
+    }
+
+    // MARK: - Shortcut Methods（ショートカット関連メソッド）
+
+    /**
+     * 定型文表示とショートカット表示を切り替える
+     *
+     * 【目的】
+     * フィルター行のトグル（shortcutToggle）から、一覧に出す対象を往復で切り替えます。
+     *
+     * 【別画面への遷移をやめた理由】
+     * 以前はショートカットを全画面のビューで出し、専用の閉じるボタンで定型文へ戻していた。
+     * トグルにすると同じ位置のボタンで行き来でき、戻る手段を探さずに済む。
+     */
+    private fun toggleListMode() {
+        if (isShortcutMode) {
+            showSnippetMode()
+        } else {
+            showShortcutMode()
+        }
+    }
+
+    /**
+     * 一覧をショートカット表示に切り替える
+     *
+     * 【何をするか】
+     * 1. フィルター行の見え方とトグルのアイコンをショートカット表示に合わせる
+     * 2. ショートカット一覧を組み立てる（そのときの入力内容で並べ替える）
+     * 3. 定型文一覧と入れ替えて、ショートカット画面をフェードインで表示する
+     *
+     * 【切り替えるたびに読み直す理由】
+     * 候補の並びはカーソル直前の入力内容で決まるため、前回開いたときの並びを使い回すと、
+     * いま入力している内容と合わない順序で出てしまう。
+     * メインアプリでの追加・削除・並べ替えを取り込む意味もある。
+     *
+     * 【排他表示について】
+     * 定型文一覧（snippetListContainer）とショートカット画面（shortcutView）は
+     * 同じ一覧エリアに重ねて置いてあり、表示されるのは常にどちらか一方になる。
+     * 詳細画面（detailView）はフィルター行ごと覆うため、開いている間はトグルを押せない。
+     */
+    private fun showShortcutMode() {
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Shortcut list requested")
+
+        isShortcutMode = true
+        updateListModeChrome()
+        showShortcutList()
+
+        /* 消える側を先にGONEにしてから、出る側をフェードインする。
+           フェードアウトを挟むと、消えかけの一覧に触れて意図しない行を選べる時間が生まれるため
+           （以前はその時間をisClosingShortcutViewで塞いでいた） */
+        snippetListContainer.visibility = View.GONE
+        shortcutView.visibility = View.VISIBLE
+        shortcutView.alpha = 0f
+        shortcutView.animate()
+            .alpha(1f)
+            .setDuration(LIST_SWITCH_DURATION_MS)
+            .start()
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Shortcut list shown")
+    }
+
+    /**
+     * 一覧を定型文表示に切り替える
+     *
+     * 【定型文を読み直さない理由】
+     * 定型文の並びは環境・カテゴリ・並べ替えの設定だけで決まり、入力中の内容では変わらない。
+     * それらが変わったときは、それぞれの処理がreloadSnippets()を呼んでいる。
+     */
+    private fun showSnippetMode() {
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Snippet list requested")
+
+        isShortcutMode = false
+        updateListModeChrome()
+
+        /* 入れ替えの作法はshowShortcutMode()と同じ（消える側を先に隠す） */
+        shortcutView.visibility = View.GONE
+        snippetListContainer.visibility = View.VISIBLE
+        snippetListContainer.alpha = 0f
+        snippetListContainer.animate()
+            .alpha(1f)
+            .setDuration(LIST_SWITCH_DURATION_MS)
+            .start()
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Snippet list shown")
+    }
+
+    /**
+     * 表示中の対象に合わせて、フィルター行とトグルの見た目を整える
+     *
+     * 【環境チップを隠さない理由】
+     * ショートカットはプロファイル（環境）に属するため、どの環境の一覧を見ているのかと、
+     * 別の環境へ切り替える手段がショートカット表示でも要る。
+     *
+     * 【カテゴリをGONE、並べ替えをINVISIBLEにする理由】
+     * どちらも定型文専用のため隠すが、消し方が違う。
+     * カテゴリの右隣は重み付きスペーサーなので、GONEにして空いた幅はスペーサーが吸収し、
+     * 右側のトグルとソートボタンの位置は動かない。
+     * 一方、並べ替えはトグルの右隣にあるため、GONEにするとトグルが右端まで動いてしまう。
+     * トグルは定型文表示でもショートカット表示でも同じ位置に見えている必要があるので、
+     * 並べ替えは場所だけ残すINVISIBLEにする。
+     *
+     * 【トグルの見た目】
+     * トラックの色とノブの位置・中のアイコンで、今どちらを見ているかを示す。
+     * 左（灰色・書類）が定型文、右（アクセント色・稲妻）がショートカット。
+     * 読み上げだけは「押したら何が起きるか」を伝えるため、見た目と逆の側を読ませる。
+     *
+     * 【ノブの中のアイコンをコードから着色する理由】
+     * ノブは常に白のため、テーマで反転する色を焼き込むとダークで見えなくなる。
+     * 選択されていない側は固定の灰、選択されている側はアクセント色を使う。
+     */
+    private fun updateListModeChrome() {
+        categoryChipGroup.visibility = if (isShortcutMode) View.GONE else View.VISIBLE
+        sortButtonContainer.visibility = if (isShortcutMode) View.INVISIBLE else View.VISIBLE
+
+        shortcutToggle.setBackgroundResource(
+            if (isShortcutMode) R.drawable.list_mode_toggle_track_on
+            else R.drawable.list_mode_toggle_track_off
+        )
+        shortcutToggle.contentDescription = getString(
+            if (isShortcutMode) R.string.accessibility_show_snippets_button
+            else R.string.accessibility_show_shortcuts_button
+        )
+
+        shortcutToggleIcon.setImageResource(
+            if (isShortcutMode) R.drawable.ic_shortcut else R.drawable.ic_snippet
+        )
+        ImageViewCompat.setImageTintList(
+            shortcutToggleIcon,
+            android.content.res.ColorStateList.valueOf(
+                ContextCompat.getColor(
+                    this,
+                    if (isShortcutMode) R.color.keyboardAccent else R.color.keyboardToggleKnobIcon
+                )
+            )
+        )
+
+        moveToggleKnob()
+    }
+
+    /**
+     * トグルのノブを現在の表示対象に合わせて動かす
+     *
+     * 【translationXで動かす理由】
+     * layout_gravityやmarginを付け替えるとレイアウトのやり直しが入る。
+     * ノブは描画位置がずれるだけでよいので、再レイアウトの要らないtranslationXを使う。
+     *
+     * 【移動量】
+     * トラック52dp、ノブ28dp、左右の余白2dpずつ。左端から右端までは
+     * 52 - 28 - 2 - 2 = 20dp となる。
+     *
+     * 【ビュー生成直後はアニメーションさせない理由】
+     * 初期表示で勝手にノブが滑ると、利用者が触っていないのに切り替わったように見える。
+     * 既に同じ位置にいるときは何もしない。
+     */
+    private fun moveToggleKnob() {
+        val target = if (isShortcutMode) {
+            TOGGLE_KNOB_TRAVEL_DP * resources.displayMetrics.density
+        } else {
+            0f
+        }
+
+        if (shortcutToggleKnob.translationX == target) return
+
+        /* 表示されていない間はアニメーションの完了が保証されないため、位置だけ合わせる */
+        if (!shortcutToggleKnob.isShown) {
+            shortcutToggleKnob.translationX = target
+            return
+        }
+
+        shortcutToggleKnob.animate()
+            .translationX(target)
+            .setDuration(TOGGLE_KNOB_ANIMATION_MS)
+            .start()
+    }
+
+    /**
+     * 入力欄が切り替わったときにショートカット表示の状態を整える
+     *
+     * 【目的】
+     * ショートカットを表示したままキーボードを閉じても、次に開いたときに
+     * 削除済みのショートカットや値が残らないようにします。
+     *
+     * 【なぜ必要か】
+     * AndroidのIMEは onCreateInputView で作ったビューを使い回すため、
+     * 何もしないとショートカット一覧と、そこに載っている当時のデータがそのまま残る。
+     * その間にメインアプリで削除されていると、存在しない値を挿入できてしまう。
+     *
+     * 【一覧へ戻す理由】
+     * 値一覧を開いていた場合、そのショートカット自体が消えている可能性がある。
+     * 一覧から読み直せば、消えたものは並びから外れる。
+     * （iOS版の refreshAllData → reloadShortcutScreen と同じ狙い）
+     */
+    private fun restoreShortcutViewState() {
+        if (!::shortcutView.isInitialized) return
+        if (!isShortcutMode) return
+
+        showShortcutList()
+    }
+
+    /**
+     * ショートカット一覧を表示
+     *
+     * 【目的】
+     * ショートカット画面の1階層目（ショートカット名の一覧）を表示します。
+     *
+     * 【何をするか】
+     * 1. カーソル直前の入力内容で並べ替えたショートカット一覧を取得
+     * 2. ヘッダー（戻るボタン + ショートカット名）を畳む
+     * 3. 一覧を差し替え、0件なら空状態を表示する
+     *
+     * 【開くたびに取得し直す理由】
+     * メインアプリでの追加・並べ替えを次に開いたときに反映するため。
+     * また、そのときの入力内容で候補の並びを決め直すため。
+     *
+     * 【1階層目でヘッダーを畳む理由】
+     * 上にフィルター行（環境チップとトグル）が出たままになり、トグルの見た目でも
+     * ショートカット表示中と分かるため、見出しをもう1行置くと一覧に使える高さを削るだけになる。
+     * 戻る導線が要るのは値一覧（2階層目）だけ。
+     */
+    private fun showShortcutList() {
+        val shortcuts = loadRankedShortcuts()
+
+        shortcutHeader.visibility = View.GONE
+
+        shortcutRecyclerView.adapter = shortcutAdapter
+        shortcutAdapter.submitList(shortcuts)
+        updateShortcutEmptyState(shortcuts.isEmpty())
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Loaded ${shortcuts.size} shortcuts")
+    }
+
+    /**
+     * ショートカット値の一覧を表示
+     *
+     * 【目的】
+     * ショートカット画面の2階層目（値の一覧）を表示します。
+     *
+     * 【何をするか】
+     * 1. カーソル直前の入力内容で値を並べ替える
+     * 2. ヘッダーを出して「＜ <ショートカット名>」にする（戻るボタン + ショートカット名）
+     * 3. 一覧を値用のアダプターへ差し替える
+     *
+     * @param shortcut 選択されたショートカット
+     */
+    private fun showShortcutValues(shortcut: Shortcut) {
+        val values = shortcutService.rankedValues(shortcut.values, textBeforeCursor())
+
+        shortcutTitleLabel.text = shortcut.name
+        shortcutHeader.visibility = View.VISIBLE
+
+        shortcutRecyclerView.adapter = shortcutValueAdapter
+        shortcutValueAdapter.submitList(values)
+
+        /* 値を持つショートカットからしか遷移しないため、この階層で空状態になることはない */
+        updateShortcutEmptyState(false)
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Shortcut values shown (${values.size} values)")
+    }
+
+    /**
+     * ショートカットクリック時の処理
+     *
+     * 【目的】
+     * 選ばれたショートカットの値が1件か複数かで、動きを変えます。
+     *
+     * 【1件のときに値一覧を出さない理由】
+     * 選ぶ余地がないため、階層をもう1つ挟むと同じ結果に届くまでのタップ数が増えるだけになる。
+     *
+     * @param shortcut 選択されたショートカット
+     */
+    private fun onShortcutClicked(shortcut: Shortcut) {
+        /* 階層移動も行の中身が入れ替わる操作のため、挿入と同じ窓で二度押しを塞ぐ */
+        if (!acceptShortcutTap()) return
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Shortcut selected (${shortcut.values.size} values)")
+
+        /* 値を持たないショートカットは挿入するものがないため何もしない */
+        if (shortcut.values.isEmpty()) {
+            Log.w(TAG, "⚠️ Shortcut has no values")
+            return
+        }
+
+        /* 値が1件だけなら、値一覧を挟まずそのまま挿入する。
+           挿入しても一覧は読み直さない。すでにショートカット一覧を見ているところなので、
+           押した直後に並びが変わると、次に押したい行の位置が指の下で動いてしまう */
+        if (shortcut.values.size == 1) {
+            insertShortcutValue(shortcut.values[0])
+            return
+        }
+
+        showShortcutValues(shortcut)
+    }
+
+    /**
+     * ショートカット値クリック時の処理
+     *
+     * 【挿入後にショートカット一覧へ戻す理由】
+     * 同じ値を続けて入れる場面は少なく、次は別のショートカットを選ぶことが多いため。
+     * 表示対象はショートカットのままで、定型文へは戻さない（戻すかどうかはトグルで決める）。
+     *
+     * 【挿入できなかったときは戻さない理由】
+     * 二度押しとして落とした直後に階層まで戻すと、押したつもりのない移動が起きるため。
+     *
+     * @param value 選択されたショートカット値
+     */
+    private fun onShortcutValueClicked(value: ShortcutValue) {
+        /* 二度押しの判定は行のタップ1回につき1度だけ行う。
+           挿入側にも置くと、値1件のショートカット（onShortcutClicked→insertShortcutValue）で
+           同じタップが2回数えられ、2度目が必ず落ちて挿入できなくなる */
+        if (!acceptShortcutTap()) return
+
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Shortcut value selected")
+
+        if (!insertShortcutValue(value)) return
+
+        showShortcutList()
+    }
+
+    /**
+     * ショートカット値をテキストフィールドへ挿入
+     *
+     * 【何をするか】
+     * 1. currentInputConnectionを取得（テキストフィールドへの接続）
+     * 2. ShortcutService.insertValue()で値を挿入（振動と使用回数の加算も行う）
+     *
+     * 【二重挿入の判定をここに置かない理由】
+     * 呼び出し元の行タップ（onShortcutClicked / onShortcutValueClicked）で既に判定している。
+     * ここにも置くと、値1件のショートカットで同じタップが2回数えられてしまう。
+     *
+     * 【挿入してもショートカット表示のままにする理由】
+     * 表示対象はトグルで決めるものなので、挿入を理由に勝手に定型文へ戻さない。
+     * 続けて別のショートカットを入れられる。
+     *
+     * @param value 挿入するショートカット値
+     * @return 挿入した場合はtrue（挿入先が無い場合はfalse）
+     */
+    private fun insertShortcutValue(value: ShortcutValue): Boolean {
+        val ic = currentInputConnection
+        if (ic == null) {
+            Log.e(TAG, "❌ InputConnection is null")
+            Toast.makeText(this, R.string.keyboard_insert_failed, Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        shortcutService.insertValue(value, ic)
+        if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "✅ Shortcut value inserted successfully")
+        return true
+    }
+
+    /**
+     * ショートカット値の挿入を受け付けてよいか判定する
+     *
+     * 【目的】
+     * 指が跳ねた二度押しで、同じ値が2回入力され使用回数も2回加算されるのを防ぎます。
+     *
+     * 【以前の仕組みとの関係】
+     * 以前は挿入のたびにショートカット画面を閉じ、その200msのフェードアウト中のタップを
+     * フラグ（isClosingShortcutView）で無視していた。
+     * トグル化で挿入後も画面が閉じなくなったため、同じ役目を時間で果たす。
+     *
+     * 【挿入だけでなく階層移動も対象にする理由】
+     * 値が複数のショートカットを指が跳ねて二度押しすると、1回目で値一覧へ切り替わり、
+     * 2回目が差し替わった直後の値行に当たって、選んだ覚えのない値が挿入されてしまう。
+     * 行の中身が入れ替わる操作はすべて同じ窓で塞ぐ。
+     *
+     * 【elapsedRealtimeを使う理由】
+     * 端末の時刻設定や時差の変更に影響されない単調増加の時計のため、
+     * 時刻が戻ったときに判定が壊れない。
+     *
+     * @return 受け付ける場合はtrue（受け付けた時点で次回の判定用に時刻を記録する）
+     */
+    private fun acceptShortcutTap(): Boolean {
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (now - lastShortcutTapAt < SHORTCUT_TAP_DEBOUNCE_MS) {
+            if (com.sikakou.cliptap.BuildConfig.DEBUG) Log.d(TAG, "Shortcut tap ignored (too soon)")
+            return false
+        }
+
+        lastShortcutTapAt = now
+        return true
+    }
+
+    /**
+     * 選択中の環境のショートカット一覧を、入力内容で並べ替えて取得
+     *
+     * 【環境が決まらないときに空へ倒す理由】
+     * ショートカットはプロファイル（環境）に属する。
+     * ここで全件表示へ倒すと、選んでいない環境の値まで挿入できてしまうため、
+     * 環境が確定できないときは何も出さない。
+     *
+     * 【例外を握る理由】
+     * メインアプリが一度も起動していない、またはメインアプリのDBがまだ古い版で
+     * shortcutsテーブルが無い場合、クエリは失敗する。
+     * ここで空一覧に倒すことで、定型文の挿入というキーボード本来の機能は使えるままにする。
+     *
+     * @return 表示順に並べ替えたショートカット一覧（取得できない場合は空）
+     */
+    private fun loadRankedShortcuts(): List<Shortcut> {
+        val profileId = currentProfile?.id
+        if (profileId == null) {
+            Log.w(TAG, "⚠️ No profile selected")
+            return emptyList()
+        }
+
+        return try {
+            shortcutService.rankedShortcuts(profileId, textBeforeCursor())
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to load shortcuts", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * カーソル直前の入力内容を取得
+     *
+     * 【目的】
+     * 候補推測の手掛かりとして、いま入力している内容の末尾を読み取ります。
+     *
+     * 【全文を読まない理由】
+     * 離れた位置に出た語で候補が動き続けて落ち着かないため、
+     * 候補推測が見る長さ（ShortcutService.SHORTCUT_CONTEXT_LENGTH）だけを読む。
+     *
+     * @return カーソル直前の文字列（取得できない場合は空文字）
+     */
+    private fun textBeforeCursor(): String {
+        val ic = currentInputConnection ?: return ""
+        return ic.getTextBeforeCursor(ShortcutService.SHORTCUT_CONTEXT_LENGTH, 0)?.toString() ?: ""
+    }
+
+    /**
+     * ショートカット画面の空の状態表示を更新
+     *
+     * 【目的】
+     * ショートカットが0件の時に案内を表示します。
+     *
+     * @param isEmpty 一覧が空かどうか
+     */
+    private fun updateShortcutEmptyState(isEmpty: Boolean) {
+        if (isEmpty) {
+            shortcutEmptyView.visibility = View.VISIBLE
+            shortcutRecyclerView.visibility = View.GONE
+        } else {
+            shortcutEmptyView.visibility = View.GONE
+            shortcutRecyclerView.visibility = View.VISIBLE
+        }
     }
 
     // MARK: - Sort Methods（ソート関連メソッド）

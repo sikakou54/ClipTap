@@ -4,6 +4,7 @@ export { ProfileMapper, ProfileVariableMapper } from './ProfileMapper';
 export { SnippetMapper } from './SnippetMapper';
 export { VariableMapper } from './VariableMapper';
 export { SystemVariableFormatMapper, type SystemVariableFormatRow } from './SystemVariableFormatMapper';
+export { ShortcutMapper } from './ShortcutMapper';
 
 /* Import/Export Mappers */
 export * from './IImportMapper';

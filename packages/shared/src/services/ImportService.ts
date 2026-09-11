@@ -41,6 +41,7 @@ import {
   ProfileVariableMapper,
   ProfileMapper,
   SnippetMapper,
+  ShortcutMapper,
   SystemVariableFormatMapper,
   VariableMapper,
 } from '../mappers';
@@ -611,6 +612,8 @@ export class ImportService {
       SystemVariableFormatMapper.restoreAllWithinTransaction(
         restoreData.systemVariableFormats
       );
+      restoreData.shortcuts.forEach((row) => ShortcutMapper.restore(row));
+      restoreData.shortcutValues.forEach((row) => ShortcutMapper.restoreValue(row));
 
       /* 壊れたバックアップに標準・アクティブが無い場合だけ補完する。 */
       ProfileService.ensureDefaultAndActive();
@@ -631,6 +634,13 @@ export class ImportService {
 
     try {
       mainDbAdapter.run('DELETE FROM system_variable_formats');
+
+      /* ショートカットは値（子テーブル）から先に削除する。
+         ショートカット本体はプロファイルに属するため、profiles より先に消す必要がある。
+         実行時に外部キーを強制していないので、順序を崩しても例外にはならず
+         所属先の無い行が静かに残る */
+      mainDbAdapter.run('DELETE FROM shortcut_values');
+      mainDbAdapter.run('DELETE FROM shortcuts');
 
       /* 外部キー制約を考慮した削除順序 */
       /* 1. 中間テーブル（外部キー参照） */

@@ -40,8 +40,6 @@
     "title_input_placeholder": "タイトルを入力...",
     "content": "内容",
     "content_placeholder": "内容を入力してください",
-    "content_input": "内容を入力",
-    "content_input_placeholder": "内容を入力...",
     "search_placeholder": "定型文を検索...",
     "category": "カテゴリ",
     "select_category": "カテゴリを選択",
@@ -151,7 +149,7 @@
     "title": "プロファイル",
     "create": "プロファイルを作成",
     "edit": "プロファイルを編集",
-    "delete_confirm": "プロファイル「{{name}}」を削除しますか？\n\nこのプロファイルに登録されているすべての変数も削除されます。",
+    "delete_confirm": "プロファイル「{{name}}」を削除しますか？\n\nこのプロファイルに登録されているすべての変数とショートカットも削除されます。",
     "no_profiles": "プロファイルがありません",
     "add_hint": "右上の + ボタンからプロファイルを追加できます",
     "name": "プロファイル名",
@@ -235,7 +233,10 @@
     "google_sign_in_failed": "Googleでのサインインに失敗しました",
     "apple_sign_in_failed": "Appleでのサインインに失敗しました",
     "sign_out_failed": "サインアウトに失敗しました",
-    "newer_version": "現在の端末では対応していないバージョンです。アプリを最新バージョンに更新してから再度お試しください。"
+    "newer_version": "現在の端末では対応していないバージョンです。アプリを最新バージョンに更新してから再度お試しください。",
+    "duplicate_shortcut_name": "同じ名前のショートカットが既に存在します",
+    "shortcut_value_required": "値を1件以上登録してください",
+    "shortcut_value_name_required": "値名を入力してください"
   },
   "tabs": {
     "home": "ホーム",
@@ -348,5 +349,26 @@
     "format_reset_all": "すべて既定に戻す",
     "format_reset_all_confirm": "すべてのシステム変数の書式を既定に戻します。よろしいですか？",
     "format_changed": "書式を変更しました"
+  },
+  "shortcut": {
+    "title": "ショートカット",
+    "empty": "ショートカットがありません",
+    "empty_hint": "右上の + ボタンからショートカットを追加できます",
+    "create": "ショートカットを作成",
+    "edit": "ショートカットを編集",
+    "name": "ショートカット名",
+    "name_placeholder": "例: 電話番号",
+    "profile": "プロファイル",
+    "values": "値",
+    "value_count": "{{count}}件",
+    "value_create": "値を追加",
+    "value_edit": "値を編集",
+    "value_name": "値名",
+    "value_name_placeholder": "例: 母",
+    "value_value": "値",
+    "value_value_placeholder": "例: 080-0000-0000",
+    "delete_confirm": "ショートカット「{{name}}」を削除しますか？\n\nこのショートカットに登録されているすべての値も削除されます。",
+    "delete_value_confirm": "値「{{name}}」を削除しますか？",
+    "register": "登録"
   }
 }

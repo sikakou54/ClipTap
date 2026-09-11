@@ -30,6 +30,8 @@ import type {
   Category,
   Profile,
   ProfileVariable,
+  ShortcutRow,
+  ShortcutValue,
   Snippet,
   SnippetProfile,
   Variable,
@@ -44,6 +46,8 @@ export interface FullRestoreData {
   snippets: Snippet[];
   snippetProfiles: SnippetProfile[];
   systemVariableFormats: SystemVariableFormatRow[];
+  shortcuts: ShortcutRow[];
+  shortcutValues: ShortcutValue[];
 }
 
 /**
@@ -154,6 +158,9 @@ export class ImportMapper {
    */
   getFullRestoreData(): FullRestoreData {
     const hasFormats = tableExists(this.adapter, 'system_variable_formats');
+    /* V7以前のエクスポートを一時DBへ移行せず読む経路のために、テーブルの有無を確認する */
+    const hasShortcuts = tableExists(this.adapter, 'shortcuts');
+    const hasShortcutValues = tableExists(this.adapter, 'shortcut_values');
 
     return {
       categories: this.adapter.all<Category>('SELECT * FROM categories'),
@@ -164,6 +171,12 @@ export class ImportMapper {
       snippetProfiles: this.adapter.all<SnippetProfile>('SELECT * FROM snippet_profiles'),
       systemVariableFormats: hasFormats
         ? this.adapter.all<SystemVariableFormatRow>('SELECT * FROM system_variable_formats')
+        : [],
+      shortcuts: hasShortcuts
+        ? this.adapter.all<ShortcutRow>('SELECT * FROM shortcuts')
+        : [],
+      shortcutValues: hasShortcutValues
+        ? this.adapter.all<ShortcutValue>('SELECT * FROM shortcut_values')
         : [],
     };
   }

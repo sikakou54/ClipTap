@@ -12,6 +12,7 @@ export { CategoryService } from './CategoryService';
 export { ProfileService } from './ProfileService';
 export { SnippetService } from './SnippetService';
 export { VariableService, type VariableResolverContext } from './VariableService';
+export { ShortcutService } from './ShortcutService';
 export {
   SubscriptionService,
   FREE_PROFILES_LIMIT,

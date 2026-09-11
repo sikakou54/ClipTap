@@ -315,7 +315,7 @@ const DYNAMIC_KEY_PATTERNS: readonly DynamicKeyPattern[] = [
   },
   {
     description: '名称重複エラー（エンティティ種別ごと）',
-    keys: /^error\.duplicate_(?:category|profile|variable)_name$/,
+    keys: /^error\.duplicate_(?:category|profile|variable|shortcut)_name$/,
     generator: /`error\.duplicate_\$\{entityType\}_name`/,
   },
 ];

@@ -1,0 +1,36 @@
+/**
+ * 起動時App Open広告ゲート
+ *
+ * @description
+ * 起動時のApp Open広告の表示判定だけを担うコンポーネント。画面には何も描画しない。
+ * 広告そのものはAdMob SDKがネイティブの全画面として表示するため、React側に描画物は無い。
+ *
+ * 【コンポーネントとして置く理由】
+ * 判定には加入状態が必要で、SubscriptionProviderの内側でしかフックを呼べない。
+ * 一方でスプラッシュの保持解除はProviderの外側にあるルートレイアウトの責務になる。
+ * 判定だけを行うこのコンポーネントをProviderの内側へ挿し、結果をコールバックで外へ返すことで、
+ * ナビゲーションを組み立てるAppContentに広告の責務を持ち込まずに両者をつなぐ。
+ *
+ * @see src/hooks/useAppOpenAd.ts - 表示条件と失敗時の扱い
+ */
+
+import { useAppOpenAd } from '@hooks/useAppOpenAd';
+
+/* ========================================
+   Props定義
+   ======================================== */
+
+/**
+ * AppOpenAdGateのProps
+ * @property onSettled - 表示判定が決着したときのコールバック（表示の有無によらず必ず1回呼ばれる。引数は実際に広告を表示したか）
+ */
+interface AppOpenAdGateProps {
+  onSettled: (adShown: boolean) => void;
+}
+
+export function AppOpenAdGate({ onSettled }: AppOpenAdGateProps) {
+  useAppOpenAd({ onSettled });
+
+  /* 判定専用のため描画しない */
+  return null;
+}

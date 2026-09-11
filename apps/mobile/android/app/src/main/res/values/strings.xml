@@ -20,6 +20,9 @@
   <string name="snippet_detail">Details</string>
   <string name="snippet_close">Close</string>
   <string name="snippet_no_title">(No Title)</string>
+  <string name="shortcut_title">Shortcuts</string>
+  <string name="shortcut_empty">No shortcuts available</string>
+  <string name="shortcut_empty_hint">Create shortcuts in the main app</string>
   <string name="search_placeholder">Search snippets</string>
   <string name="search_clear">Clear</string>
   <string name="search_no_results">No search results</string>
@@ -48,11 +51,13 @@
   <string name="accessibility_profile_button">Profile button</string>
   <string name="accessibility_category_button">Category button</string>
   <string name="accessibility_snippet_item">Snippet item</string>
-  <string name="accessibility_close_button">Close button</string>
   <string name="accessibility_copy_button">Copy button</string>
   <string name="accessibility_sort_button">Sort button</string>
   <string name="accessibility_insert_title_button">Insert title button</string>
   <string name="accessibility_insert_newline_button">Insert newline button</string>
+  <string name="accessibility_show_shortcuts_button">Show shortcuts</string>
+  <string name="accessibility_show_snippets_button">Show snippets</string>
+  <string name="accessibility_back_button">Back button</string>
   <string name="keyboard_insert_failed">Failed to insert text</string>
   <string name="keyboard_sort_label">Sort</string>
   <string name="keyboard_sort_created">Created</string>

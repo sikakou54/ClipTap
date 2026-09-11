@@ -12,9 +12,10 @@
  * - スワイプによる編集・削除操作
  *
  * @navigation
+ * - ショートカットアイコン → /shortcut
+ * - 設定アイコン → /settings
  * - 検索アイコン → /search（モーダル）
  * - 追加アイコン → /snippet/create（モーダル）
- * - 設定アイコン → /settings
  *
  * @see src/hooks/screens/useHomeScreen.ts - ビジネスロジック
  * @see src/components/snippet/SnippetList.tsx - 一覧表示コンポーネント
@@ -46,8 +47,8 @@ export default function HomeScreen() {
     handleCopySnippetTitle,
     handleEditSnippet,
     handleDeleteSnippet,
+    handleNavigateToShortcuts,
     handleNavigateToSettings,
-    handleNavigateToExportImport,
     handleNavigateToSearch,
     handleNavigateToCreate,
     handleProfileChange,
@@ -75,21 +76,23 @@ export default function HomeScreen() {
           <ProfileSelector onProfileChange={handleProfileChange} />
         </View>
 
-        {/* アクションボタン（設定・検索・追加） */}
+        {/* アクションボタン（ショートカット・設定・検索・追加）。
+            アイコン群は縮まずプロファイル名だけが縮む配置のため、狭い端末でプロファイル名が
+            読めなくならないよう4個に保つ。入出力（バックアップ）は設定画面から開く */}
         <View style={styles.iconGroup}>
-          {/* 設定画面への遷移 */}
-          <TouchableOpacity onPress={handleNavigateToSettings} style={styles.iconButton}>
+          {/* ショートカット一覧への遷移 */}
+          <TouchableOpacity onPress={handleNavigateToShortcuts} style={styles.iconButton}>
             <Ionicons
-              name="settings-outline"
+              name="flash-outline"
               size={responsive.header.iconSize + 2}
               color={colors.text}
             />
           </TouchableOpacity>
 
-          {/* バックアップ画面への遷移 */}
-          <TouchableOpacity onPress={handleNavigateToExportImport} style={styles.iconButton}>
+          {/* 設定画面への遷移 */}
+          <TouchableOpacity onPress={handleNavigateToSettings} style={styles.iconButton}>
             <Ionicons
-              name="swap-horizontal-outline"
+              name="settings-outline"
               size={responsive.header.iconSize + 2}
               color={colors.text}
             />

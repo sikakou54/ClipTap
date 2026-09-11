@@ -690,14 +690,14 @@ packages/shared/src/mappers/
 データベースに新しいテーブルが必要な場合、共通マイグレーションへ次の連続バージョンを追加します。
 
 ```bash
-# 現行の packages/shared/src/database/migrations.ts に V6 → V7 を追加
+# 現行の packages/shared/src/database/migrations.ts に V8 → V9 を追加
 ```
 
 **例**: `packages/shared/src/database/migrations.ts`
 
 ```typescript
-export async function migrateV6ToV7(db: DbAdapter): Promise<void> {
-  // V6のfixtureからV7へ移行できる処理と回帰テストを追加する
+export async function migrateV8ToV9(db: DbAdapter): Promise<void> {
+  // V8のfixtureからV9へ移行できる処理と回帰テストを追加する
 }
 ```
 

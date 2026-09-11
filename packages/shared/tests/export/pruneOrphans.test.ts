@@ -71,4 +71,55 @@ describe('ExportMapper.deleteUnselectedData', () => {
       snippetProfileCount
     );
   });
+
+  /**
+   * 選択外プロファイルのショートカットを出力へ残さない。
+   *
+   * ショートカットは選択軸に含めないが、1件のプロファイルへ必ず属するため、
+   * 所属先を選ばなかった場合は関連ではなく本体ごと落とす必要がある。
+   * 残すと、選択したつもりのないプロファイルのショートカット名と値が出力ファイルへ入る。
+   */
+  it('removes the shortcuts of unselected profiles', () => {
+    const adapter = setup();
+    adapter.run("INSERT INTO profiles VALUES ('p2', 'other', 0, 0, 1, 1, 'now', 'now')");
+    adapter.run("INSERT INTO shortcuts VALUES ('sc1', 'p1', 'phone', 0, 'now', 'now')");
+    adapter.run(
+      "INSERT INTO shortcut_values VALUES ('sv1', 'sc1', 'mother', '080', 0, 0, 'now', 'now')"
+    );
+    adapter.run("INSERT INTO shortcuts VALUES ('sc2', 'p2', 'bank', 0, 'now', 'now')");
+    adapter.run(
+      "INSERT INTO shortcut_values VALUES ('sv2', 'sc2', 'main', '1234567', 0, 0, 'now', 'now')"
+    );
+
+    new ExportMapper(adapter).deleteUnselectedData({
+      snippetIds: ['s1'],
+      profileIds: ['p1'],
+      variableIds: ['v1'],
+      categoryIds: ['c1'],
+    });
+
+    expect(adapter.all<{ id: string }>('SELECT id FROM shortcuts')).toEqual([{ id: 'sc1' }]);
+    expect(adapter.all<{ id: string }>('SELECT id FROM shortcut_values')).toEqual([
+      { id: 'sv1' },
+    ]);
+  });
+
+  /** プロファイルを1件も選ばなかった場合はショートカットも残らない */
+  it('removes every shortcut when no profile is selected', () => {
+    const adapter = setup();
+    adapter.run("INSERT INTO shortcuts VALUES ('sc1', 'p1', 'phone', 0, 'now', 'now')");
+    adapter.run(
+      "INSERT INTO shortcut_values VALUES ('sv1', 'sc1', 'mother', '080', 0, 0, 'now', 'now')"
+    );
+
+    new ExportMapper(adapter).deleteUnselectedData({
+      snippetIds: ['s1'],
+      profileIds: [],
+      variableIds: ['v1'],
+      categoryIds: ['c1'],
+    });
+
+    expect(adapter.all('SELECT id FROM shortcuts')).toEqual([]);
+    expect(adapter.all('SELECT id FROM shortcut_values')).toEqual([]);
+  });
 });

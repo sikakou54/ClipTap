@@ -7,7 +7,7 @@
 /**
  * データベーススキーマバージョン
  */
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 
 /** インポートで受け付ける最古のスキーマバージョン */
 export const MIN_SUPPORTED_SCHEMA_VERSION = 3;
@@ -119,6 +119,45 @@ export const CREATE_TABLES = {
       updatedAt TEXT NOT NULL
     );
   `,
+
+  /**
+   * ショートカットテーブル
+   *
+   * @remarks
+   * 1件のショートカットは必ず1件のプロファイルに属する。
+   * 名前の一意性はプロファイル内に限るため、列単位のUNIQUEではなく複合UNIQUEで表す。
+   * 実行時に外部キーを強制していないため、プロファイル削除時のカスケードは
+   * ProfileMapperが明示的に行う（profile_variablesと同じ扱い）。
+   */
+  shortcuts: `
+    CREATE TABLE IF NOT EXISTS shortcuts (
+      id TEXT PRIMARY KEY,
+      profileId TEXT NOT NULL,
+      name TEXT NOT NULL,
+      sortOrder INTEGER DEFAULT 0,
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL,
+      FOREIGN KEY (profileId) REFERENCES profiles(id) ON DELETE CASCADE,
+      UNIQUE(profileId, name)
+    );
+  `,
+
+  /**
+   * ショートカット値テーブル
+   */
+  shortcutValues: `
+    CREATE TABLE IF NOT EXISTS shortcut_values (
+      id TEXT PRIMARY KEY,
+      shortcutId TEXT NOT NULL,
+      name TEXT NOT NULL,
+      value TEXT NOT NULL,
+      useCount INTEGER DEFAULT 0,
+      sortOrder INTEGER DEFAULT 0,
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL,
+      FOREIGN KEY (shortcutId) REFERENCES shortcuts(id) ON DELETE CASCADE
+    );
+  `,
 };
 
 /**
@@ -157,12 +196,45 @@ export const CREATE_INDEXES = {
     CREATE INDEX IF NOT EXISTS idx_snippet_profiles_profile
     ON snippet_profiles(profileId);
   `,
+  /**
+   * ショートカットの所属プロファイルのindex
+   *
+   * @remarks
+   * 一覧はプロファイルで絞って取得するため実際に使われる。
+   * 併せて、移行・取込の後に `profileId` 列が存在することを確かめる経路でもある。
+   * `finalizeLatestSchema` はテーブル名しか確認しないため、この列が欠けたまま
+   * 最新スキーマとして通ってしまうのを防いでいる。参照するクエリが無いと誤解して消さないこと。
+   */
+  shortcutsProfile: `
+    CREATE INDEX IF NOT EXISTS idx_shortcuts_profile
+    ON shortcuts(profileId);
+  `,
+  shortcutValuesShortcut: `
+    CREATE INDEX IF NOT EXISTS idx_shortcut_values_shortcut
+    ON shortcut_values(shortcutId);
+  `,
+  /**
+   * 使用回数のindex
+   *
+   * @remarks
+   * useCount順の並べ替えは取得後のメモリ上で行うため、このindexで速くなるクエリは無い。
+   * それでも置いているのは、移行・取込の後に `useCount` 列が存在することを確かめる唯一の経路だから。
+   * `finalizeLatestSchema` はテーブル名しか確認せず、Mapperは `useCount ?? 0` で読むため、
+   * 列が欠けても例外にならず全件0として静かに壊れる（migrations.tsの「派生indexが参照する列は
+   * createIndexesWithDbの作成時に検知される」に対応）。参照するクエリが無いことを理由に消さないこと。
+   */
+  shortcutValuesUseCount: `
+    CREATE INDEX IF NOT EXISTS idx_shortcut_values_use_count
+    ON shortcut_values(useCount DESC);
+  `,
 };
 
 /**
  * テーブル削除SQL定義（外部キー制約のため削除順序重要）
  */
 export const DROP_TABLES = {
+  shortcutValues: 'DROP TABLE IF EXISTS shortcut_values;',
+  shortcuts: 'DROP TABLE IF EXISTS shortcuts;',
   systemVariableFormats: 'DROP TABLE IF EXISTS system_variable_formats;',
   snippetProfiles: 'DROP TABLE IF EXISTS snippet_profiles;',
   profileVariables: 'DROP TABLE IF EXISTS profile_variables;',

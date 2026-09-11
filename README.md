@@ -24,7 +24,7 @@ ClipTapは、定型文をローカルで管理し、変数を展開してクリ�
 | `apps/web` | React 19、Vite 7、SQLite WASM | Webアプリとランディングページ |
 | `packages/shared` | TypeScript、Zod | 型、業務ロジック、DBスキーマ、日英翻訳の共有 |
 
-現行はアプリ版1.3.0、DBスキーマV7です。最低対応OSはiOS / iPadOS 17.0、Android 7.0（API 24）です。
+現行はアプリ版1.4.0、DBスキーマV8です。最低対応OSはiOS / iPadOS 17.0、Android 7.0（API 24）です。
 
 ## セットアップ
 

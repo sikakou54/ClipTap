@@ -40,8 +40,6 @@
     "title_input_placeholder": "Enter title...",
     "content": "Content",
     "content_placeholder": "Enter content...",
-    "content_input": "Enter Content",
-    "content_input_placeholder": "Enter content...",
     "search_placeholder": "Search templates...",
     "category": "Category",
     "select_category": "Select category",
@@ -151,7 +149,7 @@
     "title": "Profiles",
     "create": "Create Profile",
     "edit": "Edit Profile",
-    "delete_confirm": "Delete profile \"{{name}}\"?\n\nAll variables in this profile will also be deleted.",
+    "delete_confirm": "Delete profile \"{{name}}\"?\n\nAll variables and shortcuts in this profile will also be deleted.",
     "no_profiles": "No profiles",
     "add_hint": "Tap the + button to add a profile",
     "name": "Profile Name",
@@ -235,7 +233,10 @@
     "google_sign_in_failed": "Failed to sign in with Google",
     "apple_sign_in_failed": "Failed to sign in with Apple",
     "sign_out_failed": "Failed to sign out",
-    "newer_version": "This version is not supported on your current device. Please update the app to the latest version and try again."
+    "newer_version": "This version is not supported on your current device. Please update the app to the latest version and try again.",
+    "duplicate_shortcut_name": "A shortcut with this name already exists",
+    "shortcut_value_required": "Add at least one value",
+    "shortcut_value_name_required": "Enter a value name"
   },
   "tabs": {
     "home": "Home",
@@ -348,5 +349,26 @@
     "format_reset_all": "Reset all to default",
     "format_reset_all_confirm": "Reset all system variable formats to default?",
     "format_changed": "Format updated"
+  },
+  "shortcut": {
+    "title": "Shortcuts",
+    "empty": "No shortcuts",
+    "empty_hint": "Add a shortcut with the + button at the top right",
+    "create": "Create Shortcut",
+    "edit": "Edit Shortcut",
+    "name": "Shortcut name",
+    "name_placeholder": "e.g. Phone number",
+    "profile": "Profile",
+    "values": "Values",
+    "value_count": "{{count}} value(s)",
+    "value_create": "Add Value",
+    "value_edit": "Edit Value",
+    "value_name": "Value name",
+    "value_name_placeholder": "e.g. Mother",
+    "value_value": "Value",
+    "value_value_placeholder": "e.g. 080-0000-0000",
+    "delete_confirm": "Delete shortcut \"{{name}}\"?\n\nAll values registered in this shortcut will also be deleted.",
+    "delete_value_confirm": "Delete value \"{{name}}\"?",
+    "register": "Save"
   }
 }
