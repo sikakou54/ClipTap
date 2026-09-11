@@ -91,6 +91,7 @@ data class ShortcutValue(
  */
 data class Shortcut(
     val id: String,
+    val profileId: String,           /* 所属するプロファイルID（1ショートカットは必ず1プロファイルに属する） */
     val name: String,
     val values: List<ShortcutValue>, /* 所属する値（sortOrder順） */
     val sortOrder: Int,              /* 一覧での並び順（0始まり） */

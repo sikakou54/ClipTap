@@ -92,21 +92,26 @@ class ShortcutService {
 
     // MARK: - Read Operations（読み取り操作）
 
-    /// 全ショートカットを値付きで取得（登録順）
+    /// 指定プロファイルのショートカットを値付きで取得（登録順）
     ///
+    /// - Parameter profileId: 表示中の環境（プロファイル）のID
     /// - Returns: ショートカットの配列（sortOrder順、値もsortOrder順）
     ///
-    /// 【プロファイルで絞り込まない理由】
-    /// ショートカットは定型文と違い、環境（プロファイル）に紐付かない共通のデータです。
-    func getAll() -> [Shortcut] {
-        return shortcutMapper.getAll()
+    /// 【プロファイルで絞り込む理由】
+    /// ショートカットは1件のプロファイルに属します（DBスキーマV8で shortcuts.profileId を追加）。
+    /// 「会社用」で使う値と「個人用」で使う値が混ざると選び間違えるため、
+    /// キーボードは選択中の環境のショートカットだけを扱います。
+    func getAll(profileId: String) -> [Shortcut] {
+        return shortcutMapper.getAll(profileId: profileId)
     }
 
     // MARK: - Candidate Ranking（候補推測）
 
     /// ショートカット一覧を表示順に並べ替えて取得
     ///
-    /// - Parameter context: カーソル直前の入力内容
+    /// - Parameters:
+    ///   - profileId: 表示中の環境（プロファイル）のID
+    ///   - context: カーソル直前の入力内容
     /// - Returns: 表示順に並べ替えたショートカットの配列
     ///
     /// 【並びの決め方】
@@ -116,8 +121,8 @@ class ShortcutService {
     /// 【使用回数を使わない理由】
     /// 利用者が決めた登録順が入力内容と無関係に入れ替わると、
     /// 目で追う位置が毎回変わってしまうためです（正本 candidates.ts と同じ）。
-    func rankedShortcuts(context: String) -> [Shortcut] {
-        let shortcuts = getAll()
+    func rankedShortcuts(profileId: String, context: String) -> [Shortcut] {
+        let shortcuts = getAll(profileId: profileId)
         let normalizedContext = Self.normalizeContext(context)
 
         /* 添字を持ったまま並べ替える。

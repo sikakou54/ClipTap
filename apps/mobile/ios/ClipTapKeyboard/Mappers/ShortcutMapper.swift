@@ -42,31 +42,44 @@ class ShortcutMapper: BaseMapper {
 
     // MARK: - Read Operations
 
-    /// 全ショートカットを値付きで取得（sortOrder順、値もsortOrder順）
+    /// 指定プロファイルのショートカットを値付きで取得（sortOrder順、値もsortOrder順）
     ///
+    /// - Parameter profileId: 所属プロファイルID
     /// - Returns: ショートカットの配列（値は各ショートカットのvaluesに格納済み）
+    ///
+    /// 【プロファイル指定を必須にする理由】
+    /// 1件のショートカットは必ず1件のプロファイルに属し、キーボードは選択中のプロファイルの分だけを出す。
+    /// 全プロファイル横断で取得する用途が無いため、TypeScript版 getByProfileId() と同じく必須にする。
+    /// 省略可能にすると、プロファイルを決められなかったときに全件が出てしまう。
     ///
     /// 【値を1回のクエリでまとめて取る理由】
     /// ショートカットごとに値を問い合わせると、キーボードを開くたびに件数分のクエリが走る。
-    /// 全件を1回で取り、ショートカットIDで振り分ける（TypeScript版 getAll() と同じ方針）。
-    func getAll() -> [Shortcut] {
+    /// 全件を1回で取り、ショートカットIDで振り分ける（TypeScript版 getByProfileId() と同じ方針）。
+    func getAll(profileId: String) -> [Shortcut] {
         let shortcutQuery = """
             SELECT id, name, sortOrder, createdAt, updatedAt
             FROM \(tableName)
+            WHERE profileId = ?
             ORDER BY sortOrder ASC
         """
 
-        let shortcuts: [Shortcut] = executeQuery(shortcutQuery) { statement in
+        let shortcuts: [Shortcut] = executeQuery(shortcutQuery, parameters: [profileId]) { statement in
             return self.mapShortcut(from: statement)
         }
 
+        /* 値にも同じ絞り込みを掛ける。
+           shortcut_values は所属プロファイルを持たないため、shortcutsとのINNER JOINで
+           ショートカット側と同じ条件に揃える（TypeScript版 SELECT_BY_PROFILE と同じ方針）。
+           ここを絞らないと、他プロファイルの値を読み込んだうえで捨てるだけの無駄が出る */
         let valueQuery = """
-            SELECT id, shortcutId, name, value, useCount, sortOrder, createdAt, updatedAt
-            FROM \(valueTableName)
-            ORDER BY shortcutId ASC, sortOrder ASC
+            SELECT v.id, v.shortcutId, v.name, v.value, v.useCount, v.sortOrder, v.createdAt, v.updatedAt
+            FROM \(valueTableName) v
+            INNER JOIN \(tableName) s ON s.id = v.shortcutId
+            WHERE s.profileId = ?
+            ORDER BY v.shortcutId ASC, v.sortOrder ASC
         """
 
-        let values: [ShortcutValue] = executeQuery(valueQuery) { statement in
+        let values: [ShortcutValue] = executeQuery(valueQuery, parameters: [profileId]) { statement in
             return self.mapShortcutValue(from: statement)
         }
 

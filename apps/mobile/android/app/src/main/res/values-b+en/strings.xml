@@ -10,7 +10,8 @@
   <string name="keyboard_sort_usage">"Usage"</string>
   <string name="category_all">"All"</string>
   <string name="snippet_empty">"No snippets"</string>
-  <string name="accessibility_shortcut_button">"Shortcuts button"</string>
+  <string name="accessibility_show_shortcuts_button">"Show shortcuts"</string>
+  <string name="accessibility_show_snippets_button">"Show snippets"</string>
   <string name="accessibility_back_button">"Back button"</string>
   <string name="accessibility_close_button">"Close button"</string>
   <string name="shortcut_title">"Shortcuts"</string>

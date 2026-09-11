@@ -97,20 +97,25 @@ class ShortcutService private constructor(private val context: Context) {
     )
 
     /**
-     * 全ショートカットを値付きで取得
+     * 指定プロファイルのショートカットを値付きで取得
      *
+     * @param profileId 対象プロファイルのID
      * @return ショートカット一覧（sortOrder順、値もsortOrder順）
      */
-    fun getAll(): List<Shortcut> {
-        return shortcutMapper.getAll()
+    fun getAll(profileId: String): List<Shortcut> {
+        return shortcutMapper.getAll(profileId)
     }
 
     /**
-     * ショートカット一覧を表示順に並べ替えて取得
+     * 指定プロファイルのショートカット一覧を表示順に並べ替えて取得
      *
      * 【何をするか】
-     * 1. 保存順（sortOrder順）のショートカットを取得
+     * 1. 保存順（sortOrder順）のショートカットを、そのプロファイルの分だけ取得
      * 2. 一致度の降順 → sortOrderの昇順 → 元の位置 で並べ替える
+     *
+     * 【プロファイルで絞る理由】
+     * ショートカットはプロファイル（環境）に属する。
+     * 絞らずに全件を出すと、選んでいる環境と関係のない値を挿入できてしまう。
      *
      * 【使用回数を使わない理由】
      * 利用者が決めた登録順が入力内容と無関係に入れ替わると、目で追う位置が毎回変わってしまう。
@@ -120,11 +125,12 @@ class ShortcutService private constructor(private val context: Context) {
      * このクラスはAndroidのContextをcontextという名前で保持しているため、
      * 同名の引数を置くと関数内で意味が入れ替わり、取り違えの原因になる。
      *
+     * @param profileId 対象プロファイルのID
      * @param inputContext カーソル直前の入力内容
      * @return 表示順に並べ替えたショートカット一覧
      */
-    fun rankedShortcuts(inputContext: String): List<Shortcut> {
-        return rankShortcuts(getAll(), inputContext)
+    fun rankedShortcuts(profileId: String, inputContext: String): List<Shortcut> {
+        return rankShortcuts(getAll(profileId), inputContext)
     }
 
     /**

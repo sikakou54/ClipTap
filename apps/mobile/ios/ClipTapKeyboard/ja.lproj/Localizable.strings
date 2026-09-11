@@ -80,7 +80,8 @@
 "accessibility.sort_button" = "並び替えボタン";
 "accessibility.insert_title_button" = "タイトル挿入ボタン";
 "accessibility.insert_newline_button" = "改行ボタン";
-"accessibility.shortcut_button" = "ショートカットボタン";
+"accessibility.show_shortcuts_button" = "ショートカットを表示";
+"accessibility.show_snippets_button" = "定型文を表示";
 "accessibility.back_button" = "戻るボタン";
 
 /* ソート関連 */

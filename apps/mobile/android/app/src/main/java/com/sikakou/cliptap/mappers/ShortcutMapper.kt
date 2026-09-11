@@ -44,30 +44,42 @@ class ShortcutMapper private constructor(context: Context) : BaseMapper(context)
     }
 
     /**
-     * 全ショートカットを値付きで取得
+     * 指定プロファイルのショートカットを値付きで取得
      *
      * 【何をするか】
-     * 1. shortcutsをsortOrder昇順で取得
-     * 2. shortcut_valuesを1回のクエリでまとめて取得
+     * 1. shortcut_valuesを親のprofileIdで絞り、1回のクエリでまとめて取得
+     * 2. shortcutsを同じprofileIdで絞り、sortOrder昇順で取得
      * 3. shortcutIdごとに値を振り分けて組み立てる
      *
      * 【値をショートカットごとに引かない理由】
      * ショートカットの件数だけクエリを発行すると、行の描画前にSQLiteへ何度も往復することになる。
      * 拡張キーボードは表示までの速さが体験に直結するため、2回のクエリに固定する。
      *
+     * 【値の絞り込みをJOINで行う理由】
+     * shortcut_valuesはprofileIdを持たず、所属プロファイルは親のshortcutsにしかない。
+     * 別プロファイルの値まで読み込むと、同じidのショートカットが無いまま捨てられる無駄が出るうえ、
+     * 将来の実装変更で他プロファイルの値が紛れ込む余地を残すため、SQLの時点で親と突き合わせる。
+     *
+     * 【全件取得の口を残さない理由】
+     * ショートカットはプロファイルに属するため、プロファイルを指定しない取得は
+     * 「どの環境のものか分からない一覧」になり、拡張キーボードでは使い道がない。
+     *
+     * @param profileId 対象プロファイルのID
      * @return ショートカット一覧（sortOrder順、値もsortOrder順）
      */
-    fun getAll(): List<Shortcut> {
+    fun getAll(profileId: String): List<Shortcut> {
         /* 値を先に読み、shortcutIdごとにまとめておく */
         val valuesByShortcut = mutableMapOf<String, MutableList<ShortcutValue>>()
 
         val valueQuery = """
-            SELECT id, shortcutId, name, value, useCount, sortOrder, createdAt, updatedAt
-            FROM shortcut_values
-            ORDER BY shortcutId ASC, sortOrder ASC
+            SELECT v.id, v.shortcutId, v.name, v.value, v.useCount, v.sortOrder, v.createdAt, v.updatedAt
+            FROM shortcut_values v
+            INNER JOIN shortcuts s ON s.id = v.shortcutId
+            WHERE s.profileId = ?
+            ORDER BY v.shortcutId ASC, v.sortOrder ASC
         """
 
-        val valueCursor = executeQuery(valueQuery)
+        val valueCursor = executeQuery(valueQuery, arrayOf(profileId))
         valueCursor.use {
             while (it.moveToNext()) {
                 val value = ShortcutValue(
@@ -87,24 +99,26 @@ class ShortcutMapper private constructor(context: Context) : BaseMapper(context)
         val shortcuts = mutableListOf<Shortcut>()
 
         val query = """
-            SELECT id, name, sortOrder, createdAt, updatedAt
+            SELECT id, profileId, name, sortOrder, createdAt, updatedAt
             FROM shortcuts
+            WHERE profileId = ?
             ORDER BY sortOrder ASC
         """
 
-        val cursor = executeQuery(query)
+        val cursor = executeQuery(query, arrayOf(profileId))
         cursor.use {
             while (it.moveToNext()) {
                 val id = it.getString(0)
                 shortcuts.add(
                     Shortcut(
                         id = id,
-                        name = it.getString(1),
+                        profileId = it.getString(1),
+                        name = it.getString(2),
                         /* 値を持たないショートカットでも一覧の取得は落とさない */
                         values = valuesByShortcut[id] ?: emptyList(),
-                        sortOrder = it.getInt(2),
-                        createdAt = it.getString(3),
-                        updatedAt = it.getString(4)
+                        sortOrder = it.getInt(3),
+                        createdAt = it.getString(4),
+                        updatedAt = it.getString(5)
                     )
                 )
             }

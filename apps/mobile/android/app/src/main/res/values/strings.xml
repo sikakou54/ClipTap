@@ -56,7 +56,8 @@
   <string name="accessibility_sort_button">Sort button</string>
   <string name="accessibility_insert_title_button">Insert title button</string>
   <string name="accessibility_insert_newline_button">Insert newline button</string>
-  <string name="accessibility_shortcut_button">Shortcuts button</string>
+  <string name="accessibility_show_shortcuts_button">Show shortcuts</string>
+  <string name="accessibility_show_snippets_button">Show snippets</string>
   <string name="accessibility_back_button">Back button</string>
   <string name="keyboard_insert_failed">Failed to insert text</string>
   <string name="keyboard_sort_label">Sort</string>

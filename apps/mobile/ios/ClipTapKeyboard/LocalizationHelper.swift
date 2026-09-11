@@ -295,8 +295,16 @@ enum L10n {
         /// "改行ボタン" / "Insert newline button"
         static let insertNewlineButton = localized("accessibility.insert_newline_button")
 
-        /// "ショートカットボタン" / "Shortcuts button"
-        static let shortcutButton = localized("accessibility.shortcut_button")
+        /// "ショートカットを表示" / "Show shortcuts"
+        ///
+        /// 定型文／ショートカットのトグルが定型文を表示しているときのラベル。
+        /// トグルは押した先を示すため、ボタン名ではなく「押すと何が起きるか」で表す。
+        static let showShortcutsButton = localized("accessibility.show_shortcuts_button")
+
+        /// "定型文を表示" / "Show snippets"
+        ///
+        /// 定型文／ショートカットのトグルがショートカットを表示しているときのラベル。
+        static let showSnippetsButton = localized("accessibility.show_snippets_button")
 
         /// "戻るボタン" / "Back button"
         static let backButton = localized("accessibility.back_button")
@@ -455,7 +463,8 @@ enum L10n {
         case "accessibility.copy_button": return isJapanese ? "コピーボタン" : "Copy button"
         case "accessibility.sort_button": return isJapanese ? "並び替えボタン" : "Sort button"
         case "accessibility.insert_title_button": return isJapanese ? "タイトル挿入ボタン" : "Insert title button"
-        case "accessibility.shortcut_button": return isJapanese ? "ショートカットボタン" : "Shortcuts button"
+        case "accessibility.show_shortcuts_button": return isJapanese ? "ショートカットを表示" : "Show shortcuts"
+        case "accessibility.show_snippets_button": return isJapanese ? "定型文を表示" : "Show snippets"
         case "accessibility.back_button": return isJapanese ? "戻るボタン" : "Back button"
 
         // Sort

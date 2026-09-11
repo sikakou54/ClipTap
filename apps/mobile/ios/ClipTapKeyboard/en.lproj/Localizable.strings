@@ -80,7 +80,8 @@
 "accessibility.sort_button" = "Sort button";
 "accessibility.insert_title_button" = "Insert title button";
 "accessibility.insert_newline_button" = "Insert newline button";
-"accessibility.shortcut_button" = "Shortcuts button";
+"accessibility.show_shortcuts_button" = "Show shortcuts";
+"accessibility.show_snippets_button" = "Show snippets";
 "accessibility.back_button" = "Back button";
 
 /* Sort related */
